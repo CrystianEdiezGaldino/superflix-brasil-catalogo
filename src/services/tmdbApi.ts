@@ -1,3 +1,4 @@
+
 const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 
 export const fetchPopularMovies = async (page = 1) => {
@@ -61,6 +62,9 @@ export const fetchSeriesSeasonDetails = async (id: string, seasonNumber: number)
     return null;
   }
 };
+
+// Add the missing fetchSeasonDetails function (alias of fetchSeriesSeasonDetails)
+export const fetchSeasonDetails = fetchSeriesSeasonDetails;
 
 export const fetchTopRatedAnime = async () => {
   try {
@@ -140,10 +144,10 @@ export const fetchAnime = async (page = 1, itemsPerPage = 20) => {
   }
 };
 
-// New function to fetch recommendations based on a media item
-export const fetchRecommendations = async (mediaType: string, id: string) => {
+// New function to fetch recommendations based on a media ID
+export const fetchRecommendations = async (mediaId: string, mediaType: string) => {
   try {
-    const response = await fetch(`https://api.themoviedb.org/3/${mediaType}/${id}/recommendations?api_key=${API_KEY}&language=pt-BR`);
+    const response = await fetch(`https://api.themoviedb.org/3/${mediaType}/${mediaId}/recommendations?api_key=${API_KEY}&language=pt-BR`);
     const data = await response.json();
     
     // Add media_type to each recommended item
@@ -159,10 +163,10 @@ export const fetchRecommendations = async (mediaType: string, id: string) => {
   }
 };
 
-// New function to fetch doramas (Korean dramas)
-export const fetchDoramas = async (page = 1, itemsPerPage = 20) => {
+// Add the new fetchKoreanDramas function
+export const fetchKoreanDramas = async (page = 1, itemsPerPage = 20) => {
   try {
-    // Using specific regions and keywords associated with doramas
+    // Using specific regions and keywords associated with Korean dramas
     const response = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=pt-BR&with_original_language=ko&page=${page}`);
     const data = await response.json();
     
@@ -175,7 +179,7 @@ export const fetchDoramas = async (page = 1, itemsPerPage = 20) => {
     // Limit results based on itemsPerPage
     return doramaWithType.slice(0, itemsPerPage);
   } catch (error) {
-    console.error("Error fetching doramas:", error);
+    console.error("Error fetching Korean dramas:", error);
     return [];
   }
 };

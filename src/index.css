@@ -119,7 +119,7 @@
 
 /* Active route styles */
 .active-route {
-  @apply text-netflix-red font-medium;
+  @apply text-red-600 font-medium;
   position: relative;
 }
 
@@ -130,7 +130,7 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: theme('colors.netflix-red');
+  background-color: #E50914;
   transform: scaleX(1);
   transform-origin: center;
   transition: transform 0.3s ease;
@@ -148,7 +148,7 @@
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: theme('colors.netflix-red');
+  background-color: #E50914;
   transform: scaleX(0);
   transform-origin: center;
   transition: transform 0.3s ease;

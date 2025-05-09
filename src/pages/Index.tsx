@@ -40,7 +40,7 @@ const Index = () => {
   } = useHomePageData();
   
   // Fetch Korean dramas (doramas)
-  const { data: doramasData, isLoading: doramasLoading } = useQuery({
+  const { data: doramasData = [], isLoading: doramasLoading } = useQuery({
     queryKey: ["koreanDramas"],
     queryFn: fetchKoreanDramas,
     enabled: !!user && hasAccess

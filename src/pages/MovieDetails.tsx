@@ -36,7 +36,7 @@ const MovieDetails = () => {
 
   const { data: movie, isLoading, error } = useQuery({
     queryKey: ["movie", id],
-    queryFn: () => fetchMovieDetails(Number(id)),
+    queryFn: () => fetchMovieDetails(id as string),
     enabled: !!id && !!user,
   });
 

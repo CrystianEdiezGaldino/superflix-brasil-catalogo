@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { fetchSeriesDetails, fetchSeasonDetails } from "@/services/tmdbApi";
+import { fetchSeriesDetails, fetchSeriesSeasonDetails } from "@/services/tmdbApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { toast } from "sonner";
@@ -34,13 +34,13 @@ export const useSeriesDetails = (id: string | undefined) => {
 
   const { data: series, isLoading: isLoadingSeries } = useQuery({
     queryKey: ["series", id],
-    queryFn: () => fetchSeriesDetails(Number(id)),
+    queryFn: () => fetchSeriesDetails(id as string),
     enabled: !!id && !!user,
   });
 
   const { data: seasonData, isLoading: isLoadingSeason } = useQuery({
     queryKey: ["season", id, selectedSeason],
-    queryFn: () => fetchSeasonDetails(Number(id), selectedSeason),
+    queryFn: () => fetchSeriesSeasonDetails(id as string, selectedSeason),
     enabled: !!id && !!series && !!user,
   });
 

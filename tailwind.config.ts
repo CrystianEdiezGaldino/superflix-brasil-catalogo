@@ -68,7 +68,11 @@ export default {
 					red: '#E50914',
 					black: '#000000',
 					gray: '#808080'
-				}
+				},
+				"netflix-background": '#141414',
+				"netflix-red": '#E50914',
+				"netflix-black": '#000000',
+				"netflix-gray": '#808080'
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

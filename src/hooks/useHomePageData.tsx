@@ -107,13 +107,19 @@ export const useHomePageData = () => {
           let recs: MediaItem[] = [];
           
           if (movieIds.length > 0) {
-            const movieRecs = await fetchRecommendations(movieIds, "movie");
-            recs = [...recs, ...movieRecs];
+            // Fix: Convert media IDs to strings in case they're numbers
+            const movieRecs = await Promise.all(
+              movieIds.map(id => fetchRecommendations(String(id), "movie"))
+            );
+            recs = [...recs, ...movieRecs.flat()];
           }
           
           if (tvIds.length > 0) {
-            const tvRecs = await fetchRecommendations(tvIds, "tv");
-            recs = [...recs, ...tvRecs];
+            // Fix: Convert media IDs to strings in case they're numbers
+            const tvRecs = await Promise.all(
+              tvIds.map(id => fetchRecommendations(String(id), "tv"))
+            );
+            recs = [...recs, ...tvRecs.flat()];
           }
           
           // Shuffle and limit recommendations
@@ -225,8 +231,8 @@ export const useHomePageData = () => {
     moviesData: moviesQuery.data || [],
     seriesData: seriesQuery.data || [],
     animeData: animeQuery.data || [],
-    topRatedAnimeData: topRatedAnimeQuery.data,
-    doramasData: doramasQuery.data,
+    topRatedAnimeData: topRatedAnimeQuery.data || [],
+    doramasData: doramasQuery.data || [],
     isLoading,
     hasError,
     handleSearch,
