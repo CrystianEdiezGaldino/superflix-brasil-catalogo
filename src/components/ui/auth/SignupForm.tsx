@@ -106,18 +106,14 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
           
           <FormField
             control={form.control}
-            name="promoCode"
+            name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-gray-300">
-                  <div className="flex items-center">
-                    <CreditCard className="mr-1 h-4 w-4 text-netflix-red" />
-                    <span>Código Promocional (opcional)</span>
-                  </div>
-                </FormLabel>
+                <FormLabel className="text-gray-300">Senha</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Insira seu código promocional"
+                    type="password"
+                    placeholder="******"
                     {...field}
                     disabled={isLoading}
                     className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
@@ -130,14 +126,18 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
           
           <FormField
             control={form.control}
-            name="password"
+            name="promoCode"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-gray-300">Senha</FormLabel>
+                <FormLabel className="text-gray-300">
+                  <div className="flex items-center">
+                    <CreditCard className="mr-1 h-4 w-4 text-netflix-red" />
+                    <span>Código Promocional (opcional)</span>
+                  </div>
+                </FormLabel>
                 <FormControl>
                   <Input
-                    type="password"
-                    placeholder="******"
+                    placeholder="Insira seu código promocional"
                     {...field}
                     disabled={isLoading}
                     className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"

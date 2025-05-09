@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,7 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
     try {
       console.log("Attempting signup for:", email);
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -67,7 +68,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       
-      console.log("Signup successful for:", email);
+      console.log("Signup successful for:", email, "User data:", data);
+      
+      // Call auth webhook to create trial subscription
+      try {
+        const response = await fetch(`https://juamkehykcohwufehqfv.supabase.co/functions/v1/auth-webhook`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`,
+          },
+          body: JSON.stringify({
+            type: 'signup',
+            email: email,
+            user_id: data.user?.id
+          }),
+        });
+        
+        if (!response.ok) {
+          console.warn("Trial subscription creation may have failed:", await response.text());
+        }
+      } catch (webhookError) {
+        console.warn("Error calling auth webhook:", webhookError);
+        // Non-critical error, don't throw
+      }
+      
       toast.success("Cadastro realizado! Por favor, faça login.");
     } catch (error: any) {
       console.error("Error during signup:", error);
@@ -79,7 +104,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       console.log("Attempting login for:", email);
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -89,7 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       
-      console.log("Login successful for:", email);
+      console.log("Login successful for:", email, "User data:", data.user);
     } catch (error: any) {
       console.error("Error during login:", error);
       toast.error(error.message || "Erro ao fazer login");

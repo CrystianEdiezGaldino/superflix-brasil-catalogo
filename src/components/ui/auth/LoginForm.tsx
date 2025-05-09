@@ -47,11 +47,16 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
     setIsLoading(true);
     try {
       await signIn(data.email, data.password);
+      console.log("Login successful, navigating to home");
       toast.success("Login realizado com sucesso");
       navigate("/");
     } catch (error: any) {
       console.error("Authentication error:", error);
-      toast.error(error.message || "Erro ao fazer login");
+      if (error.message?.includes("Invalid login")) {
+        toast.error("Email ou senha incorretos");
+      } else {
+        toast.error(error.message || "Erro ao fazer login");
+      }
     } finally {
       setIsLoading(false);
     }
