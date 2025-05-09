@@ -1,17 +1,34 @@
 
-import { useEffect, useState } from "react";
-import { MediaItem } from "@/types/movie";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useKidsFilters } from "./useKidsFilters";
 import { useKidsPagination } from "./useKidsPagination";
+import { MediaItem, Movie, Series } from "@/types/movie";
+
+// Mock API service for kids content - replace with real API later
+const fetchKidsContent = async (page = 1): Promise<MediaItem[]> => {
+  // This would call your actual API
+  // For now returning mock data that conforms to MediaItem type
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  const mockMovies: Movie[] = Array(20).fill(null).map((_, i) => ({
+    id: 1000 + i,
+    title: `Kids Movie ${i + 1}`,
+    name: undefined,
+    poster_path: "/placeholder.svg",
+    backdrop_path: "/placeholder.svg",
+    vote_average: 4.5,
+    release_date: "2023-01-01",
+    first_air_date: undefined,
+    media_type: "movie",
+    genre_ids: [16, 10751], // Animation, Family
+    overview: "A family-friendly movie for kids"
+  }));
+  
+  return mockMovies;
+};
 
 export const useKidsContent = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [kidsContent, setKidsContent] = useState<MediaItem[]>([]);
-  const [trendingContent, setTrendingContent] = useState<MediaItem[]>([]);
-  const [topRatedContent, setTopRatedContent] = useState<MediaItem[]>([]);
-  const [recentContent, setRecentContent] = useState<MediaItem[]>([]);
-  const [popularContent, setPopularContent] = useState<MediaItem[]>([]);
-
   const {
     yearFilter,
     ratingFilter,
@@ -33,80 +50,56 @@ export const useKidsContent = () => {
     setIsLoadingMore
   } = useKidsPagination();
 
-  // Mock data generation for kids content
+  const [kidsContent, setKidsContent] = useState<MediaItem[]>([]);
+
+  // Query for initial data
+  const { data, isLoading } = useQuery({
+    queryKey: ['kids-content', page, yearFilter, ratingFilter, searchQuery],
+    queryFn: () => fetchKidsContent(page),
+  });
+
+  // Mock data for the various content sections
+  const trendingContent = data?.slice(0, 5) || [];
+  const topRatedContent = data?.slice(5, 10) || [];
+  const recentContent = data?.slice(10, 15) || [];
+  const popularContent = data?.slice(15, 20) || [];
+
+  // Filter content
   useEffect(() => {
-    const fetchKidsContent = async () => {
-      try {
-        // This is mock data - in a real app, this would be API calls
-        const generateMockKidsContent = (count: number, offset: number = 0): MediaItem[] => {
-          return Array.from({ length: count }, (_, i) => ({
-            id: offset + i + 1,
-            title: `Kids Show ${offset + i + 1}`,
-            poster_path: `/placeholder.svg`,
-            backdrop_path: `/placeholder.svg`,
-            vote_average: Math.floor(Math.random() * 5) + 5,
-            release_date: `202${Math.floor(Math.random() * 4)}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
-            media_type: Math.random() > 0.5 ? 'movie' : 'tv',
-            genre_ids: [10751, 16], // Family, Animation genres
-            overview: `A fun and educational show for kids of all ages. Follow the adventures in this exciting kids content!`
-          }));
-        };
-
-        // Filter logic
-        const filterContent = (content: MediaItem[]) => {
-          return content.filter(item => {
-            const matchesSearch = !searchQuery || 
-                                  item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                  item.overview?.toLowerCase().includes(searchQuery.toLowerCase());
-            
-            const matchesYear = !yearFilter || 
-                                (item.release_date && item.release_date.startsWith(yearFilter));
-            
-            const matchesRating = !ratingFilter ||
-                                  (item.vote_average >= parseInt(ratingFilter));
-            
-            return matchesSearch && matchesYear && matchesRating;
-          });
-        };
-
-        // First time loading
-        if (page === 1) {
-          const mockTrendingContent = generateMockKidsContent(6);
-          setTrendingContent(mockTrendingContent);
-          
-          const mockTopRatedContent = generateMockKidsContent(6, 10);
-          setTopRatedContent(mockTopRatedContent);
-          
-          const mockRecentContent = generateMockKidsContent(6, 20);
-          setRecentContent(mockRecentContent);
-          
-          const mockPopularContent = generateMockKidsContent(6, 30);
-          setPopularContent(mockPopularContent);
-          
-          const initialContent = generateMockKidsContent(18);
-          setKidsContent(filterContent(initialContent));
-          setIsLoading(false);
-        } 
-        // For pagination
-        else {
-          setTimeout(() => {
-            const newContent = generateMockKidsContent(8, (page - 1) * 8);
-            const filteredNewContent = filterContent(newContent);
-            
-            setKidsContent(prev => [...prev, ...filteredNewContent]);
-            setHasMore(page < 5); // Limit to 5 pages for this example
-            setIsLoadingMore(false);
-          }, 1000);
-        }
-      } catch (error) {
-        console.error("Error fetching kids content:", error);
-        setIsLoading(false);
-        setIsLoadingMore(false);
+    if (data) {
+      let filtered = [...data];
+      
+      if (searchQuery) {
+        filtered = filtered.filter((item) => {
+          // Handle both movie and series types
+          const title = 'title' in item ? item.title : item.name;
+          return title?.toLowerCase().includes(searchQuery.toLowerCase());
+        });
       }
-    };
+      
+      if (yearFilter) {
+        filtered = filtered.filter((item) => {
+          // Handle both movie and series types
+          const date = 'release_date' in item ? item.release_date : item.first_air_date;
+          return date?.includes(yearFilter);
+        });
+      }
+      
+      setKidsContent(filtered);
+      setHasMore(filtered.length >= 20);
+    }
+  }, [data, searchQuery, yearFilter, ratingFilter, setHasMore]);
 
-    fetchKidsContent();
-  }, [page, searchQuery, yearFilter, ratingFilter]);
+  // Load more data
+  useEffect(() => {
+    if (page > 1) {
+      fetchKidsContent(page).then(newData => {
+        setKidsContent(prev => [...prev, ...newData]);
+        setIsLoadingMore(false);
+        setHasMore(newData.length > 0);
+      });
+    }
+  }, [page, setIsLoadingMore, setHasMore]);
 
   return {
     kidsContent,
