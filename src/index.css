@@ -49,7 +49,7 @@
 
 @layer components {
   .movie-card {
-    @apply relative overflow-hidden transition-transform duration-300 rounded-md hover:scale-110 hover:z-10;
+    @apply relative overflow-hidden transition-transform duration-300 hover:scale-105 hover:z-10;
   }
 
   .movie-card:hover .movie-info {
@@ -57,7 +57,24 @@
   }
 
   .movie-info {
-    @apply absolute bottom-0 left-0 right-0 bg-black/80 p-2 opacity-0 transition-opacity duration-300;
+    @apply opacity-90 transition-opacity duration-300;
+  }
+  
+  .movie-grid-item {
+    @apply animate-fade-in;
+    animation-fill-mode: both;
+    animation-delay: calc(var(--delay, 0) * 50ms);
+  }
+}
+
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -77,4 +94,16 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: #E50914;
+}
+
+/* Glass effect for filters */
+.glass-effect {
+  @apply backdrop-blur-lg bg-black/30 border border-white/10;
+}
+
+/* Add animation to the grid items */
+@for $i from 1 through 20 {
+  .movie-grid-item:nth-child(#{$i}) {
+    --delay: #{$i};
+  }
 }

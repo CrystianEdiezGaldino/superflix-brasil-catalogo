@@ -13,10 +13,13 @@ const headers = {
 
 export async function fetchPopularMovies(page = 1): Promise<Movie[]> {
   try {
-    // Removida a restrição de "with_original_language=pt" para buscar filmes com dublagem em pt-BR
-    const url = `${BASE_URL}/discover/movie?sort_by=popularity.desc&page=${page}&language=${LANGUAGE}&region=${REGION}&include_video=true`;
+    const url = `${BASE_URL}/discover/movie?sort_by=popularity.desc&page=${page}&language=${LANGUAGE}&region=${REGION}&include_video=true&vote_count.gte=100`;
     const response = await fetch(url, { headers });
     const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
+    }
     
     return data.results.map((movie: any) => ({
       ...movie,
@@ -30,10 +33,13 @@ export async function fetchPopularMovies(page = 1): Promise<Movie[]> {
 
 export async function fetchPopularSeries(page = 1): Promise<Series[]> {
   try {
-    // Removida a restrição de "with_original_language=pt" para buscar séries com dublagem em pt-BR
-    const url = `${BASE_URL}/discover/tv?sort_by=popularity.desc&page=${page}&language=${LANGUAGE}&region=${REGION}`;
+    const url = `${BASE_URL}/discover/tv?sort_by=popularity.desc&page=${page}&language=${LANGUAGE}&region=${REGION}&vote_count.gte=50`;
     const response = await fetch(url, { headers });
     const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
+    }
     
     return data.results.map((series: any) => ({
       ...series,
@@ -47,9 +53,13 @@ export async function fetchPopularSeries(page = 1): Promise<Series[]> {
 
 export async function fetchMovieDetails(id: number): Promise<Movie> {
   try {
-    const url = `${BASE_URL}/movie/${id}?language=${LANGUAGE}&append_to_response=external_ids`;
+    const url = `${BASE_URL}/movie/${id}?language=${LANGUAGE}&append_to_response=external_ids,credits,similar,videos`;
     const response = await fetch(url, { headers });
     const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
+    }
     
     return {
       ...data,
@@ -64,9 +74,13 @@ export async function fetchMovieDetails(id: number): Promise<Movie> {
 
 export async function fetchSeriesDetails(id: number): Promise<Series> {
   try {
-    const url = `${BASE_URL}/tv/${id}?language=${LANGUAGE}&append_to_response=external_ids`;
+    const url = `${BASE_URL}/tv/${id}?language=${LANGUAGE}&append_to_response=external_ids,credits,similar,videos`;
     const response = await fetch(url, { headers });
     const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
+    }
     
     return {
       ...data,
@@ -85,6 +99,10 @@ export async function fetchSeasonDetails(seriesId: number, seasonNumber: number)
     const response = await fetch(url, { headers });
     const data = await response.json();
     
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
+    }
+    
     return data;
   } catch (error) {
     console.error(`Error fetching season ${seasonNumber} details for series ${seriesId}:`, error);
@@ -94,11 +112,14 @@ export async function fetchSeasonDetails(seriesId: number, seasonNumber: number)
 
 export async function searchMedia(query: string): Promise<(Movie | Series)[]> {
   try {
-    const url = `${BASE_URL}/search/multi?query=${encodeURIComponent(query)}&language=${LANGUAGE}&page=1&region=${REGION}`;
+    const url = `${BASE_URL}/search/multi?query=${encodeURIComponent(query)}&language=${LANGUAGE}&page=1&region=${REGION}&include_adult=false`;
     const response = await fetch(url, { headers });
     const data = await response.json();
     
-    // Removida a filtragem por idioma original ou país de origem para buscar conteúdo dublado
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
+    }
+    
     return data.results.filter((item: any) => 
       item.media_type === "movie" || item.media_type === "tv"
     );
