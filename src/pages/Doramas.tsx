@@ -28,7 +28,7 @@ const Doramas = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      <Navbar />
+      <Navbar onSearch={handleSearch} />
       
       <div className="pt-24 pb-10 px-4 md:px-8">
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">Doramas Coreanos</h1>
