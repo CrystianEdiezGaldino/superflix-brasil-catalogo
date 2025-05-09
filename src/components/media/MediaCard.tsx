@@ -79,8 +79,11 @@ const MediaCard = ({ media }: MediaCardProps) => {
               </div>
             )}
             
-            {media.id && (
-              <FavoriteButton mediaId={media.id} mediaType={media.media_type || 'movie'} />
+            {media && media.id && (
+              <FavoriteButton 
+                mediaId={media.id} 
+                mediaType={media.media_type || 'movie'} 
+              />
             )}
           </div>
         </div>
