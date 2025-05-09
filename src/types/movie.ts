@@ -19,6 +19,7 @@ export interface Series {
   backdrop_path: string;
   first_air_date: string;
   vote_average: number;
+  original_language: string;
   external_ids?: {
     imdb_id?: string;
   };
