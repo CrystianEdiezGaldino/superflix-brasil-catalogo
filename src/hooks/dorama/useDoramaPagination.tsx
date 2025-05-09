@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Series, Movie, MediaItem } from "@/types/movie";
+import { MediaItem } from "@/types/movie";
 import { fetchKoreanDramas } from "@/services/tmdbApi";
 
 interface UseDoramaPaginationProps {

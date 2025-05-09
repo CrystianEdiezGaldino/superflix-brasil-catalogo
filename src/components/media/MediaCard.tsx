@@ -81,7 +81,7 @@ const MediaCard = ({ media }: MediaCardProps) => {
             
             {media && media.id && (
               <FavoriteButton 
-                mediaId={media.id} 
+                mediaId={media.id.toString()} 
                 mediaType={media.media_type || 'movie'} 
               />
             )}

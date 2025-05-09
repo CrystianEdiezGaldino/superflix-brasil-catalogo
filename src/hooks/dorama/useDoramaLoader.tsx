@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { MediaItem } from "@/types/movie";
-import { fetchKoreanDramas, fetchPopularDoramas, fetchTopRatedDoramas, fetchKoreanMovies } from "@/services/tmdbApi";
+import { fetchKoreanDramas, fetchPopularKoreanDramas, fetchTopRatedKoreanDramas, fetchKoreanMovies } from "@/services/tmdbApi";
 import { toast } from "sonner";
 
 interface UseDoramaLoaderProps {
@@ -49,7 +49,7 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
   useEffect(() => {
     const loadPopularDoramas = async () => {
       try {
-        const popular = await fetchPopularDoramas(12);
+        const popular = await fetchPopularKoreanDramas();
         const filteredPopular = filterDoramas(popular);
         setPopularDoramas(filteredPopular);
         setIsLoadingPopular(false);
@@ -62,7 +62,7 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
     
     const loadTopRatedDoramas = async () => {
       try {
-        const topRated = await fetchTopRatedDoramas(12);
+        const topRated = await fetchTopRatedKoreanDramas();
         const filteredTopRated = filterDoramas(topRated);
         setTopRatedDoramas(filteredTopRated);
         setIsLoadingTopRated(false);
@@ -75,7 +75,7 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
     
     const loadKoreanMovies = async () => {
       try {
-        const movies = await fetchKoreanMovies(12);
+        const movies = await fetchKoreanMovies();
         setKoreanMovies(movies);
         setIsLoadingMovies(false);
       } catch (error) {
