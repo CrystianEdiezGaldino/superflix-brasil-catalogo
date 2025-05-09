@@ -31,7 +31,7 @@ serve(async (req) => {
         demo_mode: true 
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200, // Returning 200 with error message in demo mode
+        status: 200, // Return 200 with error message in demo mode
       });
     }
     
@@ -126,33 +126,51 @@ serve(async (req) => {
     const simultaneousAccesses = isAnnual ? 6 : 3;
     const productId = isAnnual ? "prod_SHSce9XGUSazQq" : "prod_SHSb9G94AXb8Nl";
     
-    // Now use the real-world price IDs
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: mode,
-      success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/subscribe`,
-      allow_promotion_codes: true,
-      subscription_data: mode === "subscription" ? subscriptionDataConfig : undefined,
-      metadata: {
-        user_id: user.id,
-        simultaneous_accesses: simultaneousAccesses.toString(),
-        product_id: productId
+    try {
+      // Now use the real-world price IDs
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: mode,
+        success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/subscribe`,
+        allow_promotion_codes: true,
+        subscription_data: mode === "subscription" ? subscriptionDataConfig : undefined,
+        metadata: {
+          user_id: user.id,
+          simultaneous_accesses: simultaneousAccesses.toString(),
+          product_id: productId
+        }
+      });
+
+      logStep("Checkout session created", { sessionId: session.id, url: session.url });
+
+      return new Response(JSON.stringify({ 
+        url: session.url,
+        sessionId: session.id,
+        trialDaysToAdd: trialDaysToAdd
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    } catch (stripeError: any) {
+      // Handle Stripe-specific errors
+      logStep("Stripe error", { message: stripeError.message });
+      
+      // Demo mode in case of stripe errors for development
+      if (stripeError.message?.includes('No such price') || stripeError.message?.includes('Invalid API Key')) {
+        return new Response(JSON.stringify({ 
+          error: stripeError.message,
+          demo_mode: true 
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
       }
-    });
-
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
-
-    return new Response(JSON.stringify({ 
-      url: session.url,
-      sessionId: session.id,
-      trialDaysToAdd: trialDaysToAdd
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+      
+      throw stripeError; // Rethrow for general error handling
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[CREATE-CHECKOUT] Error: ${errorMessage}`);

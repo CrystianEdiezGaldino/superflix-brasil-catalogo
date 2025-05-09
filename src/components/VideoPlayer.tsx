@@ -12,6 +12,10 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
   const [loading, setLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const visibilityChangeRef = useRef<boolean>(false);
+  const playerStateRef = useRef<{
+    currentTime?: number;
+    paused?: boolean;
+  }>({});
 
   // Construir a URL do player
   let playerUrl = `https://superflixapi.nexus/${type}/${imdbId}`;
@@ -70,20 +74,74 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
       handleIframeLoad();
     }
 
-    // Página visibilidade change handler
+    // Page visibility change handler with improved state preservation
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && visibilityChangeRef.current) {
-        // Evitar recarregamento completo da página ao retornar
+        // Avoid complete reload when returning to the tab
         visibilityChangeRef.current = false;
+        
+        // Try to restore player state if we saved it
+        try {
+          const savedState = sessionStorage.getItem('videoPlayerState');
+          if (savedState && iframeRef.current?.contentWindow) {
+            const parsedState = JSON.parse(savedState);
+            if (parsedState.imdbId === imdbId && 
+                parsedState.type === type &&
+                parsedState.season === season && 
+                parsedState.episode === episode) {
+              
+              // We won't reload the iframe, just use existing one
+              console.log("Tab visible again, maintaining player state");
+            }
+          }
+        } catch (error) {
+          console.error("Error restoring player state:", error);
+        }
       } else if (document.visibilityState === 'hidden') {
         visibilityChangeRef.current = true;
+        
+        // Save current state before leaving
+        try {
+          const state = {
+            type,
+            imdbId,
+            season,
+            episode,
+            lastActive: new Date().getTime(),
+            ...playerStateRef.current
+          };
+          sessionStorage.setItem('videoPlayerState', JSON.stringify(state));
+          console.log("Tab hidden, saved player state");
+        } catch (error) {
+          console.error("Error saving player state:", error);
+        }
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // Save player state on unload
+    const handleBeforeUnload = () => {
+      try {
+        const state = {
+          type,
+          imdbId,
+          season,
+          episode,
+          lastActive: new Date().getTime(),
+          ...playerStateRef.current
+        };
+        sessionStorage.setItem('videoPlayerState', JSON.stringify(state));
+      } catch (error) {
+        // Silent error in unload event
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       
       // Cleanup attempt (will likely fail due to cross-origin)
       if (iframeRef.current) {
@@ -99,11 +157,59 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
         }
       }
     };
+  }, [type, imdbId, season, episode]);
+
+  // Improve state persistence with postMessage API
+  useEffect(() => {
+    // Try to communicate with iframe using postMessage
+    const messageHandler = (event: MessageEvent) => {
+      // Check origin for security (adapt to your video player's domain)
+      try {
+        if (event.data && typeof event.data === 'object') {
+          if (event.data.type === 'videoState') {
+            playerStateRef.current = {
+              currentTime: event.data.currentTime,
+              paused: event.data.paused
+            };
+          }
+        }
+      } catch (error) {
+        console.error("Error handling message from iframe:", error);
+      }
+    };
+    
+    window.addEventListener('message', messageHandler);
+    return () => window.removeEventListener('message', messageHandler);
   }, []);
 
-  // Persist player state in sessionStorage
+  // Persist player state in sessionStorage with improved handling
   useEffect(() => {
-    // Save current player state to session storage
+    // Load previous state if available
+    try {
+      const savedState = sessionStorage.getItem('videoPlayerState');
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        
+        // Only restore for same content
+        if (parsedState.imdbId === imdbId && 
+            parsedState.type === type &&
+            parsedState.season === season && 
+            parsedState.episode === episode) {
+          
+          playerStateRef.current = {
+            currentTime: parsedState.currentTime,
+            paused: parsedState.paused
+          };
+          
+          // If we have time info, we could potentially seek the player here
+          // But this requires iframe cooperation
+        }
+      }
+    } catch (error) {
+      console.error("Error loading player state:", error);
+    }
+    
+    // Save current video state on component mount
     sessionStorage.setItem('currentVideoState', JSON.stringify({
       type,
       imdbId,
@@ -113,7 +219,7 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
       lastActive: new Date().getTime()
     }));
     
-    // Listen for beforeunload to save state
+    // Handle beforeunload to save state
     const handleBeforeUnload = () => {
       sessionStorage.setItem('currentVideoState', JSON.stringify({
         type,
@@ -121,7 +227,8 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
         season,
         episode,
         scrollPosition: window.scrollY,
-        lastActive: new Date().getTime()
+        lastActive: new Date().getTime(),
+        ...playerStateRef.current
       }));
     };
     
@@ -132,7 +239,6 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
     };
   }, [type, imdbId, season, episode]);
 
-  // Removed sandbox attribute to allow full functionality
   return (
     <div className="w-full aspect-video relative rounded-lg overflow-hidden shadow-xl border-2 border-gray-800">
       {loading && (

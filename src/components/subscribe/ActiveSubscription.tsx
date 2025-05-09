@@ -49,7 +49,7 @@ const ActiveSubscription = ({
 
       console.log("Resposta do create-checkout:", data);
 
-      // Check if we're in demo mode
+      // Handle demo mode or Stripe errors
       if (data.demo_mode) {
         toast.error(data.error || "Sistema de pagamento em modo de demonstração");
         
@@ -65,8 +65,14 @@ const ActiveSubscription = ({
         return;
       }
 
+      if (data.error) {
+        console.error("Erro retornado pelo servidor:", data.error);
+        throw new Error(data.error);
+      }
+
       if (!data.url) {
-        throw new Error("URL do checkout não foi retornada");
+        console.error("URL do checkout não retornada:", data);
+        throw new Error("URL do checkout não foi retornada. Verifique se os IDs de preço estão corretos.");
       }
 
       // Redirect to Stripe Checkout
@@ -79,6 +85,11 @@ const ActiveSubscription = ({
         errorMessage = `Erro: ${error.message}`;
       }
       toast.error(errorMessage);
+      
+      // If error includes "price" and we're in development, suggest checking Stripe price IDs
+      if (errorMessage.toLowerCase().includes("price") || errorMessage.toLowerCase().includes("preço")) {
+        toast.info("Verifique se os IDs de preço da Stripe estão corretos", { duration: 8000 });
+      }
     } finally {
       setIsProcessing(false);
     }
