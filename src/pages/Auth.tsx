@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPopularMovies } from "@/services/tmdbApi";
 import { getFilteredSeries } from "@/data/series";
@@ -17,6 +17,7 @@ import { Progress } from "@/components/ui/progress";
 
 const Auth = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [backgroundImage, setBackgroundImage] = useState("");
   const [redirecting, setRedirecting] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -47,27 +48,37 @@ const Auth = () => {
     }
   }, [filteredMovies, filteredSeries, filteredAnimes]);
   
-  // Handle user redirecting state with progress animation
+  // Improved user redirection with proper cleanup
   useEffect(() => {
+    let intervalId: number | undefined;
+    
     if (user && !redirecting) {
+      console.log("User authenticated, starting redirection process");
       setRedirecting(true);
       
       // Animate progress bar before redirecting
-      const interval = setInterval(() => {
+      intervalId = window.setInterval(() => {
         setProgress(prev => {
           const newProgress = prev + 5;
           if (newProgress >= 100) {
-            clearInterval(interval);
+            console.log("Progress complete, navigating to home page");
+            navigate("/", { replace: true });
+            return 100;
           }
           return newProgress;
         });
       }, 50);
-      
-      return () => clearInterval(interval);
     }
-  }, [user, redirecting]);
+    
+    // Cleanup function
+    return () => {
+      if (intervalId !== undefined) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [user, redirecting, navigate]);
   
-  // Display loading during loading
+  // Display loading during authentication check
   if (loading) {
     return (
       <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
@@ -77,23 +88,24 @@ const Auth = () => {
     );
   }
   
-  // Redirect logged-in user to home page with progress animation
-  if (user) {
-    if (progress < 100) {
-      return (
-        <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
-          <h2 className="text-white text-xl mb-2">Login realizado com sucesso!</h2>
-          <p className="text-gray-300 mb-6">Redirecionando para a página inicial...</p>
-          <div className="w-64">
-            <Progress value={progress} className="h-2 bg-gray-700">
-              <div className="bg-netflix-red" style={{ width: `${progress}%` }} />
-            </Progress>
-          </div>
-        </div>
-      );
-    }
-    
+  // Skip progress animation and redirect immediately if on another page
+  if (user && !window.location.pathname.includes("/auth")) {
     return <Navigate to="/" replace />;
+  }
+  
+  // Show progress animation if on auth page and logged in
+  if (user) {
+    return (
+      <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
+        <h2 className="text-white text-xl mb-2">Login realizado com sucesso!</h2>
+        <p className="text-gray-300 mb-6">Redirecionando para a página inicial...</p>
+        <div className="w-64">
+          <Progress value={progress} className="h-2 bg-gray-700">
+            <div className="bg-netflix-red h-full" style={{ width: `${progress}%` }} />
+          </Progress>
+        </div>
+      </div>
+    );
   }
   
   return (

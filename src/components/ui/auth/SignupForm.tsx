@@ -19,7 +19,7 @@ import { UserPlus, CreditCard } from "lucide-react";
 
 // Modified schema to remove email validation
 const signupSchema = z.object({
-  email: z.string().min(1, "Email é obrigatório"),
+  email: z.string().min(1, "Email é obrigatório").email("Email inválido"),
   password: z.string().min(6, "A senha precisa ter pelo menos 6 caracteres"),
   promoCode: z.string().optional(),
 });
@@ -47,6 +47,7 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
   const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
     try {
+      console.log("Attempting signup with:", data.email);
       // Prepare user metadata including promoCode if provided
       const metadata: Record<string, string> = {};
       if (data.promoCode) {

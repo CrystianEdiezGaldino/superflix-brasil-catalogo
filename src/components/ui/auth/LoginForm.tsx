@@ -46,18 +46,21 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true);
     try {
-      await signIn(data.email, data.password);
+      console.log("Attempting login with:", data.email);
+      const response = await signIn(data.email, data.password);
+      console.log("Login successful, response:", response);
       console.log("Login successful, navigating to home");
-      toast.success("Login realizado com sucesso");
-      navigate("/");
+      // No need to manually navigate or show toast
+      // The AuthContext will handle this and Auth.tsx will redirect
     } catch (error: any) {
       console.error("Authentication error:", error);
       if (error.message?.includes("Invalid login")) {
         toast.error("Email ou senha incorretos");
+      } else if (error.message?.includes("Email not confirmed")) {
+        toast.error("Por favor, confirme seu email antes de fazer login");
       } else {
         toast.error(error.message || "Erro ao fazer login");
       }
-    } finally {
       setIsLoading(false);
     }
   };

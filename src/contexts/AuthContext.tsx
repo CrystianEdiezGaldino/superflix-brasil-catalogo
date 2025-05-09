@@ -29,10 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(newSession?.user ?? null);
         
         if (event === "SIGNED_IN") {
+          console.log("User signed in:", newSession?.user?.email);
           toast.success("Login realizado com sucesso!");
         }
         
         if (event === "SIGNED_OUT") {
+          console.log("User signed out");
           toast.info("Você saiu da sua conta");
         }
       }
@@ -70,13 +72,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       console.log("Signup successful for:", email, "User data:", data);
       
+      // Create a profile for the user manually to ensure it exists
+      if (data.user) {
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({ 
+              id: data.user.id,
+              username: email,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+            
+          if (profileError) {
+            console.warn("Error creating profile:", profileError);
+          }
+        } catch (profileException) {
+          console.warn("Exception when creating profile:", profileException);
+          // Non-critical, continue with signup
+        }
+      }
+      
       // Call auth webhook to create trial subscription
       try {
-        const response = await fetch(`https://juamkehykcohwufehqfv.supabase.co/functions/v1/auth-webhook`, {
+        const webhookResponse = await fetch(`https://juamkehykcohwufehqfv.supabase.co/functions/v1/auth-webhook`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${supabase.auth.getSession().then(res => res.data.session?.access_token)}`,
+            'Authorization': `Bearer ${data.session?.access_token || ''}`,
           },
           body: JSON.stringify({
             type: 'signup',
@@ -85,8 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }),
         });
         
-        if (!response.ok) {
-          console.warn("Trial subscription creation may have failed:", await response.text());
+        if (!webhookResponse.ok) {
+          console.warn("Trial subscription creation may have failed:", await webhookResponse.text());
+        } else {
+          console.log("Trial subscription webhook response:", await webhookResponse.json());
         }
       } catch (webhookError) {
         console.warn("Error calling auth webhook:", webhookError);
@@ -115,6 +140,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       
       console.log("Login successful for:", email, "User data:", data.user);
+      return data;
     } catch (error: any) {
       console.error("Error during login:", error);
       toast.error(error.message || "Erro ao fazer login");

@@ -27,6 +27,33 @@ serve(async (req) => {
       console.log(`[AUTH-WEBHOOK] Processing signup/confirmation for user ${user_id}`);
 
       try {
+        // First, ensure a profile exists for this user
+        const { data: existingProfile } = await supabaseAdmin
+          .from("profiles")
+          .select("*")
+          .eq("id", user_id)
+          .single();
+
+        if (!existingProfile) {
+          console.log(`[AUTH-WEBHOOK] Creating profile for user ${user_id}`);
+          
+          // Create a profile for the user
+          const { error: profileError } = await supabaseAdmin
+            .from("profiles")
+            .insert({
+              id: user_id,
+              username: email || `user_${user_id.substring(0, 8)}`,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+            
+          if (profileError) {
+            console.warn(`[AUTH-WEBHOOK] Error creating profile: ${profileError.message}`);
+          } else {
+            console.log(`[AUTH-WEBHOOK] Profile created for user ${user_id}`);
+          }
+        }
+
         // Check if the user already has an active subscription
         const { data: existingSubscription } = await supabaseAdmin
           .from("subscriptions")
@@ -56,6 +83,7 @@ serve(async (req) => {
             .single();
             
           if (error) {
+            console.error(`[AUTH-WEBHOOK] Error creating subscription: ${error.message}`);
             throw error;
           }
           
