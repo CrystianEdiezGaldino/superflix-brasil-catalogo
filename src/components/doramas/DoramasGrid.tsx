@@ -2,8 +2,9 @@
 import { useRef, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import MediaCard from "@/components/MediaCard";
 import { Series } from "@/types/movie";
+import DoramaCard from "@/components/doramas/DoramaCard";
+import { useDoramaVideos } from "@/hooks/useDoramaVideos";
 
 interface DoramasGridProps {
   doramas: Series[];
@@ -26,6 +27,7 @@ const DoramasGrid = ({
 }: DoramasGridProps) => {
   const observer = useRef<IntersectionObserver>();
   const loadingRef = useRef<HTMLDivElement>(null);
+  const { videoMap } = useDoramaVideos(doramas);
 
   // Setup intersection observer for infinite scrolling
   useEffect(() => {
@@ -84,7 +86,10 @@ const DoramasGrid = ({
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
         {doramas.map((dorama) => (
           <div key={dorama.id} className="dorama-grid-item">
-            <MediaCard media={dorama} />
+            <DoramaCard 
+              dorama={dorama} 
+              videoKey={videoMap[dorama.id] || undefined}
+            />
           </div>
         ))}
       </div>

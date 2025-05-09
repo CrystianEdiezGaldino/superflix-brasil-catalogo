@@ -1,6 +1,7 @@
 
 import { Series } from "@/types/movie";
-import MediaCard from "@/components/MediaCard";
+import DoramaCard from "@/components/doramas/DoramaCard";
+import { useDoramaVideos } from "@/hooks/useDoramaVideos";
 
 interface DoramaSectionProps {
   title: string;
@@ -9,6 +10,8 @@ interface DoramaSectionProps {
 }
 
 const DoramaSection = ({ title, doramas, isLoading }: DoramaSectionProps) => {
+  const { videoMap } = useDoramaVideos(doramas);
+
   if (isLoading) {
     return (
       <section className="mb-10">
@@ -35,7 +38,10 @@ const DoramaSection = ({ title, doramas, isLoading }: DoramaSectionProps) => {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 md:gap-6">
         {doramas.map((dorama) => (
           <div key={dorama.id} className="animate-fade-in">
-            <MediaCard media={dorama} />
+            <DoramaCard 
+              dorama={dorama} 
+              videoKey={videoMap[dorama.id] || undefined}
+            />
           </div>
         ))}
       </div>

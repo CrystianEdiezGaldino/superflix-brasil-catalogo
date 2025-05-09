@@ -6,3 +6,4 @@ export * from "./tmdb/anime";
 export * from "./tmdb/search";
 export * from "./tmdb/config";
 export * from "./tmdb/doramas";
+export * from "./tmdb/videos";
