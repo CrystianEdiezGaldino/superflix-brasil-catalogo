@@ -120,47 +120,104 @@ serve(async (req) => {
       } : undefined
     } : undefined;
 
-    // Create the base session
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: mode,
-      success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/subscribe`,
-      allow_promotion_codes: true,
-      subscription_data: subscriptionData
-    });
+    // For demo mode with no valid price IDs
+    if (priceId === "price_monthly" || priceId === "price_annual") {
+      // Create a demo payment session with a test price
+      // In demo mode, we create a session with a test price instead of a real one
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{
+          price_data: {
+            currency: 'brl',
+            product_data: {
+              name: priceId === "price_monthly" ? "Plano Mensal" : "Plano Anual"
+            },
+            unit_amount: priceId === "price_monthly" ? 990 : 10000,
+            recurring: mode === "subscription" ? {
+              interval: priceId === "price_monthly" ? "month" : "year"
+            } : undefined
+          },
+          quantity: 1
+        }],
+        mode: mode,
+        success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/subscribe`,
+        allow_promotion_codes: true,
+        subscription_data: subscriptionData
+      });
 
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+      logStep("Demo checkout session created", { sessionId: session.id, url: session.url });
 
-    // If user has remaining trial days, we need to handle it after checkout completion
-    if (trialDaysToAdd > 0 && mode === "subscription") {
-      // Store the trial days info to be used after checkout completion
-      await supabaseClient
-        .from('subscription_extensions')
-        .insert({
-          user_id: user.id,
-          checkout_session_id: session.id,
-          days_to_add: trialDaysToAdd,
-          processed: false
+      // If user has remaining trial days, handle after checkout completion
+      if (trialDaysToAdd > 0 && mode === "subscription") {
+        await supabaseClient
+          .from('subscription_extensions')
+          .insert({
+            user_id: user.id,
+            checkout_session_id: session.id,
+            days_to_add: trialDaysToAdd,
+            processed: false
+          });
+        
+        logStep("Stored trial extension data", { 
+          userId: user.id, 
+          checkoutSessionId: session.id, 
+          daysToAdd: trialDaysToAdd 
         });
-      
-      logStep("Stored trial extension data", { 
-        userId: user.id, 
-        checkoutSessionId: session.id, 
-        daysToAdd: trialDaysToAdd 
+      }
+
+      return new Response(JSON.stringify({ 
+        url: session.url,
+        sessionId: session.id,
+        trialDaysToAdd: trialDaysToAdd
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    } else {
+      // Normal case with real price IDs
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: mode,
+        success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/subscribe`,
+        allow_promotion_codes: true,
+        subscription_data: subscriptionData
+      });
+
+      logStep("Checkout session created", { sessionId: session.id, url: session.url });
+
+      // If user has remaining trial days, we need to handle it after checkout completion
+      if (trialDaysToAdd > 0 && mode === "subscription") {
+        // Store the trial days info to be used after checkout completion
+        await supabaseClient
+          .from('subscription_extensions')
+          .insert({
+            user_id: user.id,
+            checkout_session_id: session.id,
+            days_to_add: trialDaysToAdd,
+            processed: false
+          });
+        
+        logStep("Stored trial extension data", { 
+          userId: user.id, 
+          checkoutSessionId: session.id, 
+          daysToAdd: trialDaysToAdd 
+        });
+      }
+
+      return new Response(JSON.stringify({ 
+        url: session.url,
+        sessionId: session.id,
+        trialDaysToAdd: trialDaysToAdd
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
       });
     }
-
-    return new Response(JSON.stringify({ 
-      url: session.url,
-      sessionId: session.id,
-      trialDaysToAdd: trialDaysToAdd
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[CREATE-CHECKOUT] Error: ${errorMessage}`);

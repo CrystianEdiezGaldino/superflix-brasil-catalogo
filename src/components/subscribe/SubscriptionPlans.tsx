@@ -27,6 +27,7 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
 
     setIsProcessing(true);
     try {
+      console.log("Iniciando processo de checkout com priceId:", priceId);
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
           priceId,
@@ -35,8 +36,11 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
       });
 
       if (error) {
+        console.error("Erro na chamada da função create-checkout:", error);
         throw new Error(error.message);
       }
+
+      console.log("Resposta do create-checkout:", data);
 
       // Check if we're in demo mode (Stripe not configured)
       if (data.demo_mode) {
@@ -54,11 +58,16 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
         return;
       }
 
+      if (!data.url) {
+        throw new Error("URL do checkout não foi retornada");
+      }
+
       // Redirect to Stripe Checkout
+      console.log("Redirecionando para URL do Stripe:", data.url);
       window.location.href = data.url;
     } catch (error) {
-      console.error("Error creating checkout session:", error);
-      toast.error("Erro ao processar assinatura");
+      console.error("Erro ao criar sessão de checkout:", error);
+      toast.error("Erro ao processar assinatura. Por favor, tente novamente.");
     } finally {
       setIsProcessing(false);
     }
