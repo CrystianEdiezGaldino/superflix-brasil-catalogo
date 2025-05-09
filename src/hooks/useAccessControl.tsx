@@ -12,7 +12,6 @@ export const useAccessControl = () => {
     isLoading: subscriptionLoading 
   } = useSubscription();
 
-  // Check if user has access to premium content
   // Enhanced access check to properly handle trial subscriptions
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
