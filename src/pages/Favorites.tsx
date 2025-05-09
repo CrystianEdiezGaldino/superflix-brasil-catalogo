@@ -1,40 +1,50 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
-import MediaSection from "@/components/MediaSection";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Heart, Trash2 } from "lucide-react";
 import { MediaItem } from "@/types/movie";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSubscription } from "@/contexts/SubscriptionContext";
-
-// Just keeping the structure without implementing actual favorites functionality
+import MediaGrid from "@/components/media/MediaGrid";
+import { useFavorites } from "@/hooks/useFavorites";
 
 const Favorites = () => {
   const { user } = useAuth();
-  const { isSubscribed } = useSubscription();
-  const [searchQuery, setSearchQuery] = useState("");
+  const { getFavorites } = useFavorites();
   const [favorites, setFavorites] = useState<MediaItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
 
-  // Mock query for demonstration purposes
-  const { isLoading } = useQuery({
-    queryKey: ["favorites"],
-    queryFn: async () => {
-      // This would be replaced with actual favorites fetching logic
-      return [];
-    },
-    enabled: !!user,
-  });
+      setIsLoading(true);
+      try {
+        const favs = await getFavorites();
+        setFavorites(favs);
+      } catch (error) {
+        console.error("Erro ao carregar favoritos:", error);
+        toast.error("Erro ao carregar favoritos");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
+    loadFavorites();
+  }, [user, getFavorites]);
+
+  const handleClearFavorites = () => {
+    // Em uma implementação real, você chamaria uma função para limpar favoritos no backend
+    setFavorites([]);
+    toast.success("Favoritos limpos com sucesso");
   };
 
-  const handleRemoveFromFavorites = (id: number) => {
-    setFavorites(favorites.filter(item => item.id !== id));
-  };
-
-  // Placeholder for empty favorites
+  // Placeholder para estado vazio de favoritos
   const EmptyFavoritesPlaceholder = () => (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="bg-gray-800 p-6 rounded-full mb-6">
@@ -56,7 +66,7 @@ const Favorites = () => {
   if (!user) {
     return (
       <div className="min-h-screen bg-netflix-background">
-        <Navbar onSearch={handleSearch} />
+        <Navbar onSearch={() => {}} />
         <div className="flex flex-col items-center justify-center h-[80vh] text-center px-4">
           <h2 className="text-2xl font-semibold text-white mb-4">
             Faça login para acessar seus favoritos
@@ -74,7 +84,7 @@ const Favorites = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      <Navbar onSearch={handleSearch} />
+      <Navbar onSearch={() => {}} />
       
       <div className="pt-20 px-4 md:px-8">
         <div className="flex justify-between items-center mb-8">
@@ -83,7 +93,7 @@ const Favorites = () => {
             <Button 
               variant="ghost"
               className="text-gray-400 hover:text-white"
-              onClick={() => setFavorites([])}
+              onClick={handleClearFavorites}
             >
               <Trash2 className="mr-2 h-4 w-4" />
               Limpar tudo
@@ -92,11 +102,19 @@ const Favorites = () => {
         </div>
 
         {isLoading ? (
-          <div className="text-white">Carregando...</div>
+          <div className="flex justify-center py-20">
+            <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
+          </div>
         ) : favorites.length > 0 ? (
-          <MediaSection 
-            title="Conteúdo Salvo" 
-            medias={favorites}
+          <MediaGrid 
+            mediaItems={favorites}
+            isLoading={false}
+            isLoadingMore={false}
+            hasMore={false}
+            isSearching={false}
+            isFiltering={false}
+            onLoadMore={() => {}}
+            onResetFilters={() => {}}
           />
         ) : (
           <EmptyFavoritesPlaceholder />

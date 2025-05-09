@@ -15,6 +15,50 @@ export const fetchPopularSeries = async (page = 1, itemsPerPage = 20) => {
   }
 };
 
+// Fetch top rated series
+export const fetchTopRatedSeries = async (limit = 12) => {
+  try {
+    const url = buildApiUrl("/tv/top_rated");
+    const data = await fetchFromApi<{results?: any[]}>(url);
+    const seriesWithType = addMediaTypeToResults(data.results, "tv");
+    return limitResults(seriesWithType, limit);
+  } catch (error) {
+    console.error("Error fetching top rated series:", error);
+    return [];
+  }
+};
+
+// Fetch trending series of the week
+export const fetchTrendingSeries = async (limit = 12) => {
+  try {
+    const url = buildApiUrl("/trending/tv/week");
+    const data = await fetchFromApi<{results?: any[]}>(url);
+    const seriesWithType = addMediaTypeToResults(data.results, "tv");
+    return limitResults(seriesWithType, limit);
+  } catch (error) {
+    console.error("Error fetching trending series:", error);
+    return [];
+  }
+};
+
+// Fetch recent series released in the last 5 years
+export const fetchRecentSeries = async (limit = 12) => {
+  try {
+    const currentYear = new Date().getFullYear();
+    const fiveYearsAgo = currentYear - 5;
+    const fromDate = `${fiveYearsAgo}-01-01`;
+    const toDate = `${currentYear}-12-31`;
+    
+    const url = buildApiUrl("/discover/tv", `&first_air_date.gte=${fromDate}&first_air_date.lte=${toDate}&sort_by=first_air_date.desc`);
+    const data = await fetchFromApi<{results?: any[]}>(url);
+    const seriesWithType = addMediaTypeToResults(data.results, "tv");
+    return limitResults(seriesWithType, limit);
+  } catch (error) {
+    console.error("Error fetching recent series:", error);
+    return [];
+  }
+};
+
 // Fetch TV series details
 export const fetchSeriesDetails = async (id: string): Promise<Series> => {
   try {

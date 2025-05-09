@@ -1,10 +1,9 @@
 
 import { useState } from "react";
-import Navbar from "@/components/Navbar";
+import MediaView from "@/components/media/MediaView";
 import { useDoramas } from "@/hooks/useDoramas";
-import DoramaSearchFilters from "@/components/doramas/DoramaSearchFilters";
 import DoramaSection from "@/components/doramas/DoramaSection";
-import DoramasGrid from "@/components/doramas/DoramasGrid";
+import { useDoramaVideos } from "@/hooks/useDoramaVideos";
 
 const Doramas = () => {
   const {
@@ -22,6 +21,7 @@ const Doramas = () => {
     isLoadingPopular,
     isLoadingTopRated,
     isLoadingMovies,
+    searchQuery,
     handleSearch,
     loadMoreDoramas,
     setYearFilter,
@@ -29,60 +29,37 @@ const Doramas = () => {
     resetFilters
   } = useDoramas();
 
+  const { videoMap } = useDoramaVideos(doramas);
+  
   return (
-    <div className="min-h-screen bg-netflix-background">
-      <Navbar onSearch={handleSearch} />
-      
-      <div className="pt-24 pb-10 px-4 md:px-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">Conteúdo Coreano</h1>
-        
-        {/* Search and Filter Section */}
-        <DoramaSearchFilters 
-          onSearch={handleSearch}
-          onYearFilterChange={setYearFilter}
-          onGenreFilterChange={setGenreFilter}
-          isSearching={isSearching}
-          yearFilter={yearFilter}
-          genreFilter={genreFilter}
-        />
-        
-        {/* Featured Doramas - Top Rated */}
-        <DoramaSection 
-          title="Doramas Mais Bem Avaliados"
-          doramas={topRatedDoramas}
-          isLoading={isLoadingTopRated}
-        />
-        
-        {/* Popular Doramas */}
-        <DoramaSection 
-          title="Doramas Populares"
-          doramas={popularDoramas}
-          isLoading={isLoadingPopular}
-        />
-        
-        {/* Korean Movies */}
-        <DoramaSection 
-          title="Filmes Coreanos"
-          doramas={koreanMovies}
-          isLoading={isLoadingMovies}
-        />
-        
-        {/* All Korean Content Grid */}
-        <section>
-          <h2 className="text-xl md:text-2xl font-semibold text-white mb-4">Todo Conteúdo Coreano</h2>
-          <DoramasGrid 
-            doramas={doramas}
-            isLoading={isLoadingInitial}
-            hasMore={hasMore}
-            isLoadingMore={isLoadingMore}
-            isSearching={isSearching}
-            isFiltering={isFiltering}
-            onLoadMore={loadMoreDoramas}
-            onResetFilters={resetFilters}
-          />
-        </section>
-      </div>
-    </div>
+    <MediaView
+      title="Conteúdo Coreano"
+      type="dorama"
+      mediaItems={doramas}
+      topRatedItems={topRatedDoramas}
+      popularItems={popularDoramas}
+      searchQuery={searchQuery}
+      yearFilter={yearFilter}
+      ratingFilter={genreFilter}
+      isLoading={isLoadingInitial}
+      isLoadingMore={isLoadingMore}
+      hasMore={hasMore}
+      isFiltering={isFiltering}
+      isSearching={isSearching}
+      page={1}
+      onSearch={handleSearch}
+      onYearFilterChange={setYearFilter}
+      onRatingFilterChange={setGenreFilter}
+      onLoadMore={loadMoreDoramas}
+      onResetFilters={resetFilters}
+    >
+      {/* Seção específica para filmes coreanos */}
+      <DoramaSection 
+        title="Filmes Coreanos"
+        doramas={koreanMovies}
+        isLoading={isLoadingMovies}
+      />
+    </MediaView>
   );
 };
 

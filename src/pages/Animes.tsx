@@ -1,66 +1,69 @@
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import Navbar from "@/components/Navbar";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import MediaCard from "@/components/MediaCard";
-import { Series } from "@/types/movie";
-import { fetchAnime, fetchTopRatedAnime, fetchSpecificAnimeRecommendations, searchMedia } from "@/services/tmdbApi";
-import { Search, Filter, Tv, Star } from "lucide-react";
+import MediaView from "@/components/media/MediaView";
+import { MediaItem, Series } from "@/types/movie";
+import { 
+  fetchAnime, 
+  fetchTopRatedAnime, 
+  fetchSpecificAnimeRecommendations, 
+  searchMedia 
+} from "@/services/tmdbApi";
 
 const Animes = () => {
+  const [animes, setAnimes] = useState<MediaItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [ratingFilter, setRatingFilter] = useState<string>("all");
-  const [animes, setAnimes] = useState<Series[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
-  const [itemsPerLoad] = useState(24); // Increased items per load
-  const observer = useRef<IntersectionObserver>();
-  const loadingRef = useRef<HTMLDivElement>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [itemsPerLoad] = useState(24);
   
-  const { data: popularAnime, isLoading: loadingPopular } = useQuery({
+  // Buscar animes populares
+  const { data: popularAnimes, isLoading: loadingPopular } = useQuery({
     queryKey: ["popularAnime", page],
     queryFn: () => fetchAnime(page, itemsPerLoad),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutos
   });
 
-  const { data: topRatedAnime, isLoading: loadingTopRated } = useQuery({
+  // Buscar animes mais bem avaliados
+  const { data: topRatedAnimes, isLoading: loadingTopRated } = useQuery({
     queryKey: ["topRatedAnime"],
     queryFn: fetchTopRatedAnime
   });
 
+  // Buscar recomendações específicas
   const { data: specificRecommendations, isLoading: loadingSpecific } = useQuery({
     queryKey: ["specificAnimeRecommendations"],
     queryFn: fetchSpecificAnimeRecommendations
   });
 
-  // Set initial animes when they load
+  // Definir animes iniciais quando carregados
   useEffect(() => {
-    if (popularAnime && page === 1) {
-      setAnimes(popularAnime);
-    } else if (popularAnime && page > 1) {
-      setAnimes(prev => [...prev, ...popularAnime]);
+    if (popularAnimes && page === 1) {
+      setAnimes(popularAnimes);
+    } else if (popularAnimes && page > 1) {
+      setAnimes(prev => [...prev, ...popularAnimes]);
     }
-  }, [popularAnime, page]);
+  }, [popularAnimes, page]);
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      setSearchQuery("");
-      if (popularAnime) setAnimes(popularAnime);
+  // Função de busca
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    
+    if (!query.trim()) {
+      if (popularAnimes) setAnimes(popularAnimes);
+      setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
     try {
-      const results = await searchMedia(searchQuery);
+      const results = await searchMedia(query);
       const animeResults = results.filter((item) => 
         item.media_type === "tv" && 
         (item.name?.toLowerCase().includes("anime") || 
@@ -79,13 +82,14 @@ const Animes = () => {
     }
   };
 
-  const applyFilters = useCallback((animeList: Series[]) => {
+  // Aplicar filtros
+  const applyFilters = useCallback((animeList: MediaItem[]) => {
     let filteredAnimes = [...animeList];
 
     if (yearFilter && yearFilter !== "all") {
       const year = parseInt(yearFilter);
       filteredAnimes = filteredAnimes.filter((anime) => {
-        const releaseYear = anime.first_air_date 
+        const releaseYear = 'first_air_date' in anime && anime.first_air_date 
           ? new Date(anime.first_air_date).getFullYear() 
           : 0;
         return releaseYear === year;
@@ -102,209 +106,55 @@ const Animes = () => {
     return filteredAnimes;
   }, [yearFilter, ratingFilter]);
 
-  // Apply filters when they change
+  // Aplicar filtros quando mudarem
   useEffect(() => {
-    if (!popularAnime) return;
+    if (!popularAnimes || isSearching) return;
     
     setIsFiltering(true);
-    const filtered = applyFilters(popularAnime);
+    const filtered = applyFilters(popularAnimes);
     setAnimes(filtered);
     setIsFiltering(false);
-  }, [yearFilter, ratingFilter, popularAnime, applyFilters]);
+  }, [yearFilter, ratingFilter, popularAnimes, applyFilters, isSearching]);
 
-  // Load more animes when scrolling to the bottom
+  // Carregar mais animes
   const loadMoreAnimes = async () => {
-    if (isSearching || isFiltering || !hasMore) return;
+    if (isSearching || isFiltering || !hasMore || isLoadingMore) return;
     
+    setIsLoadingMore(true);
     const nextPage = page + 1;
     setPage(nextPage);
+    setIsLoadingMore(false);
   };
 
-  // Setup intersection observer for infinite scrolling
-  useEffect(() => {
-    if (isSearching || isFiltering) return;
-
-    const options = {
-      root: null,
-      rootMargin: "20px",
-      threshold: 1.0,
-    };
-
-    observer.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMore) {
-        loadMoreAnimes();
-      }
-    }, options);
-
-    if (loadingRef.current) {
-      observer.current.observe(loadingRef.current);
-    }
-
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
-  }, [hasMore, isSearching, isFiltering, page]);
-
-  // Generate year options for filter
-  const generateYearOptions = () => {
-    const currentYear = new Date().getFullYear();
-    const years = [];
-    
-    for (let year = currentYear; year >= 1950; year--) {
-      years.push(year);
-    }
-    
-    return years;
+  // Resetar filtros
+  const resetFilters = () => {
+    setYearFilter("all");
+    setRatingFilter("all");
+    if (popularAnimes) setAnimes(popularAnimes);
   };
-
-  // Years for the filter
-  const yearOptions = generateYearOptions();
-
-  const isLoading = loadingPopular || loadingTopRated || loadingSpecific || isSearching || isFiltering;
 
   return (
-    <div className="min-h-screen bg-netflix-background">
-      <Navbar onSearch={setSearchQuery} />
-      
-      <div className="container max-w-full pt-28 pb-20 px-4">
-        <h1 className="text-3xl font-bold text-white mb-8 flex items-center">
-          <Tv size={24} className="mr-2" /> Animes
-        </h1>
-        
-        {/* Search and Filter Section */}
-        <div className="bg-black/40 p-6 rounded-lg mb-8 backdrop-blur-sm border border-gray-800">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex flex-1 gap-2">
-              <Input 
-                type="text" 
-                placeholder="Pesquisar animes..." 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-gray-900 border-gray-700 text-white"
-              />
-              <Button 
-                onClick={handleSearch} 
-                disabled={isSearching}
-                className="bg-netflix-red hover:bg-red-700"
-              >
-                {isSearching ? (
-                  <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
-                ) : (
-                  <Search size={18} />
-                )}
-                <span className="ml-2 hidden md:inline">Pesquisar</span>
-              </Button>
-            </div>
-            
-            <div className="flex gap-2">
-              <Select value={yearFilter} onValueChange={setYearFilter}>
-                <SelectTrigger className="w-[120px] bg-gray-900 border-gray-700 text-white">
-                  <SelectValue placeholder="Ano" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700 text-white">
-                  <SelectItem value="all">Todos os anos</SelectItem>
-                  <ScrollArea className="h-[200px]">
-                    {yearOptions.map((year) => (
-                      <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
-                    ))}
-                  </ScrollArea>
-                </SelectContent>
-              </Select>
-              
-              <Select value={ratingFilter} onValueChange={setRatingFilter}>
-                <SelectTrigger className="w-[120px] bg-gray-900 border-gray-700 text-white">
-                  <SelectValue placeholder="Avaliação" />
-                </SelectTrigger>
-                <SelectContent className="bg-gray-900 border-gray-700 text-white">
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="8">8+ ⭐</SelectItem>
-                  <SelectItem value="7">7+ ⭐</SelectItem>
-                  <SelectItem value="6">6+ ⭐</SelectItem>
-                  <SelectItem value="5">5+ ⭐</SelectItem>
-                </SelectContent>
-              </Select>
-              
-              <Button variant="outline" className="border-gray-700 text-white flex gap-2">
-                <Filter size={18} />
-                <span className="hidden md:inline">Filtros</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Anime Grid */}
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        ) : animes.length === 0 ? (
-          <Card className="bg-black/40 border-gray-800">
-            <CardContent className="flex flex-col items-center justify-center h-64">
-              <p className="text-gray-400 text-lg">Nenhum anime encontrado</p>
-              <Button 
-                onClick={() => {
-                  setSearchQuery("");
-                  setYearFilter("all");
-                  setRatingFilter("all");
-                  if (popularAnime) setAnimes(popularAnime);
-                }}
-                variant="link" 
-                className="text-netflix-red mt-2"
-              >
-                Limpar filtros
-              </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-              {animes.map((anime, index) => (
-                <div 
-                  key={anime.id} 
-                  className="movie-grid-item"
-                  style={{ '--delay': index } as React.CSSProperties}
-                >
-                  <MediaCard media={anime} />
-                </div>
-              ))}
-            </div>
-            
-            {/* Loading indicator for infinite scroll */}
-            {hasMore && !isSearching && !isFiltering && (
-              <div ref={loadingRef} className="flex justify-center py-8">
-                <Button 
-                  onClick={loadMoreAnimes}
-                  className="bg-netflix-red hover:bg-red-700 text-white"
-                >
-                  Carregar Mais Animes
-                </Button>
-              </div>
-            )}
-          </>
-        )}
-        
-        {!isSearching && !isFiltering && topRatedAnime && topRatedAnime.length > 0 && (
-          <section className="mt-12">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-              <Star className="mr-2" /> Animes Mais Bem Avaliados
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {topRatedAnime.slice(0, 12).map((anime, index) => (
-                <div 
-                  key={anime.id}
-                  className="movie-grid-item"
-                  style={{ '--delay': index } as React.CSSProperties}
-                >
-                  <MediaCard key={anime.id} media={anime} />
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
-    </div>
+    <MediaView
+      title="Animes"
+      type="anime"
+      mediaItems={animes}
+      topRatedItems={topRatedAnimes}
+      popularItems={specificRecommendations}
+      searchQuery={searchQuery}
+      yearFilter={yearFilter}
+      ratingFilter={ratingFilter}
+      isLoading={loadingPopular}
+      isLoadingMore={isLoadingMore}
+      hasMore={hasMore}
+      isFiltering={isFiltering}
+      isSearching={isSearching}
+      page={page}
+      onSearch={handleSearch}
+      onYearFilterChange={setYearFilter}
+      onRatingFilterChange={setRatingFilter}
+      onLoadMore={loadMoreAnimes}
+      onResetFilters={resetFilters}
+    />
   );
 };
 
