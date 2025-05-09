@@ -16,7 +16,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { validateCPF } from "@/lib/cpf-validator";
 import { CreditCard, UserPlus, Lock } from "lucide-react";
 
 const loginSchema = z.object({
@@ -27,13 +26,7 @@ const loginSchema = z.object({
 const signupSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "A senha precisa ter pelo menos 6 caracteres"),
-  cpf: z
-    .string()
-    .min(11, "CPF inválido")
-    .max(14, "CPF inválido")
-    .refine((cpf) => validateCPF(cpf), {
-      message: "CPF inválido. Por favor, insira um CPF válido.",
-    }),
+  cpf: z.string().optional(),
   promoCode: z.string().optional(),
 });
 
@@ -81,16 +74,15 @@ const AuthForm = () => {
   const onSignupSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
     try {
-      // Normalize CPF to remove extra characters
-      const normalizedCPF = data.cpf.replace(/\D/g, '');
-      
       // Prepare user metadata including promoCode if provided
-      const metadata: Record<string, string> = { cpf: normalizedCPF };
+      const metadata: Record<string, string> = {};
+      if (data.cpf) {
+        metadata.cpf = data.cpf.replace(/\D/g, '');
+      }
       if (data.promoCode) {
         metadata.promoCode = data.promoCode;
       }
       
-      // Add CPF to user metadata when signing up
       await signUp(data.email, data.password, metadata);
       toast.success("Cadastro realizado! Verifique seu email para confirmar.");
       // Switch to login form after successful signup
@@ -166,7 +158,7 @@ const AuthForm = () => {
                 name="cpf"
                 render={({ field: { onChange, onBlur, name, ref, ...restField } }) => (
                   <FormItem>
-                    <FormLabel className="text-gray-300">CPF</FormLabel>
+                    <FormLabel className="text-gray-300">CPF (opcional)</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="000.000.000-00"
