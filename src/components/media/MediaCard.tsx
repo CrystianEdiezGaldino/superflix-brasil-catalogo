@@ -79,7 +79,7 @@ const MediaCard = ({ media }: MediaCardProps) => {
               </div>
             )}
             
-            {media.id !== undefined && (
+            {typeof media.id !== 'undefined' && (
               <FavoriteButton 
                 mediaId={media.id} 
                 mediaType={media.media_type || 'movie'} 
