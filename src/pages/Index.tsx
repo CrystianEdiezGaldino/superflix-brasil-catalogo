@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -13,13 +12,13 @@ const Index = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [featuredMedia, setFeaturedMedia] = useState<MediaItem | undefined>(undefined);
 
-  // Buscar filmes populares brasileiros
+  // Buscar filmes populares com dublagem em português
   const moviesQuery = useQuery({
     queryKey: ["popularMovies"],
     queryFn: () => fetchPopularMovies(),
   });
 
-  // Buscar séries populares brasileiras
+  // Buscar séries populares com dublagem em português
   const seriesQuery = useQuery({
     queryKey: ["popularSeries"],
     queryFn: () => fetchPopularSeries(),
@@ -107,11 +106,11 @@ const Index = () => {
           <>
             {/* Seções de conteúdo */}
             <MediaSection 
-              title="Filmes Brasileiros em Alta" 
+              title="Filmes Populares em Português" 
               medias={moviesQuery.data || []} 
             />
             <MediaSection 
-              title="Séries Brasileiras Populares" 
+              title="Séries Populares em Português" 
               medias={seriesQuery.data || []} 
             />
           </>

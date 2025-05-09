@@ -22,6 +22,7 @@ export interface Series {
   external_ids?: {
     imdb_id?: string;
   };
+  number_of_seasons?: number;
   media_type: "tv";
 }
 

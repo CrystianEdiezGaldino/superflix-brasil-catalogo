@@ -13,7 +13,8 @@ const headers = {
 
 export async function fetchPopularMovies(page = 1): Promise<Movie[]> {
   try {
-    const url = `${BASE_URL}/discover/movie?with_original_language=pt&sort_by=popularity.desc&page=${page}&language=${LANGUAGE}&region=${REGION}`;
+    // Removida a restrição de "with_original_language=pt" para buscar filmes com dublagem em pt-BR
+    const url = `${BASE_URL}/discover/movie?sort_by=popularity.desc&page=${page}&language=${LANGUAGE}&region=${REGION}&include_video=true`;
     const response = await fetch(url, { headers });
     const data = await response.json();
     
@@ -29,7 +30,8 @@ export async function fetchPopularMovies(page = 1): Promise<Movie[]> {
 
 export async function fetchPopularSeries(page = 1): Promise<Series[]> {
   try {
-    const url = `${BASE_URL}/discover/tv?with_original_language=pt&sort_by=popularity.desc&page=${page}&language=${LANGUAGE}&region=${REGION}`;
+    // Removida a restrição de "with_original_language=pt" para buscar séries com dublagem em pt-BR
+    const url = `${BASE_URL}/discover/tv?sort_by=popularity.desc&page=${page}&language=${LANGUAGE}&region=${REGION}`;
     const response = await fetch(url, { headers });
     const data = await response.json();
     
@@ -96,9 +98,10 @@ export async function searchMedia(query: string): Promise<(Movie | Series)[]> {
     const response = await fetch(url, { headers });
     const data = await response.json();
     
-    return data.results
-      .filter((item: any) => (item.media_type === "movie" || item.media_type === "tv") && 
-                            (item.original_language === "pt" || item.origin_country?.includes("BR")));
+    // Removida a filtragem por idioma original ou país de origem para buscar conteúdo dublado
+    return data.results.filter((item: any) => 
+      item.media_type === "movie" || item.media_type === "tv"
+    );
   } catch (error) {
     console.error("Error searching media:", error);
     return [];
