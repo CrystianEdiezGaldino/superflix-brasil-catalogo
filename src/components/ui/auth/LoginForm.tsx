@@ -47,8 +47,7 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
     setIsLoading(true);
     try {
       console.log("Attempting login with:", data.email);
-      const response = await signIn(data.email, data.password);
-      console.log("Login successful, response:", response);
+      await signIn(data.email, data.password);
       console.log("Login successful, navigating to home");
       // No need to manually navigate or show toast
       // The AuthContext will handle this and Auth.tsx will redirect

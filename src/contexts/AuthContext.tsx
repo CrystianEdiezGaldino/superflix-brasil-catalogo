@@ -8,7 +8,7 @@ interface AuthContextProps {
   session: Session | null;
   user: User | null;
   signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<any>; // Changed return type to any to fix TypeScript error
   signOut: () => Promise<void>;
   loading: boolean;
 }
