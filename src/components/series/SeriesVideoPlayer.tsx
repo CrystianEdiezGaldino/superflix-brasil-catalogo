@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import VideoPlayer from "@/components/VideoPlayer";
 
 interface SeriesVideoPlayerProps {
@@ -16,6 +17,18 @@ const SeriesVideoPlayer = ({
   selectedEpisode,
   hasAccess
 }: SeriesVideoPlayerProps) => {
+  // Store player state in session storage to persist through refreshes
+  useEffect(() => {
+    if (showPlayer && imdbId) {
+      sessionStorage.setItem('playerState', JSON.stringify({
+        imdbId,
+        selectedSeason,
+        selectedEpisode,
+        showPlayer
+      }));
+    }
+  }, [showPlayer, imdbId, selectedSeason, selectedEpisode]);
+  
   if (!showPlayer || !imdbId || !hasAccess) return null;
   
   return (

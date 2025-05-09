@@ -76,14 +76,17 @@ const Index = () => {
     };
   }, []);
   
+  // Show loading indicator while data is loading
   if (isLoading) {
     return <LoadingState />;
   }
   
+  // Show unauthenticated state if user is not logged in
   if (!user) {
     return <UnauthenticatedState />;
   }
   
+  // Show error state if there was an error loading data
   if (hasError) {
     return <ErrorState />;
   }
