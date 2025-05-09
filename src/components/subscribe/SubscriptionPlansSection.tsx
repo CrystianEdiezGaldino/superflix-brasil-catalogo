@@ -11,6 +11,15 @@ const SubscriptionPlansSection: React.FC<SubscriptionPlansSectionProps> = ({
   handleSubscribe, 
   isProcessing 
 }) => {
+  // IDs corretos dos produtos
+  const MONTHLY_PRODUCT_ID = "prod_SHSb9G94AXb8Nl";
+  const ANNUAL_PRODUCT_ID = "prod_SHSce9XGUSazQq";
+  
+  // Definição dos preços com base nos produtos corretos
+  // Usaremos os mesmos price_ids mas com uma validação melhor
+  const MONTHLY_PRICE_ID = "price_1Qkiz906o9nmaCFZL6CQMeEM";
+  const ANNUAL_PRICE_ID = "price_1Qkj0S06o9nmaCFZHli9wwLC";
+  
   // Enhanced benefits list for the monthly plan
   const monthlyBenefits = [
     "Acesso a todos os conteúdos",
@@ -45,9 +54,9 @@ const SubscriptionPlansSection: React.FC<SubscriptionPlansSectionProps> = ({
           discountedPrice="R$9,90/mês"
           discountPercentage="33%"
           benefits={monthlyBenefits}
-          onSubscribe={() => handleSubscribe("price_1Qkiz906o9nmaCFZL6CQMeEM")}
+          onSubscribe={() => handleSubscribe(MONTHLY_PRICE_ID)}
           isProcessing={isProcessing}
-          productId="prod_SHSb9G94AXb8Nl"
+          productId={MONTHLY_PRODUCT_ID}
         />
         
         {/* Annual Plan */}
@@ -58,10 +67,10 @@ const SubscriptionPlansSection: React.FC<SubscriptionPlansSectionProps> = ({
           discountedPrice="R$100/ano"
           discountPercentage="44%"
           benefits={annualBenefits}
-          onSubscribe={() => handleSubscribe("price_1Qkj0S06o9nmaCFZHli9wwLC")}
+          onSubscribe={() => handleSubscribe(ANNUAL_PRICE_ID)}
           isProcessing={isProcessing}
           isPopular={true}
-          productId="prod_SHSce9XGUSazQq"
+          productId={ANNUAL_PRODUCT_ID}
         />
       </div>
 

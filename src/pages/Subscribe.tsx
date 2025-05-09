@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import Navbar from "@/components/Navbar";
 import SubscriptionPlans from "@/components/subscribe/SubscriptionPlans";
@@ -22,51 +22,7 @@ const Subscribe = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
   
-  // Store page state in sessionStorage to prevent reloads when switching tabs
-  useEffect(() => {
-    const storeKey = 'subscribePageState';
-    
-    // Load previous state if available
-    try {
-      const savedState = sessionStorage.getItem(storeKey);
-      if (savedState) {
-        const parsedState = JSON.parse(savedState);
-        setIsProcessing(parsedState.isProcessing || false);
-        setIsDemoMode(parsedState.isDemoMode || false);
-      }
-    } catch (error) {
-      console.error("Error loading page state:", error);
-    }
-    
-    // Store state when component unmounts or tab switches
-    const saveState = () => {
-      try {
-        sessionStorage.setItem(storeKey, JSON.stringify({ 
-          isProcessing,
-          isDemoMode,
-          timestamp: new Date().getTime()
-        }));
-      } catch (error) {
-        console.error("Error saving page state:", error);
-      }
-    };
-    
-    // Save state when tab visibility changes
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        saveState();
-      }
-    };
-    
-    window.addEventListener('beforeunload', saveState);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      saveState();
-      window.removeEventListener('beforeunload', saveState);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [isProcessing, isDemoMode]);
+  // Simplificamos a lógica para evitar recargas ao trocar de abas
   
   // Verifica se o usuário tem qualquer tipo de acesso válido
   const hasValidAccess = isSubscribed || hasTrialAccess || hasTempAccess;

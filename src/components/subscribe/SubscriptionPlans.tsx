@@ -18,6 +18,12 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
   const { user } = useAuth();
   const navigate = useNavigate();
   
+  // IDs corretos dos produtos
+  const MONTHLY_PRICE_ID = "price_1Qkiz906o9nmaCFZL6CQMeEM";
+  const ANNUAL_PRICE_ID = "price_1Qkj0S06o9nmaCFZHli9wwLC";
+  const MONTHLY_PRODUCT_ID = "prod_SHSb9G94AXb8Nl";
+  const ANNUAL_PRODUCT_ID = "prod_SHSce9XGUSazQq";
+  
   const handleSubscribe = async (priceId: string, isMonthly: boolean) => {
     if (!user) {
       toast.error("Você precisa estar logado para assinar");
@@ -116,14 +122,14 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
             </li>
             <li className="flex items-start gap-2">
               <Check className="h-5 w-5 text-netflix-red flex-shrink-0 mt-0.5" />
-              <span>Sem limites de telas simultâneas</span>
+              <span>Até 3 telas simultâneas</span>
             </li>
           </ul>
         </CardContent>
         <CardFooter>
           <Button 
             className="w-full py-6 text-lg bg-netflix-red hover:bg-netflix-red/90"
-            onClick={() => handleSubscribe("price_1Qkiz906o9nmaCFZL6CQMeEM", true)}
+            onClick={() => handleSubscribe(MONTHLY_PRICE_ID, true)}
             disabled={isProcessing}
           >
             {isProcessing ? "Processando..." : "Assinar Plano Mensal"}
@@ -169,7 +175,7 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
             </li>
             <li className="flex items-start gap-2">
               <Check className="h-5 w-5 text-netflix-red flex-shrink-0 mt-0.5" />
-              <span>Sem limites de telas simultâneas</span>
+              <span>Até 6 telas simultâneas</span>
             </li>
             <li className="flex items-start gap-2">
               <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
@@ -180,7 +186,7 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
         <CardFooter>
           <Button 
             className="w-full py-6 text-lg bg-green-600 hover:bg-green-700"
-            onClick={() => handleSubscribe("price_1Qkj0S06o9nmaCFZHli9wwLC", false)}
+            onClick={() => handleSubscribe(ANNUAL_PRICE_ID, false)}
             disabled={isProcessing}
           >
             {isProcessing ? "Processando..." : "Assinar Plano Anual"}

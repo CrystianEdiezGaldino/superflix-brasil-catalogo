@@ -14,6 +14,18 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
+// Mapeamento dos product IDs para os preços
+const PRODUCT_PRICE_MAP = {
+  "prod_SHSb9G94AXb8Nl": "price_1Qkiz906o9nmaCFZL6CQMeEM", // mensal
+  "prod_SHSce9XGUSazQq": "price_1Qkj0S06o9nmaCFZHli9wwLC"  // anual
+};
+
+// Mapeamento dos product IDs para acessos simultâneos
+const PRODUCT_ACCESS_MAP = {
+  "prod_SHSb9G94AXb8Nl": 3, // mensal: 3 acessos
+  "prod_SHSce9XGUSazQq": 6  // anual: 6 acessos
+};
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -36,6 +48,8 @@ serve(async (req) => {
       throw new Error("Price ID and mode are required");
     }
 
+    logStep("Request parameters", { priceId, mode });
+    
     // Validate price ID format to ensure it's a valid Stripe price ID
     if (!priceId.startsWith('price_')) {
       throw new Error(`Invalid price ID format: ${priceId}`);
@@ -121,7 +135,7 @@ serve(async (req) => {
       }
     };
 
-    // Determine metadata based on product
+    // Determine metadata based on price ID
     const isAnnual = priceId === "price_1Qkj0S06o9nmaCFZHli9wwLC";
     const simultaneousAccesses = isAnnual ? 6 : 3;
     const productId = isAnnual ? "prod_SHSce9XGUSazQq" : "prod_SHSb9G94AXb8Nl";
@@ -132,7 +146,7 @@ serve(async (req) => {
       simultaneousAccesses, 
       productId
     });
-    
+
     try {
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
