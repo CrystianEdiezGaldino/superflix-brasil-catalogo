@@ -35,7 +35,7 @@ const SubscriptionPlansSection: React.FC<SubscriptionPlansSectionProps> = ({
           discountedPrice="R$9,90/mês"
           discountPercentage="33%"
           benefits={monthlyBenefits}
-          onSubscribe={() => handleSubscribe("price_monthly")}
+          onSubscribe={() => handleSubscribe("price_1Qkiz906o9nmaCFZL6CQMeEM")}
           isProcessing={isProcessing}
         />
         
@@ -47,7 +47,7 @@ const SubscriptionPlansSection: React.FC<SubscriptionPlansSectionProps> = ({
           discountedPrice="R$100/ano"
           discountPercentage="44%"
           benefits={annualBenefits}
-          onSubscribe={() => handleSubscribe("price_annual")}
+          onSubscribe={() => handleSubscribe("price_1Qkj0S06o9nmaCFZHli9wwLC")}
           isProcessing={isProcessing}
           isPopular={true}
         />

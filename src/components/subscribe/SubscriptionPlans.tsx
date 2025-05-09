@@ -123,7 +123,7 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
         <CardFooter>
           <Button 
             className="w-full py-6 text-lg bg-netflix-red hover:bg-netflix-red/90"
-            onClick={() => handleSubscribe("price_monthly", true)}
+            onClick={() => handleSubscribe("price_1Qkiz906o9nmaCFZL6CQMeEM", true)}
             disabled={isProcessing}
           >
             {isProcessing ? "Processando..." : "Assinar Plano Mensal"}
@@ -180,7 +180,7 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
         <CardFooter>
           <Button 
             className="w-full py-6 text-lg bg-green-600 hover:bg-green-700"
-            onClick={() => handleSubscribe("price_annual", false)}
+            onClick={() => handleSubscribe("price_1Qkj0S06o9nmaCFZHli9wwLC", false)}
             disabled={isProcessing}
           >
             {isProcessing ? "Processando..." : "Assinar Plano Anual"}

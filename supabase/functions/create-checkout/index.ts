@@ -91,7 +91,7 @@ serve(async (req) => {
       .eq('status', 'trialing')
       .maybeSingle();
     
-    let trialDaysToAdd = 0;
+    let trialDaysToAdd = 7; // Default to 7 days
     
     if (trialData?.trial_end && trialData.status === 'trialing') {
       const trialEndDate = new Date(trialData.trial_end);
@@ -113,8 +113,7 @@ serve(async (req) => {
     
     // Define subscription data for checkout session
     const subscriptionDataConfig = {
-      // Ensure trial_period_days is at least 1 if specified
-      trial_period_days: trialDaysToAdd > 0 ? trialDaysToAdd : 7,
+      trial_period_days: trialDaysToAdd,
       trial_settings: {
         end_behavior: {
           missing_payment_method: 'cancel'
@@ -122,66 +121,28 @@ serve(async (req) => {
       }
     };
 
-    // For demo mode with no valid price IDs
-    if (priceId === "price_monthly" || priceId === "price_annual") {
-      // Create a demo payment session with a test price
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ['card'],
-        line_items: [{
-          price_data: {
-            currency: 'brl',
-            product_data: {
-              name: priceId === "price_monthly" ? "Plano Mensal" : "Plano Anual"
-            },
-            unit_amount: priceId === "price_monthly" ? 990 : 10000,
-            recurring: mode === "subscription" ? {
-              interval: priceId === "price_monthly" ? "month" : "year"
-            } : undefined
-          },
-          quantity: 1
-        }],
-        mode: mode,
-        success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/subscribe`,
-        allow_promotion_codes: true,
-        subscription_data: mode === "subscription" ? subscriptionDataConfig : undefined
-      });
+    // Now use the real-world price IDs instead of demo ones
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: mode,
+      success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/subscribe`,
+      allow_promotion_codes: true,
+      subscription_data: mode === "subscription" ? subscriptionDataConfig : undefined
+    });
 
-      logStep("Demo checkout session created", { sessionId: session.id, url: session.url });
+    logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
-      return new Response(JSON.stringify({ 
-        url: session.url,
-        sessionId: session.id,
-        trialDaysToAdd: trialDaysToAdd
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    } else {
-      // Normal case with real price IDs
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ['card'],
-        line_items: [{ price: priceId, quantity: 1 }],
-        mode: mode,
-        success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/subscribe`,
-        allow_promotion_codes: true,
-        subscription_data: mode === "subscription" ? subscriptionDataConfig : undefined
-      });
-
-      logStep("Checkout session created", { sessionId: session.id, url: session.url });
-
-      return new Response(JSON.stringify({ 
-        url: session.url,
-        sessionId: session.id,
-        trialDaysToAdd: trialDaysToAdd
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
+    return new Response(JSON.stringify({ 
+      url: session.url,
+      sessionId: session.id,
+      trialDaysToAdd: trialDaysToAdd
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
+    });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[CREATE-CHECKOUT] Error: ${errorMessage}`);
