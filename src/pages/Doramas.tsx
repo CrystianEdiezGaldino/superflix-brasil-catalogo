@@ -33,8 +33,8 @@ const Doramas = () => {
       title="Conteúdo Coreano"
       type="dorama"
       mediaItems={doramas}
-      topRatedItems={topRatedDoramas as MediaItem[]}
-      popularItems={popularDoramas as MediaItem[]}
+      topRatedItems={topRatedDoramas}
+      popularItems={popularDoramas}
       searchQuery={searchQuery}
       yearFilter={yearFilter}
       ratingFilter={genreFilter}

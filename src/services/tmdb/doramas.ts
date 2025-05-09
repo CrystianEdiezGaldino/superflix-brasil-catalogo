@@ -1,5 +1,4 @@
-
-import { Series, Movie } from "@/types/movie";
+import { Series, Movie, MediaItem } from "@/types/movie";
 import { buildApiUrl, fetchFromApi, addMediaTypeToResults, limitResults } from "./utils";
 
 // Lista expandida de IDs de doramas e filmes coreanos populares com nomes em português
@@ -130,7 +129,12 @@ export const fetchPopularDoramas = async (limit = 12) => {
     const popularIds = POPULAR_DORAMA_IDS.slice(0, limit);
     const promises = popularIds.map(id => 
       fetchFromApi<Series>(`${buildApiUrl(`/tv/${id}`)}`)
-        .then(drama => ({...drama, media_type: "tv" as const}))
+        .then(drama => {
+          if (drama && drama.id) {
+            return {...drama, media_type: "tv" as const};
+          }
+          return null;
+        })
         .catch(error => {
           console.error(`Error fetching dorama with ID ${id}:`, error);
           return null;
@@ -139,7 +143,7 @@ export const fetchPopularDoramas = async (limit = 12) => {
     
     const results = await Promise.all(promises);
     // Filter out any null results from failed requests
-    return results.filter(drama => drama && drama.id && (drama.poster_path || drama.backdrop_path));
+    return results.filter(drama => drama && drama.id && (drama.poster_path || drama.backdrop_path)) as Series[];
   } catch (error) {
     console.error("Error fetching popular doramas:", error);
     return [];
@@ -153,7 +157,12 @@ export const fetchTopRatedDoramas = async (limit = 12) => {
     const topRatedIds = POPULAR_DORAMA_IDS.slice(10, 10 + limit);
     const promises = topRatedIds.map(id => 
       fetchFromApi<Series>(`${buildApiUrl(`/tv/${id}`)}`)
-        .then(drama => ({...drama, media_type: "tv" as const}))
+        .then(drama => {
+          if (drama && drama.id) {
+            return {...drama, media_type: "tv" as const};
+          }
+          return null;
+        })
         .catch(error => {
           console.error(`Error fetching dorama with ID ${id}:`, error);
           return null;
@@ -162,7 +171,7 @@ export const fetchTopRatedDoramas = async (limit = 12) => {
     
     const results = await Promise.all(promises);
     // Filter out any null results from failed requests
-    return results.filter(drama => drama && drama.id && (drama.poster_path || drama.backdrop_path));
+    return results.filter(drama => drama && drama.id && (drama.poster_path || drama.backdrop_path)) as Series[];
   } catch (error) {
     console.error("Error fetching top rated doramas:", error);
     return [];
@@ -175,7 +184,12 @@ export const fetchKoreanMovies = async (limit = 12) => {
     const movieIds = KOREAN_MOVIES_IDS.slice(0, limit);
     const promises = movieIds.map(id => 
       fetchFromApi<Movie>(`${buildApiUrl(`/movie/${id}`)}`)
-        .then(movie => ({...movie, media_type: "movie" as const}))
+        .then(movie => {
+          if (movie && movie.id) {
+            return {...movie, media_type: "movie" as const};
+          }
+          return null;
+        })
         .catch(error => {
           console.error(`Error fetching Korean movie with ID ${id}:`, error);
           return null;
@@ -184,7 +198,7 @@ export const fetchKoreanMovies = async (limit = 12) => {
     
     const results = await Promise.all(promises);
     // Filter out any null results from failed requests
-    return results.filter(movie => movie && movie.id && (movie.poster_path || movie.backdrop_path));
+    return results.filter(movie => movie && movie.id && (movie.poster_path || movie.backdrop_path)) as Movie[];
   } catch (error) {
     console.error("Error fetching Korean movies:", error);
     return [];
@@ -212,6 +226,8 @@ export const fetchKoreanDramas = async (page = 1, limit = 30) => {
       
       return fetchFromApi(`${buildApiUrl(endpoint)}`)
         .then(content => {
+          if (!content) return null;
+          
           if (isMovie) {
             return {...content, media_type: "movie" as const};
           } else {
@@ -226,7 +242,7 @@ export const fetchKoreanDramas = async (page = 1, limit = 30) => {
     
     const results = await Promise.all(promises);
     // Filter out any null results from failed requests
-    return results.filter(content => content && content.id && (content.poster_path || content.backdrop_path));
+    return results.filter(content => content && content.id && (content.poster_path || content.backdrop_path)) as MediaItem[];
   } catch (error) {
     console.error("Error fetching Korean content:", error);
     return [];

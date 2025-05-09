@@ -27,8 +27,7 @@ const DoramasGrid = ({
   onLoadMore,
   onResetFilters
 }: DoramasGridProps) => {
-  // Cast MediaItem[] to any[] for useDoramaVideos to prevent type errors
-  const { videoMap } = useDoramaVideos(doramas as any[]);
+  const { videoMap } = useDoramaVideos(doramas);
 
   if (isLoading) {
     return (
@@ -59,10 +58,10 @@ const DoramasGrid = ({
     <div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
         {doramas.map((dorama) => (
-          <div key={`${dorama.media_type}-${dorama.id}`} className="dorama-grid-item">
+          <div key={`${dorama.media_type || 'unknown'}-${dorama.id || Math.random()}`} className="dorama-grid-item">
             <DoramaCard 
               dorama={dorama} 
-              videoKey={videoMap[dorama.id] || undefined}
+              videoKey={dorama.id ? videoMap[dorama.id] : undefined}
             />
           </div>
         ))}

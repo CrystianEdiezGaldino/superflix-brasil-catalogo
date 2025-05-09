@@ -11,12 +11,14 @@ interface MediaCardProps {
 
 const MediaCard = ({ media }: MediaCardProps) => {
   // Fail safe check for the media object
-  if (!media || !media.id) {
+  if (!media) {
     return null;
   }
 
   // Determine link path based on media type
   const getLinkPath = () => {
+    if (!media || !media.id) return "#";
+    
     if (!media.media_type) return `/filme/${media.id}`;
     
     switch (media.media_type) {
@@ -77,7 +79,9 @@ const MediaCard = ({ media }: MediaCardProps) => {
               </div>
             )}
             
-            <FavoriteButton mediaId={media.id} mediaType={media.media_type || 'movie'} />
+            {media.id && (
+              <FavoriteButton mediaId={media.id} mediaType={media.media_type || 'movie'} />
+            )}
           </div>
         </div>
         
