@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
@@ -8,6 +7,7 @@ import { Film } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPopularMovies, fetchPopularSeries, fetchAnime } from "@/services/tmdbApi";
 import ContentPreview from "@/components/home/ContentPreview";
+import MediaSection from "@/components/MediaSection";
 
 const popularSeries = [
   { 
@@ -239,22 +239,11 @@ const Auth = () => {
               <p className="text-gray-300 mt-2">Crie sua conta para acessar todo o catálogo</p>
             </div>
             
-            <div className="space-y-8">
-              <MediaSection 
-                title="Filmes Populares" 
-                medias={moviesPreview.slice(0, 10)} 
-              />
-              
-              <MediaSection 
-                title="Séries Populares" 
-                medias={popularSeries} 
-              />
-              
-              <MediaSection 
-                title="Animes em Alta" 
-                medias={popularAnimes} 
-              />
-            </div>
+            <ContentPreview 
+              movies={moviesPreview}
+              series={popularSeries}
+              anime={popularAnimes}
+            />
           </div>
         </div>
       </div>
