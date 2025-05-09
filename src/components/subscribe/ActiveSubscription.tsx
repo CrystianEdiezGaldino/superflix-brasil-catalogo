@@ -43,6 +43,23 @@ const ActiveSubscription = ({
           <p className="text-gray-300 mb-8">
             {getAccessTypeMessage()}
           </p>
+          
+          {hasTrialAccess && (
+            <div className="mb-8 p-4 bg-gray-800 rounded-lg">
+              <h2 className="text-xl font-semibold text-white mb-2">Assine agora e garanta seu acesso após o período de teste</h2>
+              <p className="text-gray-300 mb-4">
+                Você pode assinar agora e sua assinatura começará imediatamente. O tempo restante do seu período 
+                de teste será adicionado ao seu primeiro ciclo de cobrança!
+              </p>
+              <Button 
+                onClick={() => navigate("/subscribe")} 
+                className="bg-netflix-red hover:bg-netflix-red/90"
+              >
+                Ver planos de assinatura
+              </Button>
+            </div>
+          )}
+          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               variant="default" 

@@ -83,9 +83,44 @@ serve(async (req) => {
       logStep("Created new customer", { customerId });
     }
 
+    // Check if user has remaining trial days to add to subscription
+    const { data: trialData } = await supabaseClient
+      .from('subscriptions')
+      .select('trial_end, status')
+      .eq('user_id', user.id)
+      .eq('status', 'trialing')
+      .maybeSingle();
+    
+    let trialDaysToAdd = 0;
+    
+    if (trialData?.trial_end && trialData.status === 'trialing') {
+      const trialEndDate = new Date(trialData.trial_end);
+      const now = new Date();
+      
+      // Calculate remaining trial days if trial is still active
+      if (trialEndDate > now) {
+        const diffTime = Math.abs(trialEndDate.getTime() - now.getTime());
+        trialDaysToAdd = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        logStep("Found active trial with remaining days", { 
+          trialEndDate: trialData.trial_end, 
+          remainingDays: trialDaysToAdd 
+        });
+      }
+    }
+
     // Create checkout session
     const origin = req.headers.get("origin") || "http://localhost:3000";
     
+    const subscriptionData = mode === "subscription" ? {
+      trial_period_days: trialDaysToAdd > 0 ? 0 : 7, // Only give 7 day trial if user doesn't have existing trial days
+      trial_settings: trialDaysToAdd > 0 ? {
+        end_behavior: {
+          missing_payment_method: 'cancel'
+        }
+      } : undefined
+    } : undefined;
+
+    // Create the base session
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
@@ -94,16 +129,34 @@ serve(async (req) => {
       success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/subscribe`,
       allow_promotion_codes: true,
-      subscription_data: mode === "subscription" ? {
-        trial_period_days: 7
-      } : undefined
+      subscription_data: subscriptionData
     });
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
+    // If user has remaining trial days, we need to handle it after checkout completion
+    if (trialDaysToAdd > 0 && mode === "subscription") {
+      // Store the trial days info to be used after checkout completion
+      await supabaseClient
+        .from('subscription_extensions')
+        .insert({
+          user_id: user.id,
+          checkout_session_id: session.id,
+          days_to_add: trialDaysToAdd,
+          processed: false
+        });
+      
+      logStep("Stored trial extension data", { 
+        userId: user.id, 
+        checkoutSessionId: session.id, 
+        daysToAdd: trialDaysToAdd 
+      });
+    }
+
     return new Response(JSON.stringify({ 
       url: session.url,
-      sessionId: session.id 
+      sessionId: session.id,
+      trialDaysToAdd: trialDaysToAdd
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
