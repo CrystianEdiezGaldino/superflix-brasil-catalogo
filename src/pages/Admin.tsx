@@ -82,15 +82,18 @@ const Admin = () => {
         setTempAccesses(tempAccessesData || []);
         
         // Combine user data with subscription data
-        const combinedUsers = (usersData?.users || []).map(user => {
+        const combinedUsers: UserWithSubscription[] = (usersData?.users || []).map(user => {
           const subscription = subscriptionsData?.find(sub => sub.user_id === user.id);
           const tempAccess = tempAccessesData?.find(
             access => access.user_id === user.id && new Date(access.expires_at) > new Date()
           );
           
           return {
-            ...user,
-            subscription,
+            id: user.id,
+            email: user.email || '',  // Ensure email is not undefined
+            last_sign_in_at: user.last_sign_in_at,
+            created_at: user.created_at,
+            subscription: subscription,
             temp_access: tempAccess
           };
         });
