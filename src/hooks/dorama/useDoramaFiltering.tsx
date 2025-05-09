@@ -28,10 +28,10 @@ export const useDoramaFiltering = ({
   useEffect(() => {
     const loadInitialDoramas = async () => {
       try {
-        const initialDoramas = await fetchKoreanDramas(1, 30);
+        const initialDoramas = await fetchKoreanDramas(1, 50);
         setCachedDoramas(initialDoramas);
       } catch (error) {
-        console.error("Error caching doramas:", error);
+        console.error("Erro ao armazenar doramas em cache:", error);
       }
     };
     
@@ -40,7 +40,7 @@ export const useDoramaFiltering = ({
     }
   }, [isLoadingInitial, cachedDoramas.length]);
   
-  // Apply filters when they change
+  // Aplicar filtros quando eles mudarem
   useEffect(() => {
     const filterDoramasWithCriteria = async () => {
       if (cachedDoramas.length === 0) return;
@@ -51,26 +51,31 @@ export const useDoramaFiltering = ({
         const filtered = applyFilters(cachedDoramas, yearFilter, genreFilter);
         setDoramas(filtered);
         resetPagination();
+        
+        if (filtered.length === 0) {
+          toast.info("Nenhum dorama encontrado com estes filtros.");
+        }
       } catch (error) {
-        console.error("Error filtering doramas:", error);
+        console.error("Erro ao filtrar doramas:", error);
         toast.error("Erro ao aplicar filtros");
       } finally {
         setIsFiltering(false);
       }
     };
     
-    // Only apply filters if we're not in a search state and have cached data
-    if (!isSearching && !isLoadingInitial && cachedDoramas.length > 0) {
+    // Aplicar filtros apenas se não estivermos em estado de busca e tivermos dados em cache
+    if (!isSearching && !isLoadingInitial && cachedDoramas.length > 0 && 
+        (yearFilter !== "all" || genreFilter !== "all")) {
       filterDoramasWithCriteria();
     }
   }, [yearFilter, genreFilter, applyFilters, isSearching, isLoadingInitial, cachedDoramas, resetPagination, setDoramas]);
 
-  // Reset all filters
+  // Resetar todos os filtros
   const resetFilters = () => {
     setYearFilter("all");
     setGenreFilter("all");
     
-    // Reset to initial doramas without filters
+    // Resetar para os doramas iniciais sem filtros
     if (cachedDoramas.length > 0) {
       const filtered = applyFilters(cachedDoramas, "all", "all");
       setDoramas(filtered);

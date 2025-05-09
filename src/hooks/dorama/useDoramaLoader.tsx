@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { Series } from "@/types/movie";
 import { fetchKoreanDramas, fetchPopularDoramas, fetchTopRatedDoramas } from "@/services/tmdbApi";
+import { toast } from "sonner";
 
 interface UseDoramaLoaderProps {
   filterDoramas: (doramaList: Series[]) => Series[];
@@ -15,18 +16,23 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
   const [isLoadingPopular, setIsLoadingPopular] = useState(true);
   const [isLoadingTopRated, setIsLoadingTopRated] = useState(true);
   
-  // Load initial doramas (30 doramas inicialmente)
+  // Carrega os doramas iniciais (30 doramas inicialmente)
   useEffect(() => {
     const loadInitialDoramas = async () => {
       try {
-        // Carregamos os primeiros 30 doramas (pode ser ajustado)
-        // Já que TMDB não tem endpoint específico para doramas, usamos a lista de IDs
+        // Carregamos 30 doramas inicialmente
         const initialDoramas = await fetchKoreanDramas(1, 30);
+        
+        if (initialDoramas.length === 0) {
+          toast.error("Não foi possível carregar os doramas. Tente novamente mais tarde.");
+        }
+        
         const filteredDoramas = filterDoramas(initialDoramas);
         setDoramas(filteredDoramas);
         setIsLoadingInitial(false);
       } catch (error) {
-        console.error("Error loading initial doramas:", error);
+        console.error("Erro ao carregar doramas iniciais:", error);
+        toast.error("Erro ao carregar doramas. Tente novamente mais tarde.");
         setIsLoadingInitial(false);
       }
     };
@@ -34,28 +40,30 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
     loadInitialDoramas();
   }, [filterDoramas]);
   
-  // Load popular and top rated doramas
+  // Carrega doramas populares e mais bem avaliados
   useEffect(() => {
     const loadPopularDoramas = async () => {
       try {
-        const popular = await fetchPopularDoramas(10);
+        const popular = await fetchPopularDoramas(12);
         const filteredPopular = filterDoramas(popular);
         setPopularDoramas(filteredPopular);
         setIsLoadingPopular(false);
       } catch (error) {
-        console.error("Error loading popular doramas:", error);
+        console.error("Erro ao carregar doramas populares:", error);
+        toast.error("Erro ao carregar doramas populares.");
         setIsLoadingPopular(false);
       }
     };
     
     const loadTopRatedDoramas = async () => {
       try {
-        const topRated = await fetchTopRatedDoramas(10);
+        const topRated = await fetchTopRatedDoramas(12);
         const filteredTopRated = filterDoramas(topRated);
         setTopRatedDoramas(filteredTopRated);
         setIsLoadingTopRated(false);
       } catch (error) {
-        console.error("Error loading top rated doramas:", error);
+        console.error("Erro ao carregar doramas mais bem avaliados:", error);
+        toast.error("Erro ao carregar doramas mais bem avaliados.");
         setIsLoadingTopRated(false);
       }
     };

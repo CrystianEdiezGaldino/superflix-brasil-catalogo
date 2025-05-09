@@ -2,7 +2,7 @@
 import { Series } from "@/types/movie";
 import { buildApiUrl, fetchFromApi, addMediaTypeToResults, limitResults } from "./utils";
 
-// Lista de IDs de doramas populares com nomes em português
+// Lista expandida de IDs de doramas populares com nomes em português
 const POPULAR_DORAMA_IDS = [
   129478, // Squid Game (Round 6)
   93405,  // Vincenzo
@@ -35,8 +35,29 @@ const POPULAR_DORAMA_IDS = [
   61904,  // My Girlfriend Is a Gumiho (Minha Namorada é uma Gumiho)
   100957, // Itaewon Class (Aula Itaewon)
   109840, // Gyeongseong Creature (Criatura de Gyeongseong)
-  127240, // Squid Game 2 (Round 6: Segunda Temporada)
   135157, // Alchemy of Souls (Alquimia das Almas)
+  214681, // Extraordinary Attorney Woo (Advogada Extraordinária Woo)
+  197067, // Business Proposal (Proposta de Negócio)
+  117376, // Our Beloved Summer (Nosso Querido Verão)
+  154396, // Pachinko
+  99966,  // All of Us Are Dead (Estamos Mortos)
+  110316, // Forecasting Love and Weather (Previsão do Amor e Tempo)
+  118215, // Twenty Five Twenty One (Vinte e Cinco, Vinte e Um)
+  121423, // Thirty-Nine (Trinta e Nove)
+  60735,  // The Heirs (Os Herdeiros)
+  83869,  // Touch Your Heart (Toque Seu Coração)
+  87827,  // Her Private Life (Sua Vida Privada)
+  90447,  // The King's Affection (O Afeto do Rei)
+  127924, // Little Women (Pequenas Mulheres)
+  96391,  // Run On (Corre)
+  70074,  // Moon Lovers: Scarlet Heart Ryeo (Amantes da Lua: Scarlet Heart Ryeo)
+  60948,  // The Legend of the Blue Sea (A Lenda do Mar Azul)
+  112888, // Sisyphus: The Myth (Sísifo: O Mito)
+  158008, // Mask Girl (Garota da Máscara)
+  111323, // Squid Game 2 (Round 6: Segunda Temporada)
+  95483,  // Hometown Cha-Cha-Cha (Hometown Cha-Cha-Cha)
+  84393,  // Mr. Sunshine (Sr. Sol)
+  96256,  // Tale of the Nine-Tailed (Conto dos Nove Caudas)
 ];
 
 // Fetch Korean dramas by specific IDs (popular ones)
@@ -86,7 +107,7 @@ export const fetchTopRatedDoramas = async (limit = 10) => {
 };
 
 // Generic function to fetch Korean dramas
-export const fetchKoreanDramas = async (page = 1, limit = 20) => {
+export const fetchKoreanDramas = async (page = 1, limit = 30) => {
   try {
     // Calcular o índice inicial e final com base na página e limite
     const startIndex = (page - 1) * limit;

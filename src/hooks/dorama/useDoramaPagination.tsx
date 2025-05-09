@@ -22,13 +22,14 @@ export const useDoramaPagination = ({ filterDoramas, setDoramas }: UseDoramaPagi
     
     try {
       const nextPage = page + 1;
-      const newDoramas = await fetchKoreanDramas(nextPage);
+      const newDoramas = await fetchKoreanDramas(nextPage, 30);
       
-      // Filter to ensure only Korean doramas with images
+      // Filtra para garantir apenas doramas coreanos com imagens
       const filteredDoramas = filterDoramas(newDoramas);
       
       if (filteredDoramas.length === 0) {
         setHasMore(false);
+        toast.info("Não há mais doramas para carregar.");
         return;
       }
       
