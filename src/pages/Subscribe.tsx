@@ -10,7 +10,15 @@ import DemoModeNotification from "@/components/subscribe/DemoModeNotification";
 import PromoCodeSection from "@/components/subscribe/PromoCodeSection";
 
 const Subscribe = () => {
-  const { isSubscribed, subscriptionTier, isLoading, hasTrialAccess, hasTempAccess } = useSubscription();
+  const { 
+    isSubscribed, 
+    subscriptionTier, 
+    isLoading, 
+    hasTrialAccess,
+    hasTempAccess,
+    trialEnd 
+  } = useSubscription();
+  
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
   
@@ -26,6 +34,7 @@ const Subscribe = () => {
           subscriptionTier={subscriptionTier} 
           hasTrialAccess={hasTrialAccess}
           hasTempAccess={hasTempAccess}
+          trialEnd={trialEnd}
         />
       </>
     );

@@ -108,6 +108,7 @@ serve(async (req) => {
       .from('subscriptions')
       .select('*')
       .eq('user_id', user.id)
+      .eq('status', 'trialing')
       .gt('trial_end', now.toISOString())
       .maybeSingle();
     

@@ -1,3 +1,4 @@
+
 import { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -96,17 +97,32 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         // If direct DB check is needed on API failure, implement as fallback
         if (!data?.hasActiveSubscription && !data?.isAdmin && !data?.has_trial_access) {
           try {
+            // Direct database check for trial subscriptions and active subscriptions
             const { data: subData } = await supabase
               .from('subscriptions')
-              .select('status, plan_type')
+              .select('status, plan_type, trial_end')
               .eq('user_id', user.id)
-              .eq('status', 'active')
+              .or('status.eq.active,status.eq.trialing')
               .maybeSingle();
               
             if (subData) {
-              console.log('Fallback subscription check found active subscription:', subData);
-              setIsSubscribed(true);
-              setSubscriptionTier(subData.plan_type);
+              console.log('Fallback subscription check found subscription:', subData);
+              
+              // Check if it's a trial subscription with valid trial date
+              if (subData.status === 'trialing' && subData.trial_end) {
+                const trialEndDate = new Date(subData.trial_end);
+                const isTrialValid = trialEndDate > new Date();
+                
+                if (isTrialValid) {
+                  console.log('Valid trial subscription found');
+                  setHasTrialAccess(true);
+                  setSubscriptionTier(subData.plan_type || 'trial');
+                  setTrialEnd(subData.trial_end);
+                }
+              } else if (subData.status === 'active') {
+                setIsSubscribed(true);
+                setSubscriptionTier(subData.plan_type);
+              }
             }
           } catch (dbError) {
             console.error('Fallback subscription check failed:', dbError);

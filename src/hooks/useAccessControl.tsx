@@ -13,6 +13,7 @@ export const useAccessControl = () => {
   } = useSubscription();
 
   // Check if user has access to premium content
+  // Make sure to include hasTrialAccess in the access check
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
   return {

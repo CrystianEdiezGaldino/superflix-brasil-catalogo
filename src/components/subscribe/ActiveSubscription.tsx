@@ -6,19 +6,24 @@ interface ActiveSubscriptionProps {
   subscriptionTier: string | null;
   hasTrialAccess?: boolean;
   hasTempAccess?: boolean;
+  trialEnd?: string | null;
 }
 
 const ActiveSubscription = ({ 
   subscriptionTier, 
   hasTrialAccess = false,
-  hasTempAccess = false
+  hasTempAccess = false,
+  trialEnd = null
 }: ActiveSubscriptionProps) => {
   const navigate = useNavigate();
+  
+  // Format the trial end date
+  const formattedTrialEnd = trialEnd ? new Date(trialEnd).toLocaleDateString('pt-BR') : '';
   
   // Determina o tipo de acesso para mostrar a mensagem correta
   const getAccessTypeMessage = () => {
     if (hasTrialAccess) {
-      return "Você está utilizando o período de teste gratuito";
+      return `Você está utilizando o período de teste gratuito até ${formattedTrialEnd}`;
     } else if (hasTempAccess) {
       return "Você possui acesso temporário";
     } else if (subscriptionTier === "monthly") {
