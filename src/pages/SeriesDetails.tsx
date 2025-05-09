@@ -1,32 +1,66 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useSeriesDetails } from "@/hooks/useSeriesDetails";
 import SeriesLoadingState from "@/components/series/SeriesLoadingState";
 import SeriesHeader from "@/components/series/SeriesHeader";
 import SeriesActions from "@/components/series/SeriesActions";
 import SeriesPlayer from "@/components/series/SeriesPlayer";
 import SeriesContent from "@/components/series/SeriesContent";
-import { toast } from "sonner";
 
 const SeriesDetails = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const [showPlayer, setShowPlayer] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  
+  const { user, loading: authLoading } = useAuth();
+  const { 
+    isSubscribed, 
+    isAdmin, 
+    hasTempAccess,
+    hasTrialAccess,
+    isLoading: subscriptionLoading 
+  } = useSubscription();
+
+  const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
   
   const {
     series,
     seasonData,
-    showPlayer,
     selectedSeason,
     selectedEpisode,
     setSelectedSeason,
     handleEpisodeSelect,
-    togglePlayer,
     isLoadingSeries,
     isLoadingSeason,
-    authLoading,
-    subscriptionLoading,
-    user,
-    hasAccess
-  } = useSeriesDetails(undefined); // The ID comes from the URL params in the hook
+  } = useSeriesDetails(id);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error("É necessário fazer login para acessar este conteúdo");
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  // Scroll to player when it becomes visible
+  useEffect(() => {
+    if (showPlayer) {
+      const playerElement = document.getElementById('video-player');
+      if (playerElement) {
+        setTimeout(() => {
+          playerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [showPlayer]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [id]);
 
   // Toggle favorite
   const toggleFavorite = () => {
@@ -40,10 +74,20 @@ const SeriesDetails = () => {
     // Here you would integrate with a favorites API
   };
 
+  // Show subscription modal if trying to watch without access
+  const handleWatchClick = () => {
+    if (!hasAccess) {
+      toast.error("É necessário ter uma assinatura para assistir");
+      navigate("/subscribe");
+    } else {
+      setShowPlayer(!showPlayer);
+    }
+  };
+
   // Loading, auth and error states
   const isLoading = authLoading || subscriptionLoading || isLoadingSeries || isLoadingSeason;
   const hasError = !isLoading && !series;
-  
+
   if (isLoading || !user || hasError) {
     return (
       <SeriesLoadingState 
@@ -61,30 +105,30 @@ const SeriesDetails = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      {/* Header with banner and favorite button */}
       <SeriesHeader 
         series={series} 
         isFavorite={isFavorite}
         toggleFavorite={toggleFavorite}
       />
 
-      {/* Watch Button */}
       <SeriesActions 
         showPlayer={showPlayer} 
         hasAccess={hasAccess}
-        togglePlayer={togglePlayer}
+        onPlayClick={handleWatchClick}
       />
 
-      {/* Video Player */}
-      <SeriesPlayer 
-        showPlayer={showPlayer}
-        series={series}
-        selectedSeason={selectedSeason}
-        selectedEpisode={selectedEpisode}
-        hasAccess={hasAccess}
-      />
+      {showPlayer && (
+        <div className="px-6 md:px-10 mb-10">
+          <SeriesPlayer 
+            showPlayer={true}
+            series={series}
+            selectedSeason={selectedSeason}
+            selectedEpisode={selectedEpisode}
+            hasAccess={hasAccess}
+          />
+        </div>
+      )}
 
-      {/* Series Content - Synopsis, Episodes, etc. */}
       <SeriesContent 
         series={series}
         seasonData={seasonData}

@@ -1,28 +1,26 @@
-
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AnimeActionsProps {
   showPlayer: boolean;
   hasAccess: boolean;
-  togglePlayer: () => void;
+  onPlayClick: () => void;
 }
 
-const AnimeActions = ({
-  showPlayer,
-  hasAccess,
-  togglePlayer
-}: AnimeActionsProps) => {
+const AnimeActions = ({ showPlayer, hasAccess, onPlayClick }: AnimeActionsProps) => {
   return (
-    <div className="relative z-10 mt-6 px-6 md:px-10 mb-8">
-      <Button 
-        onClick={togglePlayer} 
-        className={`${hasAccess ? "bg-netflix-red" : "bg-gray-700"} hover:bg-red-700 text-lg py-6 px-8 rounded-xl flex items-center gap-2`}
+    <div className="px-6 md:px-10 py-4">
+      <button
+        onClick={onPlayClick}
+        className={`px-8 py-3 rounded-md font-semibold transition ${
+          hasAccess 
+            ? 'bg-white text-black hover:bg-opacity-80' 
+            : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+        }`}
         disabled={!hasAccess}
       >
-        <Play fill="white" size={20} />
-        {showPlayer ? "Ocultar Player" : "Assistir Agora"}
-      </Button>
+        {showPlayer ? 'Voltar para detalhes' : 'Assistir'}
+      </button>
     </div>
   );
 };

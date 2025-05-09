@@ -57,17 +57,7 @@ export const popularAnimes: MediaItem[] = [
     vote_average: 8.6,
     original_language: "ja"
   },
-  {
-    id: 16,
-    name: "Death Note",
-    overview: "Estudante encontra caderno que mata pessoas.",
-    poster_path: "/g8hHbsRmHxbDz7BT21cNjpBcFrn.jpg",
-    backdrop_path: "/g8hHbsRmHxbDz7BT21cNjpBcFrn.jpg",
-    first_air_date: "2006-10-03",
-    media_type: "tv",
-    vote_average: 8.5,
-    original_language: "ja"
-  },
+
   {
     id: 17,
     name: "Solo Leveling",
@@ -79,17 +69,7 @@ export const popularAnimes: MediaItem[] = [
     vote_average: 8.6,
     original_language: "ja"
   },
-  {
-    id: 18,
-    name: "Jujutsu Kaisen",
-    overview: "Estudantes lutam contra maldições.",
-    poster_path: "/hFWP5HkbVEe40adDOqgNy4kmQQy.jpg",
-    backdrop_path: "/hFWP5HkbVEe40adDOqgNy4kmQQy.jpg",
-    first_air_date: "2020-10-03",
-    media_type: "tv",
-    vote_average: 8.5,
-    original_language: "ja"
-  },
+ 
   {
     id: 19,
     name: "Fullmetal Alchemist: Brotherhood",
@@ -101,17 +81,7 @@ export const popularAnimes: MediaItem[] = [
     vote_average: 8.7,
     original_language: "ja"
   },
-  {
-    id: 20,
-    name: "Sword Art Online",
-    overview: "Jogadores presos em um jogo de realidade virtual.",
-    poster_path: "/ibe7AdW7CiabthEkJ4i9ZL1ITVb.jpg",
-    backdrop_path: "/ibe7AdW7CiabthEkJ4i9ZL1ITVb.jpg",
-    first_air_date: "2012-07-08",
-    media_type: "tv",
-    vote_average: 7.9,
-    original_language: "ja"
-  }
+  
 ];
 
 // Função para filtrar conteúdo sem imagens

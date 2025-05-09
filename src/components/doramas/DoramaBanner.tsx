@@ -1,14 +1,15 @@
-
 import { Series } from "@/types/movie";
 import { Button } from "@/components/ui/button";
-import { Play, Info } from "lucide-react";
+import { Play, Info, Heart } from "lucide-react";
 
 interface DoramaBannerProps {
   dorama: Series;
   onPlay: () => void;
+  isFavorite: boolean;
+  toggleFavorite: () => void;
 }
 
-const DoramaBanner = ({ dorama, onPlay }: DoramaBannerProps) => {
+const DoramaBanner = ({ dorama, onPlay, isFavorite, toggleFavorite }: DoramaBannerProps) => {
   // Format year from release date
   const releaseYear = dorama.first_air_date 
     ? new Date(dorama.first_air_date).getFullYear() 
@@ -87,6 +88,17 @@ const DoramaBanner = ({ dorama, onPlay }: DoramaBannerProps) => {
             <Info className="mr-2" size={20} />
             Mais Informações
           </Button>
+        </div>
+
+        <div className="flex space-x-4 mt-4">
+          <button
+            onClick={toggleFavorite}
+            className="bg-white bg-opacity-20 p-3 rounded-full hover:bg-opacity-30 transition"
+          >
+            <Heart 
+              className={`w-6 h-6 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-white'}`} 
+            />
+          </button>
         </div>
       </div>
     </div>
