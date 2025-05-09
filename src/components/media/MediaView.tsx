@@ -7,7 +7,7 @@ import MediaGrid from "./MediaGrid";
 import MediaSection from "@/components/MediaSection";
 import { Button } from "@/components/ui/button";
 import { MediaItem } from "@/types/movie";
-import { TrendUp, FireIcon, Clock } from "lucide-react";
+import { TrendingUp, Star, Clock } from "lucide-react";
 
 interface MediaViewProps {
   title: string;
@@ -114,6 +114,15 @@ const MediaView = ({
           <MediaSection 
             title={`${getContentTypeTitle(type)} Populares`}
             medias={popularItems}
+            viewAllPath={`/${type === 'movie' ? 'filmes' : type === 'tv' ? 'series' : type === 'anime' ? 'animes' : 'doramas'}`}
+          />
+        )}
+        
+        {/* Seção de conteúdo recente */}
+        {!isSearching && !isFiltering && recentItems && recentItems.length > 0 && (
+          <MediaSection 
+            title={`${getContentTypeTitle(type)} Recentes`}
+            medias={recentItems}
             viewAllPath={`/${type === 'movie' ? 'filmes' : type === 'tv' ? 'series' : type === 'anime' ? 'animes' : 'doramas'}`}
           />
         )}

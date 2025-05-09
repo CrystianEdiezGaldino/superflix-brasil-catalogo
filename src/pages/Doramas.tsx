@@ -1,9 +1,7 @@
 
-import { useState } from "react";
 import MediaView from "@/components/media/MediaView";
 import { useDoramas } from "@/hooks/useDoramas";
 import DoramaSection from "@/components/doramas/DoramaSection";
-import { useDoramaVideos } from "@/hooks/useDoramaVideos";
 
 const Doramas = () => {
   const {
@@ -28,8 +26,6 @@ const Doramas = () => {
     setGenreFilter,
     resetFilters
   } = useDoramas();
-
-  const { videoMap } = useDoramaVideos(doramas);
   
   return (
     <MediaView
