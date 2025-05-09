@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import {
   Form,
   FormControl,
@@ -64,9 +65,11 @@ const AuthForm = () => {
     setIsLoading(true);
     try {
       await signIn(data.email, data.password);
+      toast.success("Login realizado com sucesso");
       navigate("/");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Authentication error:", error);
+      toast.error(error.message || "Erro ao fazer login");
     } finally {
       setIsLoading(false);
     }
@@ -80,9 +83,12 @@ const AuthForm = () => {
       
       // Add CPF to user metadata when signing up
       await signUp(data.email, data.password, { cpf: normalizedCPF });
-      // Signup will send a confirmation email or redirect, depending on settings
-    } catch (error) {
+      toast.success("Cadastro realizado! Verifique seu email para confirmar.");
+      // Switch to login form after successful signup
+      setIsSignUp(false);
+    } catch (error: any) {
       console.error("Signup error:", error);
+      toast.error(error.message || "Erro ao criar conta");
     } finally {
       setIsLoading(false);
     }
@@ -109,6 +115,7 @@ const AuthForm = () => {
                         placeholder="seu.email@exemplo.com"
                         {...field}
                         disabled={isLoading}
+                        className="bg-gray-700 border-gray-600 text-white"
                       />
                     </FormControl>
                     <FormMessage />
@@ -127,6 +134,7 @@ const AuthForm = () => {
                         placeholder="000.000.000-00"
                         {...field}
                         disabled={isLoading}
+                        className="bg-gray-700 border-gray-600 text-white"
                       />
                     </FormControl>
                     <FormMessage />
@@ -146,6 +154,7 @@ const AuthForm = () => {
                         placeholder="******"
                         {...field}
                         disabled={isLoading}
+                        className="bg-gray-700 border-gray-600 text-white"
                       />
                     </FormControl>
                     <FormMessage />
@@ -155,7 +164,7 @@ const AuthForm = () => {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full bg-netflix-red hover:bg-red-700"
                 disabled={isLoading}
               >
                 {isLoading ? "Processando..." : "Cadastrar"}
@@ -176,6 +185,7 @@ const AuthForm = () => {
                         placeholder="seu.email@exemplo.com"
                         {...field}
                         disabled={isLoading}
+                        className="bg-gray-700 border-gray-600 text-white"
                       />
                     </FormControl>
                     <FormMessage />
@@ -195,6 +205,7 @@ const AuthForm = () => {
                         placeholder="******"
                         {...field}
                         disabled={isLoading}
+                        className="bg-gray-700 border-gray-600 text-white"
                       />
                     </FormControl>
                     <FormMessage />
@@ -204,7 +215,7 @@ const AuthForm = () => {
 
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full bg-netflix-red hover:bg-red-700"
                 disabled={isLoading}
               >
                 {isLoading ? "Processando..." : "Entrar"}

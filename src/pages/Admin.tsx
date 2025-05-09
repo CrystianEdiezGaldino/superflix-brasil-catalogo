@@ -13,11 +13,12 @@ import { fetchAdminData } from "@/components/admin/AdminDataService";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { AdminStats, UserWithSubscription } from "@/types/admin";
+import { supabase } from "@/integrations/supabase/client";
 
 const Admin = () => {
   const navigate = useNavigate();
-  const { isAdmin, isLoading: isSubscriptionLoading } = useSubscription();
-  const { loading: isAuthLoading } = useAuth();
+  const { isAdmin, isLoading: isSubscriptionLoading, checkSubscription } = useSubscription();
+  const { user, loading: isAuthLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(true);
   const [adminData, setAdminData] = useState<{
@@ -30,7 +31,9 @@ const Admin = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
+      console.log("Fetching admin data...");
       const data = await fetchAdminData();
+      console.log("Admin data fetched:", data);
       setAdminData(data);
     } catch (error) {
       console.error("Error loading admin data:", error);
@@ -40,18 +43,47 @@ const Admin = () => {
     }
   };
   
+  // Force check subscription status when loading admin page
+  useEffect(() => {
+    if (user && !isAuthLoading) {
+      checkSubscription();
+    }
+  }, [user, isAuthLoading]);
+  
   useEffect(() => {
     // Só carrega os dados quando soubermos que é um admin
     if (!isAuthLoading && !isSubscriptionLoading) {
       if (isAdmin) {
         loadData();
-      } else if (!isAdmin) {
+      } else if (!isAdmin && !isLoading) {
+        // Log the problem for debugging
+        console.log("Access denied to admin page:", { isAdmin, user });
+        
+        // For testing purposes - log admin status to console
+        const checkAdminRole = async () => {
+          if (!user) return;
+          
+          try {
+            const { data, error } = await supabase
+              .from('user_roles')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('role', 'admin');
+              
+            console.log("Admin role check:", { data, error, userId: user.id });
+          } catch (err) {
+            console.error("Error checking admin role:", err);
+          }
+        };
+        
+        checkAdminRole();
+        
         // Redireciona se não for admin
         navigate("/");
         toast.error("Acesso restrito a administradores");
       }
     }
-  }, [isAdmin, isAuthLoading, isSubscriptionLoading, navigate]);
+  }, [isAdmin, isAuthLoading, isSubscriptionLoading, navigate, user]);
   
   if (isAuthLoading || isSubscriptionLoading || (isLoading && !adminData)) {
     return (

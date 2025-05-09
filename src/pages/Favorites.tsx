@@ -9,10 +9,11 @@ import { MediaItem } from "@/types/movie";
 import { useAuth } from "@/contexts/AuthContext";
 import MediaGrid from "@/components/media/MediaGrid";
 import { useFavorites } from "@/hooks/useFavorites";
+import { supabase } from "@/integrations/supabase/client";
 
 const Favorites = () => {
   const { user } = useAuth();
-  const { getFavorites } = useFavorites();
+  const { getFavorites, removeFromFavorites } = useFavorites();
   const [favorites, setFavorites] = useState<MediaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
@@ -27,6 +28,7 @@ const Favorites = () => {
       try {
         const favs = await getFavorites();
         setFavorites(favs);
+        console.log("Loaded favorites:", favs);
       } catch (error) {
         console.error("Erro ao carregar favoritos:", error);
         toast.error("Erro ao carregar favoritos");
@@ -38,13 +40,30 @@ const Favorites = () => {
     loadFavorites();
   }, [user, getFavorites]);
 
-  const handleClearFavorites = () => {
-    // Em uma implementação real, você chamaria uma função para limpar favoritos no backend
-    setFavorites([]);
-    toast.success("Favoritos limpos com sucesso");
+  const handleClearFavorites = async () => {
+    if (!user || !favorites.length) return;
+    
+    setIsLoading(true);
+    try {
+      // Delete all favorites for this user
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id);
+        
+      if (error) throw error;
+      
+      setFavorites([]);
+      toast.success("Favoritos limpos com sucesso");
+    } catch (error) {
+      console.error("Erro ao limpar favoritos:", error);
+      toast.error("Erro ao limpar favoritos");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // Placeholder para estado vazio de favoritos
+  // Placeholder for estado vazio de favoritos
   const EmptyFavoritesPlaceholder = () => (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="bg-gray-800 p-6 rounded-full mb-6">

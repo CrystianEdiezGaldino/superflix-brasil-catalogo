@@ -18,25 +18,29 @@ const MediaCard = ({ media }: MediaCardProps) => {
   // Determine link path based on media type
   const getLinkPath = () => {
     // First check if media and media.id exist to avoid TypeScript errors
-    if (!media || media.id === undefined) return "#";
+    if (!media) return "#";
     
-    if (!media.media_type) return `/filme/${media.id}`;
+    // Use type assertion to handle the potential 'never' type
+    const mediaId = (media as any).id;
+    if (mediaId === undefined) return "#";
+    
+    if (!media.media_type) return `/filme/${mediaId}`;
     
     switch (media.media_type) {
       case 'movie':
-        return `/filme/${media.id}`;
+        return `/filme/${mediaId}`;
       case 'tv':
         // Verificar se é um anime ou dorama (coreano)
         if ('original_language' in media) {
           if (media.original_language === 'ko') {
-            return `/dorama/${media.id}`;
+            return `/dorama/${mediaId}`;
           } else if (media.original_language === 'ja') {
-            return `/anime/${media.id}`;
+            return `/anime/${mediaId}`;
           }
         }
-        return `/serie/${media.id}`;
+        return `/serie/${mediaId}`;
       default:
-        return `/filme/${media.id}`;
+        return `/filme/${mediaId}`;
     }
   };
 
@@ -50,6 +54,9 @@ const MediaCard = ({ media }: MediaCardProps) => {
   
   // Get vote average if available
   const rating = media.vote_average ? Math.round(media.vote_average * 10) / 10 : null;
+  
+  // Use type assertion to handle the ID for favorite button
+  const mediaId = (media as any).id;
   
   return (
     <Card className="bg-transparent border-none overflow-hidden group">
@@ -80,9 +87,9 @@ const MediaCard = ({ media }: MediaCardProps) => {
               </div>
             )}
             
-            {media.id !== undefined && (
+            {mediaId !== undefined && (
               <FavoriteButton 
-                mediaId={media.id} 
+                mediaId={Number(mediaId)} 
                 mediaType={media.media_type || 'movie'} 
               />
             )}

@@ -2,27 +2,32 @@
 import { useState } from "react";
 import { MediaItem } from "@/types/movie";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
-// Este é um hook simulado para gerenciar favoritos
-// Em uma implementação real, você conectaria isso ao Supabase ou outra solução de backend
 export const useFavorites = () => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Função para simular adição aos favoritos
+  // Função para adicionar aos favoritos
   const addToFavorites = async (mediaId: number, mediaType: string) => {
     if (!user) return false;
     
     setIsLoading(true);
     try {
-      // Aqui você faria uma chamada real para o backend
-      // Ex: await supabase.from('favorites').insert({ user_id: user.id, media_id: mediaId, media_type: mediaType })
+      // Get the poster path and title for this media item
+      const { poster_path, title, name } = await getMediaDetails(mediaId, mediaType);
       
-      // Por enquanto, armazenamos no localStorage como demonstração
-      const currentFavs = JSON.parse(localStorage.getItem('favorites') || '[]');
-      const newFav = { userId: user.id, mediaId, mediaType, addedAt: new Date().toISOString() };
+      // Insert into Supabase favorites table
+      const { error } = await supabase.from('favorites').insert({ 
+        user_id: user.id, 
+        media_id: mediaId, 
+        media_type: mediaType,
+        poster_path,
+        title: title || name || 'Sem título'
+      });
       
-      localStorage.setItem('favorites', JSON.stringify([...currentFavs, newFav]));
+      if (error) throw error;
+      
       return true;
     } catch (error) {
       console.error("Erro ao adicionar favorito:", error);
@@ -32,22 +37,22 @@ export const useFavorites = () => {
     }
   };
   
-  // Função para simular remoção dos favoritos
+  // Função para remover dos favoritos
   const removeFromFavorites = async (mediaId: number, mediaType: string) => {
     if (!user) return false;
     
     setIsLoading(true);
     try {
-      // Aqui você faria uma chamada real para o backend
-      // Ex: await supabase.from('favorites').delete().match({ user_id: user.id, media_id: mediaId, media_type: mediaType })
+      // Remove from Supabase favorites table
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('media_id', mediaId)
+        .eq('media_type', mediaType);
       
-      // Por enquanto, removemos do localStorage
-      const currentFavs = JSON.parse(localStorage.getItem('favorites') || '[]');
-      const updatedFavs = currentFavs.filter(
-        (fav: any) => !(fav.userId === user.id && fav.mediaId === mediaId && fav.mediaType === mediaType)
-      );
+      if (error) throw error;
       
-      localStorage.setItem('favorites', JSON.stringify(updatedFavs));
       return true;
     } catch (error) {
       console.error("Erro ao remover favorito:", error);
@@ -62,14 +67,18 @@ export const useFavorites = () => {
     if (!user) return false;
     
     try {
-      // Aqui você faria uma chamada real para o backend
-      // Ex: const { data } = await supabase.from('favorites').select().match({ user_id: user.id, media_id: mediaId, media_type: mediaType })
+      // Check if item exists in Supabase favorites table
+      const { data, error } = await supabase
+        .from('favorites')
+        .select()
+        .eq('user_id', user.id)
+        .eq('media_id', mediaId)
+        .eq('media_type', mediaType)
+        .maybeSingle();
       
-      // Por enquanto, verificamos no localStorage
-      const currentFavs = JSON.parse(localStorage.getItem('favorites') || '[]');
-      return currentFavs.some(
-        (fav: any) => fav.userId === user.id && fav.mediaId === mediaId && fav.mediaType === mediaType
-      );
+      if (error) throw error;
+      
+      return !!data;
     } catch (error) {
       console.error("Erro ao verificar favorito:", error);
       return false;
@@ -82,21 +91,50 @@ export const useFavorites = () => {
     
     setIsLoading(true);
     try {
-      // Aqui você faria uma chamada real para o backend
-      // Ex: const { data } = await supabase.from('favorites').select().eq('user_id', user.id)
+      // Get all favorites from Supabase
+      const { data, error } = await supabase
+        .from('favorites')
+        .select('*')
+        .eq('user_id', user.id);
       
-      // Por enquanto, obtemos do localStorage
-      const currentFavs = JSON.parse(localStorage.getItem('favorites') || '[]');
-      const userFavs = currentFavs.filter((fav: any) => fav.userId === user.id);
+      if (error) throw error;
       
-      // Em uma implementação real, você buscaria os detalhes completos dos itens favoritos
-      // Por enquanto, retornamos uma lista vazia já que não temos acesso real aos dados
-      return [];
+      // Convert to MediaItem format
+      return (data || []).map(fav => ({
+        id: fav.media_id,
+        media_type: fav.media_type,
+        poster_path: fav.poster_path,
+        title: fav.title,
+        vote_average: 0,
+        // Add required fields for MediaItem type
+        overview: '',
+        backdrop_path: '',
+        release_date: '',
+      })) as MediaItem[];
     } catch (error) {
       console.error("Erro ao buscar favoritos:", error);
       return [];
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Helper function to get media details
+  const getMediaDetails = async (mediaId: number, mediaType: string) => {
+    try {
+      // Fetch from TMDB API via our backend service
+      const apiUrl = `https://api.themoviedb.org/3/${mediaType}/${mediaId}?api_key=3e12a7e85d7a29a86a227c7a9743f556&language=pt-BR`;
+      const response = await fetch(apiUrl);
+      const data = await response.json();
+      
+      return {
+        poster_path: data.poster_path,
+        title: data.title,
+        name: data.name
+      };
+    } catch (error) {
+      console.error("Error fetching media details:", error);
+      return { poster_path: null, title: null, name: null };
     }
   };
   
