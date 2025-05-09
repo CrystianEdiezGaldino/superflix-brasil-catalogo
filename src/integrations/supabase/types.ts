@@ -131,6 +131,36 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_extensions: {
+        Row: {
+          checkout_session_id: string
+          created_at: string
+          days_to_add: number
+          id: string
+          processed: boolean
+          processed_at: string | null
+          user_id: string
+        }
+        Insert: {
+          checkout_session_id: string
+          created_at?: string
+          days_to_add: number
+          id?: string
+          processed?: boolean
+          processed_at?: string | null
+          user_id: string
+        }
+        Update: {
+          checkout_session_id?: string
+          created_at?: string
+          days_to_add?: number
+          id?: string
+          processed?: boolean
+          processed_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
