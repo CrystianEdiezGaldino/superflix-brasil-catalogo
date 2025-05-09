@@ -18,8 +18,8 @@ const Movies = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [yearFilter, setYearFilter] = useState<string>("");
-  const [ratingFilter, setRatingFilter] = useState<string>("");
+  const [yearFilter, setYearFilter] = useState<string>("all");
+  const [ratingFilter, setRatingFilter] = useState<string>("all");
   const [isSearching, setIsSearching] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const observer = useRef<IntersectionObserver>();
@@ -55,7 +55,7 @@ const Movies = () => {
   const applyFilters = useCallback((movieList: Movie[]) => {
     let filteredMovies = [...movieList];
 
-    if (yearFilter) {
+    if (yearFilter && yearFilter !== "all") {
       const year = parseInt(yearFilter);
       filteredMovies = filteredMovies.filter((movie) => {
         const releaseYear = movie.release_date 
@@ -65,7 +65,7 @@ const Movies = () => {
       });
     }
 
-    if (ratingFilter) {
+    if (ratingFilter && ratingFilter !== "all") {
       const rating = parseFloat(ratingFilter);
       filteredMovies = filteredMovies.filter((movie) => {
         return movie.vote_average >= rating;
@@ -193,7 +193,7 @@ const Movies = () => {
                   <SelectValue placeholder="Ano" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700 text-white">
-                  <SelectItem value="">Todos os anos</SelectItem>
+                  <SelectItem value="all">Todos os anos</SelectItem>
                   <ScrollArea className="h-[200px]">
                     {yearOptions.map((year) => (
                       <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
@@ -207,7 +207,7 @@ const Movies = () => {
                   <SelectValue placeholder="Avaliação" />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-900 border-gray-700 text-white">
-                  <SelectItem value="">Todas</SelectItem>
+                  <SelectItem value="all">Todas</SelectItem>
                   <SelectItem value="8">8+ ⭐</SelectItem>
                   <SelectItem value="7">7+ ⭐</SelectItem>
                   <SelectItem value="6">6+ ⭐</SelectItem>
