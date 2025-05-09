@@ -15,7 +15,7 @@ const Doramas = () => {
   
   const { data: doramas = [], isLoading, error } = useQuery({
     queryKey: ["koreanDramas"],
-    queryFn: fetchKoreanDramas
+    queryFn: () => fetchKoreanDramas(),
   });
 
   const handleSearch = (query: string) => {
@@ -48,7 +48,7 @@ const Doramas = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                {doramas.map((dorama: Series, index) => (
+                {(doramas as Series[]).map((dorama: Series, index) => (
                   <div 
                     key={dorama.id} 
                     className="animate-fade-in"
@@ -100,7 +100,7 @@ const Doramas = () => {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-              {doramas.slice(0, 12).map((dorama: Series) => (
+              {(doramas as Series[]).slice(0, 12).map((dorama: Series) => (
                 <MediaCard key={dorama.id} media={dorama} />
               ))}
             </div>

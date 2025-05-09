@@ -107,19 +107,19 @@ export const useHomePageData = () => {
           let recs: MediaItem[] = [];
           
           if (movieIds.length > 0) {
-            // Fix: Convert media IDs to strings in case they're numbers
-            const movieRecs = await Promise.all(
-              movieIds.map(id => fetchRecommendations(String(id), "movie"))
-            );
-            recs = [...recs, ...movieRecs.flat()];
+            // Fix: Process each ID individually to avoid type errors
+            for (const id of movieIds) {
+              const movieRecs = await fetchRecommendations(String(id), "movie");
+              recs = [...recs, ...movieRecs];
+            }
           }
           
           if (tvIds.length > 0) {
-            // Fix: Convert media IDs to strings in case they're numbers
-            const tvRecs = await Promise.all(
-              tvIds.map(id => fetchRecommendations(String(id), "tv"))
-            );
-            recs = [...recs, ...tvRecs.flat()];
+            // Fix: Process each ID individually to avoid type errors
+            for (const id of tvIds) {
+              const tvRecs = await fetchRecommendations(String(id), "tv");
+              recs = [...recs, ...tvRecs];
+            }
           }
           
           // Shuffle and limit recommendations
