@@ -2,7 +2,7 @@
 import React from "react";
 import MediaView from "@/components/media/MediaView";
 import { useKidsContent } from "@/hooks/kids/useKidsContent";
-import { Baby } from "lucide-react";
+import { Baby, Film, Tv } from "lucide-react";
 
 const Kids = () => {
   const {
@@ -57,9 +57,27 @@ const Kids = () => {
           <h2 className="text-2xl font-bold text-white">Espaço Infantil</h2>
         </div>
         <p className="text-gray-200 mb-4">
-          Um mundo de diversão e aprendizado para os pequenos! Aqui você encontra conteúdos 
-          educativos e divertidos para toda a família, com classificação indicativa adequada para crianças.
+          Um mundo de diversão e aprendizado para os pequenos! Aqui você encontra filmes de animação, 
+          desenhos animados, séries infantis e muito mais, com classificação indicativa adequada para crianças.
         </p>
+        <div className="flex flex-wrap gap-3 mt-4">
+          <div className="bg-purple-800/40 px-3 py-1 rounded-full text-sm flex items-center">
+            <Film size={14} className="mr-1" />
+            <span>Filmes de Animação</span>
+          </div>
+          <div className="bg-blue-800/40 px-3 py-1 rounded-full text-sm flex items-center">
+            <Tv size={14} className="mr-1" />
+            <span>Desenhos Animados</span>
+          </div>
+          <div className="bg-green-800/40 px-3 py-1 rounded-full text-sm flex items-center">
+            <Film size={14} className="mr-1" />
+            <span>Filmes Infantis</span>
+          </div>
+          <div className="bg-pink-800/40 px-3 py-1 rounded-full text-sm flex items-center">
+            <Tv size={14} className="mr-1" />
+            <span>Séries Infantis</span>
+          </div>
+        </div>
       </div>
     </MediaView>
   );

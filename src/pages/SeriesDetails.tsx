@@ -87,8 +87,8 @@ const SeriesDetails = () => {
         onToggleFavorite={toggleFavorite}
       />
 
-      {/* Watch Button - Prominent Call to Action */}
-      <div className="relative z-10 -mt-10 px-6 md:px-10 mb-8">
+      {/* Watch Button - Ajustado para ficar mais abaixo */}
+      <div className="relative z-10 mt-6 px-6 md:px-10 mb-8">
         <Button 
           onClick={togglePlayer} 
           className={`${hasAccess ? "bg-netflix-red" : "bg-gray-700"} hover:bg-red-700 text-lg py-6 px-8 rounded-xl flex items-center gap-2`}
@@ -99,7 +99,7 @@ const SeriesDetails = () => {
         </Button>
       </div>
 
-      {/* Player de vídeo - More visible position */}
+      {/* Player de vídeo */}
       {showPlayer && (
         <div id="video-player" className="px-6 md:px-10 mb-10">
           <SeriesVideoPlayer 

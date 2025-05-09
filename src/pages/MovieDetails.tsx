@@ -157,8 +157,8 @@ const MovieDetails = () => {
         </div>
       </div>
 
-      {/* Watch Button - Prominent Call to Action */}
-      <div className="relative z-10 -mt-10 px-6 md:px-10 mb-8">
+      {/* Watch Button - Ajustado para ficar mais abaixo */}
+      <div className="relative z-10 mt-6 px-6 md:px-10 mb-8">
         <Button 
           onClick={handleWatchClick} 
           className={`${hasAccess ? "bg-netflix-red" : "bg-gray-700"} hover:bg-red-700 text-lg py-6 px-8 rounded-xl flex items-center gap-2`}
@@ -169,7 +169,7 @@ const MovieDetails = () => {
         </Button>
       </div>
 
-      {/* Player de vídeo - More visible position */}
+      {/* Player de vídeo */}
       {showPlayer && movie.imdb_id && hasAccess && (
         <div id="video-player" className="px-6 md:px-10 mb-10">
           <VideoPlayer type="filme" imdbId={movie.imdb_id} />
