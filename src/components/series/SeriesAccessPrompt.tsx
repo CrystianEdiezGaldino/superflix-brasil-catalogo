@@ -8,7 +8,7 @@ interface SeriesAccessPromptProps {
 }
 
 const SeriesAccessPrompt = ({ hasAccess, isLoading }: SeriesAccessPromptProps) => {
-  // Não mostrar nada durante o carregamento ou se tiver acesso válido
+  // Don't show anything during loading or if user has valid access
   if (isLoading || hasAccess) return null;
   
   return (

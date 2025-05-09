@@ -57,12 +57,38 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
       setSubscriptionEnd(subscriptionState.subscriptionEnd);
       setTrialEnd(subscriptionState.trialEnd);
       
+      // Log de estado para debug
+      console.log("Subscription state updated:", {
+        isSubscribed: subscriptionState.isSubscribed,
+        isAdmin: subscriptionState.isAdmin,
+        hasTempAccess: subscriptionState.hasTempAccess,
+        hasTrialAccess: subscriptionState.hasTrialAccess,
+        tier: subscriptionState.subscriptionTier
+      });
+      
       // Reset error count on success
       errorCountRef.current = 0;
     } catch (error) {
       // Incrementar contador de erros
       errorCountRef.current += 1;
       console.error("Erro ao verificar assinatura:", error);
+      
+      // Fallback: Se falhar em verificar no backend, verificar se tem dados na Storage
+      // e confiar temporariamente nesses dados para melhorar UX
+      const cachedSubscription = localStorage.getItem('userSubscription');
+      if (cachedSubscription) {
+        try {
+          const parsed = JSON.parse(cachedSubscription);
+          if (parsed && parsed.expires > Date.now()) {
+            console.log("Usando dados de assinatura em cache temporariamente");
+            setHasTrialAccess(parsed.hasTrialAccess || false);
+            setIsSubscribed(parsed.isSubscribed || false);
+            setIsAdmin(parsed.isAdmin || false);
+          }
+        } catch (e) {
+          console.error("Erro ao processar cache de assinatura:", e);
+        }
+      }
       
       // Só mostrar toast após múltiplas falhas para evitar spam
       if (errorCountRef.current >= maxErrors) {
@@ -73,6 +99,20 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
       checkInProgressRef.current = false;
     }
   }, [user, session]);
+
+  // Salvar estado da assinatura em localStorage para fallback
+  useEffect(() => {
+    if (!isLoading && user) {
+      localStorage.setItem('userSubscription', JSON.stringify({
+        isSubscribed,
+        isAdmin,
+        hasTempAccess,
+        hasTrialAccess,
+        expires: Date.now() + (60 * 60 * 1000), // validade de 1 hora
+        updatedAt: Date.now()
+      }));
+    }
+  }, [isSubscribed, isAdmin, hasTempAccess, hasTrialAccess, isLoading, user]);
 
   // Verificação inicial quando o usuário/sessão muda
   useEffect(() => {

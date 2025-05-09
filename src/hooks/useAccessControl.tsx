@@ -32,8 +32,16 @@ export const useAccessControl = () => {
     // Update loading state
     setSubscriptionLoading(subLoading);
     
-    // Calculate access
+    // Calculate access - Make sure to include "trialing" status as valid access
     const userHasAccess = Boolean(isSubscribed || isAdmin || hasTempAccess || hasTrialAccess);
+    console.log("Access control status:", { 
+      isSubscribed, 
+      isAdmin, 
+      hasTempAccess, 
+      hasTrialAccess,
+      userHasAccess 
+    });
+    
     setHasAccess(userHasAccess);
   }, [isSubscribed, isAdmin, hasTempAccess, hasTrialAccess, subLoading]);
   
@@ -41,6 +49,7 @@ export const useAccessControl = () => {
     user,
     authLoading,
     subscriptionLoading,
-    hasAccess
+    hasAccess,
+    isLoading: authLoading || subscriptionLoading
   };
 };
