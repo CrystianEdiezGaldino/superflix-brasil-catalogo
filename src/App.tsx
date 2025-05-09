@@ -23,6 +23,7 @@ import Profile from "./pages/Profile";
 import Subscribe from "./pages/Subscribe";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import Admin from "./pages/Admin";
+import Kids from "./pages/Kids";
 
 const App = () => {
   // Create a new QueryClient for each app instance
@@ -45,6 +46,7 @@ const App = () => {
                 <Route path="/animes" element={<Animes />} />
                 <Route path="/doramas" element={<Doramas />} />
                 <Route path="/dorama/:id" element={<DoramaDetails />} />
+                <Route path="/kids" element={<Kids />} />
                 <Route path="/favoritos" element={<Favorites />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/profile" element={<Profile />} />

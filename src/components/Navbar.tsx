@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Film, Heart, Search, User, X, Tv } from "lucide-react";
+import { Film, Heart, Search, User, X, Tv, Baby } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -85,7 +85,7 @@ const Navbar = ({
               <li>
                 <Link to="/" 
                   className={`flex items-center transition duration-300 ${
-                    isRouteActive('/') && !isRouteActive('/filmes') && !isRouteActive('/series') && !isRouteActive('/animes') && !isRouteActive('/doramas') && !isRouteActive('/favoritos') 
+                    isRouteActive('/') && !isRouteActive('/filmes') && !isRouteActive('/series') && !isRouteActive('/animes') && !isRouteActive('/doramas') && !isRouteActive('/kids') && !isRouteActive('/favoritos') 
                     ? "text-netflix-red font-medium" 
                     : "text-white hover:text-netflix-red"
                   }`}
@@ -140,6 +140,18 @@ const Navbar = ({
                 >
                   <Tv className="mr-1 h-4 w-4" />
                   Doramas
+                </Link>
+              </li>
+              <li>
+                <Link to="/kids" 
+                  className={`flex items-center transition duration-300 ${
+                    isRouteActive('/kids') 
+                    ? "text-netflix-red font-medium" 
+                    : "text-white hover:text-netflix-red"
+                  }`}
+                >
+                  <Baby className="mr-1 h-4 w-4" />
+                  Kids
                 </Link>
               </li>
               {user && (
