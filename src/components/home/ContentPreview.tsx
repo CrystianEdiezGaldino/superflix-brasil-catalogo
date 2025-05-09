@@ -4,35 +4,32 @@ import MediaSection from "@/components/MediaSection";
 
 interface ContentPreviewProps {
   movies: MediaItem[];
-  series: MediaItem[];
-  anime: MediaItem[];
+  series?: MediaItem[];
+  anime?: MediaItem[];
 }
 
-const ContentPreview = ({ movies, series, anime }: ContentPreviewProps) => {
+const ContentPreview = ({ movies, series = [], anime = [] }: ContentPreviewProps) => {
   return (
-    <>
-      <div className="px-4 mb-6">
-        <h2 className="text-xl font-bold text-white mb-4">Prévia do conteúdo</h2>
-        <p className="text-gray-400 mb-4">
-          Assine para ter acesso completo a todos os títulos. Confira uma pequena prévia abaixo:
-        </p>
-      </div>
-      
+    <div className="space-y-8">
       <MediaSection 
         title="Filmes Populares (Prévia)" 
-        medias={movies.slice(0, 4)} 
+        medias={movies.slice(0, 10)} 
       />
       
-      <MediaSection 
-        title="Séries Populares (Prévia)" 
-        medias={series.slice(0, 4)} 
-      />
+      {series.length > 0 && (
+        <MediaSection 
+          title="Séries Populares (Prévia)" 
+          medias={series.slice(0, 10)} 
+        />
+      )}
       
-      <MediaSection 
-        title="Anime em Alta (Prévia)" 
-        medias={anime.slice(0, 4)} 
-      />
-    </>
+      {anime.length > 0 && (
+        <MediaSection 
+          title="Anime em Alta (Prévia)" 
+          medias={anime.slice(0, 10)} 
+        />
+      )}
+    </div>
   );
 };
 

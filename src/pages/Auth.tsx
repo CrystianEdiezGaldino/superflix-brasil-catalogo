@@ -9,6 +9,162 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPopularMovies, fetchPopularSeries, fetchAnime } from "@/services/tmdbApi";
 import ContentPreview from "@/components/home/ContentPreview";
 
+const popularSeries = [
+  { 
+    id: 1, 
+    name: "Eu, a Patroa e as Crianças", 
+    poster_path: "/tXcJrFrSFVcpXTLcHAzU3AvlkUV.jpg", 
+    media_type: "tv",
+    vote_average: 8.3
+  },
+  { 
+    id: 2, 
+    name: "Dois Homens e Meio", 
+    poster_path: "/dPCv0RaOj2pRxZcUDOoqXFe7Pqn.jpg", 
+    media_type: "tv",
+    vote_average: 7.8
+  },
+  { 
+    id: 3, 
+    name: "The Big Bang Theory", 
+    poster_path: "/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg", 
+    media_type: "tv",
+    vote_average: 8.1
+  },
+  { 
+    id: 4, 
+    name: "Chaves", 
+    poster_path: "/8D83nX7YFhR8YcvrJcnJ2PDgah5.jpg", 
+    media_type: "tv",
+    vote_average: 8.5
+  },
+  { 
+    id: 5, 
+    name: "Todo Mundo Odeia o Chris", 
+    poster_path: "/3NbGsr4VgwugmZ7QA7k3SVIUeCo.jpg", 
+    media_type: "tv",
+    vote_average: 8.4
+  },
+  { 
+    id: 6, 
+    name: "Friends", 
+    poster_path: "/f496cm9enuEsZkSPzCwnTESEK5s.jpg", 
+    media_type: "tv",
+    vote_average: 8.4
+  },
+  { 
+    id: 7, 
+    name: "Um Maluco no Pedaço", 
+    poster_path: "/1BmrF4J9fj2tT2zgfXrRnLQ1wWi.jpg", 
+    media_type: "tv",
+    vote_average: 8.2
+  },
+  { 
+    id: 8, 
+    name: "How I Met Your Mother", 
+    poster_path: "/izncB6dCLV7LBQ5JcdNnUZt3vc9.jpg", 
+    media_type: "tv",
+    vote_average: 8.0
+  },
+  { 
+    id: 9, 
+    name: "That '70s Show", 
+    poster_path: "/k2RjYOJ7nj68PwPJUzNueW6qGX5.jpg", 
+    media_type: "tv",
+    vote_average: 7.9
+  },
+  { 
+    id: 10, 
+    name: "Supernatural", 
+    poster_path: "/KoYWXbnYuS3b0GyQPkbuexlVK9.jpg", 
+    media_type: "tv",
+    vote_average: 8.3
+  }
+];
+
+const popularAnimes = [
+  {
+    id: 11,
+    name: "Naruto",
+    poster_path: "/9ptbVZpKNy5NY9D4zq4KGiYWRQY.jpg",
+    media_type: "tv",
+    vote_average: 8.4,
+    original_language: "ja"
+  },
+  {
+    id: 12,
+    name: "One Piece",
+    poster_path: "/fcXdJlbSdUEeMSJFsXKsznGwwok.jpg",
+    media_type: "tv",
+    vote_average: 8.7,
+    original_language: "ja"
+  },
+  {
+    id: 13,
+    name: "Dragon Ball",
+    poster_path: "/f2zhRLqwRLrKhEMeIM7Z5buJFo3.jpg",
+    media_type: "tv",
+    vote_average: 8.3,
+    original_language: "ja"
+  },
+  {
+    id: 14,
+    name: "Attack on Titan",
+    poster_path: "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
+    media_type: "tv",
+    vote_average: 8.7,
+    original_language: "ja"
+  },
+  {
+    id: 15,
+    name: "Demon Slayer",
+    poster_path: "/wrCVHdkBlBWdJUZPvnJWcBRuhSY.jpg",
+    media_type: "tv",
+    vote_average: 8.6,
+    original_language: "ja"
+  },
+  {
+    id: 16,
+    name: "Death Note",
+    poster_path: "/g8hHbsRmHxbDz7BT21cNjpBcFrn.jpg",
+    media_type: "tv",
+    vote_average: 8.5,
+    original_language: "ja"
+  },
+  {
+    id: 17,
+    name: "Solo Leveling",
+    poster_path: "/eCD7WS9h4lCT8N4Xavc9u8R1IGk.jpg",
+    media_type: "tv",
+    vote_average: 8.6,
+    original_language: "ja"
+  },
+  {
+    id: 18,
+    name: "Jujutsu Kaisen",
+    poster_path: "/hFWP5HkbVEe40adDOqgNy4kmQQy.jpg",
+    media_type: "tv",
+    vote_average: 8.5,
+    original_language: "ja"
+  },
+  {
+    id: 19,
+    name: "Fullmetal Alchemist: Brotherhood",
+    poster_path: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
+    media_type: "tv",
+    vote_average: 8.7,
+    original_language: "ja"
+  },
+  {
+    id: 20,
+    name: "Sword Art Online",
+    poster_path: "/ibe7AdW7CiabthEkJ4i9ZL1ITVb.jpg",
+    media_type: "tv",
+    vote_average: 7.9,
+    original_language: "ja"
+  }
+];
+
 const Auth = () => {
   const { user, loading } = useAuth();
   const [backgroundImage, setBackgroundImage] = useState("");
@@ -20,21 +176,9 @@ const Auth = () => {
     staleTime: 1000 * 60 * 10, // 10 minutes
   });
   
-  const { data: seriesPreview = [] } = useQuery({
-    queryKey: ["authSeriesPreview"],
-    queryFn: () => fetchPopularSeries(),
-    staleTime: 1000 * 60 * 10,
-  });
-  
-  const { data: animePreview = [] } = useQuery({
-    queryKey: ["authAnimePreview"],
-    queryFn: () => fetchAnime(),
-    staleTime: 1000 * 60 * 10,
-  });
-
   // Choose a random background from the fetched media
   useEffect(() => {
-    const allMedia = [...moviesPreview, ...seriesPreview, ...animePreview];
+    const allMedia = [...moviesPreview, ...popularSeries, ...popularAnimes];
     if (allMedia.length > 0) {
       const randomIndex = Math.floor(Math.random() * allMedia.length);
       const randomMedia = allMedia[randomIndex];
@@ -42,7 +186,7 @@ const Auth = () => {
         setBackgroundImage(`https://image.tmdb.org/t/p/original${randomMedia.backdrop_path}`);
       }
     }
-  }, [moviesPreview, seriesPreview, animePreview]);
+  }, [moviesPreview]);
   
   // If user is already logged in, redirect to home
   if (loading) {
@@ -88,22 +232,31 @@ const Auth = () => {
         </div>
         
         {/* Preview Content Section */}
-        {(moviesPreview.length > 0 || seriesPreview.length > 0 || animePreview.length > 0) && (
-          <div className="mt-10 bg-black/50 py-10 backdrop-blur-sm">
-            <div className="container mx-auto px-4">
-              <div className="mb-8 text-center">
-                <h2 className="text-3xl font-bold text-white">Veja o que você está perdendo</h2>
-                <p className="text-gray-300 mt-2">Crie sua conta para acessar todo o catálogo</p>
-              </div>
+        <div className="mt-10 bg-black/50 py-10 backdrop-blur-sm">
+          <div className="container mx-auto px-4">
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl font-bold text-white">Veja o que você está perdendo</h2>
+              <p className="text-gray-300 mt-2">Crie sua conta para acessar todo o catálogo</p>
+            </div>
+            
+            <div className="space-y-8">
+              <MediaSection 
+                title="Filmes Populares" 
+                medias={moviesPreview.slice(0, 10)} 
+              />
               
-              <ContentPreview 
-                movies={moviesPreview}
-                series={seriesPreview}
-                anime={animePreview}
+              <MediaSection 
+                title="Séries Populares" 
+                medias={popularSeries} 
+              />
+              
+              <MediaSection 
+                title="Animes em Alta" 
+                medias={popularAnimes} 
               />
             </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
