@@ -17,7 +17,8 @@ const MediaCard = ({ media }: MediaCardProps) => {
 
   // Determine link path based on media type
   const getLinkPath = () => {
-    if (!media || !media.id) return "#";
+    // First check if media and media.id exist to avoid TypeScript errors
+    if (!media || media.id === undefined) return "#";
     
     if (!media.media_type) return `/filme/${media.id}`;
     
@@ -79,7 +80,7 @@ const MediaCard = ({ media }: MediaCardProps) => {
               </div>
             )}
             
-            {typeof media.id !== 'undefined' && (
+            {media.id !== undefined && (
               <FavoriteButton 
                 mediaId={media.id} 
                 mediaType={media.media_type || 'movie'} 
