@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -7,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, Movie, Series } from "@/types/movie";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import MediaCard from "@/components/MediaCard";
@@ -71,17 +70,31 @@ const Profile = () => {
         if (error) throw error;
 
         // Convert favorites to MediaItem format
-        const favoriteItems: MediaItem[] = data.map((fav: Favorite) => ({
-          id: fav.media_id,
-          title: fav.title,
-          poster_path: fav.poster_path,
-          media_type: fav.media_type,
-          // Add required properties with default values
-          overview: "",
-          backdrop_path: "",
-          vote_average: 0,
-          release_date: "",
-        }));
+        const favoriteItems: MediaItem[] = data.map((fav: any) => {
+          if (fav.media_type === "movie") {
+            return {
+              id: fav.media_id,
+              title: fav.title,
+              poster_path: fav.poster_path,
+              media_type: "movie",
+              overview: "",
+              backdrop_path: "",
+              vote_average: 0,
+              release_date: ""
+            } as Movie;
+          } else {
+            return {
+              id: fav.media_id,
+              name: fav.title,
+              poster_path: fav.poster_path,
+              media_type: "tv",
+              overview: "",
+              backdrop_path: "",
+              vote_average: 0,
+              first_air_date: ""
+            } as Series;
+          }
+        });
 
         setFavorites(favoriteItems);
       } catch (error) {

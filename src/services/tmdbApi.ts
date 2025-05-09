@@ -1,4 +1,4 @@
-import { Movie, Series, Season, Episode } from "@/types/movie";
+import { Movie, Series, Season, Episode, MediaItem } from "@/types/movie";
 
 const API_KEY = "062def1aa1f84c69eb8cd943df2ccc0d";
 const BASE_URL = "https://api.themoviedb.org/3";
@@ -129,7 +129,7 @@ export async function searchMedia(query: string): Promise<(Movie | Series)[]> {
 }
 
 // Add new function to fetch anime series
-export const fetchAnime = async (): Promise<MediaItem[]> => {
+export const fetchAnime = async (): Promise<Series[]> => {
   try {
     const response = await fetch(
       `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_keywords=210024&language=pt-BR&sort_by=popularity.desc`
@@ -152,7 +152,7 @@ export const fetchAnime = async (): Promise<MediaItem[]> => {
 };
 
 // Add function to fetch recommendations
-export const fetchRecommendations = async (mediaIds: number[], mediaType: string): Promise<MediaItem[]> => {
+export const fetchRecommendations = async (mediaIds: number[], mediaType: "movie" | "tv"): Promise<MediaItem[]> => {
   try {
     // If no mediaIds provided, return empty array
     if (!mediaIds.length) return [];
@@ -171,10 +171,18 @@ export const fetchRecommendations = async (mediaIds: number[], mediaType: string
     
     const data = await response.json();
     
-    return data.results.map((item: any) => ({
-      ...item,
-      media_type: mediaType
-    }));
+    // Ensure we correctly type the media items
+    if (mediaType === "movie") {
+      return data.results.map((item: any) => ({
+        ...item,
+        media_type: "movie"
+      })) as Movie[];
+    } else {
+      return data.results.map((item: any) => ({
+        ...item,
+        media_type: "tv"
+      })) as Series[];
+    }
   } catch (error) {
     console.error("Error fetching recommendations:", error);
     return [];
