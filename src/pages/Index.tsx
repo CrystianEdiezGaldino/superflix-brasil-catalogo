@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Banner from "@/components/Banner";
 import MediaSection from "@/components/MediaSection";
@@ -22,43 +24,65 @@ import { Link } from "react-router-dom";
 import MediaCard from "@/components/MediaCard";
 
 const Index = () => {
-  const { user } = useAuth();
-  const { isSubscribed, isAdmin, hasTempAccess } = useSubscription();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { 
+    isSubscribed, 
+    isAdmin, 
+    hasTempAccess,
+    hasTrialAccess,
+    isLoading: subscriptionLoading, 
+    trialEnd 
+  } = useSubscription();
+  
   const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [featuredMedia, setFeaturedMedia] = useState<MediaItem | undefined>(undefined);
   const [recommendations, setRecommendations] = useState<MediaItem[]>([]);
 
+  const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error("É necessário fazer login para acessar o conteúdo");
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+  
   // Fetch popular movies
   const moviesQuery = useQuery({
     queryKey: ["popularMovies"],
     queryFn: () => fetchPopularMovies(),
+    enabled: !!user,
   });
 
   // Fetch popular TV series
   const seriesQuery = useQuery({
     queryKey: ["popularSeries"],
     queryFn: () => fetchPopularSeries(),
+    enabled: !!user,
   });
   
   // Fetch popular anime
   const animeQuery = useQuery({
     queryKey: ["anime"],
     queryFn: () => fetchAnime(),
+    enabled: !!user,
   });
   
   // Fetch top rated anime
   const topRatedAnimeQuery = useQuery({
     queryKey: ["topRatedAnime"],
     queryFn: () => fetchTopRatedAnime(),
-    enabled: isSubscribed || isAdmin || hasTempAccess, // Only fetch if user has access
+    enabled: !!user && hasAccess, // Only fetch if user has access
   });
   
   // Fetch specific anime recommendations like Solo Leveling
   const specificAnimeQuery = useQuery({
     queryKey: ["specificAnimeRecommendations"],
     queryFn: () => fetchSpecificAnimeRecommendations(),
-    enabled: isSubscribed || isAdmin || hasTempAccess, // Only fetch if user has access
+    enabled: !!user && hasAccess, // Only fetch if user has access
   });
 
   // Fetch favorites and recommendations for logged-in users
@@ -113,9 +137,10 @@ const Index = () => {
 
   // Select a random item for the banner
   useEffect(() => {
+    if (!user) return;
+    
     // If user has access to premium content, include all media
-    // Otherwise, only use free content for the banner
-    if (isSubscribed || isAdmin || hasTempAccess) {
+    if (hasAccess) {
       const allMedia = [
         ...(moviesQuery.data || []),
         ...(seriesQuery.data || []),
@@ -129,10 +154,11 @@ const Index = () => {
         setFeaturedMedia(allMedia[randomIndex]);
       }
     } else {
+      // Show preview content only
       const freeMedia = [
-        ...(moviesQuery.data || []).slice(0, 5),
-        ...(seriesQuery.data || []).slice(0, 5),
-        ...(animeQuery.data || []).slice(0, 5)
+        ...(moviesQuery.data || []).slice(0, 2),
+        ...(seriesQuery.data || []).slice(0, 2),
+        ...(animeQuery.data || []).slice(0, 2)
       ];
       
       if (freeMedia.length > 0) {
@@ -141,18 +167,23 @@ const Index = () => {
       }
     }
   }, [
+    user,
+    hasAccess,
     moviesQuery.data, 
     seriesQuery.data, 
     animeQuery.data, 
     topRatedAnimeQuery.data, 
-    specificAnimeQuery.data,
-    isSubscribed,
-    isAdmin,
-    hasTempAccess
+    specificAnimeQuery.data
   ]);
 
   // Search function
   const handleSearch = async (query: string) => {
+    if (!user) {
+      toast.error("É necessário fazer login para pesquisar");
+      navigate("/auth");
+      return;
+    }
+    
     setIsSearching(true);
     try {
       const results = await searchMedia(query);
@@ -177,8 +208,27 @@ const Index = () => {
   }, []);
 
   // Loading and error states
-  const isLoading = moviesQuery.isPending || seriesQuery.isPending || animeQuery.isPending;
+  const isLoading = authLoading || subscriptionLoading || moviesQuery.isPending || seriesQuery.isPending || animeQuery.isPending;
   const hasError = moviesQuery.isError || seriesQuery.isError || animeQuery.isError;
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-netflix-background flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
+        <h1 className="text-3xl font-bold text-white mb-4">Faça login para acessar</h1>
+        <Button onClick={() => navigate("/auth")} className="bg-netflix-red hover:bg-red-700">
+          Ir para login
+        </Button>
+      </div>
+    );
+  }
   
   if (hasError) {
     return (
@@ -198,8 +248,27 @@ const Index = () => {
       {/* Banner principal */}
       <Banner media={featuredMedia} />
       
+      {/* Trial notification for users with trial access */}
+      {hasTrialAccess && (
+        <div className="bg-gradient-to-r from-green-600 to-green-800 py-6 px-4 mb-6">
+          <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">
+            <div className="mb-4 md:mb-0">
+              <h3 className="text-xl font-bold text-white">Você está no período de avaliação gratuito!</h3>
+              <p className="text-white/90">
+                Aproveite acesso a todo o conteúdo até {new Date(trialEnd || "").toLocaleDateString('pt-BR')}
+              </p>
+            </div>
+            <Link to="/subscribe">
+              <Button className="bg-white text-green-700 hover:bg-gray-100">
+                Ver Planos
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
+      
       {/* Upsell for non-subscribers */}
-      {!isSubscribed && !isAdmin && !hasTempAccess && (
+      {!hasAccess && (
         <div className="bg-gradient-to-r from-netflix-red to-red-800 py-6 px-4 mb-6">
           <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">
             <div className="mb-4 md:mb-0">
@@ -245,47 +314,75 @@ const Index = () => {
             )}
             
             {/* Seções de conteúdo */}
-            {user && recommendations.length > 0 && (
+            {user && recommendations.length > 0 && hasAccess && (
               <MediaSection 
                 title="Recomendados para Você" 
                 medias={recommendations} 
               />
             )}
             
-            <MediaSection 
-              title="Filmes Populares" 
-              medias={moviesQuery.data || []} 
-            />
-            
-            <MediaSection 
-              title="Séries Populares" 
-              medias={seriesQuery.data || []} 
-            />
-            
-            {/* Enhanced Anime Sections */}
-            <MediaSection 
-              title="Anime em Alta" 
-              medias={animeQuery.data || []} 
-            />
-            
-            {/* Premium content - only for subscribers */}
-            {(isSubscribed || isAdmin || hasTempAccess) && topRatedAnimeQuery.data && (
-              <MediaSection 
-                title="Animes Melhor Avaliados" 
-                medias={topRatedAnimeQuery.data} 
-              />
-            )}
-            
-            {/* Specific anime recommendations featuring Solo Leveling */}
-            {(isSubscribed || isAdmin || hasTempAccess) && specificAnimeQuery.data && (
-              <MediaSection 
-                title="Semelhantes a Solo Leveling" 
-                medias={specificAnimeQuery.data} 
-              />
+            {/* Preview content for non-subscribers */}
+            {!hasAccess ? (
+              <>
+                <div className="px-4 mb-6">
+                  <h2 className="text-xl font-bold text-white mb-4">Prévia do conteúdo</h2>
+                  <p className="text-gray-400 mb-4">
+                    Assine para ter acesso completo a todos os títulos. Confira uma pequena prévia abaixo:
+                  </p>
+                </div>
+                
+                <MediaSection 
+                  title="Filmes Populares (Prévia)" 
+                  medias={(moviesQuery.data || []).slice(0, 4)} 
+                />
+                
+                <MediaSection 
+                  title="Séries Populares (Prévia)" 
+                  medias={(seriesQuery.data || []).slice(0, 4)} 
+                />
+                
+                <MediaSection 
+                  title="Anime em Alta (Prévia)" 
+                  medias={(animeQuery.data || []).slice(0, 4)} 
+                />
+              </>
+            ) : (
+              <>
+                <MediaSection 
+                  title="Filmes Populares" 
+                  medias={moviesQuery.data || []} 
+                />
+                
+                <MediaSection 
+                  title="Séries Populares" 
+                  medias={seriesQuery.data || []} 
+                />
+                
+                <MediaSection 
+                  title="Anime em Alta" 
+                  medias={animeQuery.data || []} 
+                />
+                
+                {/* Premium content */}
+                {topRatedAnimeQuery.data && (
+                  <MediaSection 
+                    title="Animes Melhor Avaliados" 
+                    medias={topRatedAnimeQuery.data} 
+                  />
+                )}
+                
+                {/* Specific anime recommendations featuring Solo Leveling */}
+                {specificAnimeQuery.data && (
+                  <MediaSection 
+                    title="Semelhantes a Solo Leveling" 
+                    medias={specificAnimeQuery.data} 
+                  />
+                )}
+              </>
             )}
             
             {/* Subscription upsell section */}
-            {!isSubscribed && !isAdmin && !hasTempAccess && (
+            {!hasAccess && (
               <div className="px-4 py-8 mt-8 bg-gradient-to-r from-gray-900 to-gray-800 rounded-lg mx-4">
                 <div className="max-w-3xl mx-auto text-center">
                   <h2 className="text-2xl font-bold text-white mb-4">Acesse conteúdo exclusivo!</h2>

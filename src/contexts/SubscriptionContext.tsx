@@ -9,8 +9,10 @@ interface SubscriptionContextType {
   isLoading: boolean;
   isAdmin: boolean;
   hasTempAccess: boolean;
+  hasTrialAccess: boolean;
   subscriptionTier: string | null;
   subscriptionEnd: string | null;
+  trialEnd: string | null;
   checkSubscription: () => Promise<void>;
 }
 
@@ -22,16 +24,20 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasTempAccess, setHasTempAccess] = useState(false);
+  const [hasTrialAccess, setHasTrialAccess] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [trialEnd, setTrialEnd] = useState<string | null>(null);
 
   const checkSubscription = async () => {
     if (!user) {
       setIsSubscribed(false);
       setIsAdmin(false);
       setHasTempAccess(false);
+      setHasTrialAccess(false);
       setSubscriptionTier(null);
       setSubscriptionEnd(null);
+      setTrialEnd(null);
       setIsLoading(false);
       return;
     }
@@ -49,8 +55,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setIsSubscribed(data.subscribed);
       setIsAdmin(data.is_admin || false);
       setHasTempAccess(data.has_temp_access || false);
+      setHasTrialAccess(data.has_trial_access || false);
       setSubscriptionTier(data.subscription_tier || null);
       setSubscriptionEnd(data.subscription_end || null);
+      setTrialEnd(data.trial_end || null);
     } catch (error) {
       console.error('Failed to check subscription:', error);
       toast.error('Erro ao verificar assinatura');
@@ -79,8 +87,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         isLoading, 
         isAdmin,
         hasTempAccess,
+        hasTrialAccess,
         subscriptionTier, 
         subscriptionEnd,
+        trialEnd,
         checkSubscription
       }}
     >

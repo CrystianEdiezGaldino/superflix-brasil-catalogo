@@ -65,8 +65,19 @@ serve(async (req) => {
       .eq('status', 'active')
       .maybeSingle();
 
-    // Check for temporary access
+    // Check for trial access
     const now = new Date();
+    const { data: subscriptionWithTrial, error: trialError } = await supabaseClient
+      .from('subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .gt('trial_end', now.toISOString())
+      .maybeSingle();
+
+    const hasTrialAccess = !trialError && subscriptionWithTrial;
+    console.log(`[CHECK-SUBSCRIPTION] Trial access check - ${JSON.stringify({hasTrialAccess: !!hasTrialAccess})}`);
+
+    // Check for temporary access
     const { data: tempAccess, error: tempAccessError } = await supabaseClient
       .from('temp_access')
       .select('*')
@@ -121,11 +132,17 @@ serve(async (req) => {
       JSON.stringify({
         hasActiveSubscription: !subscriptionError && subscription?.status === 'active',
         hasTempAccess: !!hasTempAccess,
+        has_trial_access: !!hasTrialAccess,
         isAdmin: !!isAdmin,
+        subscribed: (!subscriptionError && subscription?.status === 'active') || !!hasTrialAccess,
         subscription,
         tempAccess,
+        trial_access: subscriptionWithTrial,
+        trial_end: subscriptionWithTrial?.trial_end || null,
         user: user,
-        authUsers: allAuthUsers
+        authUsers: allAuthUsers,
+        subscription_tier: subscription?.plan_type || (hasTrialAccess ? 'trial' : null),
+        subscription_end: subscription?.current_period_end || null
       }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },

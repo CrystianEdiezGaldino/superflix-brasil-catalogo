@@ -7,7 +7,7 @@ import { toast } from "sonner";
 interface AuthContextProps {
   session: Session | null;
   user: User | null;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
@@ -49,16 +49,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: metadata
+        }
       });
       
       if (error) throw error;
       
-      toast.success("Cadastro realizado! Verifique seu email para confirmar.");
+      // Create trial subscription for new user
+      if (!error) {
+        toast.success("Cadastro realizado! Verifique seu email para confirmar.");
+        
+        // The trial subscription will be created by a trigger function in Supabase
+        // after email verification is completed
+      }
     } catch (error: any) {
       toast.error(error.message || "Erro ao cadastrar");
       throw error;

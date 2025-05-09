@@ -1,30 +1,74 @@
 
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
 import { fetchMovieDetails } from "@/services/tmdbApi";
 import VideoPlayer from "@/components/VideoPlayer";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { toast } from "sonner";
 
 const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
+  
+  const { user, loading: authLoading } = useAuth();
+  const { 
+    isSubscribed, 
+    isAdmin, 
+    hasTempAccess,
+    hasTrialAccess,
+    isLoading: subscriptionLoading 
+  } = useSubscription();
+
+  const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error("É necessário fazer login para acessar este conteúdo");
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
 
   const { data: movie, isLoading, error } = useQuery({
     queryKey: ["movie", id],
     queryFn: () => fetchMovieDetails(Number(id)),
-    enabled: !!id,
+    enabled: !!id && !!user,
   });
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  if (isLoading) {
+  // Show subscription modal if trying to watch without access
+  const handleWatchClick = () => {
+    if (!hasAccess) {
+      toast.error("É necessário ter uma assinatura para assistir");
+      navigate("/subscribe");
+    } else {
+      setShowPlayer(!showPlayer);
+    }
+  };
+
+  if (authLoading || subscriptionLoading || isLoading) {
     return (
       <div className="min-h-screen bg-netflix-background flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
+        <h1 className="text-2xl font-bold text-white mb-4">Faça login para acessar</h1>
+        <Button onClick={() => navigate("/auth")} className="bg-netflix-red hover:bg-red-700">
+          Ir para login
+        </Button>
       </div>
     );
   }
@@ -105,18 +149,38 @@ const MovieDetails = () => {
             {movie.imdb_id && (
               <div className="mt-8">
                 <Button 
-                  onClick={() => setShowPlayer(!showPlayer)} 
-                  className="bg-netflix-red hover:bg-red-700"
+                  onClick={handleWatchClick} 
+                  className={hasAccess ? "bg-netflix-red hover:bg-red-700" : "bg-gray-500 hover:bg-gray-600"}
                 >
-                  {showPlayer ? "Ocultar Player" : "Assistir Agora"}
+                  {showPlayer ? "Ocultar Player" : hasAccess ? "Assistir Agora" : "Assinar para Assistir"}
                 </Button>
+                
+                {!hasAccess && (
+                  <Link to="/subscribe">
+                    <Button 
+                      variant="outline" 
+                      className="ml-4 border-netflix-red text-netflix-red hover:bg-netflix-red/10"
+                    >
+                      Ver Planos
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            )}
+            
+            {!hasAccess && (
+              <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-md">
+                <p className="text-amber-400 text-sm">
+                  É necessário ter uma assinatura ativa para assistir a este conteúdo.
+                  Assine um de nossos planos para ter acesso ilimitado.
+                </p>
               </div>
             )}
           </div>
         </div>
 
         {/* Player de vídeo */}
-        {showPlayer && movie.imdb_id && (
+        {showPlayer && movie.imdb_id && hasAccess && (
           <div className="mt-10">
             <VideoPlayer type="filme" imdbId={movie.imdb_id} />
           </div>
