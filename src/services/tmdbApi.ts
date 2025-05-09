@@ -1,265 +1,181 @@
-import { Movie, Series, Season, Episode, MediaItem } from "@/types/movie";
+const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
 
-const API_KEY = "062def1aa1f84c69eb8cd943df2ccc0d";
-const BASE_URL = "https://api.themoviedb.org/3";
-const LANGUAGE = "pt-BR";
-const REGION = "BR";
-
-const headers = {
-  Authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIwNjJkZWYxYWExZjg0YzY5ZWI4Y2Q5NDNkZjJjY2MwZCIsIm5iZiI6MS43NDY2NzA1MTI4NjA5OTk4ZSs5LCJzdWIiOiI2ODFjMTNiMGY2MWJlMmQ4YzY5M2FjMzMiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.aFl6knGX6f2YA0u0_sSYRu-CsxxAGX-rZpc3RAffRQQ",
-  "Content-Type": "application/json;charset=utf-8",
-};
-
-export async function fetchPopularMovies(page = 1): Promise<Movie[]> {
+export const fetchPopularMovies = async (page = 1) => {
   try {
-    const url = `${BASE_URL}/discover/movie?sort_by=popularity.desc&page=${page}&language=${LANGUAGE}&region=${REGION}&include_video=true&vote_count.gte=100`;
-    const response = await fetch(url, { headers });
+    const response = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${API_KEY}&language=pt-BR&page=${page}`);
     const data = await response.json();
     
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
-    }
-    
-    return data.results.map((movie: any) => ({
+    // Add media_type to each movie
+    const moviesWithType = data.results.map((movie: any) => ({
       ...movie,
       media_type: "movie"
     }));
+    
+    return moviesWithType;
   } catch (error) {
     console.error("Error fetching popular movies:", error);
     return [];
   }
-}
+};
 
-export async function fetchPopularSeries(page = 1): Promise<Series[]> {
+export const searchMedia = async (query: string) => {
   try {
-    const url = `${BASE_URL}/discover/tv?sort_by=popularity.desc&page=${page}&language=${LANGUAGE}&region=${REGION}&vote_count.gte=50`;
-    const response = await fetch(url, { headers });
+    const response = await fetch(`https://api.themoviedb.org/3/search/multi?api_key=${API_KEY}&language=pt-BR&query=${query}`);
     const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
-    }
-    
-    return data.results.map((series: any) => ({
-      ...series,
-      media_type: "tv"
-    }));
-  } catch (error) {
-    console.error("Error fetching popular series:", error);
-    return [];
-  }
-}
-
-export async function fetchMovieDetails(id: number): Promise<Movie> {
-  try {
-    const url = `${BASE_URL}/movie/${id}?language=${LANGUAGE}&append_to_response=external_ids,credits,similar,videos`;
-    const response = await fetch(url, { headers });
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
-    }
-    
-    return {
-      ...data,
-      imdb_id: data.imdb_id,
-      media_type: "movie"
-    };
-  } catch (error) {
-    console.error(`Error fetching movie details for ID ${id}:`, error);
-    throw error;
-  }
-}
-
-export async function fetchSeriesDetails(id: number): Promise<Series> {
-  try {
-    const url = `${BASE_URL}/tv/${id}?language=${LANGUAGE}&append_to_response=external_ids,credits,similar,videos`;
-    const response = await fetch(url, { headers });
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
-    }
-    
-    return {
-      ...data,
-      external_ids: data.external_ids,
-      media_type: "tv"
-    };
-  } catch (error) {
-    console.error(`Error fetching series details for ID ${id}:`, error);
-    throw error;
-  }
-}
-
-export async function fetchSeasonDetails(seriesId: number, seasonNumber: number): Promise<Season> {
-  try {
-    const url = `${BASE_URL}/tv/${seriesId}/season/${seasonNumber}?language=${LANGUAGE}`;
-    const response = await fetch(url, { headers });
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
-    }
-    
-    return data;
-  } catch (error) {
-    console.error(`Error fetching season ${seasonNumber} details for series ${seriesId}:`, error);
-    throw error;
-  }
-}
-
-export async function searchMedia(query: string): Promise<(Movie | Series)[]> {
-  try {
-    const url = `${BASE_URL}/search/multi?query=${encodeURIComponent(query)}&language=${LANGUAGE}&page=1&region=${REGION}&include_adult=false`;
-    const response = await fetch(url, { headers });
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(`Error ${response.status}: ${data.status_message || 'Erro desconhecido'}`);
-    }
-    
-    return data.results.filter((item: any) => 
-      item.media_type === "movie" || item.media_type === "tv"
-    );
+    return data.results;
   } catch (error) {
     console.error("Error searching media:", error);
     return [];
   }
-}
+};
 
-// Fetch popular anime
-export const fetchAnime = async (): Promise<Series[]> => {
+export const fetchMovieDetails = async (id: string) => {
   try {
-    const response = await fetch(
-      `${BASE_URL}/discover/tv?api_key=${API_KEY}&with_keywords=210024&language=${LANGUAGE}&sort_by=popularity.desc&vote_count.gte=100`
-    );
-    
-    if (!response.ok) {
-      throw new Error("Failed to fetch anime");
-    }
-    
+    const response = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=pt-BR`);
     const data = await response.json();
-    
-    return data.results.map((item: any) => ({
-      ...item,
-      media_type: "tv"
-    }));
+    return data;
   } catch (error) {
-    console.error("Error fetching anime:", error);
-    return [];
+    console.error("Error fetching movie details:", error);
+    return null;
   }
 };
 
-// Fetch top rated anime
-export const fetchTopRatedAnime = async (): Promise<Series[]> => {
+export const fetchSeriesDetails = async (id: string) => {
   try {
-    const response = await fetch(
-      `${BASE_URL}/discover/tv?api_key=${API_KEY}&with_keywords=210024&language=${LANGUAGE}&sort_by=vote_average.desc&vote_count.gte=200`
-    );
-    
-    if (!response.ok) {
-      throw new Error("Failed to fetch top rated anime");
-    }
-    
+    const response = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=pt-BR`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching series details:", error);
+    return null;
+  }
+};
+
+export const fetchSeriesSeasonDetails = async (id: string, seasonNumber: number) => {
+  try {
+    const response = await fetch(`https://api.themoviedb.org/3/tv/${id}/season/${seasonNumber}?api_key=${API_KEY}&language=pt-BR`);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching series season details:", error);
+    return null;
+  }
+};
+
+export const fetchTopRatedAnime = async () => {
+  try {
+    const response = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=pt-BR&with_genres=16&sort_by=vote_average.desc&vote_count.gte=10`);
     const data = await response.json();
     
-    return data.results.map((item: any) => ({
-      ...item,
+    // Add media_type to each TV series
+    const animeWithType = data.results.map((anime: any) => ({
+      ...anime,
       media_type: "tv"
     }));
+    
+    return animeWithType;
   } catch (error) {
     console.error("Error fetching top rated anime:", error);
     return [];
   }
 };
 
-// Get specific anime recommendations like Solo Leveling
-export const fetchSpecificAnimeRecommendations = async (): Promise<Series[]> => {
-  try {
-    // Solo Leveling ID
-    const soloLevelingId = 156680;
-    
-    const response = await fetch(
-      `${BASE_URL}/tv/${soloLevelingId}/recommendations?api_key=${API_KEY}&language=${LANGUAGE}`
-    );
-    
-    if (!response.ok) {
-      throw new Error("Failed to fetch anime recommendations");
+export const fetchSpecificAnimeRecommendations = async () => {
+    try {
+        // Using specific keywords and genres associated with anime
+        const response = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=pt-BR&with_keywords=210024&sort_by=popularity.desc`);
+        const data = await response.json();
+        
+        // Add media_type to each TV series
+        const animeWithType = data.results.map((anime: any) => ({
+          ...anime,
+          media_type: "tv"
+        }));
+        
+        return animeWithType;
+    } catch (error) {
+        console.error("Error fetching specific anime recommendations:", error);
+        return [];
     }
-    
+};
+
+// New function to fetch popular series with pagination and items per page
+export const fetchPopularSeries = async (page = 1, itemsPerPage = 20) => {
+  try {
+    const response = await fetch(`https://api.themoviedb.org/3/tv/popular?api_key=${API_KEY}&language=pt-BR&page=${page}`);
     const data = await response.json();
     
-    return data.results.map((item: any) => ({
-      ...item,
+    // Map to add media_type to each TV series
+    const seriesWithType = data.results.map((series: any) => ({
+      ...series,
       media_type: "tv"
     }));
+    
+    // Limit results based on itemsPerPage
+    return seriesWithType.slice(0, itemsPerPage);
   } catch (error) {
-    console.error("Error fetching anime recommendations:", error);
+    console.error("Error fetching popular series:", error);
     return [];
   }
 };
 
-// Fetch Korean dramas (doramas)
-export const fetchKoreanDramas = async (): Promise<Series[]> => {
+// Update anime fetch to include pagination and items per page
+export const fetchAnime = async (page = 1, itemsPerPage = 20) => {
   try {
-    // Korean drama keyword ID (K-drama)
-    const koreanDramaKeywordId = 10735;
-    
-    const response = await fetch(
-      `${BASE_URL}/discover/tv?api_key=${API_KEY}&with_keywords=${koreanDramaKeywordId}&language=${LANGUAGE}&sort_by=popularity.desc&vote_count.gte=50`
-    );
-    
-    if (!response.ok) {
-      throw new Error("Failed to fetch Korean dramas");
-    }
-    
+    // Using specific keywords and genres associated with anime
+    const response = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=pt-BR&with_keywords=210024&page=${page}`);
     const data = await response.json();
     
-    return data.results.map((item: any) => ({
-      ...item,
+    // Map to add media_type to each TV series
+    const animeWithType = data.results.map((anime: any) => ({
+      ...anime,
       media_type: "tv"
     }));
+    
+    // Limit results based on itemsPerPage
+    return animeWithType.slice(0, itemsPerPage);
   } catch (error) {
-    console.error("Error fetching Korean dramas:", error);
+    console.error("Error fetching anime:", error);
     return [];
   }
 };
 
-// Add function to fetch recommendations
-export const fetchRecommendations = async (mediaIds: number[], mediaType: "movie" | "tv"): Promise<MediaItem[]> => {
+// New function to fetch recommendations based on a media item
+export const fetchRecommendations = async (mediaType: string, id: string) => {
   try {
-    // If no mediaIds provided, return empty array
-    if (!mediaIds.length) return [];
-    
-    // Take one random ID from the list to get recommendations
-    const randomIndex = Math.floor(Math.random() * mediaIds.length);
-    const randomId = mediaIds[randomIndex];
-    
-    const response = await fetch(
-      `${BASE_URL}/${mediaType}/${randomId}/recommendations?api_key=${API_KEY}&language=${LANGUAGE}`
-    );
-    
-    if (!response.ok) {
-      throw new Error("Failed to fetch recommendations");
-    }
-    
+    const response = await fetch(`https://api.themoviedb.org/3/${mediaType}/${id}/recommendations?api_key=${API_KEY}&language=pt-BR`);
     const data = await response.json();
     
-    // Ensure we correctly type the media items
-    if (mediaType === "movie") {
-      return data.results.map((item: any) => ({
-        ...item,
-        media_type: "movie"
-      })) as Movie[];
-    } else {
-      return data.results.map((item: any) => ({
-        ...item,
-        media_type: "tv"
-      })) as Series[];
-    }
+    // Add media_type to each recommended item
+    const recommendationsWithType = data.results.map((item: any) => ({
+      ...item,
+      media_type: mediaType === 'movie' ? 'movie' : 'tv'
+    }));
+    
+    return recommendationsWithType;
   } catch (error) {
     console.error("Error fetching recommendations:", error);
+    return [];
+  }
+};
+
+// New function to fetch doramas (Korean dramas)
+export const fetchDoramas = async (page = 1, itemsPerPage = 20) => {
+  try {
+    // Using specific regions and keywords associated with doramas
+    const response = await fetch(`https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&language=pt-BR&with_original_language=ko&page=${page}`);
+    const data = await response.json();
+    
+    // Map to add media_type to each TV series
+    const doramaWithType = data.results.map((dorama: any) => ({
+      ...dorama,
+      media_type: "tv"
+    }));
+    
+    // Limit results based on itemsPerPage
+    return doramaWithType.slice(0, itemsPerPage);
+  } catch (error) {
+    console.error("Error fetching doramas:", error);
     return [];
   }
 };

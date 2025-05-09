@@ -116,3 +116,44 @@
     --delay: #{$i};
   }
 }
+
+/* Active route styles */
+.active-route {
+  @apply text-netflix-red font-medium;
+  position: relative;
+}
+
+.active-route::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: theme('colors.netflix-red');
+  transform: scaleX(1);
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+/* Hover effect for menu items */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: theme('colors.netflix-red');
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s ease;
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+}

@@ -10,67 +10,41 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import MediaCard from "@/components/MediaCard";
 import { Series } from "@/types/movie";
-import { fetchAnime, fetchTopRatedAnime, fetchSpecificAnimeRecommendations, searchMedia } from "@/services/tmdbApi";
-import { Search, Filter, Tv, Star } from "lucide-react";
+import { fetchPopularSeries, searchMedia } from "@/services/tmdbApi";
+import { Search, Filter, ChevronDown } from "lucide-react";
 
-const Animes = () => {
+const SeriesPage = () => {
+  const [series, setSeries] = useState<Series[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [ratingFilter, setRatingFilter] = useState<string>("all");
-  const [animes, setAnimes] = useState<Series[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const [itemsPerLoad] = useState(24); // Increased items per load
   const observer = useRef<IntersectionObserver>();
   const loadingRef = useRef<HTMLDivElement>(null);
-  
-  const { data: popularAnime, isLoading: loadingPopular } = useQuery({
-    queryKey: ["popularAnime", page],
-    queryFn: () => fetchAnime(page, itemsPerLoad),
+
+  const { data: initialSeries, isLoading: isLoadingInitial } = useQuery({
+    queryKey: ["popularSeries", 1],
+    queryFn: () => fetchPopularSeries(1, itemsPerLoad),
     staleTime: 1000 * 60 * 5, // 5 minutes
   });
 
-  const { data: topRatedAnime, isLoading: loadingTopRated } = useQuery({
-    queryKey: ["topRatedAnime"],
-    queryFn: fetchTopRatedAnime
-  });
-
-  const { data: specificRecommendations, isLoading: loadingSpecific } = useQuery({
-    queryKey: ["specificAnimeRecommendations"],
-    queryFn: fetchSpecificAnimeRecommendations
-  });
-
-  // Set initial animes when they load
-  useEffect(() => {
-    if (popularAnime && page === 1) {
-      setAnimes(popularAnime);
-    } else if (popularAnime && page > 1) {
-      setAnimes(prev => [...prev, ...popularAnime]);
-    }
-  }, [popularAnime, page]);
-
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      setSearchQuery("");
-      if (popularAnime) setAnimes(popularAnime);
+      toast.error("Digite algo para pesquisar");
       return;
     }
 
     setIsSearching(true);
     try {
       const results = await searchMedia(searchQuery);
-      const animeResults = results.filter((item) => 
-        item.media_type === "tv" && 
-        (item.name?.toLowerCase().includes("anime") || 
-        item.name?.match(/\bjapanese\b/i) || 
-        item.name?.match(/\banime\b/i))
-      ) as Series[];
-      
-      setAnimes(animeResults);
+      const seriesResults = results.filter((item) => item.media_type === "tv") as Series[];
+      setSeries(seriesResults);
       setPage(1);
-      setHasMore(animeResults.length >= itemsPerLoad);
+      setHasMore(seriesResults.length >= itemsPerLoad);
     } catch (error) {
       console.error("Erro na pesquisa:", error);
       toast.error("Ocorreu um erro durante a pesquisa.");
@@ -79,14 +53,14 @@ const Animes = () => {
     }
   };
 
-  const applyFilters = useCallback((animeList: Series[]) => {
-    let filteredAnimes = [...animeList];
+  const applyFilters = useCallback((seriesList: Series[]) => {
+    let filteredSeries = [...seriesList];
 
     if (yearFilter && yearFilter !== "all") {
       const year = parseInt(yearFilter);
-      filteredAnimes = filteredAnimes.filter((anime) => {
-        const releaseYear = anime.first_air_date 
-          ? new Date(anime.first_air_date).getFullYear() 
+      filteredSeries = filteredSeries.filter((series) => {
+        const releaseYear = series.first_air_date 
+          ? new Date(series.first_air_date).getFullYear() 
           : 0;
         return releaseYear === year;
       });
@@ -94,30 +68,40 @@ const Animes = () => {
 
     if (ratingFilter && ratingFilter !== "all") {
       const rating = parseFloat(ratingFilter);
-      filteredAnimes = filteredAnimes.filter((anime) => {
-        return anime.vote_average >= rating;
+      filteredSeries = filteredSeries.filter((series) => {
+        return series.vote_average >= rating;
       });
     }
 
-    return filteredAnimes;
+    return filteredSeries;
   }, [yearFilter, ratingFilter]);
 
-  // Apply filters when they change
+  // Set initial series when they load
   useEffect(() => {
-    if (!popularAnime) return;
-    
-    setIsFiltering(true);
-    const filtered = applyFilters(popularAnime);
-    setAnimes(filtered);
-    setIsFiltering(false);
-  }, [yearFilter, ratingFilter, popularAnime, applyFilters]);
+    if (initialSeries) {
+      setSeries(initialSeries);
+    }
+  }, [initialSeries]);
 
-  // Load more animes when scrolling to the bottom
-  const loadMoreAnimes = async () => {
+  // Load more series when scrolling to the bottom or clicking "load more"
+  const loadMoreSeries = async () => {
     if (isSearching || isFiltering || !hasMore) return;
     
-    const nextPage = page + 1;
-    setPage(nextPage);
+    try {
+      const nextPage = page + 1;
+      const newSeries = await fetchPopularSeries(nextPage, itemsPerLoad);
+      
+      if (newSeries.length === 0) {
+        setHasMore(false);
+        return;
+      }
+      
+      setSeries((prevSeries) => [...prevSeries, ...newSeries]);
+      setPage(nextPage);
+    } catch (error) {
+      console.error("Erro ao carregar mais séries:", error);
+      toast.error("Erro ao carregar mais séries.");
+    }
   };
 
   // Setup intersection observer for infinite scrolling
@@ -132,7 +116,7 @@ const Animes = () => {
 
     observer.current = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && hasMore) {
-        loadMoreAnimes();
+        loadMoreSeries();
       }
     }, options);
 
@@ -146,6 +130,16 @@ const Animes = () => {
       }
     };
   }, [hasMore, isSearching, isFiltering, page]);
+
+  // Apply filters when they change
+  useEffect(() => {
+    if (!initialSeries) return;
+    
+    setIsFiltering(true);
+    const filtered = applyFilters(initialSeries);
+    setSeries(filtered);
+    setIsFiltering(false);
+  }, [yearFilter, ratingFilter, initialSeries, applyFilters]);
 
   // Generate year options for filter
   const generateYearOptions = () => {
@@ -161,17 +155,13 @@ const Animes = () => {
 
   // Years for the filter
   const yearOptions = generateYearOptions();
-
-  const isLoading = loadingPopular || loadingTopRated || loadingSpecific || isSearching || isFiltering;
-
+  
   return (
     <div className="min-h-screen bg-netflix-background">
-      <Navbar onSearch={setSearchQuery} />
+      <Navbar onSearch={() => {}} />
       
-      <div className="container max-w-full pt-28 pb-20 px-4">
-        <h1 className="text-3xl font-bold text-white mb-8 flex items-center">
-          <Tv size={24} className="mr-2" /> Animes
-        </h1>
+      <div className="pt-24 pb-10 px-4 md:px-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">Séries Dubladas em Português</h1>
         
         {/* Search and Filter Section */}
         <div className="bg-black/40 p-6 rounded-lg mb-8 backdrop-blur-sm border border-gray-800">
@@ -179,7 +169,7 @@ const Animes = () => {
             <div className="flex flex-1 gap-2">
               <Input 
                 type="text" 
-                placeholder="Pesquisar animes..." 
+                placeholder="Pesquisar séries..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="bg-gray-900 border-gray-700 text-white"
@@ -234,21 +224,21 @@ const Animes = () => {
           </div>
         </div>
         
-        {/* Anime Grid */}
-        {isLoading ? (
+        {/* Series Grid */}
+        {isLoadingInitial ? (
           <div className="flex justify-center py-20">
             <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : animes.length === 0 ? (
+        ) : series.length === 0 ? (
           <Card className="bg-black/40 border-gray-800">
             <CardContent className="flex flex-col items-center justify-center h-64">
-              <p className="text-gray-400 text-lg">Nenhum anime encontrado</p>
+              <p className="text-gray-400 text-lg">Nenhuma série encontrada</p>
               <Button 
                 onClick={() => {
                   setSearchQuery("");
                   setYearFilter("all");
                   setRatingFilter("all");
-                  if (popularAnime) setAnimes(popularAnime);
+                  if (initialSeries) setSeries(initialSeries);
                 }}
                 variant="link" 
                 className="text-netflix-red mt-2"
@@ -258,15 +248,15 @@ const Animes = () => {
             </CardContent>
           </Card>
         ) : (
-          <>
+          <div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-              {animes.map((anime, index) => (
+              {series.map((series, index) => (
                 <div 
-                  key={anime.id} 
+                  key={series.id} 
                   className="movie-grid-item"
                   style={{ '--delay': index } as React.CSSProperties}
                 >
-                  <MediaCard media={anime} />
+                  <MediaCard media={series} />
                 </div>
               ))}
             </div>
@@ -275,37 +265,18 @@ const Animes = () => {
             {hasMore && !isSearching && !isFiltering && (
               <div ref={loadingRef} className="flex justify-center py-8">
                 <Button 
-                  onClick={loadMoreAnimes}
+                  onClick={loadMoreSeries}
                   className="bg-netflix-red hover:bg-red-700 text-white"
                 >
-                  Carregar Mais Animes
+                  Carregar Mais Séries
                 </Button>
               </div>
             )}
-          </>
-        )}
-        
-        {!isSearching && !isFiltering && topRatedAnime && topRatedAnime.length > 0 && (
-          <section className="mt-12">
-            <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
-              <Star className="mr-2" /> Animes Mais Bem Avaliados
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {topRatedAnime.slice(0, 12).map((anime, index) => (
-                <div 
-                  key={anime.id}
-                  className="movie-grid-item"
-                  style={{ '--delay': index } as React.CSSProperties}
-                >
-                  <MediaCard key={anime.id} media={anime} />
-                </div>
-              ))}
-            </div>
-          </section>
+          </div>
         )}
       </div>
     </div>
   );
 };
 
-export default Animes;
+export default SeriesPage;
