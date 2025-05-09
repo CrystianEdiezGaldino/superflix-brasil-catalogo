@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
@@ -8,85 +9,130 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPopularMovies, fetchPopularSeries, fetchAnime } from "@/services/tmdbApi";
 import ContentPreview from "@/components/home/ContentPreview";
 import MediaSection from "@/components/MediaSection";
+import { MediaItem } from "@/types/movie";
 
-const popularSeries = [
+// Adicionar os campos necessários para satisfazer o tipo MediaItem
+const popularSeries: MediaItem[] = [
   { 
     id: 1, 
     name: "Eu, a Patroa e as Crianças", 
+    overview: "Uma sitcom sobre uma família moderna.",
     poster_path: "/tXcJrFrSFVcpXTLcHAzU3AvlkUV.jpg", 
+    backdrop_path: "/tXcJrFrSFVcpXTLcHAzU3AvlkUV.jpg",
+    first_air_date: "2001-03-28",
     media_type: "tv",
-    vote_average: 8.3
+    vote_average: 8.3,
+    original_language: "en"
   },
   { 
     id: 2, 
     name: "Dois Homens e Meio", 
+    overview: "Comédia sobre dois irmãos vivendo juntos.",
     poster_path: "/dPCv0RaOj2pRxZcUDOoqXFe7Pqn.jpg", 
+    backdrop_path: "/dPCv0RaOj2pRxZcUDOoqXFe7Pqn.jpg",
+    first_air_date: "2003-09-22",
     media_type: "tv",
-    vote_average: 7.8
+    vote_average: 7.8,
+    original_language: "en"
   },
   { 
     id: 3, 
     name: "The Big Bang Theory", 
+    overview: "Uma série sobre físicos nerds e sua vizinha.",
     poster_path: "/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg", 
+    backdrop_path: "/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg",
+    first_air_date: "2007-09-24",
     media_type: "tv",
-    vote_average: 8.1
+    vote_average: 8.1,
+    original_language: "en"
   },
   { 
     id: 4, 
     name: "Chaves", 
+    overview: "Série mexicana sobre um garoto que vive em uma vila.",
     poster_path: "/8D83nX7YFhR8YcvrJcnJ2PDgah5.jpg", 
+    backdrop_path: "/8D83nX7YFhR8YcvrJcnJ2PDgah5.jpg",
+    first_air_date: "1973-02-26",
     media_type: "tv",
-    vote_average: 8.5
+    vote_average: 8.5,
+    original_language: "es"
   },
   { 
     id: 5, 
     name: "Todo Mundo Odeia o Chris", 
+    overview: "Baseada na adolescência de Chris Rock.",
     poster_path: "/3NbGsr4VgwugmZ7QA7k3SVIUeCo.jpg", 
+    backdrop_path: "/3NbGsr4VgwugmZ7QA7k3SVIUeCo.jpg",
+    first_air_date: "2005-09-22",
     media_type: "tv",
-    vote_average: 8.4
+    vote_average: 8.4,
+    original_language: "en"
   },
   { 
     id: 6, 
     name: "Friends", 
+    overview: "Seis amigos, uma cafeteria e muita diversão.",
     poster_path: "/f496cm9enuEsZkSPzCwnTESEK5s.jpg", 
+    backdrop_path: "/f496cm9enuEsZkSPzCwnTESEK5s.jpg",
+    first_air_date: "1994-09-22",
     media_type: "tv",
-    vote_average: 8.4
+    vote_average: 8.4,
+    original_language: "en"
   },
   { 
     id: 7, 
     name: "Um Maluco no Pedaço", 
+    overview: "Will Smith se muda para Bel-Air.",
     poster_path: "/1BmrF4J9fj2tT2zgfXrRnLQ1wWi.jpg", 
+    backdrop_path: "/1BmrF4J9fj2tT2zgfXrRnLQ1wWi.jpg",
+    first_air_date: "1990-09-10",
     media_type: "tv",
-    vote_average: 8.2
+    vote_average: 8.2,
+    original_language: "en"
   },
   { 
     id: 8, 
     name: "How I Met Your Mother", 
+    overview: "Ted conta aos seus filhos como conheceu a mãe deles.",
     poster_path: "/izncB6dCLV7LBQ5JcdNnUZt3vc9.jpg", 
+    backdrop_path: "/izncB6dCLV7LBQ5JcdNnUZt3vc9.jpg",
+    first_air_date: "2005-09-19",
     media_type: "tv",
-    vote_average: 8.0
+    vote_average: 8.0,
+    original_language: "en"
   },
   { 
     id: 9, 
     name: "That '70s Show", 
+    overview: "Adolescentes nos anos 70.",
     poster_path: "/k2RjYOJ7nj68PwPJUzNueW6qGX5.jpg", 
+    backdrop_path: "/k2RjYOJ7nj68PwPJUzNueW6qGX5.jpg",
+    first_air_date: "1998-08-23",
     media_type: "tv",
-    vote_average: 7.9
+    vote_average: 7.9,
+    original_language: "en"
   },
   { 
     id: 10, 
     name: "Supernatural", 
+    overview: "Dois irmãos caçam criaturas sobrenaturais.",
     poster_path: "/KoYWXbnYuS3b0GyQPkbuexlVK9.jpg", 
+    backdrop_path: "/KoYWXbnYuS3b0GyQPkbuexlVK9.jpg",
+    first_air_date: "2005-09-13",
     media_type: "tv",
-    vote_average: 8.3
+    vote_average: 8.3,
+    original_language: "en"
   }
 ];
 
-const popularAnimes = [
+const popularAnimes: MediaItem[] = [
   {
     id: 11,
     name: "Naruto",
+    overview: "Jovem ninja busca reconhecimento e sonha em se tornar Hokage.",
     poster_path: "/9ptbVZpKNy5NY9D4zq4KGiYWRQY.jpg",
+    backdrop_path: "/9ptbVZpKNy5NY9D4zq4KGiYWRQY.jpg",
+    first_air_date: "2002-10-03",
     media_type: "tv",
     vote_average: 8.4,
     original_language: "ja"
@@ -94,7 +140,10 @@ const popularAnimes = [
   {
     id: 12,
     name: "One Piece",
+    overview: "Piratas em busca do tesouro One Piece.",
     poster_path: "/fcXdJlbSdUEeMSJFsXKsznGwwok.jpg",
+    backdrop_path: "/fcXdJlbSdUEeMSJFsXKsznGwwok.jpg",
+    first_air_date: "1999-10-20",
     media_type: "tv",
     vote_average: 8.7,
     original_language: "ja"
@@ -102,7 +151,10 @@ const popularAnimes = [
   {
     id: 13,
     name: "Dragon Ball",
+    overview: "Goku e seus amigos defendem a Terra.",
     poster_path: "/f2zhRLqwRLrKhEMeIM7Z5buJFo3.jpg",
+    backdrop_path: "/f2zhRLqwRLrKhEMeIM7Z5buJFo3.jpg",
+    first_air_date: "1986-02-26",
     media_type: "tv",
     vote_average: 8.3,
     original_language: "ja"
@@ -110,7 +162,10 @@ const popularAnimes = [
   {
     id: 14,
     name: "Attack on Titan",
+    overview: "Humanidade luta contra titãs gigantes.",
     poster_path: "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
+    backdrop_path: "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
+    first_air_date: "2013-04-07",
     media_type: "tv",
     vote_average: 8.7,
     original_language: "ja"
@@ -118,7 +173,10 @@ const popularAnimes = [
   {
     id: 15,
     name: "Demon Slayer",
+    overview: "Jovem caça demônios para vingar sua família.",
     poster_path: "/wrCVHdkBlBWdJUZPvnJWcBRuhSY.jpg",
+    backdrop_path: "/wrCVHdkBlBWdJUZPvnJWcBRuhSY.jpg",
+    first_air_date: "2019-04-06",
     media_type: "tv",
     vote_average: 8.6,
     original_language: "ja"
@@ -126,7 +184,10 @@ const popularAnimes = [
   {
     id: 16,
     name: "Death Note",
+    overview: "Estudante encontra caderno que mata pessoas.",
     poster_path: "/g8hHbsRmHxbDz7BT21cNjpBcFrn.jpg",
+    backdrop_path: "/g8hHbsRmHxbDz7BT21cNjpBcFrn.jpg",
+    first_air_date: "2006-10-03",
     media_type: "tv",
     vote_average: 8.5,
     original_language: "ja"
@@ -134,7 +195,10 @@ const popularAnimes = [
   {
     id: 17,
     name: "Solo Leveling",
+    overview: "Caçador fraco ganha poderes únicos.",
     poster_path: "/eCD7WS9h4lCT8N4Xavc9u8R1IGk.jpg",
+    backdrop_path: "/eCD7WS9h4lCT8N4Xavc9u8R1IGk.jpg",
+    first_air_date: "2024-01-06",
     media_type: "tv",
     vote_average: 8.6,
     original_language: "ja"
@@ -142,7 +206,10 @@ const popularAnimes = [
   {
     id: 18,
     name: "Jujutsu Kaisen",
+    overview: "Estudantes lutam contra maldições.",
     poster_path: "/hFWP5HkbVEe40adDOqgNy4kmQQy.jpg",
+    backdrop_path: "/hFWP5HkbVEe40adDOqgNy4kmQQy.jpg",
+    first_air_date: "2020-10-03",
     media_type: "tv",
     vote_average: 8.5,
     original_language: "ja"
@@ -150,7 +217,10 @@ const popularAnimes = [
   {
     id: 19,
     name: "Fullmetal Alchemist: Brotherhood",
+    overview: "Irmãos buscam a Pedra Filosofal.",
     poster_path: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
+    backdrop_path: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
+    first_air_date: "2009-04-05",
     media_type: "tv",
     vote_average: 8.7,
     original_language: "ja"
@@ -158,7 +228,10 @@ const popularAnimes = [
   {
     id: 20,
     name: "Sword Art Online",
+    overview: "Jogadores presos em um jogo de realidade virtual.",
     poster_path: "/ibe7AdW7CiabthEkJ4i9ZL1ITVb.jpg",
+    backdrop_path: "/ibe7AdW7CiabthEkJ4i9ZL1ITVb.jpg",
+    first_air_date: "2012-07-08",
     media_type: "tv",
     vote_average: 7.9,
     original_language: "ja"

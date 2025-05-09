@@ -16,7 +16,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CreditCard, UserPlus, Lock } from "lucide-react";
+import { UserPlus, Lock, CreditCard } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -26,7 +26,6 @@ const loginSchema = z.object({
 const signupSchema = z.object({
   email: z.string().email("Email inválido"),
   password: z.string().min(6, "A senha precisa ter pelo menos 6 caracteres"),
-  cpf: z.string().optional(),
   promoCode: z.string().optional(),
 });
 
@@ -52,7 +51,6 @@ const AuthForm = () => {
     defaultValues: {
       email: "",
       password: "",
-      cpf: "",
       promoCode: "",
     },
   });
@@ -76,9 +74,6 @@ const AuthForm = () => {
     try {
       // Prepare user metadata including promoCode if provided
       const metadata: Record<string, string> = {};
-      if (data.cpf) {
-        metadata.cpf = data.cpf.replace(/\D/g, '');
-      }
       if (data.promoCode) {
         metadata.promoCode = data.promoCode;
       }
@@ -93,25 +88,6 @@ const AuthForm = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value;
-    
-    // Remove all non-digits
-    value = value.replace(/\D/g, '');
-    
-    // Apply CPF mask as the user types (XXX.XXX.XXX-XX)
-    if (value.length > 0) {
-      value = value
-        .replace(/^(\d{3})(\d)/, '$1.$2')
-        .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
-        .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4')
-        .replace(/^(\d{3})\.(\d{3})\.(\d{3})-(\d{2}).*/, '$1.$2.$3-$4');
-    }
-    
-    // Update the form field
-    signupForm.setValue('cpf', value);
   };
 
   return (
@@ -144,29 +120,6 @@ const AuthForm = () => {
                       <Input
                         placeholder="seu.email@exemplo.com"
                         {...field}
-                        disabled={isLoading}
-                        className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
-                      />
-                    </FormControl>
-                    <FormMessage className="text-red-400" />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={signupForm.control}
-                name="cpf"
-                render={({ field: { onChange, onBlur, name, ref, ...restField } }) => (
-                  <FormItem>
-                    <FormLabel className="text-gray-300">CPF (opcional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="000.000.000-00"
-                        {...restField}
-                        onChange={handleCPFChange}
-                        onBlur={onBlur}
-                        name={name}
-                        ref={ref}
                         disabled={isLoading}
                         className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
                       />
