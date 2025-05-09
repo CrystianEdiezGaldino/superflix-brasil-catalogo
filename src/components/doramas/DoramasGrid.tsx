@@ -1,10 +1,10 @@
 
+import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { MediaItem } from "@/types/movie";
 import DoramaCard from "@/components/doramas/DoramaCard";
 import { useDoramaVideos } from "@/hooks/useDoramaVideos";
-import { ChevronDown } from "lucide-react";
 
 interface DoramasGridProps {
   doramas: MediaItem[];
@@ -28,6 +28,33 @@ const DoramasGrid = ({
   onResetFilters
 }: DoramasGridProps) => {
   const { videoMap } = useDoramaVideos(doramas);
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Set up intersection observer for infinite scrolling
+  useEffect(() => {
+    if (!hasMore || isSearching || isFiltering || isLoadingMore) return;
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          onLoadMore();
+        }
+      },
+      { threshold: 0.5 }
+    );
+    
+    const currentTarget = observerTarget.current;
+    
+    if (currentTarget) {
+      observer.observe(currentTarget);
+    }
+    
+    return () => {
+      if (currentTarget) {
+        observer.unobserve(currentTarget);
+      }
+    };
+  }, [hasMore, isSearching, isFiltering, isLoadingMore, onLoadMore]);
 
   if (isLoading) {
     return (
@@ -67,26 +94,18 @@ const DoramasGrid = ({
         ))}
       </div>
       
-      {/* Load More button */}
+      {/* Infinite scroll loading indicator */}
       {hasMore && !isSearching && !isFiltering && (
-        <div className="flex justify-center mt-8">
-          <Button 
-            onClick={onLoadMore} 
-            disabled={isLoadingMore}
-            className="bg-netflix-red hover:bg-red-700 text-white px-6"
-          >
-            {isLoadingMore ? (
-              <>
-                <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></div>
-                Carregando...
-              </>
-            ) : (
-              <>
-                Carregar mais conteúdo
-                <ChevronDown className="ml-1" />
-              </>
-            )}
-          </Button>
+        <div 
+          ref={observerTarget} 
+          className="flex justify-center my-8"
+        >
+          {isLoadingMore && (
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 border-2 border-t-transparent border-netflix-red rounded-full animate-spin"></div>
+              <span className="text-gray-400">Carregando mais conteúdo...</span>
+            </div>
+          )}
         </div>
       )}
     </div>
