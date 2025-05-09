@@ -110,11 +110,12 @@ const AuthForm = () => {
     value = value.replace(/\D/g, '');
     
     // Apply CPF mask as the user types (XXX.XXX.XXX-XX)
-    if (value.length <= 11) {
+    if (value.length > 0) {
       value = value
-        .replace(/(\d{3})(?=\d)/, '$1.')
-        .replace(/(\d{3})(\.)(?=\d)/, '$1$2.')
-        .replace(/(\d{3})(\.)(\d{3})(\.)(?=\d)/, '$1$2$3$4-');
+        .replace(/^(\d{3})(\d)/, '$1.$2')
+        .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+        .replace(/^(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4')
+        .replace(/^(\d{3})\.(\d{3})\.(\d{3})-(\d{2}).*/, '$1.$2.$3-$4');
     }
     
     // Update the form field
@@ -163,17 +164,19 @@ const AuthForm = () => {
               <FormField
                 control={signupForm.control}
                 name="cpf"
-                render={({ field: { value, ...fieldProps } }) => (
+                render={({ field: { onChange, onBlur, name, ref, ...restField } }) => (
                   <FormItem>
                     <FormLabel className="text-gray-300">CPF</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="000.000.000-00"
-                        value={value}
+                        {...restField}
                         onChange={handleCPFChange}
+                        onBlur={onBlur}
+                        name={name}
+                        ref={ref}
                         disabled={isLoading}
                         className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
-                        {...fieldProps}
                       />
                     </FormControl>
                     <FormMessage className="text-red-400" />
