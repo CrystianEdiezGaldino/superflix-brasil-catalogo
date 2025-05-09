@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,14 +18,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [visibilityChanged, setVisibilityChanged] = useState(false);
 
   useEffect(() => {
+    // Lidar com eventos de visibilidade para evitar recarregamento desnecessário
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && visibilityChanged) {
+        setVisibilityChanged(false);
+      } else if (document.visibilityState === 'hidden') {
+        setVisibilityChanged(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         console.log("Auth state changed:", event, newSession?.user?.email);
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+        
+        // Não atualizar o estado se a mudança foi apenas por troca de aba
+        if (!(document.visibilityState === 'visible' && visibilityChanged)) {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+        }
         
         if (event === "SIGNED_IN") {
           console.log("User signed in:", newSession?.user?.email);
@@ -49,9 +64,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       subscription.unsubscribe();
     };
-  }, []);
+  }, [visibilityChanged]);
 
   const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
     try {

@@ -33,15 +33,18 @@ const SeriesVideoPlayer = ({
       sessionStorage.setItem('playerState', JSON.stringify(playerState));
       
       // Restore scroll position if returning to this page
-      const handlePageShow = () => {
+      const handlePageShow = (e: PageTransitionEvent) => {
         try {
-          const savedState = sessionStorage.getItem('playerState');
-          if (savedState) {
-            const parsedState = JSON.parse(savedState);
-            if (parsedState.scrollPosition) {
-              setTimeout(() => {
-                window.scrollTo(0, parsedState.scrollPosition);
-              }, 100);
+          // Verifica se está voltando de uma mudança de aba
+          if (e.persisted) {
+            const savedState = sessionStorage.getItem('playerState');
+            if (savedState) {
+              const parsedState = JSON.parse(savedState);
+              if (parsedState.scrollPosition) {
+                setTimeout(() => {
+                  window.scrollTo(0, parsedState.scrollPosition);
+                }, 100);
+              }
             }
           }
         } catch (error) {

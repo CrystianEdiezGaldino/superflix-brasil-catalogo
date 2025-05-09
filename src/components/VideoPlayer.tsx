@@ -11,6 +11,7 @@ interface VideoPlayerProps {
 const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
   const [loading, setLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const visibilityChangeRef = useRef<boolean>(false);
 
   // Construir a URL do player
   let playerUrl = `https://superflixapi.nexus/${type}/${imdbId}`;
@@ -69,7 +70,21 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
       handleIframeLoad();
     }
 
+    // Página visibilidade change handler
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && visibilityChangeRef.current) {
+        // Evitar recarregamento completo da página ao retornar
+        visibilityChangeRef.current = false;
+      } else if (document.visibilityState === 'hidden') {
+        visibilityChangeRef.current = true;
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      
       // Cleanup attempt (will likely fail due to cross-origin)
       if (iframeRef.current) {
         try {
@@ -94,7 +109,8 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
       imdbId,
       season,
       episode,
-      scrollPosition: window.scrollY
+      scrollPosition: window.scrollY,
+      lastActive: new Date().getTime()
     }));
     
     // Listen for beforeunload to save state
@@ -104,7 +120,8 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
         imdbId,
         season,
         episode,
-        scrollPosition: window.scrollY
+        scrollPosition: window.scrollY,
+        lastActive: new Date().getTime()
       }));
     };
     
