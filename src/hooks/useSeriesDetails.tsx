@@ -6,6 +6,7 @@ import { fetchSeriesDetails, fetchSeriesSeasonDetails } from "@/services/tmdbApi
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { toast } from "sonner";
+import { Series, Season } from "@/types/movie";
 
 export const useSeriesDetails = (id: string | undefined) => {
   const [showPlayer, setShowPlayer] = useState(false);
@@ -77,8 +78,8 @@ export const useSeriesDetails = (id: string | undefined) => {
   };
 
   return {
-    series,
-    seasonData,
+    series: series as Series | undefined,
+    seasonData: seasonData as Season | undefined,
     showPlayer,
     selectedSeason,
     selectedEpisode,

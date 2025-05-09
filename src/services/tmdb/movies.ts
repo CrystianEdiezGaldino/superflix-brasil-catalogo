@@ -1,4 +1,5 @@
 
+import { Movie } from "@/types/movie";
 import { buildApiUrl, fetchFromApi, addMediaTypeToResults } from "./utils";
 
 // Fetch popular movies
@@ -14,12 +15,12 @@ export const fetchPopularMovies = async (page = 1) => {
 };
 
 // Fetch movie details
-export const fetchMovieDetails = async (id: string) => {
+export const fetchMovieDetails = async (id: string): Promise<Movie> => {
   try {
     const url = buildApiUrl(`/movie/${id}`);
-    return await fetchFromApi(url);
+    return await fetchFromApi<Movie>(url);
   } catch (error) {
     console.error("Error fetching movie details:", error);
-    return null;
+    return {} as Movie;
   }
 };

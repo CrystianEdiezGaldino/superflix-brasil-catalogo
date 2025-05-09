@@ -12,12 +12,12 @@ export async function fetchFromApi<T>(url: string): Promise<T> {
     const response = await fetch(url);
     if (!response.ok) {
       console.error(`API Error: ${response.status} for URL: ${url}`);
-      return [] as unknown as T;
+      return {} as T;
     }
     return await response.json();
   } catch (error) {
     console.error("Fetch error:", error);
-    return [] as unknown as T;
+    return {} as T;
   }
 }
 

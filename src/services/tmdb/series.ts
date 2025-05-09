@@ -1,4 +1,5 @@
 
+import { Series, Season } from "@/types/movie";
 import { buildApiUrl, fetchFromApi, addMediaTypeToResults, limitResults } from "./utils";
 
 // Fetch popular TV series
@@ -15,24 +16,24 @@ export const fetchPopularSeries = async (page = 1, itemsPerPage = 20) => {
 };
 
 // Fetch TV series details
-export const fetchSeriesDetails = async (id: string) => {
+export const fetchSeriesDetails = async (id: string): Promise<Series> => {
   try {
     const url = buildApiUrl(`/tv/${id}`, "&append_to_response=external_ids");
-    return await fetchFromApi(url);
+    return await fetchFromApi<Series>(url);
   } catch (error) {
     console.error("Error fetching series details:", error);
-    return null;
+    return {} as Series;
   }
 };
 
 // Fetch season details
-export const fetchSeriesSeasonDetails = async (id: string, seasonNumber: number) => {
+export const fetchSeriesSeasonDetails = async (id: string, seasonNumber: number): Promise<Season> => {
   try {
     const url = buildApiUrl(`/tv/${id}/season/${seasonNumber}`);
-    return await fetchFromApi(url);
+    return await fetchFromApi<Season>(url);
   } catch (error) {
     console.error("Error fetching series season details:", error);
-    return null;
+    return {} as Season;
   }
 };
 
