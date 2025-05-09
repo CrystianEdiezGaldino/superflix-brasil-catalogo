@@ -38,6 +38,7 @@ serve(async (req) => {
     } = await supabaseClient.auth.getUser();
 
     if (userError || !user) {
+      console.error("[CHECK-SUBSCRIPTION] User auth error:", userError);
       return new Response(
         JSON.stringify({ error: 'Failed to get user', details: userError }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -64,6 +65,10 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .eq('status', 'active')
       .maybeSingle();
+    
+    if (subscriptionError) {
+      console.error("[CHECK-SUBSCRIPTION] Subscription check error:", subscriptionError);
+    }
 
     // Check for trial access
     const now = new Date();
@@ -73,6 +78,10 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .gt('trial_end', now.toISOString())
       .maybeSingle();
+    
+    if (trialError) {
+      console.error("[CHECK-SUBSCRIPTION] Trial check error:", trialError);
+    }
 
     const hasTrialAccess = !trialError && subscriptionWithTrial;
     console.log(`[CHECK-SUBSCRIPTION] Trial access check - ${JSON.stringify({hasTrialAccess: !!hasTrialAccess})}`);
@@ -84,6 +93,10 @@ serve(async (req) => {
       .eq('user_id', user.id)
       .gt('expires_at', now.toISOString())
       .maybeSingle();
+    
+    if (tempAccessError) {
+      console.error("[CHECK-SUBSCRIPTION] Temp access check error:", tempAccessError);
+    }
 
     const hasTempAccess = !tempAccessError && tempAccess;
     console.log(`[CHECK-SUBSCRIPTION] Temp access check - ${JSON.stringify({hasTempAccess: !!hasTempAccess})}`);
@@ -150,9 +163,9 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('[CHECK-SUBSCRIPTION] Error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal Server Error' }),
+      JSON.stringify({ error: 'Internal Server Error', message: String(error) }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
