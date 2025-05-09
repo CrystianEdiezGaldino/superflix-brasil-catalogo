@@ -4,18 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import MediaCard from "@/components/MediaCard";
 import { MediaItem } from "@/types/movie";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useEffect } from "react";
 
-interface FavoritesTabProps {
-  favorites: MediaItem[];
-}
-
-const FavoritesTab = ({ favorites }: FavoritesTabProps) => {
+const FavoritesTab = () => {
   const navigate = useNavigate();
+  const { favorites, isLoading, refetchFavorites } = useFavorites();
+
+  useEffect(() => {
+    refetchFavorites();
+  }, [refetchFavorites]);
+
+  if (isLoading) {
+    return (
+      <Card className="bg-gray-900 text-white border-gray-700">
+        <CardContent className="pt-6 flex justify-center py-10">
+          <div className="w-8 h-8 border-2 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-gray-900 text-white border-gray-700">
       <CardContent className="pt-6">
-        {favorites.length === 0 ? (
+        {!favorites || favorites.length === 0 ? (
           <div className="text-center py-10">
             <p className="text-gray-400">Você ainda não adicionou nenhum favorito</p>
             <Button 

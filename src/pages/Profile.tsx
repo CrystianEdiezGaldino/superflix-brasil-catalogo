@@ -7,7 +7,6 @@ import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTab from "@/components/profile/ProfileTab";
 import FavoritesTab from "@/components/profile/FavoritesTab";
 import SubscriptionTab from "@/components/profile/SubscriptionTab";
-import { MediaItem } from "@/types/movie";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("profile");
@@ -20,9 +19,6 @@ const Profile = () => {
     isAdmin
   } = useSubscription();
   
-  // Mock favorites data
-  const [favorites] = useState<MediaItem[]>([]);
-
   const handleLogout = async () => {
     try {
       await signOut();
@@ -81,7 +77,7 @@ const Profile = () => {
         </TabsContent>
         
         <TabsContent value="favorites" className="mt-4">
-          <FavoritesTab favorites={favorites} />
+          <FavoritesTab />
         </TabsContent>
         
         <TabsContent value="subscription" className="mt-4">

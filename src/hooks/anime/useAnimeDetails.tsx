@@ -18,7 +18,7 @@ export const useAnimeDetails = (providedId?: string) => {
   
   const { user, loading: authLoading } = useAuth();
   const { hasAccess, subscriptionLoading } = useAccessControl();
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -98,6 +98,37 @@ export const useAnimeDetails = (providedId?: string) => {
     }
   };
 
+  // Check if this anime is in favorites
+  const checkIsFavorite = async (id: number) => {
+    if (!id) return false;
+    try {
+      return await isFavorite(id, 'tv');
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+      return false;
+    }
+  };
+
+  // Toggle favorite status for this anime
+  const toggleFavoriteAnime = async () => {
+    if (!anime || !anime.id) return;
+    
+    try {
+      const isFav = await checkIsFavorite(anime.id);
+      
+      if (isFav) {
+        await removeFromFavorites(anime.id, 'tv');
+        toast.success("Removido dos favoritos");
+      } else {
+        await addToFavorites(anime.id, 'tv');
+        toast.success("Adicionado aos favoritos");
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Erro ao atualizar favoritos");
+    }
+  };
+
   return {
     anime: anime as Series | undefined,
     seasonData: seasonData as Season | undefined,
@@ -114,13 +145,7 @@ export const useAnimeDetails = (providedId?: string) => {
     user,
     hasAccess,
     seasons,
-    isFavorite: !!anime ? isFavorite(anime.id, 'tv') : false,
-    toggleFavoriteAnime: !!anime ? 
-      () => toggleFavorite({
-        id: anime.id,
-        title: anime.name,
-        media_type: 'tv',
-        poster_path: anime.poster_path
-      }) : () => {}
+    isFavorite: async () => anime?.id ? await checkIsFavorite(anime.id) : false,
+    toggleFavoriteAnime
   };
 };

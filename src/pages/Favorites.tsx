@@ -13,37 +13,17 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Favorites = () => {
   const { user } = useAuth();
-  const { getFavorites, removeFromFavorites } = useFavorites();
-  const [favorites, setFavorites] = useState<MediaItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { favorites, refetchFavorites, isLoading } = useFavorites();
   
   useEffect(() => {
-    const loadFavorites = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      try {
-        const favs = await getFavorites();
-        setFavorites(favs);
-        console.log("Loaded favorites:", favs);
-      } catch (error) {
-        console.error("Erro ao carregar favoritos:", error);
-        toast.error("Erro ao carregar favoritos");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadFavorites();
-  }, [user, getFavorites]);
+    if (user) {
+      refetchFavorites();
+    }
+  }, [user, refetchFavorites]);
 
   const handleClearFavorites = async () => {
-    if (!user || !favorites.length) return;
+    if (!user || !favorites?.length) return;
     
-    setIsLoading(true);
     try {
       // Delete all favorites for this user
       const { error } = await supabase
@@ -53,17 +33,15 @@ const Favorites = () => {
         
       if (error) throw error;
       
-      setFavorites([]);
+      refetchFavorites();
       toast.success("Favoritos limpos com sucesso");
     } catch (error) {
       console.error("Erro ao limpar favoritos:", error);
       toast.error("Erro ao limpar favoritos");
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Placeholder for estado vazio de favoritos
+  // Placeholder for empty favorites state
   const EmptyFavoritesPlaceholder = () => (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <div className="bg-gray-800 p-6 rounded-full mb-6">
@@ -108,7 +86,7 @@ const Favorites = () => {
       <div className="pt-20 px-4 md:px-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-white">Meus Favoritos</h1>
-          {favorites.length > 0 && (
+          {favorites && favorites.length > 0 && (
             <Button 
               variant="ghost"
               className="text-gray-400 hover:text-white"
@@ -124,7 +102,7 @@ const Favorites = () => {
           <div className="flex justify-center py-20">
             <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : favorites.length > 0 ? (
+        ) : favorites && favorites.length > 0 ? (
           <MediaGrid 
             mediaItems={favorites}
             isLoading={false}

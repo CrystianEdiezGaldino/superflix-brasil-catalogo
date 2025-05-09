@@ -1,5 +1,7 @@
-
 import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Heart } from "lucide-react";
+import { toast } from "sonner";
 
 interface VideoPlayerProps {
   type: "filme" | "serie";
@@ -10,6 +12,7 @@ interface VideoPlayerProps {
 
 const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
   const [loading, setLoading] = useState(true);
+  const [contentUnavailable, setContentUnavailable] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const visibilityChangeRef = useRef<boolean>(false);
   const playerStateRef = useRef<{
@@ -123,6 +126,70 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
       iframe.removeEventListener('load', handleIframeLoad);
     };
   }, []);
+
+  // Check for error messages in the iframe
+  useEffect(() => {
+    if (!iframeRef.current) return;
+
+    const checkContentAvailability = () => {
+      const iframe = iframeRef.current;
+      if (!iframe || !iframe.contentWindow) return;
+
+      try {
+        // Try to access iframe content after it loads
+        setTimeout(() => {
+          try {
+            if (iframe.contentDocument?.body?.innerText?.includes("Estranho?!") || 
+                iframe.contentDocument?.body?.innerText?.includes("warezcdn.link") ||
+                iframe.contentDocument?.body?.innerText?.includes("Tem algum problema com o seu video")) {
+              setContentUnavailable(true);
+            }
+          } catch (e) {
+            // Cross-origin restrictions might prevent this check
+            console.log("Could not check iframe content due to cross-origin policy");
+          }
+        }, 2000);
+      } catch (error) {
+        console.error("Error checking iframe content:", error);
+      }
+    };
+
+    // Add load handler to check content
+    const iframe = iframeRef.current;
+    iframe.addEventListener('load', checkContentAvailability);
+    
+    return () => {
+      iframe.removeEventListener('load', checkContentAvailability);
+    };
+  }, [imdbId, season, episode]);
+
+  // If content is unavailable, show a custom message
+  if (contentUnavailable) {
+    return (
+      <div className="w-full aspect-video flex items-center justify-center bg-gray-900 rounded-lg border-2 border-gray-800">
+        <div className="text-center p-8 max-w-lg">
+          <h3 className="text-2xl text-netflix-red font-semibold mb-4">Conteúdo Em Breve</h3>
+          <p className="text-white text-lg mb-6">
+            Este conteúdo ainda não está disponível em nossa plataforma, mas estamos trabalhando para adicioná-lo o quanto antes.
+          </p>
+          <p className="text-gray-400 mb-8">
+            Adicione aos seus favoritos para ser notificado quando estiver disponível para assistir.
+          </p>
+          <div className="flex justify-center">
+            <Button 
+              className="bg-netflix-red hover:bg-red-700 flex items-center gap-2"
+              onClick={() => {
+                // Aqui você pode implementar a lógica para adicionar aos favoritos
+                toast.success("Adicionado aos favoritos! Você será notificado quando disponível.");
+              }}
+            >
+              <Heart size={18} /> Adicionar aos Favoritos
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full aspect-video relative rounded-lg overflow-hidden shadow-xl border-2 border-gray-800">

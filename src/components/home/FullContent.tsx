@@ -6,141 +6,156 @@ interface FullContentProps {
   movies: MediaItem[];
   series: MediaItem[];
   anime: MediaItem[];
-  topRatedAnime?: MediaItem[];
-  specificAnimeRecommendations?: MediaItem[];
-  recommendations?: MediaItem[];
-  doramas?: MediaItem[];
-  
-  // New genre-specific movie categories
-  actionMovies?: MediaItem[];
-  comedyMovies?: MediaItem[];
-  adventureMovies?: MediaItem[];
-  sciFiMovies?: MediaItem[];
-  marvelMovies?: MediaItem[];
-  dcMovies?: MediaItem[];
+  topRatedAnime: MediaItem[];
+  recommendations: MediaItem[];
+  doramas: MediaItem[];
+  actionMovies: MediaItem[];
+  comedyMovies: MediaItem[];
+  adventureMovies: MediaItem[];
+  sciFiMovies: MediaItem[];
+  marvelMovies: MediaItem[];
+  dcMovies: MediaItem[];
+  popularSeries?: MediaItem[];
+  recentAnimes?: MediaItem[];
 }
 
 const FullContent = ({ 
   movies, 
   series, 
   anime, 
-  topRatedAnime,
-  recommendations,
+  topRatedAnime, 
+  recommendations, 
   doramas,
-  
-  // New categories
   actionMovies,
   comedyMovies,
   adventureMovies,
   sciFiMovies,
   marvelMovies,
-  dcMovies
+  dcMovies,
+  popularSeries = [],
+  recentAnimes = []
 }: FullContentProps) => {
+  // Filter out content without images
+  const filteredMovies = movies.filter(movie => movie.poster_path || movie.backdrop_path);
+  const filteredSeries = series.filter(serie => serie.poster_path || serie.backdrop_path);
+  const filteredAnime = anime.filter(item => item.poster_path || item.backdrop_path);
+  const filteredTopAnime = topRatedAnime.filter(item => item.poster_path || item.backdrop_path);
+  const filteredRecommendations = recommendations.filter(item => item.poster_path || item.backdrop_path);
+  const filteredDoramas = doramas.filter(item => item.poster_path || item.backdrop_path);
+
+  // Filter genre-specific content
+  const filteredActionMovies = actionMovies.filter(movie => movie.poster_path || movie.backdrop_path);
+  const filteredComedyMovies = comedyMovies.filter(movie => movie.poster_path || movie.backdrop_path);
+  const filteredAdventureMovies = adventureMovies.filter(movie => movie.poster_path || movie.backdrop_path);
+  const filteredSciFiMovies = sciFiMovies.filter(movie => movie.poster_path || movie.backdrop_path);
+  
+  // Filter franchise-specific content
+  const filteredMarvelMovies = marvelMovies.filter(movie => movie.poster_path || movie.backdrop_path);
+  const filteredDcMovies = dcMovies.filter(movie => movie.poster_path || movie.backdrop_path);
+  
+  // Filter additional content
+  const filteredPopularSeries = popularSeries.filter(serie => serie.poster_path || serie.backdrop_path);
+  const filteredRecentAnimes = recentAnimes.filter(anime => anime.poster_path || anime.backdrop_path);
+  
   return (
-    <div className="space-y-2">
-      {recommendations && recommendations.length > 0 && (
+    <div className="space-y-8 pb-10">
+      {filteredRecommendations.length > 0 && (
         <MediaSection 
           title="Recomendados para Você" 
-          medias={recommendations} 
-          viewAllPath="/recommendations"
-          mediaType="mixed"
+          medias={filteredRecommendations.slice(0, 10)} 
         />
       )}
       
-      <MediaSection 
-        title="Filmes Populares" 
-        medias={movies || []} 
-        viewAllPath="/filmes"
-        mediaType="movie"
-      />
-      
-      <MediaSection 
-        title="Séries Populares" 
-        medias={series || []} 
-        viewAllPath="/series"
-        mediaType="tv"
-      />
-      
-      <MediaSection 
-        title="Anime em Alta" 
-        medias={anime || []} 
-        viewAllPath="/animes"
-        mediaType="anime"
-      />
-      
-      {/* New universe-specific collections */}
-      {marvelMovies && marvelMovies.length > 0 && (
+      {filteredMovies.length > 0 && (
         <MediaSection 
-          title="Universo Marvel" 
-          medias={marvelMovies} 
-          viewAllPath="/filmes?keyword=marvel"
-          mediaType="movie"
-        />
-      )}
-
-      {dcMovies && dcMovies.length > 0 && (
-        <MediaSection 
-          title="Universo DC" 
-          medias={dcMovies} 
-          viewAllPath="/filmes?keyword=dc"
-          mediaType="movie"
+          title="Filmes Populares" 
+          medias={filteredMovies.slice(0, 10)} 
         />
       )}
       
-      {/* Movie genres */}
-      {actionMovies && actionMovies.length > 0 && (
+      {filteredPopularSeries.length > 0 && (
+        <MediaSection 
+          title="Séries Populares" 
+          medias={filteredPopularSeries.slice(0, 10)} 
+        />
+      )}
+      
+      {filteredRecentAnimes.length > 0 && (
+        <MediaSection 
+          title="Anime em Alta" 
+          medias={filteredRecentAnimes.slice(0, 10)} 
+        />
+      )}
+      
+      {filteredAnime.length > 0 && (
+        <MediaSection 
+          title="Animes Populares" 
+          medias={filteredAnime.slice(0, 10)} 
+        />
+      )}
+      
+      {filteredTopAnime.length > 0 && (
+        <MediaSection 
+          title="Animes Bem Avaliados" 
+          medias={filteredTopAnime.slice(0, 10)} 
+        />
+      )}
+      
+      {filteredDoramas.length > 0 && (
+        <MediaSection 
+          title="Doramas Coreanos" 
+          medias={filteredDoramas.slice(0, 10)} 
+        />
+      )}
+      
+      {filteredSeries.length > 0 && (
+        <MediaSection 
+          title="Séries e Programas de TV" 
+          medias={filteredSeries.slice(0, 10)} 
+        />
+      )}
+      
+      {/* Genre-specific movie sections */}
+      {filteredActionMovies.length > 0 && (
         <MediaSection 
           title="Filmes de Ação" 
-          medias={actionMovies} 
-          viewAllPath="/filmes?genre=action"
-          mediaType="movie"
+          medias={filteredActionMovies.slice(0, 10)} 
         />
       )}
-
-      {adventureMovies && adventureMovies.length > 0 && (
+      
+      {filteredComedyMovies.length > 0 && (
+        <MediaSection 
+          title="Comédias" 
+          medias={filteredComedyMovies.slice(0, 10)} 
+        />
+      )}
+      
+      {filteredAdventureMovies.length > 0 && (
         <MediaSection 
           title="Filmes de Aventura" 
-          medias={adventureMovies} 
-          viewAllPath="/filmes?genre=adventure"
-          mediaType="movie"
-        />
-      )}
-
-      {comedyMovies && comedyMovies.length > 0 && (
-        <MediaSection 
-          title="Filmes de Comédia" 
-          medias={comedyMovies} 
-          viewAllPath="/filmes?genre=comedy"
-          mediaType="movie"
-        />
-      )}
-
-      {sciFiMovies && sciFiMovies.length > 0 && (
-        <MediaSection 
-          title="Filmes de Ficção Científica" 
-          medias={sciFiMovies} 
-          viewAllPath="/filmes?genre=sci-fi"
-          mediaType="movie"
+          medias={filteredAdventureMovies.slice(0, 10)} 
         />
       )}
       
-      {/* Premium content */}
-      {topRatedAnime && topRatedAnime.length > 0 && (
+      {filteredSciFiMovies.length > 0 && (
         <MediaSection 
-          title="Animes Melhor Avaliados" 
-          medias={topRatedAnime} 
-          viewAllPath="/animes?sort=top-rated"
-          mediaType="anime"
+          title="Ficção Científica" 
+          medias={filteredSciFiMovies.slice(0, 10)} 
         />
       )}
       
-      {/* Doramas section */}
-      {doramas && doramas.length > 0 && (
+      {/* Franchise-specific movie sections */}
+      {filteredMarvelMovies.length > 0 && (
         <MediaSection 
-          title="Doramas" 
-          medias={doramas} 
-          viewAllPath="/doramas"
-          mediaType="dorama"
+          title="Universo Marvel" 
+          medias={filteredMarvelMovies.slice(0, 10)} 
+        />
+      )}
+      
+      {filteredDcMovies.length > 0 && (
+        <MediaSection 
+          title="DC Comics" 
+          medias={filteredDcMovies.slice(0, 10)} 
         />
       )}
     </div>

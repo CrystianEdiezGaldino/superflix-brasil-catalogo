@@ -3,6 +3,7 @@ import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Series } from "@/types/movie";
 import SeriesBanner from "../series/SeriesBanner";
+import { useState, useEffect } from "react";
 
 interface AnimeHeaderProps {
   anime: Series;

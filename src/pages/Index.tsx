@@ -39,6 +39,8 @@ const Index = () => {
     sciFiMoviesData,
     marvelMoviesData,
     dcMoviesData,
+    popularSeries,
+    recentAnimes,
     isLoading,
     hasError,
     handleSearch: originalHandleSearch,
@@ -104,17 +106,6 @@ const Index = () => {
     return <ErrorState />;
   }
 
-  // Debug data availability
-  console.log("Data loaded successfully:", {
-    hasMovies: moviesData && moviesData.length > 0,
-    hasSeries: seriesData && seriesData.length > 0,
-    hasAnime: animeData && animeData.length > 0,
-    hasAccess,
-    isAdmin,
-    hasTrialAccess,
-    hasFeaturedMedia: !!featuredMedia
-  });
-
   return (
     <div className="min-h-screen bg-netflix-background text-white">
       <Navbar onSearch={handleSearch} />
@@ -162,6 +153,8 @@ const Index = () => {
                 sciFiMovies={sciFiMoviesData || []}
                 marvelMovies={marvelMoviesData || []}
                 dcMovies={dcMoviesData || []}
+                popularSeries={popularSeries || []}
+                recentAnimes={recentAnimes || []}
               />
             )}
             

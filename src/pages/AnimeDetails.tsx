@@ -1,5 +1,6 @@
 
 import { useParams, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { useAnimeDetails } from "@/hooks/anime/useAnimeDetails";
@@ -12,6 +13,7 @@ import AnimeLoadingState from "@/components/anime/AnimeLoadingState";
 const AnimeDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isFav, setIsFav] = useState(false);
   
   const {
     anime,
@@ -26,7 +28,23 @@ const AnimeDetails = () => {
     seasons,
     seasonData,
     user,
+    isFavorite,
+    toggleFavoriteAnime
   } = useAnimeDetails(id);
+
+  // Check if anime is in favorites
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (anime?.id) {
+        const result = await isFavorite();
+        setIsFav(result);
+      }
+    };
+    
+    if (anime) {
+      checkFavoriteStatus();
+    }
+  }, [anime, isFavorite]);
 
   // Handle loading state
   if (isLoadingSeries) {
@@ -47,8 +65,11 @@ const AnimeDetails = () => {
       {/* Anime Header Component */}
       <AnimeHeader
         anime={anime}
-        isFavorite={false} 
-        toggleFavorite={() => {}} 
+        isFavorite={isFav} 
+        toggleFavorite={() => {
+          toggleFavoriteAnime();
+          setIsFav(!isFav); // Optimistically update UI immediately
+        }} 
       />
 
       {/* Player Actions */}
