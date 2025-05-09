@@ -68,7 +68,7 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
     };
   }, []);
 
-  // Sandbox iframe to prevent opening new windows
+  // Removed the sandbox attribute from the iframe
   return (
     <div className="w-full aspect-video relative rounded-lg overflow-hidden shadow-xl border-2 border-gray-800">
       {loading && (
@@ -86,7 +86,6 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
         className="w-full h-full"
         frameBorder="0"
         allowFullScreen
-        sandbox="allow-same-origin allow-scripts allow-forms"
         onLoad={() => setLoading(false)}
       ></iframe>
     </div>
