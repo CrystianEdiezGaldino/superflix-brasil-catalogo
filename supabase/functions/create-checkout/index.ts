@@ -41,6 +41,11 @@ serve(async (req) => {
       throw new Error("Price ID and mode are required");
     }
 
+    // Validate price ID format to ensure it's a valid Stripe price ID
+    if (!priceId.startsWith('price_')) {
+      throw new Error(`Invalid price ID format: ${priceId}`);
+    }
+
     logStep("Stripe key verified");
 
     // Create Supabase client
@@ -126,8 +131,14 @@ serve(async (req) => {
     const simultaneousAccesses = isAnnual ? 6 : 3;
     const productId = isAnnual ? "prod_SHSce9XGUSazQq" : "prod_SHSb9G94AXb8Nl";
     
+    logStep("Creating checkout session", { 
+      priceId, 
+      customerId, 
+      simultaneousAccesses, 
+      productId
+    });
+    
     try {
-      // Now use the real-world price IDs
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
@@ -144,7 +155,11 @@ serve(async (req) => {
         }
       });
 
-      logStep("Checkout session created", { sessionId: session.id, url: session.url });
+      logStep("Checkout session created successfully", { 
+        sessionId: session.id, 
+        url: session.url,
+        hasUrl: !!session.url
+      });
 
       return new Response(JSON.stringify({ 
         url: session.url,
@@ -155,21 +170,14 @@ serve(async (req) => {
         status: 200,
       });
     } catch (stripeError: any) {
-      // Handle Stripe-specific errors
-      logStep("Stripe error", { message: stripeError.message });
+      // More specific error logging
+      logStep("Stripe error creating checkout session", { 
+        message: stripeError.message,
+        type: stripeError.type,
+        code: stripeError.code
+      });
       
-      // Demo mode in case of stripe errors for development
-      if (stripeError.message?.includes('No such price') || stripeError.message?.includes('Invalid API Key')) {
-        return new Response(JSON.stringify({ 
-          error: stripeError.message,
-          demo_mode: true 
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-          status: 200,
-        });
-      }
-      
-      throw stripeError; // Rethrow for general error handling
+      throw stripeError;
     }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);

@@ -85,11 +85,6 @@ const ActiveSubscription = ({
         errorMessage = `Erro: ${error.message}`;
       }
       toast.error(errorMessage);
-      
-      // If error includes "price" and we're in development, suggest checking Stripe price IDs
-      if (errorMessage.toLowerCase().includes("price") || errorMessage.toLowerCase().includes("preço")) {
-        toast.info("Verifique se os IDs de preço da Stripe estão corretos", { duration: 8000 });
-      }
     } finally {
       setIsProcessing(false);
     }

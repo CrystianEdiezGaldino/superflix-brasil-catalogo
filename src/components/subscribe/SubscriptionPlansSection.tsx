@@ -11,20 +11,25 @@ const SubscriptionPlansSection: React.FC<SubscriptionPlansSectionProps> = ({
   handleSubscribe, 
   isProcessing 
 }) => {
+  // Enhanced benefits list for the monthly plan
   const monthlyBenefits = [
     "Acesso a todos os conteúdos",
     "Cancele quando quiser",
     "Até 3 acessos simultâneos",
-    "Suporte prioritário"
+    "Suporte prioritário",
+    "Atualizações e novidades exclusivas",
+    "7 dias de avaliação gratuita"
   ];
 
+  // Enhanced benefits list for the annual plan
   const annualBenefits = [
     "Acesso a todos os conteúdos",
     "Cancele quando quiser",
     "Até 6 acessos simultâneos",
     "Suporte prioritário",
     "<strong>Economize 44% comparado ao plano mensal</strong>",
-    "Conteúdos e benefícios exclusivos"
+    "Conteúdos e benefícios exclusivos",
+    "7 dias de avaliação gratuita"
   ];
   
   return (
