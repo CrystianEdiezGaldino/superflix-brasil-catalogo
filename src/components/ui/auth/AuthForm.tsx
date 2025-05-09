@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { validateCPF } from "@/lib/cpf-validator";
+import { CreditCard, UserPlus, Lock } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -33,6 +34,7 @@ const signupSchema = z.object({
     .refine((cpf) => validateCPF(cpf), {
       message: "CPF inválido. Por favor, insira um CPF válido.",
     }),
+  promoCode: z.string().optional(),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -58,6 +60,7 @@ const AuthForm = () => {
       email: "",
       password: "",
       cpf: "",
+      promoCode: "",
     },
   });
 
@@ -81,8 +84,14 @@ const AuthForm = () => {
       // Normalize CPF to remove extra characters
       const normalizedCPF = data.cpf.replace(/\D/g, '');
       
+      // Prepare user metadata including promoCode if provided
+      const metadata: Record<string, string> = { cpf: normalizedCPF };
+      if (data.promoCode) {
+        metadata.promoCode = data.promoCode;
+      }
+      
       // Add CPF to user metadata when signing up
-      await signUp(data.email, data.password, { cpf: normalizedCPF });
+      await signUp(data.email, data.password, metadata);
       toast.success("Cadastro realizado! Verifique seu email para confirmar.");
       // Switch to login form after successful signup
       setIsSignUp(false);
@@ -94,11 +103,39 @@ const AuthForm = () => {
     }
   };
 
+  const handleCPFChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+    
+    // Remove all non-digits
+    value = value.replace(/\D/g, '');
+    
+    // Apply CPF mask as the user types (XXX.XXX.XXX-XX)
+    if (value.length <= 11) {
+      value = value
+        .replace(/(\d{3})(?=\d)/, '$1.')
+        .replace(/(\d{3})(\.)(?=\d)/, '$1$2.')
+        .replace(/(\d{3})(\.)(\d{3})(\.)(?=\d)/, '$1$2$3$4-');
+    }
+    
+    // Update the form field
+    signupForm.setValue('cpf', value);
+  };
+
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-black/60 p-8 rounded-lg border border-gray-800">
-        <h1 className="text-2xl font-bold text-white mb-6">
-          {isSignUp ? "Criar conta" : "Entrar"}
+      <div className="bg-black/60 p-8 rounded-lg border border-gray-700 shadow-lg backdrop-blur-sm">
+        <h1 className="text-2xl font-bold text-white mb-6 flex items-center">
+          {isSignUp ? (
+            <>
+              <UserPlus className="mr-2 h-6 w-6 text-netflix-red" />
+              Criar conta
+            </>
+          ) : (
+            <>
+              <Lock className="mr-2 h-6 w-6 text-netflix-red" />
+              Entrar
+            </>
+          )}
         </h1>
 
         {isSignUp ? (
@@ -109,16 +146,16 @@ const AuthForm = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-gray-300">Email</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="seu.email@exemplo.com"
                         {...field}
                         disabled={isLoading}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
@@ -126,18 +163,44 @@ const AuthForm = () => {
               <FormField
                 control={signupForm.control}
                 name="cpf"
-                render={({ field }) => (
+                render={({ field: { value, ...fieldProps } }) => (
                   <FormItem>
-                    <FormLabel>CPF</FormLabel>
+                    <FormLabel className="text-gray-300">CPF</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="000.000.000-00"
-                        {...field}
+                        value={value}
+                        onChange={handleCPFChange}
                         disabled={isLoading}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                        {...fieldProps}
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={signupForm.control}
+                name="promoCode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-gray-300">
+                      <div className="flex items-center">
+                        <CreditCard className="mr-1 h-4 w-4 text-netflix-red" />
+                        <span>Código Promocional (opcional)</span>
+                      </div>
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Insira seu código promocional"
+                        {...field}
+                        disabled={isLoading}
+                        className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                      />
+                    </FormControl>
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
@@ -147,24 +210,24 @@ const AuthForm = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Senha</FormLabel>
+                    <FormLabel className="text-gray-300">Senha</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
                         placeholder="******"
                         {...field}
                         disabled={isLoading}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
 
               <Button
                 type="submit"
-                className="w-full bg-netflix-red hover:bg-red-700"
+                className="w-full bg-netflix-red hover:bg-red-700 transition-all duration-200 font-medium py-2 mt-2"
                 disabled={isLoading}
               >
                 {isLoading ? "Processando..." : "Cadastrar"}
@@ -179,16 +242,16 @@ const AuthForm = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-gray-300">Email</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="seu.email@exemplo.com"
                         {...field}
                         disabled={isLoading}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
@@ -198,24 +261,24 @@ const AuthForm = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Senha</FormLabel>
+                    <FormLabel className="text-gray-300">Senha</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
                         placeholder="******"
                         {...field}
                         disabled={isLoading}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-red-400" />
                   </FormItem>
                 )}
               />
 
               <Button
                 type="submit"
-                className="w-full bg-netflix-red hover:bg-red-700"
+                className="w-full bg-netflix-red hover:bg-red-700 transition-all duration-200 font-medium py-2 mt-2"
                 disabled={isLoading}
               >
                 {isLoading ? "Processando..." : "Entrar"}
@@ -224,10 +287,10 @@ const AuthForm = () => {
           </Form>
         )}
 
-        <div className="mt-4 text-center">
+        <div className="mt-6 text-center border-t border-gray-700 pt-4">
           <button
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-netflix-red hover:underline text-sm"
+            className="text-netflix-red hover:text-red-400 hover:underline transition-colors"
             disabled={isLoading}
           >
             {isSignUp ? "Já tem conta? Entre" : "Não tem conta? Cadastre-se"}

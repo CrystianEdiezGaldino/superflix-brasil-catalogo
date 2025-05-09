@@ -5,6 +5,11 @@
  * @returns boolean indicating if the CPF is valid
  */
 export function validateCPF(cpf: string): boolean {
+  // Empty CPFs are invalid
+  if (!cpf || cpf.trim() === '') {
+    return false;
+  }
+  
   // Remove any character that is not a number
   cpf = cpf.replace(/\D/g, '');
   

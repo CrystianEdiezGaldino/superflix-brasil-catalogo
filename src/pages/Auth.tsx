@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import { Film } from "lucide-react";
 
 const Auth = () => {
   const { user, loading } = useAuth();
@@ -27,9 +28,23 @@ const Auth = () => {
     >
       <Navbar onSearch={() => {}} />
       
-      <div className="container max-w-full pt-32 pb-20">
+      <div className="container max-w-full pt-20 pb-20">
         <div className="flex flex-col items-center justify-center">
+          <div className="text-center mb-6">
+            <div className="inline-flex items-center justify-center p-3 bg-netflix-red rounded-full mb-4">
+              <Film size={32} className="text-white" />
+            </div>
+            <h2 className="text-3xl font-bold text-white">Acesse sua conta</h2>
+            <p className="text-gray-300 mt-2">Assista a filmes, séries, animes e muito mais</p>
+          </div>
+          
           <AuthForm />
+          
+          <div className="mt-8 text-center max-w-md px-6">
+            <p className="text-gray-400 text-sm">
+              Ao fazer login ou criar uma conta, você concorda com nossos Termos de Uso e confirma que leu nossa Política de Privacidade.
+            </p>
+          </div>
         </div>
       </div>
     </div>
