@@ -15,6 +15,11 @@ const DoramaDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [showPlayer, setShowPlayer] = useState(false);
   
+  // Função vazia para o Navbar que não faz pesquisa nesta página
+  const handleSearch = (query: string) => {
+    // Não fazemos nada aqui, já que esta página não tem funcionalidade de pesquisa
+  };
+  
   // Scroll to top when component mounts or ID changes
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -54,7 +59,7 @@ const DoramaDetails = () => {
   if (isLoadingDorama) {
     return (
       <div className="min-h-screen bg-netflix-background">
-        <Navbar />
+        <Navbar onSearch={handleSearch} />
         <div className="pt-20">
           <Skeleton className="w-full h-[70vh]" />
           <div className="px-4 md:px-8 py-6">
@@ -70,7 +75,7 @@ const DoramaDetails = () => {
   if (!dorama) {
     return (
       <div className="min-h-screen bg-netflix-background">
-        <Navbar />
+        <Navbar onSearch={handleSearch} />
         <div className="flex flex-col items-center justify-center h-[70vh] text-white">
           <h2 className="text-2xl font-bold mb-2">Dorama não encontrado</h2>
           <p className="text-gray-400">O dorama solicitado não está disponível ou não existe.</p>
@@ -81,7 +86,7 @@ const DoramaDetails = () => {
   
   return (
     <div className="min-h-screen bg-netflix-background">
-      <Navbar />
+      <Navbar onSearch={handleSearch} />
       
       <div className="pt-16">
         {/* Video Player or Banner */}

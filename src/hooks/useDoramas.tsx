@@ -19,12 +19,23 @@ export const useDoramas = () => {
   const [isLoadingPopular, setIsLoadingPopular] = useState(true);
   const [isLoadingTopRated, setIsLoadingTopRated] = useState(true);
   
+  // Filtra doramas que não têm imagens
+  const filterDoramas = useCallback((doramaList: Series[]) => {
+    return doramaList.filter(dorama => 
+      // Garantir que é um dorama coreano (verificando idioma original)
+      dorama.original_language === "ko" && 
+      // Garantir que tem imagem (poster ou backdrop)
+      (dorama.poster_path || dorama.backdrop_path)
+    );
+  }, []);
+  
   // Load initial doramas
   useEffect(() => {
     const loadInitialDoramas = async () => {
       try {
         const initialDoramas = await fetchKoreanDramas(1);
-        setDoramas(initialDoramas);
+        const filteredDoramas = filterDoramas(initialDoramas);
+        setDoramas(filteredDoramas);
         setIsLoadingInitial(false);
       } catch (error) {
         console.error("Error loading initial doramas:", error);
@@ -33,14 +44,15 @@ export const useDoramas = () => {
     };
     
     loadInitialDoramas();
-  }, []);
+  }, [filterDoramas]);
   
   // Load popular and top rated doramas
   useEffect(() => {
     const loadPopularDoramas = async () => {
       try {
         const popular = await fetchPopularDoramas(6);
-        setPopularDoramas(popular);
+        const filteredPopular = filterDoramas(popular);
+        setPopularDoramas(filteredPopular);
         setIsLoadingPopular(false);
       } catch (error) {
         console.error("Error loading popular doramas:", error);
@@ -51,7 +63,8 @@ export const useDoramas = () => {
     const loadTopRatedDoramas = async () => {
       try {
         const topRated = await fetchTopRatedDoramas(6);
-        setTopRatedDoramas(topRated);
+        const filteredTopRated = filterDoramas(topRated);
+        setTopRatedDoramas(filteredTopRated);
         setIsLoadingTopRated(false);
       } catch (error) {
         console.error("Error loading top rated doramas:", error);
@@ -61,7 +74,7 @@ export const useDoramas = () => {
     
     loadPopularDoramas();
     loadTopRatedDoramas();
-  }, []);
+  }, [filterDoramas]);
 
   // Apply filters function
   const applyFilters = useCallback((doramaList: Series[]) => {
@@ -77,18 +90,20 @@ export const useDoramas = () => {
       });
     }
 
-    // Additional filtering could be added here for genres, etc.
     if (genreFilter && genreFilter !== "all") {
       // In a real app, we'd filter by actual genre IDs from the API
       // This is just a placeholder implementation
     }
 
+    // Sempre filtrar para mostrar apenas doramas coreanos com imagens
+    filtered = filterDoramas(filtered);
+
     return filtered;
-  }, [yearFilter, genreFilter]);
+  }, [yearFilter, genreFilter, filterDoramas]);
 
   // Apply filters when they change
   useEffect(() => {
-    const filterDoramas = async () => {
+    const filterDoramasWithCriteria = async () => {
       setIsFiltering(true);
       try {
         // Get fresh data to apply filters
@@ -107,7 +122,7 @@ export const useDoramas = () => {
     
     // Only apply filters if we're not in a search state
     if (!isSearching && !isLoadingInitial) {
-      filterDoramas();
+      filterDoramasWithCriteria();
     }
   }, [yearFilter, genreFilter, applyFilters, isSearching, isLoadingInitial]);
 
@@ -119,12 +134,15 @@ export const useDoramas = () => {
       const nextPage = page + 1;
       const newDoramas = await fetchKoreanDramas(nextPage);
       
-      if (newDoramas.length === 0) {
+      // Filtramos para garantir apenas doramas coreanos com imagens
+      const filteredDoramas = filterDoramas(newDoramas);
+      
+      if (filteredDoramas.length === 0) {
         setHasMore(false);
         return;
       }
       
-      setDoramas((prevDoramas) => [...prevDoramas, ...newDoramas]);
+      setDoramas((prevDoramas) => [...prevDoramas, ...filteredDoramas]);
       setPage(nextPage);
     } catch (error) {
       console.error("Erro ao carregar mais doramas:", error);
@@ -135,18 +153,28 @@ export const useDoramas = () => {
   // Search function
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
-      toast.error("Digite algo para pesquisar");
+      // Se a pesquisa estiver vazia, retornamos aos doramas iniciais
+      if (isSearching) {
+        // Reset to initial state only if we were previously searching
+        fetchKoreanDramas(1).then(initialDoramas => {
+          const filteredDoramas = filterDoramas(initialDoramas);
+          setDoramas(filteredDoramas);
+          setPage(1);
+          setHasMore(true);
+          setSearchQuery("");
+          setIsSearching(false);
+        });
+      }
       return;
     }
 
     setIsSearching(true);
     try {
       const results = await searchMedia(query);
-      // Filter for Korean dramas - in a real app, we'd have better criteria
-      const doramaResults = results.filter((item) => 
-        item.media_type === "tv" && 
-        item.original_language === "ko"
-      ) as Series[];
+      // Filtramos para doramas coreanos com imagens
+      const doramaResults = filterDoramas(
+        results.filter(item => item.media_type === "tv") as Series[]
+      );
       
       setDoramas(doramaResults);
       setPage(1);
@@ -165,7 +193,8 @@ export const useDoramas = () => {
     setGenreFilter("all");
     setSearchQuery("");
     fetchKoreanDramas(1).then(initialDoramas => {
-      setDoramas(initialDoramas);
+      const filteredDoramas = filterDoramas(initialDoramas);
+      setDoramas(filteredDoramas);
       setPage(1);
       setHasMore(true);
     });

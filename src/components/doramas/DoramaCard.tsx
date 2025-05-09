@@ -14,6 +14,16 @@ const DoramaCard = ({ dorama, videoKey }: DoramaCardProps) => {
   const title = dorama.name;
   const rating = dorama.vote_average ? Math.round(dorama.vote_average * 10) / 10 : null;
   
+  // Não renderizar o card se não tiver imagem (poster ou backdrop)
+  if (!dorama.poster_path && !dorama.backdrop_path) {
+    return null;
+  }
+  
+  // Checar se é um dorama coreano
+  if (dorama.original_language !== "ko") {
+    return null;
+  }
+  
   return (
     <Card className="bg-transparent border-none overflow-hidden group">
       <Link 
