@@ -1,14 +1,17 @@
+
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Shield } from "lucide-react";
 import { MediaItem, Movie, Series } from "@/types/movie";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import MediaCard from "@/components/MediaCard";
 
 interface Profile {
@@ -27,6 +30,7 @@ interface Favorite {
 
 const Profile = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useSubscription();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [username, setUsername] = useState("");
@@ -154,6 +158,21 @@ const Profile = () => {
       <main className="container max-w-full pt-20 pb-20 px-4">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-6">Meu Perfil</h1>
+          
+          {/* Admin Panel Link - Only visible for admin users */}
+          {isAdmin && (
+            <div className="mb-6">
+              <Link to="/admin">
+                <Button 
+                  variant="outline" 
+                  className="border-netflix-red text-netflix-red hover:bg-netflix-red/20 flex items-center gap-2"
+                >
+                  <Shield size={20} />
+                  Acessar Painel de Administração
+                </Button>
+              </Link>
+            </div>
+          )}
           
           <Tabs defaultValue="profile" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
