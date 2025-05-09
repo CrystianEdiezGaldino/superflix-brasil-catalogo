@@ -1,21 +1,23 @@
 
 import { useState, useEffect } from "react";
 import { fetchTVVideos, getBestTVVideoKey } from "@/services/tmdbApi";
-import { Series } from "@/types/movie";
+import { MediaItem } from "@/types/movie";
 
 interface DoramaVideoMap {
   [doramaId: number]: string | null;
 }
 
-export const useDoramaVideos = (doramas: Series[]) => {
+export const useDoramaVideos = (doramas: MediaItem[]) => {
   const [videoMap, setVideoMap] = useState<DoramaVideoMap>({});
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const loadVideos = async () => {
-      // Only fetch for doramas we don't already have data for
+      // Only fetch for doramas we don't already have data for and that are TV series
       const doramasToFetch = doramas.filter(dorama => 
-        videoMap[dorama.id] === undefined && dorama.id
+        dorama.media_type === "tv" && 
+        videoMap[dorama.id] === undefined && 
+        dorama.id
       );
       
       if (doramasToFetch.length === 0) return;

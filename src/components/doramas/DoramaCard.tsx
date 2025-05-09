@@ -14,7 +14,9 @@ const DoramaCard = ({ dorama, videoKey }: DoramaCardProps) => {
   const linkPath = isDorama ? `/dorama/${dorama.id}` : `/filme/${dorama.id}`;
   
   // Obter título (nome para séries, título para filmes)
-  const title = isDorama ? (dorama as Series).name : (dorama as Movie).title;
+  const title = isDorama 
+    ? (dorama as Series).name 
+    : (dorama as Movie).title;
   
   const rating = dorama.vote_average ? Math.round(dorama.vote_average * 10) / 10 : null;
   

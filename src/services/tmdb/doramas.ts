@@ -205,7 +205,7 @@ export const fetchKoreanDramas = async (page = 1, limit = 30) => {
       return [];
     }
     
-    const promises = pageIds.map(id => {
+    const promises = pageIds.map(async id => {
       // Determinar se é um dorama (TV) ou filme com base na presença na lista de filmes
       const isMovie = KOREAN_MOVIES_IDS.includes(id);
       const endpoint = isMovie ? `/movie/${id}` : `/tv/${id}`;

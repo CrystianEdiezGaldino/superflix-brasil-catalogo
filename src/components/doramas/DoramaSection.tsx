@@ -1,11 +1,11 @@
 
-import { Series } from "@/types/movie";
+import { MediaItem } from "@/types/movie";
 import DoramaCard from "@/components/doramas/DoramaCard";
 import { useDoramaVideos } from "@/hooks/useDoramaVideos";
 
 interface DoramaSectionProps {
   title: string;
-  doramas: Series[];
+  doramas: MediaItem[];
   isLoading: boolean;
 }
 

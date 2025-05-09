@@ -27,7 +27,8 @@ const DoramasGrid = ({
   onLoadMore,
   onResetFilters
 }: DoramasGridProps) => {
-  const { videoMap } = useDoramaVideos(doramas);
+  // Cast MediaItem[] to any[] for useDoramaVideos to prevent type errors
+  const { videoMap } = useDoramaVideos(doramas as any[]);
 
   if (isLoading) {
     return (

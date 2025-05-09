@@ -2,6 +2,7 @@
 import MediaView from "@/components/media/MediaView";
 import { useDoramas } from "@/hooks/useDoramas";
 import DoramaSection from "@/components/doramas/DoramaSection";
+import { MediaItem } from "@/types/movie";
 
 const Doramas = () => {
   const {
@@ -32,8 +33,8 @@ const Doramas = () => {
       title="Conteúdo Coreano"
       type="dorama"
       mediaItems={doramas}
-      topRatedItems={topRatedDoramas}
-      popularItems={popularDoramas}
+      topRatedItems={topRatedDoramas as MediaItem[]}
+      popularItems={popularDoramas as MediaItem[]}
       searchQuery={searchQuery}
       yearFilter={yearFilter}
       ratingFilter={genreFilter}

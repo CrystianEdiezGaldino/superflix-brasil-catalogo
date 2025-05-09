@@ -10,17 +10,26 @@ interface MediaCardProps {
 }
 
 const MediaCard = ({ media }: MediaCardProps) => {
+  // Fail safe check for the media object
+  if (!media || !media.id) {
+    return null;
+  }
+
   // Determine link path based on media type
   const getLinkPath = () => {
+    if (!media.media_type) return `/filme/${media.id}`;
+    
     switch (media.media_type) {
       case 'movie':
         return `/filme/${media.id}`;
       case 'tv':
         // Verificar se é um anime ou dorama (coreano)
-        if ('original_language' in media && media.original_language === 'ko') {
-          return `/dorama/${media.id}`;
-        } else if ('original_language' in media && media.original_language === 'ja') {
-          return `/anime/${media.id}`;
+        if ('original_language' in media) {
+          if (media.original_language === 'ko') {
+            return `/dorama/${media.id}`;
+          } else if (media.original_language === 'ja') {
+            return `/anime/${media.id}`;
+          }
         }
         return `/serie/${media.id}`;
       default:
@@ -34,7 +43,7 @@ const MediaCard = ({ media }: MediaCardProps) => {
     : '/placeholder.svg';
 
   // Get title (handle both movie and tv show titles)
-  const title = 'title' in media ? media.title : media.name;
+  const title = 'title' in media ? media.title : 'name' in media ? media.name : "Sem título";
   
   // Get vote average if available
   const rating = media.vote_average ? Math.round(media.vote_average * 10) / 10 : null;
@@ -68,7 +77,7 @@ const MediaCard = ({ media }: MediaCardProps) => {
               </div>
             )}
             
-            <FavoriteButton mediaId={media.id} mediaType={media.media_type} />
+            <FavoriteButton mediaId={media.id} mediaType={media.media_type || 'movie'} />
           </div>
         </div>
         
