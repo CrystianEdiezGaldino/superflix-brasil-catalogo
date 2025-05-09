@@ -1,15 +1,17 @@
 
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search } from "lucide-react";
+import { Search, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface NavbarProps {
   onSearch: (query: string) => void;
 }
 
 const Navbar = ({ onSearch }: NavbarProps) => {
+  const { user } = useAuth();
   const [query, setQuery] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -98,6 +100,20 @@ const Navbar = ({ onSearch }: NavbarProps) => {
               </Button>
             </div>
           </form>
+          
+          {user ? (
+            <Link to="/profile">
+              <Button variant="ghost" size="icon" className="ml-2">
+                <User size={20} className="text-white" />
+              </Button>
+            </Link>
+          ) : (
+            <Link to="/auth">
+              <Button variant="outline" size="sm" className="ml-2">
+                Entrar
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>

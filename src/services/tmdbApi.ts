@@ -1,4 +1,3 @@
-
 import { Movie, Series, Season, Episode } from "@/types/movie";
 
 const API_KEY = "062def1aa1f84c69eb8cd943df2ccc0d";
@@ -128,3 +127,56 @@ export async function searchMedia(query: string): Promise<(Movie | Series)[]> {
     return [];
   }
 }
+
+// Add new function to fetch anime series
+export const fetchAnime = async (): Promise<MediaItem[]> => {
+  try {
+    const response = await fetch(
+      `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_keywords=210024&language=pt-BR&sort_by=popularity.desc`
+    );
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch anime");
+    }
+    
+    const data = await response.json();
+    
+    return data.results.map((item: any) => ({
+      ...item,
+      media_type: "tv"
+    }));
+  } catch (error) {
+    console.error("Error fetching anime:", error);
+    return [];
+  }
+};
+
+// Add function to fetch recommendations
+export const fetchRecommendations = async (mediaIds: number[], mediaType: string): Promise<MediaItem[]> => {
+  try {
+    // If no mediaIds provided, return empty array
+    if (!mediaIds.length) return [];
+    
+    // Take one random ID from the list to get recommendations
+    const randomIndex = Math.floor(Math.random() * mediaIds.length);
+    const randomId = mediaIds[randomIndex];
+    
+    const response = await fetch(
+      `https://api.themoviedb.org/3/${mediaType}/${randomId}/recommendations?api_key=${API_KEY}&language=pt-BR`
+    );
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch recommendations");
+    }
+    
+    const data = await response.json();
+    
+    return data.results.map((item: any) => ({
+      ...item,
+      media_type: mediaType
+    }));
+  } catch (error) {
+    console.error("Error fetching recommendations:", error);
+    return [];
+  }
+};

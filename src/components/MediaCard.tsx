@@ -1,53 +1,127 @@
 
+import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Heart } from "lucide-react";
+import { toast } from "sonner";
 import { MediaItem } from "@/types/movie";
-import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MediaCardProps {
   media: MediaItem;
 }
 
 const MediaCard = ({ media }: MediaCardProps) => {
-  const title = "title" in media ? media.title : media.name;
-  const releaseDate = "release_date" in media ? media.release_date : media.first_air_date;
-  const year = releaseDate ? new Date(releaseDate).getFullYear() : "";
-  const mediaType = media.media_type;
-  const detailsPath = `/${mediaType === "movie" ? "filme" : "serie"}/${media.id}`;
-  const voteAverage = media.vote_average ? media.vote_average.toFixed(1) : "?";
+  const { user } = useAuth();
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const posterUrl = media.poster_path
+    ? `https://image.tmdb.org/t/p/w500${media.poster_path}`
+    : "/placeholder.svg";
+    
+  const mediaLink = media.media_type === "movie"
+    ? `/filme/${media.id}`
+    : `/serie/${media.id}`;
+    
+  const mediaTitle = media.media_type === "movie" 
+    ? media.title 
+    : (media as any).name || "Sem título";
+
+  const checkIfFavorite = async () => {
+    if (!user) return;
+    
+    try {
+      const { data } = await supabase
+        .from("favorites")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("media_id", media.id)
+        .eq("media_type", media.media_type)
+        .single();
+        
+      setIsFavorite(!!data);
+    } catch (error) {
+      console.error("Error checking favorite status:", error);
+    }
+  };
+  
+  // Check if favorite when component mounts
+  useState(() => {
+    checkIfFavorite();
+  });
+
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error("Faça login para adicionar aos favoritos");
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      if (isFavorite) {
+        // Remove from favorites
+        await supabase
+          .from("favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("media_id", media.id)
+          .eq("media_type", media.media_type);
+          
+        toast.info("Removido dos favoritos");
+      } else {
+        // Add to favorites
+        await supabase
+          .from("favorites")
+          .insert({
+            user_id: user.id,
+            media_id: media.id,
+            media_type: media.media_type,
+            title: mediaTitle,
+            poster_path: media.poster_path
+          });
+          
+        toast.success("Adicionado aos favoritos");
+      }
+      
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Erro ao atualizar favoritos");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <Card className="movie-card bg-transparent border-0 h-full transition-all duration-300">
-      <Link to={detailsPath}>
-        <div className="relative aspect-[2/3] overflow-hidden rounded-md">
-          {media.poster_path ? (
-            <img
-              src={`https://image.tmdb.org/t/p/w500${media.poster_path}`}
-              alt={title}
-              className="w-full h-full object-cover transition-transform duration-300"
-              loading="lazy"
+    <div className="movie-card relative">
+      <Link to={mediaLink}>
+        <img
+          src={posterUrl}
+          alt={mediaTitle}
+          className="rounded-md w-full h-auto object-cover"
+          loading="lazy"
+        />
+        <div className="movie-info absolute inset-0 bg-black/75 flex flex-col justify-end p-2 rounded-md opacity-0 transition-opacity">
+          <h3 className="text-white text-sm font-medium line-clamp-2">{mediaTitle}</h3>
+          
+          <button 
+            onClick={toggleFavorite}
+            disabled={isLoading}
+            className="absolute top-2 right-2 p-1 bg-black/50 rounded-full hover:bg-netflix-red transition-colors"
+          >
+            <Heart 
+              size={16} 
+              className={isFavorite ? "fill-netflix-red text-netflix-red" : "text-white"} 
             />
-          ) : (
-            <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-              <span className="text-gray-500 text-sm text-center px-2">{title}</span>
-            </div>
-          )}
-          
-          <div className="absolute top-2 right-2 bg-black/70 text-white text-xs font-bold py-1 px-2 rounded-md flex items-center">
-            <span className="text-yellow-400 mr-1">★</span> {voteAverage}
-          </div>
-          
-          <div className="movie-info absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-3">
-            <h3 className="text-white font-medium truncate text-sm md:text-base">{title}</h3>
-            <div className="flex justify-between items-center mt-1">
-              <span className="text-xs text-gray-300">{year}</span>
-              <span className="text-xs py-0.5 px-1.5 bg-netflix-red rounded text-white">
-                {mediaType === "movie" ? "Filme" : "Série"}
-              </span>
-            </div>
-          </div>
+          </button>
         </div>
       </Link>
-    </Card>
+    </div>
   );
 };
 

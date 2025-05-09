@@ -1,16 +1,21 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Banner from "@/components/Banner";
 import MediaSection from "@/components/MediaSection";
-import { fetchPopularMovies, fetchPopularSeries, searchMedia } from "@/services/tmdbApi";
+import { fetchPopularMovies, fetchPopularSeries, fetchAnime, searchMedia, fetchRecommendations } from "@/services/tmdbApi";
 import { MediaItem } from "@/types/movie";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const { user } = useAuth();
   const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [featuredMedia, setFeaturedMedia] = useState<MediaItem | undefined>(undefined);
+  const [recommendations, setRecommendations] = useState<MediaItem[]>([]);
 
   // Buscar filmes populares com dublagem em português
   const moviesQuery = useQuery({
@@ -23,19 +28,76 @@ const Index = () => {
     queryKey: ["popularSeries"],
     queryFn: () => fetchPopularSeries(),
   });
+  
+  // Buscar anime
+  const animeQuery = useQuery({
+    queryKey: ["anime"],
+    queryFn: () => fetchAnime(),
+  });
+
+  // Buscar favoritos e recomendações se usuário estiver logado
+  useEffect(() => {
+    const fetchFavoritesAndRecommendations = async () => {
+      if (!user) {
+        setRecommendations([]);
+        return;
+      }
+
+      try {
+        const { data: favorites, error } = await supabase
+          .from("favorites")
+          .select("media_id, media_type")
+          .eq("user_id", user.id);
+
+        if (error) throw error;
+
+        if (favorites && favorites.length > 0) {
+          // Separate movies and TV shows
+          const movieIds = favorites
+            .filter(fav => fav.media_type === "movie")
+            .map(fav => fav.media_id);
+            
+          const tvIds = favorites
+            .filter(fav => fav.media_type === "tv")
+            .map(fav => fav.media_id);
+
+          // Get recommendations based on favorites
+          let recs: MediaItem[] = [];
+          
+          if (movieIds.length > 0) {
+            const movieRecs = await fetchRecommendations(movieIds, "movie");
+            recs = [...recs, ...movieRecs];
+          }
+          
+          if (tvIds.length > 0) {
+            const tvRecs = await fetchRecommendations(tvIds, "tv");
+            recs = [...recs, ...tvRecs];
+          }
+          
+          // Shuffle and limit recommendations
+          setRecommendations(recs.slice(0, 20));
+        }
+      } catch (error) {
+        console.error("Error fetching favorites:", error);
+      }
+    };
+
+    fetchFavoritesAndRecommendations();
+  }, [user]);
 
   // Selecionar um item aleatório para destaque
   useEffect(() => {
     const allMedia = [
       ...(moviesQuery.data || []),
-      ...(seriesQuery.data || [])
+      ...(seriesQuery.data || []),
+      ...(animeQuery.data || [])
     ];
     
     if (allMedia.length > 0) {
       const randomIndex = Math.floor(Math.random() * allMedia.length);
       setFeaturedMedia(allMedia[randomIndex]);
     }
-  }, [moviesQuery.data, seriesQuery.data]);
+  }, [moviesQuery.data, seriesQuery.data, animeQuery.data]);
 
   // Função de pesquisa
   const handleSearch = async (query: string) => {
@@ -63,10 +125,10 @@ const Index = () => {
   }, []);
 
   // Estado de carregamento
-  const isLoading = moviesQuery.isPending || seriesQuery.isPending;
+  const isLoading = moviesQuery.isPending || seriesQuery.isPending || animeQuery.isPending;
 
   // Estado de erro
-  const hasError = moviesQuery.isError || seriesQuery.isError;
+  const hasError = moviesQuery.isError || seriesQuery.isError || animeQuery.isError;
   
   if (hasError) {
     return (
@@ -97,7 +159,7 @@ const Index = () => {
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 px-4">
               {searchResults.map((media) => (
                 <div key={`${media.media_type}-${media.id}`}>
-                  <MediaSection title="" medias={[media]} />
+                  <MediaCard media={media} />
                 </div>
               ))}
             </div>
@@ -105,13 +167,26 @@ const Index = () => {
         ) : (
           <>
             {/* Seções de conteúdo */}
+            {user && recommendations.length > 0 && (
+              <MediaSection 
+                title="Recomendados para Você" 
+                medias={recommendations} 
+              />
+            )}
+            
             <MediaSection 
               title="Filmes Populares em Português" 
               medias={moviesQuery.data || []} 
             />
+            
             <MediaSection 
               title="Séries Populares em Português" 
               medias={seriesQuery.data || []} 
+            />
+            
+            <MediaSection 
+              title="Anime" 
+              medias={animeQuery.data || []} 
             />
           </>
         )}
