@@ -1,14 +1,17 @@
 
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { fetchSeriesDetails, fetchSeriesSeasonDetails } from "@/services/tmdbApi";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAccessControl } from "@/hooks/useAccessControl";
 import { toast } from "sonner";
 import { Series, Season } from "@/types/movie";
 
-export const useSeriesDetails = (id: string | undefined) => {
+export const useSeriesDetails = (providedId?: string) => {
+  const { id: urlId } = useParams<{ id: string }>();
+  const id = providedId || urlId;
+  
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
