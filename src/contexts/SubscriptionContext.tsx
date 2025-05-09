@@ -1,4 +1,3 @@
-
 import { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,7 +28,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [trialEnd, setTrialEnd] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
+  const [lastCheckTime, setLastCheckTime] = useState(0);
+  const maxRetries = 5;
+  const retryDelay = 3000; // 3 seconds
 
   const checkSubscription = async () => {
     if (!user) {
@@ -44,43 +45,77 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
+    // Prevent multiple rapid checks
+    const now = Date.now();
+    if (now - lastCheckTime < 1000) {
+      console.log('Throttling subscription checks');
+      return;
+    }
+    setLastCheckTime(now);
+    
     setIsLoading(true);
     try {
+      console.log('Checking subscription status...');
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
         console.error('Error checking subscription:', error);
-        // If we're within retry limits, increment counter and return without updating state
+        
+        // On error, don't fail completely - retry or use cached data
         if (retryCount < maxRetries) {
           setRetryCount(retryCount + 1);
-          return;
+          // Don't update state yet, will retry
         } else {
-          // After max retries, show toast but don't fail completely - use cached data if available
+          // Show error after max retries
           toast.error('Erro ao verificar assinatura. Tentaremos novamente em breve.');
+          // Keep the last known state
         }
       } else {
         // Reset retry counter on success
         setRetryCount(0);
+        
+        // Always update state regardless of response content
+        // This ensures we have some state even if the function had issues
+        setIsSubscribed(data?.hasActiveSubscription || false);
+        setIsAdmin(data?.isAdmin || false);
+        setHasTempAccess(data?.hasTempAccess || false);
+        setHasTrialAccess(data?.has_trial_access || false);
+        setSubscriptionTier(data?.subscription_tier || null);
+        setSubscriptionEnd(data?.subscription_end || data?.tempAccess?.expires_at || null);
+        setTrialEnd(data?.trial_end || null);
+        
+        console.log('Subscription check result:', {
+          isSubscribed: data?.hasActiveSubscription || false,
+          isAdmin: data?.isAdmin || false,
+          hasTempAccess: data?.hasTempAccess || false,
+          hasTrialAccess: data?.has_trial_access || false,
+          subscriptionTier: data?.subscription_tier || null,
+          user: user?.id
+        });
+
+        // If direct DB check is needed on API failure, implement as fallback
+        if (!data?.hasActiveSubscription && !data?.isAdmin && !data?.has_trial_access) {
+          try {
+            const { data: subData } = await supabase
+              .from('subscriptions')
+              .select('status, plan_type')
+              .eq('user_id', user.id)
+              .eq('status', 'active')
+              .maybeSingle();
+              
+            if (subData) {
+              console.log('Fallback subscription check found active subscription:', subData);
+              setIsSubscribed(true);
+              setSubscriptionTier(subData.plan_type);
+            }
+          } catch (dbError) {
+            console.error('Fallback subscription check failed:', dbError);
+          }
+        }
       }
-      
-      // Verificar se o usuário tem uma assinatura ativa ou acesso temporário/trial
-      setIsSubscribed(data?.hasActiveSubscription || false);
-      setIsAdmin(data?.isAdmin || false);
-      setHasTempAccess(data?.hasTempAccess || false);
-      setHasTrialAccess(data?.has_trial_access || false);
-      setSubscriptionTier(data?.subscription_tier || null);
-      setSubscriptionEnd(data?.subscription_end || data?.tempAccess?.expires_at || null);
-      setTrialEnd(data?.trial_end || null);
-      
-      console.log('Subscription check result:', {
-        isSubscribed: data?.hasActiveSubscription || false,
-        isAdmin: data?.isAdmin || false,
-        hasTempAccess: data?.hasTempAccess || false,
-        hasTrialAccess: data?.has_trial_access || false,
-        subscriptionTier: data?.subscription_tier || null
-      });
     } catch (error) {
       console.error('Failed to check subscription:', error);
+      
       // Don't show toast on every error, only after max retries
       if (retryCount >= maxRetries) {
         toast.error('Erro ao verificar assinatura');
@@ -108,8 +143,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (retryCount > 0 && retryCount <= maxRetries && user) {
       const retryTimeout = setTimeout(() => {
+        console.log(`Retrying subscription check (attempt ${retryCount})...`);
         checkSubscription();
-      }, 3000 * retryCount); // Exponential backoff
+      }, retryDelay * retryCount); // Exponential backoff
       
       return () => clearTimeout(retryTimeout);
     }

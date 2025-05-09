@@ -8,10 +8,10 @@ interface SeriesAccessPromptProps {
 }
 
 const SeriesAccessPrompt = ({ hasAccess }: SeriesAccessPromptProps) => {
-  const { isSubscribed, hasTrialAccess, hasTempAccess } = useSubscription();
+  const { isSubscribed, hasTrialAccess, hasTempAccess, isAdmin } = useSubscription();
   
-  // Considera todos os tipos de acesso válidos
-  const hasValidAccess = hasAccess || isSubscribed || hasTrialAccess || hasTempAccess;
+  // Consider all valid access types
+  const hasValidAccess = hasAccess || isSubscribed || hasTrialAccess || hasTempAccess || isAdmin;
   
   if (hasValidAccess) return null;
   

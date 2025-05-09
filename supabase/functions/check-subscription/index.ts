@@ -16,8 +16,15 @@ serve(async (req) => {
     // Get authorization header
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
+      console.log("[CHECK-SUBSCRIPTION] No authorization header provided");
       return new Response(
-        JSON.stringify({ error: 'No authorization header' }),
+        JSON.stringify({ 
+          error: 'No authorization header',
+          hasActiveSubscription: false,
+          isAdmin: false,
+          hasTempAccess: false,
+          has_trial_access: false 
+        }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -37,11 +44,34 @@ serve(async (req) => {
       error: userError,
     } = await supabaseClient.auth.getUser();
 
-    if (userError || !user) {
+    if (userError) {
       console.error("[CHECK-SUBSCRIPTION] User auth error:", userError);
+      
+      // Return a user-friendly response even when auth fails
       return new Response(
-        JSON.stringify({ error: 'Failed to get user', details: userError }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ 
+          error: 'Failed to get user', 
+          details: userError,
+          hasActiveSubscription: false,
+          isAdmin: false,
+          hasTempAccess: false,
+          has_trial_access: false 
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!user) {
+      console.log("[CHECK-SUBSCRIPTION] No user found from auth token");
+      return new Response(
+        JSON.stringify({ 
+          error: 'No user found',
+          hasActiveSubscription: false,
+          isAdmin: false,
+          hasTempAccess: false,
+          has_trial_access: false 
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -69,6 +99,8 @@ serve(async (req) => {
     if (subscriptionError) {
       console.error("[CHECK-SUBSCRIPTION] Subscription check error:", subscriptionError);
     }
+    
+    console.log(`[CHECK-SUBSCRIPTION] Subscription check result - ${JSON.stringify({hasSubscription: !!subscription})}`);
 
     // Check for trial access
     const now = new Date();
@@ -123,11 +155,13 @@ serve(async (req) => {
             });
           
           if (createError) {
-            console.error('Error updating admin subscription:', createError);
+            console.error('[CHECK-SUBSCRIPTION] Error updating admin subscription:', createError);
+          } else {
+            console.log('[CHECK-SUBSCRIPTION] Created admin subscription');
           }
         }
       } catch (error) {
-        console.error('Error updating admin subscription:', error);
+        console.error('[CHECK-SUBSCRIPTION] Error updating admin subscription:', error);
       }
     }
 
@@ -140,7 +174,7 @@ serve(async (req) => {
       }
     }
 
-    // Prepare response
+    // Always return 200 status code with subscription state
     return new Response(
       JSON.stringify({
         hasActiveSubscription: !subscriptionError && subscription?.status === 'active',
@@ -164,9 +198,17 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('[CHECK-SUBSCRIPTION] Error:', error);
+    // Even on error, return 200 with default values to prevent blocking the user
     return new Response(
-      JSON.stringify({ error: 'Internal Server Error', message: String(error) }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ 
+        error: 'Internal Server Error', 
+        message: String(error),
+        hasActiveSubscription: false,
+        isAdmin: false,
+        hasTempAccess: false,
+        has_trial_access: false
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
