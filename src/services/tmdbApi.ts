@@ -1,7 +1,7 @@
 
 // Fix API key and error handling in fetch functions
 
-const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+const API_KEY = "062def1aa1f84c69eb8cd943df2ccc0d";
 
 export const fetchPopularMovies = async (page = 1) => {
   try {
