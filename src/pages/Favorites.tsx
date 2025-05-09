@@ -1,95 +1,106 @@
-
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
-import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { Button } from "@/components/ui/button";
+import { Heart, Trash2 } from "lucide-react";
+import { MediaItem } from "@/types/movie";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { useMediaSearch } from "@/hooks/useMediaSearch";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+
+// Just keeping the structure without implementing actual favorites functionality
 
 const Favorites = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { isSubscribed } = useSubscription();
+  const [searchQuery, setSearchQuery] = useState("");
   const [favorites, setFavorites] = useState<MediaItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const { handleSearch: originalHandleSearch } = useMediaSearch();
 
-  // Handle search in this page
+  // Mock query for demonstration purposes
+  const { isLoading } = useQuery({
+    queryKey: ["favorites"],
+    queryFn: async () => {
+      // This would be replaced with actual favorites fetching logic
+      return [];
+    },
+    enabled: !!user,
+  });
+
   const handleSearch = (query: string) => {
-    if (query.trim()) {
-      originalHandleSearch(query);
-      navigate('/');
-    }
+    setSearchQuery(query);
   };
 
-  // Fetch favorites
-  useEffect(() => {
-    const fetchFavorites = async () => {
-      if (!user) {
-        navigate('/auth');
-        return;
-      }
+  const handleRemoveFromFavorites = (id: number) => {
+    setFavorites(favorites.filter(item => item.id !== id));
+  };
 
-      try {
-        setIsLoading(true);
-        // In a real app, we'd fetch from an API or database
-        // For this demo, let's simulate a delayed response with some sample data
-        setTimeout(() => {
-          const mockFavorites: MediaItem[] = [
-            {
-              id: 1,
-              title: "Example Movie",
-              poster_path: "/placeholder.jpg",
-              media_type: "movie",
-              overview: "An example movie",
-              backdrop_path: "/placeholder.jpg",
-              vote_average: 8.5,
-              release_date: "2023-01-01"
-            },
-            {
-              id: 2,
-              name: "Example Series",
-              poster_path: "/placeholder.jpg",
-              media_type: "tv",
-              overview: "An example series",
-              backdrop_path: "/placeholder.jpg",
-              vote_average: 8.5,
-              first_air_date: "2023-01-01",
-              original_language: "en" // Add this property to fix the TypeScript error
-            }
-          ];
-          
-          setFavorites(mockFavorites);
-          setIsLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error("Error loading favorites:", error);
-        setIsLoading(false);
-      }
-    };
+  // Placeholder for empty favorites
+  const EmptyFavoritesPlaceholder = () => (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="bg-gray-800 p-6 rounded-full mb-6">
+        <Heart className="h-12 w-12 text-gray-400" />
+      </div>
+      <h2 className="text-2xl font-semibold text-white mb-2">Sua lista de favoritos está vazia</h2>
+      <p className="text-gray-400 max-w-md mb-8">
+        Adicione filmes, séries e doramas aos seus favoritos para encontrá-los aqui.
+      </p>
+      <Button 
+        onClick={() => window.location.href = "/"}
+        className="bg-white text-black hover:bg-gray-200"
+      >
+        Explorar Conteúdo
+      </Button>
+    </div>
+  );
 
-    fetchFavorites();
-  }, [user, navigate]);
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-netflix-background">
+        <Navbar onSearch={handleSearch} />
+        <div className="flex flex-col items-center justify-center h-[80vh] text-center px-4">
+          <h2 className="text-2xl font-semibold text-white mb-4">
+            Faça login para acessar seus favoritos
+          </h2>
+          <Button 
+            onClick={() => window.location.href = "/auth"}
+            className="bg-netflix-red hover:bg-red-700"
+          >
+            Fazer Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-netflix-background">
       <Navbar onSearch={handleSearch} />
-      <div className="pt-24 px-4 md:px-8">
-        <h1 className="text-3xl font-bold text-white mb-6">Seus Favoritos</h1>
-        
+      
+      <div className="pt-20 px-4 md:px-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-white">Meus Favoritos</h1>
+          {favorites.length > 0 && (
+            <Button 
+              variant="ghost"
+              className="text-gray-400 hover:text-white"
+              onClick={() => setFavorites([])}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Limpar tudo
+            </Button>
+          )}
+        </div>
+
         {isLoading ? (
-          <div className="flex justify-center p-20">
-            <div className="w-12 h-12 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
-          </div>
+          <div className="text-white">Carregando...</div>
         ) : favorites.length > 0 ? (
-          <MediaSection title="" media={favorites} isLoading={false} />
+          <MediaSection 
+            title="Conteúdo Salvo" 
+            medias={favorites}
+            isLoading={false}
+          />
         ) : (
-          <div className="text-center py-20 text-gray-400">
-            <h3 className="text-xl mb-4">Nenhum favorito ainda</h3>
-            <p>Adicione títulos aos seus favoritos para encontrá-los aqui!</p>
-          </div>
+          <EmptyFavoritesPlaceholder />
         )}
       </div>
     </div>

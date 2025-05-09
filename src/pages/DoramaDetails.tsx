@@ -1,57 +1,42 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
-import { fetchDoramaDetails, fetchDoramaCast, fetchSimilarDoramas } from "@/services/tmdbApi";
 import DoramaBanner from "@/components/doramas/DoramaBanner";
 import DoramaSynopsis from "@/components/doramas/DoramaSynopsis";
 import DoramaCastSection from "@/components/doramas/DoramaCastSection";
 import RelatedDoramas from "@/components/doramas/RelatedDoramas";
 import VideoPlayer from "@/components/VideoPlayer";
-import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useDoramaDetails } from "@/hooks/dorama/useDoramaDetails";
+import { useQuery } from "@tanstack/react-query";
+import { fetchDoramaCast } from "@/services/tmdbApi";
 
 const DoramaDetails = () => {
-  const { id } = useParams<{ id: string }>();
-  const [showPlayer, setShowPlayer] = useState(false);
-  
-  // Função vazia para o Navbar que não faz pesquisa nesta página
+  // Get dorama details and related functionality
+  const {
+    dorama,
+    similarDoramas,
+    isLoadingDorama,
+    isLoadingSimilar,
+    showPlayer,
+    togglePlayer,
+    authLoading,
+    subscriptionLoading,
+    user,
+    hasAccess
+  } = useDoramaDetails();
+
+  // Empty search handler for Navbar
   const handleSearch = (query: string) => {
-    // Não fazemos nada aqui, já que esta página não tem funcionalidade de pesquisa
+    // This page doesn't have search functionality
   };
-  
-  // Scroll to top when component mounts or ID changes
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
-  
-  // Fetch dorama details
-  const { data: dorama, isLoading: isLoadingDorama } = useQuery({
-    queryKey: ["dorama", id],
-    queryFn: () => fetchDoramaDetails(id || ""),
-    enabled: !!id,
-  });
-  
+
   // Fetch cast information
+  const { id } = dorama || {};
   const { data: cast, isLoading: isLoadingCast } = useQuery({
     queryKey: ["dorama-cast", id],
-    queryFn: () => fetchDoramaCast(id || "", 12),
+    queryFn: () => fetchDoramaCast(id?.toString() || "", 12),
     enabled: !!id,
   });
-  
-  // Fetch similar doramas
-  const { data: similarDoramas, isLoading: isLoadingSimilar } = useQuery({
-    queryKey: ["similar-doramas", id],
-    queryFn: () => fetchSimilarDoramas(id || ""),
-    enabled: !!id,
-  });
-  
-  const togglePlayer = () => {
-    setShowPlayer(!showPlayer);
-    if (!showPlayer) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
   
   const imdbId = dorama?.external_ids?.imdb_id;
   
