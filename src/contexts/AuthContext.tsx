@@ -24,6 +24,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
+        console.log("Auth state changed:", event, newSession?.user?.email);
         setSession(newSession);
         setUser(newSession?.user ?? null);
         
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Then check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+      console.log("Initial session check:", currentSession?.user?.email);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);
@@ -51,24 +53,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
     try {
+      console.log("Attempting signup for:", email);
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: metadata
+          data: metadata,
+          emailRedirectTo: window.location.origin + '/auth'
         }
       });
       
-      if (error) throw error;
-      
-      // Create trial subscription for new user
-      if (!error) {
-        toast.success("Cadastro realizado! Verifique seu email para confirmar.");
-        
-        // The trial subscription will be created by a trigger function in Supabase
-        // after email verification is completed
+      if (error) {
+        console.error("Signup error:", error);
+        throw error;
       }
+      
+      console.log("Signup successful for:", email);
+      toast.success("Cadastro realizado! Por favor, faça login.");
     } catch (error: any) {
+      console.error("Error during signup:", error);
       toast.error(error.message || "Erro ao cadastrar");
       throw error;
     }
@@ -76,13 +79,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const signIn = async (email: string, password: string) => {
     try {
+      console.log("Attempting login for:", email);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Login error:", error);
+        throw error;
+      }
+      
+      console.log("Login successful for:", email);
     } catch (error: any) {
+      console.error("Error during login:", error);
       toast.error(error.message || "Erro ao fazer login");
       throw error;
     }
@@ -90,9 +100,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   
   const signOut = async () => {
     try {
+      console.log("Attempting to sign out");
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      if (error) {
+        console.error("Sign out error:", error);
+        throw error;
+      }
+      console.log("Sign out successful");
     } catch (error: any) {
+      console.error("Error during sign out:", error);
       toast.error(error.message || "Erro ao sair");
       throw error;
     }

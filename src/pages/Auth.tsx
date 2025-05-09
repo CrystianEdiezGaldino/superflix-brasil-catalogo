@@ -13,10 +13,13 @@ import AuthPageBanner from "@/components/auth/AuthPageBanner";
 import AuthLegalSection from "@/components/auth/AuthLegalSection";
 import AuthPreviewSection from "@/components/auth/AuthPreviewSection";
 import { MediaItem } from "@/types/movie";
+import { Progress } from "@/components/ui/progress";
 
 const Auth = () => {
   const { user, loading } = useAuth();
   const [backgroundImage, setBackgroundImage] = useState("");
+  const [redirecting, setRedirecting] = useState(false);
+  const [progress, setProgress] = useState(0);
   
   // Buscar dados de filmes populares
   const { data: moviesPreview = [] } = useQuery({
@@ -44,17 +47,52 @@ const Auth = () => {
     }
   }, [filteredMovies, filteredSeries, filteredAnimes]);
   
+  // Handle user redirecting state with progress animation
+  useEffect(() => {
+    if (user && !redirecting) {
+      setRedirecting(true);
+      
+      // Animate progress bar before redirecting
+      const interval = setInterval(() => {
+        setProgress(prev => {
+          const newProgress = prev + 5;
+          if (newProgress >= 100) {
+            clearInterval(interval);
+          }
+          return newProgress;
+        });
+      }, 50);
+      
+      return () => clearInterval(interval);
+    }
+  }, [user, redirecting]);
+  
   // Display loading during loading
   if (loading) {
     return (
-      <div className="min-h-screen bg-netflix-background flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
+        <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-white">Verificando autenticação...</p>
       </div>
     );
   }
   
-  // Redirect logged-in user to home page
+  // Redirect logged-in user to home page with progress animation
   if (user) {
+    if (progress < 100) {
+      return (
+        <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
+          <h2 className="text-white text-xl mb-2">Login realizado com sucesso!</h2>
+          <p className="text-gray-300 mb-6">Redirecionando para a página inicial...</p>
+          <div className="w-64">
+            <Progress value={progress} className="h-2 bg-gray-700">
+              <div className="bg-netflix-red" style={{ width: `${progress}%` }} />
+            </Progress>
+          </div>
+        </div>
+      );
+    }
+    
     return <Navigate to="/" replace />;
   }
   

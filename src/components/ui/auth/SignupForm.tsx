@@ -54,7 +54,12 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
       }
       
       await signUp(data.email, data.password, metadata);
-      toast.success("Cadastro realizado! Verifique seu email para confirmar.");
+      
+      toast.success("Cadastro realizado com sucesso! Faça login para continuar.");
+      
+      // Limpar o formulário após o cadastro bem-sucedido
+      form.reset();
+      
       // Switch to login form after successful signup
       onSuccess();
     } catch (error: any) {
