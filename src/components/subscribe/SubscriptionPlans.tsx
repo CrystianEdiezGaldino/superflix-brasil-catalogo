@@ -18,13 +18,11 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  // IDs corretos dos produtos
-  const MONTHLY_PRICE_ID = "price_1Qkiz906o9nmaCFZL6CQMeEM";
-  const ANNUAL_PRICE_ID = "price_1Qkj0S06o9nmaCFZHli9wwLC";
+  // Product IDs
   const MONTHLY_PRODUCT_ID = "prod_SHSb9G94AXb8Nl";
   const ANNUAL_PRODUCT_ID = "prod_SHSce9XGUSazQq";
   
-  const handleSubscribe = async (priceId: string, isMonthly: boolean) => {
+  const handleSubscribe = async (isMonthly: boolean) => {
     if (!user) {
       toast.error("Você precisa estar logado para assinar");
       navigate("/auth");
@@ -33,10 +31,12 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
 
     setIsProcessing(true);
     try {
-      console.log("Iniciando processo de checkout com priceId:", priceId);
+      const productId = isMonthly ? MONTHLY_PRODUCT_ID : ANNUAL_PRODUCT_ID;
+      console.log("Iniciando processo de checkout para produto:", productId);
+      
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
-          priceId,
+          priceId: productId,  // We'll use the product ID instead of price ID
           mode: "subscription"
         }
       });
@@ -71,7 +71,7 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
 
       if (!data?.url) {
         console.error("URL não retornada:", data);
-        throw new Error("URL do checkout não foi retornada. Verifique se os IDs de preço estão corretos.");
+        throw new Error("URL do checkout não foi retornada. Verifique se os IDs de produto estão corretos.");
       }
 
       // Redirect to Stripe Checkout
@@ -135,7 +135,7 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
         <CardFooter>
           <Button 
             className="w-full py-6 text-lg bg-netflix-red hover:bg-netflix-red/90"
-            onClick={() => handleSubscribe(MONTHLY_PRICE_ID, true)}
+            onClick={() => handleSubscribe(true)}
             disabled={isProcessing}
           >
             {isProcessing ? "Processando..." : "Assinar Plano Mensal"}
@@ -192,7 +192,7 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
         <CardFooter>
           <Button 
             className="w-full py-6 text-lg bg-green-600 hover:bg-green-700"
-            onClick={() => handleSubscribe(ANNUAL_PRICE_ID, false)}
+            onClick={() => handleSubscribe(false)}
             disabled={isProcessing}
           >
             {isProcessing ? "Processando..." : "Assinar Plano Anual"}

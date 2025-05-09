@@ -49,12 +49,9 @@ serve(async (req) => {
 
     logStep("Request parameters", { priceId, mode });
     
-    // Validate price ID format to ensure it's a valid Stripe price ID
-    if (!priceId.startsWith('price_')) {
-      throw new Error(`Invalid price ID format: ${priceId}`);
-    }
-
-    logStep("Stripe key verified");
+    // Initialize Stripe
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    logStep("Stripe initialized");
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
@@ -76,9 +73,6 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Initialize Stripe
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    
     // Check if a customer record exists for this user
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
@@ -135,7 +129,7 @@ serve(async (req) => {
     };
 
     // Determine metadata based on price ID
-    const isAnnual = priceId === "price_1Qkj0S06o9nmaCFZHli9wwLC";
+    const isAnnual = priceId.includes("anual") || priceId.includes("annual");
     const simultaneousAccesses = isAnnual ? 6 : 3;
     const productId = isAnnual ? "prod_SHSce9XGUSazQq" : "prod_SHSb9G94AXb8Nl";
     
@@ -150,7 +144,19 @@ serve(async (req) => {
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
-        line_items: [{ price: priceId, quantity: 1 }],
+        line_items: [
+          {
+            price_data: {
+              currency: 'brl',
+              product: productId,
+              unit_amount: isAnnual ? 10000 : 990,
+              recurring: mode === 'subscription' ? {
+                interval: isAnnual ? 'year' : 'month',
+              } : undefined
+            },
+            quantity: 1,
+          }
+        ],
         mode: mode,
         success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${origin}/subscribe`,

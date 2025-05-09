@@ -25,7 +25,7 @@ const ActiveSubscription = ({
   const { user } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   
-  const handleSubscribe = async (priceId: string) => {
+  const handleSubscribe = async (productId: string) => {
     if (!user) {
       toast.error("Você precisa estar logado para assinar");
       navigate("/auth");
@@ -34,29 +34,29 @@ const ActiveSubscription = ({
 
     setIsProcessing(true);
     try {
-      console.log("Iniciando processo de checkout com priceId:", priceId);
+      console.log("Iniciando processo de checkout com productId:", productId);
       const { data, error } = await supabase.functions.invoke("create-checkout", {
         body: {
-          priceId,
+          priceId: productId,
           mode: "subscription"
         }
       });
+
+      console.log("Resposta do create-checkout:", data);
 
       if (error) {
         console.error("Erro na chamada da função create-checkout:", error);
         throw new Error(error.message || "Erro ao processar assinatura");
       }
 
-      console.log("Resposta do create-checkout:", data);
-
-      if (data.error) {
+      if (data?.error) {
         console.error("Erro retornado pelo servidor:", data.error);
         throw new Error(data.error);
       }
 
-      if (!data.url) {
+      if (!data?.url) {
         console.error("URL do checkout não retornada:", data);
-        throw new Error("URL do checkout não foi retornada. Verifique se os IDs de preço estão corretos.");
+        throw new Error("URL do checkout não foi retornada. Verifique se os IDs de produto estão corretos.");
       }
 
       // Redirect to Stripe Checkout
