@@ -4,7 +4,6 @@ import { MediaItem } from "@/types/movie";
 import MediaCard from "@/components/MediaCard";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Link } from "react-router-dom";
 
 interface MediaSectionProps {
   title: string;
@@ -13,7 +12,7 @@ interface MediaSectionProps {
   mediaType?: string;
 }
 
-const MediaSection = ({ title, medias, viewAllPath, mediaType }: MediaSectionProps) => {
+const MediaSection = ({ title, medias }: MediaSectionProps) => {
   const rowRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -41,39 +40,10 @@ const MediaSection = ({ title, medias, viewAllPath, mediaType }: MediaSectionPro
     return null;
   }
 
-  // Determine the view all path based on media type if not provided
-  const getViewAllPath = () => {
-    if (viewAllPath) return viewAllPath;
-    
-    if (!mediaType) return "";
-    
-    switch (mediaType.toLowerCase()) {
-      case "movie":
-        return "/filmes";
-      case "tv":
-        return "/series";
-      case "anime":
-        return "/animes";
-      case "dorama":
-        return "/doramas";
-      default:
-        return "";
-    }
-  };
-
   return (
     <section className="py-6 px-4 relative">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
-        {getViewAllPath() && (
-          <Link 
-            to={getViewAllPath()} 
-            className="text-sm text-gray-300 hover:text-netflix-red transition duration-300 flex items-center"
-          >
-            Ver Todos
-            <ChevronRight size={16} className="ml-1" />
-          </Link>
-        )}
       </div>
       
       <div className="relative">
