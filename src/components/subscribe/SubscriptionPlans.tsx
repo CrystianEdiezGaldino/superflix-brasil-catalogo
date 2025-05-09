@@ -37,7 +37,7 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
 
       if (error) {
         console.error("Erro na chamada da função create-checkout:", error);
-        throw new Error(error.message);
+        throw new Error(error.message || "Erro ao processar assinatura");
       }
 
       console.log("Resposta do create-checkout:", data);
@@ -66,8 +66,12 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
       console.log("Redirecionando para URL do Stripe:", data.url);
       window.location.href = data.url;
     } catch (error) {
-      console.error("Erro ao criar sessão de checkout:", error);
-      toast.error("Erro ao processar assinatura. Por favor, tente novamente.");
+      let errorMessage = "Erro ao processar assinatura. Por favor, tente novamente.";
+      if (error instanceof Error) {
+        console.error("Erro detalhado ao criar sessão de checkout:", error);
+        errorMessage = `Erro: ${error.message}`;
+      }
+      toast.error(errorMessage);
     } finally {
       setIsProcessing(false);
     }
