@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Users, UserCheck, DollarSign, CalendarClock, CreditCard, Search } from "lucide-react";
 
 interface UserWithSubscription {
   id: string;
@@ -24,6 +25,7 @@ interface UserWithSubscription {
   temp_access?: {
     expires_at: string;
   };
+  is_admin?: boolean;
 }
 
 const Admin = () => {
@@ -41,6 +43,7 @@ const Admin = () => {
     totalUsers: 0,
     activeSubscriptions: 0,
     tempAccesses: 0,
+    adminUsers: 0,
     monthlyRevenue: 0,
     yearlyRevenue: 0
   });
@@ -59,42 +62,74 @@ const Admin = () => {
       try {
         setIsLoading(true);
         
-        // Get all users
-        const { data: usersData, error: usersError } = await supabase.auth.admin.listUsers();
+        // Get all users with improved error handling
+        const { data: authData, error: usersError } = await supabase.auth.admin.listUsers();
         
-        if (usersError) throw usersError;
+        if (usersError) {
+          console.error("Error fetching users:", usersError);
+          throw usersError;
+        }
 
+        // Get user roles to identify admins
+        const { data: userRolesData, error: userRolesError } = await supabase
+          .from('user_roles')
+          .select('*');
+        
+        if (userRolesError) {
+          console.error("Error fetching user roles:", userRolesError);
+          throw userRolesError;
+        }
+        
         // Get all subscriptions
         const { data: subscriptionsData, error: subscriptionsError } = await supabase
           .from('subscriptions')
           .select('*');
         
-        if (subscriptionsError) throw subscriptionsError;
+        if (subscriptionsError) {
+          console.error("Error fetching subscriptions:", subscriptionsError);
+          throw subscriptionsError;
+        }
         
         // Get all temp accesses
         const { data: tempAccessesData, error: tempAccessesError } = await supabase
           .from('temp_access')
           .select('*');
         
-        if (tempAccessesError) throw tempAccessesError;
+        if (tempAccessesError) {
+          console.error("Error fetching temp access:", tempAccessesError);
+          throw tempAccessesError;
+        }
         
         setSubscriptions(subscriptionsData || []);
         setTempAccesses(tempAccessesData || []);
         
-        // Combine user data with subscription data
-        const combinedUsers: UserWithSubscription[] = (usersData?.users || []).map(user => {
+        // Create an admin users map for quick lookups
+        const adminsMap = new Map();
+        if (userRolesData) {
+          userRolesData.forEach((role: any) => {
+            if (role.role === 'admin') {
+              adminsMap.set(role.user_id, true);
+            }
+          });
+        }
+        
+        // Combine user data with subscription and admin data
+        const usersData = authData?.users || [];
+        const combinedUsers: UserWithSubscription[] = usersData.map(user => {
           const subscription = subscriptionsData?.find(sub => sub.user_id === user.id);
           const tempAccess = tempAccessesData?.find(
             access => access.user_id === user.id && new Date(access.expires_at) > new Date()
           );
+          const isAdmin = adminsMap.has(user.id);
           
           return {
             id: user.id,
-            email: user.email || '',  // Ensure email is not undefined
+            email: user.email || '',
             last_sign_in_at: user.last_sign_in_at,
             created_at: user.created_at,
             subscription: subscription,
-            temp_access: tempAccess
+            temp_access: tempAccess,
+            is_admin: isAdmin
           };
         });
         
@@ -105,14 +140,16 @@ const Admin = () => {
         const activeTempAccesses = tempAccessesData?.filter(
           access => new Date(access.expires_at) > new Date()
         ) || [];
+        const adminUsersCount = adminsMap.size;
         
         const monthlyRevenue = activeSubscriptions.filter(sub => sub.plan_type === 'monthly').length * 9.9;
         const annualRevenue = activeSubscriptions.filter(sub => sub.plan_type === 'annual').length * (100 / 12);
         
         setStats({
-          totalUsers: usersData?.users.length || 0,
+          totalUsers: usersData.length || 0,
           activeSubscriptions: activeSubscriptions.length,
           tempAccesses: activeTempAccesses.length,
+          adminUsers: adminUsersCount,
           monthlyRevenue: monthlyRevenue + annualRevenue,
           yearlyRevenue: (monthlyRevenue + annualRevenue) * 12
         });
@@ -189,40 +226,76 @@ const Admin = () => {
       <div className="container max-w-full pt-20 pb-20 px-4">
         <h1 className="text-3xl font-bold text-white mb-6">Painel Administrativo</h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Card className="bg-gray-800 border-gray-700 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-400">Usuários Totais</CardTitle>
+              <CardTitle className="text-sm text-gray-400 flex items-center gap-2">
+                <Users size={16} />
+                Usuários
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{stats.totalUsers}</p>
+              <p className="text-2xl font-bold">{stats.totalUsers}</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gray-800 border-gray-700 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-400">Assinaturas Ativas</CardTitle>
+              <CardTitle className="text-sm text-gray-400 flex items-center gap-2">
+                <UserCheck size={16} />
+                Admins
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">{stats.activeSubscriptions}</p>
+              <p className="text-2xl font-bold">{stats.adminUsers}</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gray-800 border-gray-700 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-400">Receita Mensal Est.</CardTitle>
+              <CardTitle className="text-sm text-gray-400 flex items-center gap-2">
+                <CreditCard size={16} />
+                Assinaturas
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">R${stats.monthlyRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{stats.activeSubscriptions}</p>
             </CardContent>
           </Card>
           
           <Card className="bg-gray-800 border-gray-700 text-white">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-400">Receita Anual Est.</CardTitle>
+              <CardTitle className="text-sm text-gray-400 flex items-center gap-2">
+                <CalendarClock size={16} />
+                Acessos Temp.
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold">R${stats.yearlyRevenue.toFixed(2)}</p>
+              <p className="text-2xl font-bold">{stats.tempAccesses}</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gray-800 border-gray-700 text-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-gray-400 flex items-center gap-2">
+                <DollarSign size={16} />
+                Receita Mensal
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">R${stats.monthlyRevenue.toFixed(2)}</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-gray-800 border-gray-700 text-white">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-gray-400 flex items-center gap-2">
+                <DollarSign size={16} />
+                Receita Anual
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">R${stats.yearlyRevenue.toFixed(2)}</p>
             </CardContent>
           </Card>
         </div>
@@ -239,12 +312,15 @@ const Admin = () => {
               <CardHeader>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <CardTitle>Gerenciar Usuários</CardTitle>
-                  <Input 
-                    placeholder="Buscar por email..." 
-                    className="max-w-xs bg-gray-700 border-gray-600"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+                  <div className="relative w-full max-w-xs">
+                    <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <Input 
+                      placeholder="Buscar por email..." 
+                      className="pl-10 bg-gray-700 border-gray-600"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -254,14 +330,16 @@ const Admin = () => {
                       <tr className="border-b border-gray-700">
                         <th className="text-left p-2">Email</th>
                         <th className="text-left p-2">Data de Registro</th>
+                        <th className="text-left p-2">Último Login</th>
                         <th className="text-left p-2">Status</th>
+                        <th className="text-left p-2">Perfil</th>
                         <th className="text-left p-2">Ações</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredUsers.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className="text-center p-4 text-gray-400">
+                          <td colSpan={6} className="text-center p-4 text-gray-400">
                             {searchTerm ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}
                           </td>
                         </tr>
@@ -271,6 +349,9 @@ const Admin = () => {
                             <td className="p-2">{user.email}</td>
                             <td className="p-2">
                               {new Date(user.created_at).toLocaleDateString('pt-BR')}
+                            </td>
+                            <td className="p-2">
+                              {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : 'Nunca'}
                             </td>
                             <td className="p-2">
                               {user.subscription?.status === 'active' ? (
@@ -284,6 +365,17 @@ const Admin = () => {
                               ) : (
                                 <span className="bg-gray-600 text-white px-2 py-1 rounded-full text-xs">
                                   Sem Assinatura
+                                </span>
+                              )}
+                            </td>
+                            <td className="p-2">
+                              {user.is_admin ? (
+                                <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">
+                                  Administrador
+                                </span>
+                              ) : (
+                                <span className="bg-gray-600 text-white px-2 py-1 rounded-full text-xs">
+                                  Usuário
                                 </span>
                               )}
                             </td>
