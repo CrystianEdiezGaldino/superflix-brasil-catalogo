@@ -5,9 +5,10 @@ import { AdminStats } from "@/types/admin";
 
 interface StatsOverviewProps {
   stats: AdminStats;
+  onRefresh?: () => Promise<void>;
 }
 
-const StatsOverview = ({ stats }: StatsOverviewProps) => {
+const StatsOverview = ({ stats, onRefresh }: StatsOverviewProps) => {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
       <StatCard 

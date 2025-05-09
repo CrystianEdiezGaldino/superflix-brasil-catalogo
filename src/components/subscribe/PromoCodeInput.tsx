@@ -7,6 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 
+interface PromoCodeResponse {
+  success: boolean;
+  message: string;
+  days_valid?: number;
+  trial_end?: string;
+}
+
 const PromoCodeInput = () => {
   const [code, setCode] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,12 +43,15 @@ const PromoCodeInput = () => {
         throw error;
       }
       
-      if (!data.success) {
-        toast.error(data.message || "Erro ao resgatar o código");
+      // Cast the data to our expected response type
+      const response = data as unknown as PromoCodeResponse;
+      
+      if (!response.success) {
+        toast.error(response.message || "Erro ao resgatar o código");
         return;
       }
       
-      toast.success(data.message);
+      toast.success(response.message);
       // Atualizar os dados de assinatura após resgatar um código
       await checkSubscription();
       
