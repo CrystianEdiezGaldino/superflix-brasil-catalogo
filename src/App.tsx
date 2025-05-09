@@ -10,6 +10,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import Index from "./pages/Index";
 import Movies from "./pages/Movies";
+import Animes from "./pages/Animes";
+import Favorites from "./pages/Favorites";
 import MovieDetails from "./pages/MovieDetails";
 import SeriesDetails from "./pages/SeriesDetails";
 import NotFound from "./pages/NotFound";
@@ -36,6 +38,8 @@ const App = () => {
                 <Route path="/filmes" element={<Movies />} />
                 <Route path="/filme/:id" element={<MovieDetails />} />
                 <Route path="/serie/:id" element={<SeriesDetails />} />
+                <Route path="/animes" element={<Animes />} />
+                <Route path="/favoritos" element={<Favorites />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/subscribe" element={<Subscribe />} />

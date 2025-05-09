@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, User } from "lucide-react";
+import { Film, Heart, Search, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -64,6 +65,20 @@ const Navbar = ({
                   Séries
                 </Link>
               </li>
+              <li>
+                <Link to="/animes" className="flex items-center text-white hover:text-gray-300 transition">
+                  <Film className="mr-1 h-4 w-4" />
+                  Animes
+                </Link>
+              </li>
+              {user && (
+                <li>
+                  <Link to="/favoritos" className="flex items-center text-white hover:text-gray-300 transition">
+                    <Heart className="mr-1 h-4 w-4" />
+                    Meus Favoritos
+                  </Link>
+                </li>
+              )}
             </ul>
           </nav>
         </div>
