@@ -4,7 +4,11 @@ import { Link } from "react-router-dom";
 const NavLogo = () => {
   return (
     <Link to="/" className="mr-10">
-      <h1 className="text-netflix-red text-3xl font-bold">NaFlixTV</h1>
+      <img 
+        src="/lovable-uploads/efa84daa-353c-4a55-836f-0baef660aba2.png" 
+        alt="NaflixTV Logo" 
+        className="h-10 md:h-12"
+      />
     </Link>
   );
 };
