@@ -66,7 +66,7 @@ const EpisodesList = ({
               key={episode.id}
               episode={episode}
               isSelected={episode.episode_number === selectedEpisode}
-              onClick={handleEpisodeSelect}
+              onSelect={handleEpisodeSelect}
             />
           ))}
           
@@ -95,7 +95,7 @@ const EpisodesList = ({
               key={episode.id}
               episode={episode}
               isSelected={episode.episode_number === selectedEpisode}
-              onClick={handleEpisodeSelect}
+              onSelect={handleEpisodeSelect}
             />
           ))}
         </div>
