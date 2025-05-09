@@ -9,6 +9,16 @@ interface AuthPreviewSectionProps {
 }
 
 const AuthPreviewSection = ({ movies, series, animes }: AuthPreviewSectionProps) => {
+  // Filter out content without images
+  const filteredMovies = movies.filter(movie => movie.poster_path || movie.backdrop_path);
+  const filteredSeries = series.filter(serie => serie.poster_path || serie.backdrop_path);
+  const filteredAnimes = animes.filter(anime => anime.poster_path || anime.backdrop_path);
+
+  // Only display the section if we have content with images
+  const hasContent = filteredMovies.length > 0 || filteredSeries.length > 0 || filteredAnimes.length > 0;
+
+  if (!hasContent) return null;
+
   return (
     <div className="mt-10 bg-black/50 py-10 backdrop-blur-sm">
       <div className="container mx-auto px-4">
@@ -18,9 +28,9 @@ const AuthPreviewSection = ({ movies, series, animes }: AuthPreviewSectionProps)
         </div>
         
         <ContentPreview 
-          movies={movies}
-          series={series}
-          anime={animes}
+          movies={filteredMovies}
+          series={filteredSeries}
+          anime={filteredAnimes}
         />
       </div>
     </div>

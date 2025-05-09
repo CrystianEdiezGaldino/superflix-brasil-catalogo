@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/form";
 import { UserPlus, CreditCard } from "lucide-react";
 
+// Modified schema to remove email validation
 const signupSchema = z.object({
-  email: z.string().email("Email inválido"),
+  email: z.string().min(1, "Email é obrigatório"),
   password: z.string().min(6, "A senha precisa ter pelo menos 6 caracteres"),
   promoCode: z.string().optional(),
 });
@@ -58,7 +59,13 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
       onSuccess();
     } catch (error: any) {
       console.error("Signup error:", error);
-      toast.error(error.message || "Erro ao criar conta");
+      
+      // Check for specific error messages
+      if (error.message?.includes("already") || error.message?.includes("já existe")) {
+        toast.error("Este email já está sendo usado.");
+      } else {
+        toast.error(error.message || "Erro ao criar conta");
+      }
     } finally {
       setIsLoading(false);
     }

@@ -18,8 +18,9 @@ import {
 } from "@/components/ui/form";
 import { Lock } from "lucide-react";
 
+// Modified schema to make email validation less strict
 const loginSchema = z.object({
-  email: z.string().email("Email inválido"),
+  email: z.string().min(1, "Email é obrigatório"),
   password: z.string().min(6, "A senha precisa ter pelo menos 6 caracteres"),
 });
 

@@ -25,14 +25,12 @@ const Auth = () => {
     staleTime: 1000 * 60 * 10, // 10 minutos
   });
   
-  // Filtrar apenas conteúdos com imagens
-  const filteredMovies = moviesPreview.filter(
-    movie => movie.poster_path || movie.backdrop_path
-  );
-  const filteredSeries = getFilteredSeries();
-  const filteredAnimes = getFilteredAnimes();
+  // Filter only content with images
+  const filteredMovies = moviesPreview.filter(movie => movie.poster_path || movie.backdrop_path);
+  const filteredSeries = getFilteredSeries().filter(serie => serie.poster_path || serie.backdrop_path);
+  const filteredAnimes = getFilteredAnimes().filter(anime => anime.poster_path || anime.backdrop_path);
   
-  // Escolher um fundo aleatório entre todos os conteúdos
+  // Choose a random background from all content with images
   useEffect(() => {
     const allMedia: MediaItem[] = [
       ...filteredMovies, 
@@ -46,7 +44,7 @@ const Auth = () => {
     }
   }, [filteredMovies, filteredSeries, filteredAnimes]);
   
-  // Exibir loading durante o carregamento
+  // Display loading during loading
   if (loading) {
     return (
       <div className="min-h-screen bg-netflix-background flex items-center justify-center">
@@ -55,7 +53,7 @@ const Auth = () => {
     );
   }
   
-  // Redirecionar usuário logado para a página inicial
+  // Redirect logged-in user to home page
   if (user) {
     return <Navigate to="/" replace />;
   }
