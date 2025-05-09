@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMovieDetails } from "@/services/tmdbApi";
-import VideoPlayer from "@/components/VideoPlayer";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -11,6 +10,7 @@ import MovieHeader from "@/components/movies/MovieHeader";
 import MovieContent from "@/components/movies/MovieContent";
 import MovieActions from "@/components/movies/MovieActions";
 import MovieLoadingState from "@/components/movies/MovieLoadingState";
+import MovieVideoPlayer from "@/components/movies/MovieVideoPlayer";
 
 const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -103,10 +103,14 @@ const MovieDetails = () => {
             onPlayClick={handleWatchClick} 
           />
 
-          {/* Player de vídeo */}
-          {showPlayer && movie.imdb_id && hasAccess && (
-            <div id="video-player" className="px-6 md:px-10 mb-10">
-              <VideoPlayer type="filme" imdbId={movie.imdb_id} />
+          {/* Player de vídeo usando componente dedicado */}
+          {showPlayer && movie.imdb_id && (
+            <div className="px-6 md:px-10 mb-10">
+              <MovieVideoPlayer 
+                showPlayer={true}
+                imdbId={movie.imdb_id}
+                hasAccess={hasAccess}
+              />
             </div>
           )}
 

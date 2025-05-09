@@ -99,7 +99,7 @@ const SeriesDetails = () => {
         </Button>
       </div>
 
-      {/* Player de vídeo */}
+      {/* Player de vídeo usando componente atualizado */}
       {showPlayer && (
         <div id="video-player" className="px-6 md:px-10 mb-10">
           <SeriesVideoPlayer 

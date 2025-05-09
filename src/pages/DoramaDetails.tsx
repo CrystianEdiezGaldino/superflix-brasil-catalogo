@@ -4,12 +4,13 @@ import DoramaBanner from "@/components/doramas/DoramaBanner";
 import DoramaSynopsis from "@/components/doramas/DoramaSynopsis";
 import DoramaCastSection from "@/components/doramas/DoramaCastSection";
 import RelatedDoramas from "@/components/doramas/RelatedDoramas";
-import VideoPlayer from "@/components/VideoPlayer";
+import DoramaVideoPlayer from "@/components/doramas/DoramaVideoPlayer";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDoramaDetails } from "@/hooks/dorama/useDoramaDetails";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDoramaCast } from "@/services/tmdbApi";
 import { Series } from "@/types/movie";
+import { useAccessControl } from "@/hooks/useAccessControl";
 
 const DoramaDetails = () => {
   // Get dorama details and related functionality
@@ -20,11 +21,10 @@ const DoramaDetails = () => {
     isLoadingSimilar,
     showPlayer,
     togglePlayer,
-    authLoading,
-    subscriptionLoading,
-    user,
-    hasAccess
   } = useDoramaDetails();
+
+  // Use access control hook to check if user has access
+  const { hasAccess, isLoading: accessLoading } = useAccessControl();
 
   // Empty search handler for Navbar
   const handleSearch = (query: string) => {
@@ -78,7 +78,11 @@ const DoramaDetails = () => {
         {/* Video Player or Banner */}
         {showPlayer && imdbId ? (
           <div className="p-4 md:p-8 bg-black">
-            <VideoPlayer type="serie" imdbId={imdbId} />
+            <DoramaVideoPlayer 
+              showPlayer={true}
+              imdbId={imdbId}
+              hasAccess={hasAccess}
+            />
             <button 
               onClick={togglePlayer}
               className="mt-4 text-white hover:underline"
