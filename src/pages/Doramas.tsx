@@ -12,6 +12,7 @@ const Doramas = () => {
     topRatedDoramas,
     popularDoramas,
     hasMore,
+    isLoadingMore,
     yearFilter,
     genreFilter,
     isSearching,
@@ -64,6 +65,7 @@ const Doramas = () => {
             doramas={doramas}
             isLoading={isLoadingInitial}
             hasMore={hasMore}
+            isLoadingMore={isLoadingMore}
             isSearching={isSearching}
             isFiltering={isFiltering}
             onLoadMore={loadMoreDoramas}

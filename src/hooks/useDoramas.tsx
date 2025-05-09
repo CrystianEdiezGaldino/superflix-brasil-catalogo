@@ -24,6 +24,7 @@ export const useDoramas = () => {
   const { 
     page, 
     hasMore, 
+    isLoadingMore,
     loadMoreDoramas, 
     resetPagination 
   } = useDoramaPagination({ filterDoramas, setDoramas });
@@ -62,6 +63,7 @@ export const useDoramas = () => {
     popularDoramas,
     page,
     hasMore,
+    isLoadingMore,
     searchQuery,
     yearFilter,
     genreFilter,

@@ -15,11 +15,13 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
   const [isLoadingPopular, setIsLoadingPopular] = useState(true);
   const [isLoadingTopRated, setIsLoadingTopRated] = useState(true);
   
-  // Load initial doramas
+  // Load initial doramas (30 doramas inicialmente)
   useEffect(() => {
     const loadInitialDoramas = async () => {
       try {
-        const initialDoramas = await fetchKoreanDramas(1);
+        // Carregamos os primeiros 30 doramas (pode ser ajustado)
+        // Já que TMDB não tem endpoint específico para doramas, usamos a lista de IDs
+        const initialDoramas = await fetchKoreanDramas(1, 30);
         const filteredDoramas = filterDoramas(initialDoramas);
         setDoramas(filteredDoramas);
         setIsLoadingInitial(false);
@@ -36,7 +38,7 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
   useEffect(() => {
     const loadPopularDoramas = async () => {
       try {
-        const popular = await fetchPopularDoramas(6);
+        const popular = await fetchPopularDoramas(10);
         const filteredPopular = filterDoramas(popular);
         setPopularDoramas(filteredPopular);
         setIsLoadingPopular(false);
@@ -48,7 +50,7 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
     
     const loadTopRatedDoramas = async () => {
       try {
-        const topRated = await fetchTopRatedDoramas(6);
+        const topRated = await fetchTopRatedDoramas(10);
         const filteredTopRated = filterDoramas(topRated);
         setTopRatedDoramas(filteredTopRated);
         setIsLoadingTopRated(false);

@@ -22,15 +22,33 @@ export const useDoramaFiltering = ({
   const [yearFilter, setYearFilter] = useState<string>("all");
   const [genreFilter, setGenreFilter] = useState<string>("all");
   const [isFiltering, setIsFiltering] = useState(false);
+  const [cachedDoramas, setCachedDoramas] = useState<Series[]>([]);
+  
+  // Carregar e armazenar em cache os doramas iniciais
+  useEffect(() => {
+    const loadInitialDoramas = async () => {
+      try {
+        const initialDoramas = await fetchKoreanDramas(1, 30);
+        setCachedDoramas(initialDoramas);
+      } catch (error) {
+        console.error("Error caching doramas:", error);
+      }
+    };
+    
+    if (!isLoadingInitial && cachedDoramas.length === 0) {
+      loadInitialDoramas();
+    }
+  }, [isLoadingInitial, cachedDoramas.length]);
   
   // Apply filters when they change
   useEffect(() => {
     const filterDoramasWithCriteria = async () => {
+      if (cachedDoramas.length === 0) return;
+      
       setIsFiltering(true);
       try {
-        // Get fresh data to apply filters
-        const doramasToFilter = await fetchKoreanDramas(1);
-        const filtered = applyFilters(doramasToFilter, yearFilter, genreFilter);
+        // Usar dados em cache para filtrar, o que torna a filtragem mais rápida
+        const filtered = applyFilters(cachedDoramas, yearFilter, genreFilter);
         setDoramas(filtered);
         resetPagination();
       } catch (error) {
@@ -41,21 +59,29 @@ export const useDoramaFiltering = ({
       }
     };
     
-    // Only apply filters if we're not in a search state
-    if (!isSearching && !isLoadingInitial) {
+    // Only apply filters if we're not in a search state and have cached data
+    if (!isSearching && !isLoadingInitial && cachedDoramas.length > 0) {
       filterDoramasWithCriteria();
     }
-  }, [yearFilter, genreFilter, applyFilters, isSearching, isLoadingInitial, resetPagination, setDoramas]);
+  }, [yearFilter, genreFilter, applyFilters, isSearching, isLoadingInitial, cachedDoramas, resetPagination, setDoramas]);
 
   // Reset all filters
   const resetFilters = () => {
     setYearFilter("all");
     setGenreFilter("all");
-    fetchKoreanDramas(1).then(initialDoramas => {
-      const filtered = applyFilters(initialDoramas, "all", "all");
+    
+    // Reset to initial doramas without filters
+    if (cachedDoramas.length > 0) {
+      const filtered = applyFilters(cachedDoramas, "all", "all");
       setDoramas(filtered);
       resetPagination();
-    });
+    } else {
+      fetchKoreanDramas(1, 30).then(initialDoramas => {
+        const filtered = applyFilters(initialDoramas, "all", "all");
+        setDoramas(filtered);
+        resetPagination();
+      });
+    }
   };
 
   return {

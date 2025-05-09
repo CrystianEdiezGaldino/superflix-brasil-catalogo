@@ -12,10 +12,13 @@ interface UseDoramaPaginationProps {
 export const useDoramaPagination = ({ filterDoramas, setDoramas }: UseDoramaPaginationProps) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   
   // Load more doramas
   const loadMoreDoramas = async (isSearching: boolean, isFiltering: boolean) => {
-    if (isSearching || isFiltering || !hasMore) return;
+    if (isSearching || isFiltering || !hasMore || isLoadingMore) return;
+    
+    setIsLoadingMore(true);
     
     try {
       const nextPage = page + 1;
@@ -34,6 +37,8 @@ export const useDoramaPagination = ({ filterDoramas, setDoramas }: UseDoramaPagi
     } catch (error) {
       console.error("Erro ao carregar mais doramas:", error);
       toast.error("Erro ao carregar mais doramas.");
+    } finally {
+      setIsLoadingMore(false);
     }
   };
   
@@ -45,6 +50,7 @@ export const useDoramaPagination = ({ filterDoramas, setDoramas }: UseDoramaPagi
   return {
     page,
     hasMore,
+    isLoadingMore,
     loadMoreDoramas,
     resetPagination
   };
