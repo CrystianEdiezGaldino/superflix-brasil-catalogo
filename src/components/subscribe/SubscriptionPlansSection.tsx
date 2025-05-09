@@ -13,13 +13,18 @@ const SubscriptionPlansSection: React.FC<SubscriptionPlansSectionProps> = ({
 }) => {
   const monthlyBenefits = [
     "Acesso a todos os conteúdos",
-    "Cancele quando quiser"
+    "Cancele quando quiser",
+    "Até 3 acessos simultâneos",
+    "Suporte prioritário"
   ];
 
   const annualBenefits = [
     "Acesso a todos os conteúdos",
     "Cancele quando quiser",
-    "<strong>Economize 44% comparado ao plano mensal</strong>"
+    "Até 6 acessos simultâneos",
+    "Suporte prioritário",
+    "<strong>Economize 44% comparado ao plano mensal</strong>",
+    "Conteúdos e benefícios exclusivos"
   ];
   
   return (
@@ -37,6 +42,7 @@ const SubscriptionPlansSection: React.FC<SubscriptionPlansSectionProps> = ({
           benefits={monthlyBenefits}
           onSubscribe={() => handleSubscribe("price_1Qkiz906o9nmaCFZL6CQMeEM")}
           isProcessing={isProcessing}
+          productId="prod_SHSb9G94AXb8Nl"
         />
         
         {/* Annual Plan */}
@@ -50,7 +56,16 @@ const SubscriptionPlansSection: React.FC<SubscriptionPlansSectionProps> = ({
           onSubscribe={() => handleSubscribe("price_1Qkj0S06o9nmaCFZHli9wwLC")}
           isProcessing={isProcessing}
           isPopular={true}
+          productId="prod_SHSce9XGUSazQq"
         />
+      </div>
+
+      <div className="mt-8 text-center">
+        <p className="text-gray-300 text-sm">
+          Planos mais adequados para suas necessidades. 
+          <br/>
+          <span className="text-netflix-red">Experimente agora com 7 dias grátis!</span>
+        </p>
       </div>
     </div>
   );

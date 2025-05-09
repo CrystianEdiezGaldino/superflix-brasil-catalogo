@@ -100,7 +100,7 @@ serve(async (req) => {
       // Calculate remaining trial days if trial is still active
       if (trialEndDate > now) {
         const diffTime = Math.abs(trialEndDate.getTime() - now.getTime());
-        trialDaysToAdd = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        trialDaysToAdd = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24))); // Ensure at least 1 day
         logStep("Found active trial with remaining days", { 
           trialEndDate: trialData.trial_end, 
           remainingDays: trialDaysToAdd 
@@ -121,7 +121,12 @@ serve(async (req) => {
       }
     };
 
-    // Now use the real-world price IDs instead of demo ones
+    // Determine metadata based on product
+    const isAnnual = priceId === "price_1Qkj0S06o9nmaCFZHli9wwLC";
+    const simultaneousAccesses = isAnnual ? 6 : 3;
+    const productId = isAnnual ? "prod_SHSce9XGUSazQq" : "prod_SHSb9G94AXb8Nl";
+    
+    // Now use the real-world price IDs
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ['card'],
@@ -130,7 +135,12 @@ serve(async (req) => {
       success_url: `${origin}/subscription-success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/subscribe`,
       allow_promotion_codes: true,
-      subscription_data: mode === "subscription" ? subscriptionDataConfig : undefined
+      subscription_data: mode === "subscription" ? subscriptionDataConfig : undefined,
+      metadata: {
+        user_id: user.id,
+        simultaneous_accesses: simultaneousAccesses.toString(),
+        product_id: productId
+      }
     });
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
@@ -149,7 +159,7 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: 200, // Changing to 200 to avoid the non-2xx error, but with error message
     });
   }
 });

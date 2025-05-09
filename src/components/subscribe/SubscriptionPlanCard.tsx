@@ -13,6 +13,7 @@ interface SubscriptionPlanCardProps {
   onSubscribe: () => void;
   isProcessing: boolean;
   isPopular?: boolean;
+  productId?: string;
 }
 
 const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
@@ -25,6 +26,7 @@ const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
   onSubscribe,
   isProcessing,
   isPopular = false,
+  productId,
 }) => {
   return (
     <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 text-white transition-transform hover:scale-105 relative">
@@ -49,7 +51,7 @@ const SubscriptionPlanCard: React.FC<SubscriptionPlanCardProps> = ({
       <ul className="space-y-2 mb-6 text-left">
         {benefits.map((benefit, index) => (
           <li key={index} className="flex items-start gap-2">
-            <Check className={`h-5 w-5 ${benefit.includes('Economize') ? 'text-green-500' : 'text-netflix-red'} flex-shrink-0 mt-0.5`} />
+            <Check className={`h-5 w-5 ${benefit.includes('Economize') || benefit.includes('exclusivos') ? 'text-green-500' : 'text-netflix-red'} flex-shrink-0 mt-0.5`} />
             <span dangerouslySetInnerHTML={{ __html: benefit }} />
           </li>
         ))}
