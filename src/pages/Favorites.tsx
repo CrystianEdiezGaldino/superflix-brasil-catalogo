@@ -97,7 +97,6 @@ const Favorites = () => {
           <MediaSection 
             title="Conteúdo Salvo" 
             medias={favorites}
-            isLoading={false}
           />
         ) : (
           <EmptyFavoritesPlaceholder />

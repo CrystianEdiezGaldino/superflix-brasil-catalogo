@@ -7,21 +7,25 @@ import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTab from "@/components/profile/ProfileTab";
 import FavoritesTab from "@/components/profile/FavoritesTab";
 import SubscriptionTab from "@/components/profile/SubscriptionTab";
+import { MediaItem } from "@/types/movie";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("profile");
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const { 
     isSubscribed, 
     subscriptionTier,
     subscriptionEnd,
     hasTempAccess,
-    hasTrialAccess
+    isAdmin
   } = useSubscription();
+  
+  // Mock favorites data
+  const [favorites] = useState<MediaItem[]>([]);
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await signOut();
       window.location.href = "/";
     } catch (error) {
       console.error("Erro ao fazer logout:", error);
@@ -45,7 +49,7 @@ const Profile = () => {
   }
 
   const profile = {
-    displayName: user.user_metadata?.name || user.email?.split('@')[0] || "Usuário",
+    username: user.user_metadata?.name || user.email?.split('@')[0] || "Usuário",
     email: user.email,
     createdAt: user.created_at,
   };
@@ -53,7 +57,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-netflix-background p-4 md:p-8">
       {/* Header */}
-      <ProfileHeader displayName={profile.displayName} />
+      <ProfileHeader isAdmin={isAdmin} />
       
       {/* Tabs */}
       <Tabs 
@@ -70,13 +74,14 @@ const Profile = () => {
         
         <TabsContent value="profile" className="mt-4">
           <ProfileTab 
-            profile={profile} 
+            user={user}
+            profile={profile}
             handleLogout={handleLogout} 
           />
         </TabsContent>
         
         <TabsContent value="favorites" className="mt-4">
-          <FavoritesTab />
+          <FavoritesTab favorites={favorites} />
         </TabsContent>
         
         <TabsContent value="subscription" className="mt-4">
@@ -84,7 +89,6 @@ const Profile = () => {
             user={user}
             isSubscribed={isSubscribed}
             hasTempAccess={hasTempAccess}
-            hasTrialAccess={hasTrialAccess}
             subscriptionTier={subscriptionTier}
             subscriptionEnd={subscriptionEnd}
           />

@@ -19,7 +19,7 @@ interface SubscriptionTabProps {
 const SubscriptionTab = ({ 
   user, 
   isSubscribed, 
-  hasTempAccess, 
+  hasTempAccess,
   subscriptionTier, 
   subscriptionEnd 
 }: SubscriptionTabProps) => {
