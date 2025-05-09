@@ -58,6 +58,32 @@ export const fetchRecentMovies = async (limit = 12) => {
   }
 };
 
+// Fetch movies by genre ID
+export const fetchMoviesByGenre = async (genreId: number, limit = 15) => {
+  try {
+    const url = buildApiUrl("/discover/movie", `&with_genres=${genreId}&sort_by=popularity.desc`);
+    const data = await fetchFromApi<{results?: any[]}>(url);
+    const moviesWithType = addMediaTypeToResults(data.results, "movie");
+    return limitResults(moviesWithType, limit);
+  } catch (error) {
+    console.error(`Error fetching movies for genre ${genreId}:`, error);
+    return [];
+  }
+};
+
+// Fetch movies by keyword ID
+export const fetchMoviesByKeyword = async (keywordId: number, limit = 15) => {
+  try {
+    const url = buildApiUrl("/discover/movie", `&with_keywords=${keywordId}&sort_by=popularity.desc`);
+    const data = await fetchFromApi<{results?: any[]}>(url);
+    const moviesWithType = addMediaTypeToResults(data.results, "movie");
+    return limitResults(moviesWithType, limit);
+  } catch (error) {
+    console.error(`Error fetching movies for keyword ${keywordId}:`, error);
+    return [];
+  }
+};
+
 // Fetch movie details
 export const fetchMovieDetails = async (id: string): Promise<Movie> => {
   try {

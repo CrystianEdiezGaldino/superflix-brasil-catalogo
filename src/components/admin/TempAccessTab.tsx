@@ -1,6 +1,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserWithSubscription } from "@/types/admin";
+import { 
+  Table, 
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell
+} from "@/components/ui/table";
 
 interface TempAccessTabProps {
   tempAccesses: any[];
@@ -15,22 +23,22 @@ const TempAccessTab = ({ tempAccesses, users }: TempAccessTabProps) => {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left p-2">Usuário</th>
-                <th className="text-left p-2">Concedido Por</th>
-                <th className="text-left p-2">Data de Expiração</th>
-                <th className="text-left p-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-gray-700">
+                <TableHead className="text-left text-white">Usuário</TableHead>
+                <TableHead className="text-left text-white">Concedido Por</TableHead>
+                <TableHead className="text-left text-white">Data de Expiração</TableHead>
+                <TableHead className="text-left text-white">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {tempAccesses.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center p-4 text-gray-400">
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center p-4 text-gray-400">
                     Nenhum acesso temporário encontrado
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 tempAccesses.map((access) => {
                   const user = users.find(u => u.id === access.user_id);
@@ -38,25 +46,25 @@ const TempAccessTab = ({ tempAccesses, users }: TempAccessTabProps) => {
                   const isActive = new Date(access.expires_at) > new Date();
                   
                   return (
-                    <tr key={access.id} className="border-b border-gray-700">
-                      <td className="p-2">{user?.email || 'Usuário não encontrado'}</td>
-                      <td className="p-2">{grantor?.email || 'Admin'}</td>
-                      <td className="p-2">
+                    <TableRow key={access.id} className="border-b border-gray-700">
+                      <TableCell>{user?.email || 'Usuário não encontrado'}</TableCell>
+                      <TableCell>{grantor?.email || 'Admin'}</TableCell>
+                      <TableCell>
                         {new Date(access.expires_at).toLocaleDateString('pt-BR')}
-                      </td>
-                      <td className="p-2">
+                      </TableCell>
+                      <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs text-white ${
                           isActive ? 'bg-green-600' : 'bg-red-600'
                         }`}>
                           {isActive ? 'Ativo' : 'Expirado'}
                         </span>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </CardContent>
     </Card>

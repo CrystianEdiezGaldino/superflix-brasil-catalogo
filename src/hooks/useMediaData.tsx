@@ -5,6 +5,11 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAccessControl } from "@/hooks/useAccessControl";
 import { 
   fetchPopularMovies, 
+  fetchTopRatedMovies,
+  fetchTrendingMovies,
+  fetchRecentMovies,
+  fetchMoviesByGenre,
+  fetchMoviesByKeyword,
   fetchPopularSeries, 
   fetchAnime, 
   fetchTopRatedAnime,
@@ -51,11 +56,59 @@ export const useMediaData = () => {
     staleTime: 1000 * 60 * 5
   });
   
-  // Fetch Korean dramas - now properly checking hasAccess
+  // Fetch Korean dramas
   const doramasQuery = useQuery({
     queryKey: ["koreanDramas"],
     queryFn: () => fetchKoreanDramas(),
-    enabled: !!user && hasAccess, // Only fetch if user has access
+    enabled: !!user && hasAccess,
+    staleTime: 1000 * 60 * 5
+  });
+
+  // Fetch action movies
+  const actionMoviesQuery = useQuery({
+    queryKey: ["actionMovies"],
+    queryFn: () => fetchMoviesByGenre(28), // 28 is action genre ID
+    enabled: !!user && hasAccess,
+    staleTime: 1000 * 60 * 5
+  });
+  
+  // Fetch comedy movies
+  const comedyMoviesQuery = useQuery({
+    queryKey: ["comedyMovies"],
+    queryFn: () => fetchMoviesByGenre(35), // 35 is comedy genre ID
+    enabled: !!user && hasAccess,
+    staleTime: 1000 * 60 * 5
+  });
+
+  // Fetch adventure movies
+  const adventureMoviesQuery = useQuery({
+    queryKey: ["adventureMovies"],
+    queryFn: () => fetchMoviesByGenre(12), // 12 is adventure genre ID
+    enabled: !!user && hasAccess,
+    staleTime: 1000 * 60 * 5
+  });
+
+  // Fetch sci-fi movies
+  const sciFiMoviesQuery = useQuery({
+    queryKey: ["sciFiMovies"],
+    queryFn: () => fetchMoviesByGenre(878), // 878 is sci-fi genre ID
+    enabled: !!user && hasAccess,
+    staleTime: 1000 * 60 * 5
+  });
+
+  // Fetch Marvel movies by keyword (Marvel is 180547 in TMDB)
+  const marvelMoviesQuery = useQuery({
+    queryKey: ["marvelMovies"],
+    queryFn: () => fetchMoviesByKeyword(180547),
+    enabled: !!user && hasAccess,
+    staleTime: 1000 * 60 * 5
+  });
+
+  // Fetch DC movies by keyword (DC is 9715 in TMDB)
+  const dcMoviesQuery = useQuery({
+    queryKey: ["dcMovies"],
+    queryFn: () => fetchMoviesByKeyword(9715),
+    enabled: !!user && hasAccess,
     staleTime: 1000 * 60 * 5
   });
 
@@ -76,6 +129,12 @@ export const useMediaData = () => {
     animeData: animeQuery.data || [],
     topRatedAnimeData: topRatedAnimeQuery.data || [],
     doramasData: doramasQuery.data || [],
+    actionMoviesData: actionMoviesQuery.data || [],
+    comedyMoviesData: comedyMoviesQuery.data || [],
+    adventureMoviesData: adventureMoviesQuery.data || [],
+    sciFiMoviesData: sciFiMoviesQuery.data || [],
+    marvelMoviesData: marvelMoviesQuery.data || [],
+    dcMoviesData: dcMoviesQuery.data || [],
     isLoading,
     hasError
   };

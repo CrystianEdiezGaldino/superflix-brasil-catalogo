@@ -6,6 +6,8 @@ const AnimesPage = () => {
   const {
     animes,
     topRatedAnimes,
+    trendingAnimes,
+    recentAnimes,
     specificAnimes,
     searchQuery,
     yearFilter,
@@ -29,6 +31,8 @@ const AnimesPage = () => {
       type="anime"
       mediaItems={animes}
       topRatedItems={topRatedAnimes}
+      trendingItems={trendingAnimes}
+      recentItems={recentAnimes}
       popularItems={specificAnimes}
       searchQuery={searchQuery}
       yearFilter={yearFilter}

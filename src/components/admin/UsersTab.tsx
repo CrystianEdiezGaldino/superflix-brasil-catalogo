@@ -6,6 +6,14 @@ import { Search } from "lucide-react";
 import { UserWithSubscription } from "@/types/admin";
 import TempAccessSheet from "./TempAccessSheet";
 import UserStatusBadge from "./UserStatusBadge";
+import { 
+  Table, 
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell
+} from "@/components/ui/table";
 
 interface UsersTabProps {
   users: UserWithSubscription[];
@@ -37,38 +45,38 @@ const UsersTab = ({ users, onUserUpdate }: UsersTabProps) => {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left p-2">Email</th>
-                <th className="text-left p-2">Data de Registro</th>
-                <th className="text-left p-2">Último Login</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Perfil</th>
-                <th className="text-left p-2">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-gray-700">
+                <TableHead className="text-left text-white">Email</TableHead>
+                <TableHead className="text-left text-white">Data de Registro</TableHead>
+                <TableHead className="text-left text-white">Último Login</TableHead>
+                <TableHead className="text-left text-white">Status</TableHead>
+                <TableHead className="text-left text-white">Perfil</TableHead>
+                <TableHead className="text-left text-white">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="text-center p-4 text-gray-400">
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center p-4 text-gray-400">
                     {searchTerm ? "Nenhum usuário encontrado" : "Nenhum usuário cadastrado"}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-700">
-                    <td className="p-2">{user.email}</td>
-                    <td className="p-2">
+                  <TableRow key={user.id} className="border-b border-gray-700">
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>
                       {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                    </td>
-                    <td className="p-2">
+                    </TableCell>
+                    <TableCell>
                       {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('pt-BR') : 'Nunca'}
-                    </td>
-                    <td className="p-2">
+                    </TableCell>
+                    <TableCell>
                       <UserStatusBadge user={user} />
-                    </td>
-                    <td className="p-2">
+                    </TableCell>
+                    <TableCell>
                       {user.is_admin ? (
                         <span className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs">
                           Administrador
@@ -78,15 +86,15 @@ const UsersTab = ({ users, onUserUpdate }: UsersTabProps) => {
                           Usuário
                         </span>
                       )}
-                    </td>
-                    <td className="p-2">
+                    </TableCell>
+                    <TableCell>
                       <TempAccessSheet user={user} onSuccess={onUserUpdate} />
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       </CardContent>
     </Card>

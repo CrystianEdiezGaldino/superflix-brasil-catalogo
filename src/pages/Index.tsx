@@ -33,6 +33,12 @@ const Index = () => {
     animeData,
     topRatedAnimeData,
     doramasData,
+    actionMoviesData,
+    comedyMoviesData,
+    adventureMoviesData,
+    sciFiMoviesData,
+    marvelMoviesData,
+    dcMoviesData,
     isLoading,
     hasError,
     handleSearch: originalHandleSearch,
@@ -149,7 +155,13 @@ const Index = () => {
                 anime={animeData || []}
                 topRatedAnime={topRatedAnimeData || []}
                 recommendations={recommendations || []}
-                doramas={doramasData as MediaItem[] || []}
+                doramas={doramasData || []}
+                actionMovies={actionMoviesData || []}
+                comedyMovies={comedyMoviesData || []}
+                adventureMovies={adventureMoviesData || []}
+                sciFiMovies={sciFiMoviesData || []}
+                marvelMovies={marvelMoviesData || []}
+                dcMovies={dcMoviesData || []}
               />
             )}
             

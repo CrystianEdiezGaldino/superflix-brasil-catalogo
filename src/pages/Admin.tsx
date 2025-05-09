@@ -14,6 +14,14 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { AdminStats, UserWithSubscription } from "@/types/admin";
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableRow, 
+  TableHead, 
+  TableCell 
+} from "@/components/ui/table";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -51,7 +59,7 @@ const Admin = () => {
   }, [user, isAuthLoading]);
   
   useEffect(() => {
-    // Só carrega os dados quando soubermos que é um admin
+    // Only load data when we know it's an admin
     if (!isAuthLoading && !isSubscriptionLoading) {
       if (isAdmin) {
         loadData();
@@ -78,7 +86,7 @@ const Admin = () => {
         
         checkAdminRole();
         
-        // Redireciona se não for admin
+        // Redirect if not admin
         navigate("/");
         toast.error("Acesso restrito a administradores");
       }

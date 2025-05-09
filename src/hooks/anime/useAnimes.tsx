@@ -9,17 +9,21 @@ import { useAnimeFilters } from "./useAnimeFilters";
 export const useAnimes = () => {
   const [animes, setAnimes] = useState<MediaItem[]>([]);
   
-  // Carregar dados iniciais
+  // Load all anime data
   const { 
     initialAnimes, 
     topRatedAnimes, 
+    trendingAnimes,
+    recentAnimes,
     specificAnimes,
     isLoadingInitial,
     isLoadingTopRated,
+    isLoadingTrending,
+    isLoadingRecent,
     isLoadingSpecific 
   } = useAnimeLoader();
   
-  // Configurar paginação
+  // Configure pagination
   const { 
     page, 
     hasMore, 
@@ -28,7 +32,7 @@ export const useAnimes = () => {
     resetPagination 
   } = useAnimePagination({ setAnimes });
   
-  // Configurar busca
+  // Configure search
   const { 
     searchQuery, 
     isSearching, 
@@ -39,7 +43,7 @@ export const useAnimes = () => {
     resetPagination 
   });
   
-  // Configurar filtros
+  // Configure filters
   const { 
     yearFilter, 
     ratingFilter, 
@@ -53,7 +57,7 @@ export const useAnimes = () => {
     isSearching 
   });
   
-  // Definir animes iniciais quando carregados
+  // Set initial animes when loaded
   useEffect(() => {
     if (initialAnimes.length > 0 && !isSearching && !isFiltering) {
       setAnimes(initialAnimes);
@@ -63,6 +67,8 @@ export const useAnimes = () => {
   return {
     animes,
     topRatedAnimes,
+    trendingAnimes,
+    recentAnimes,
     specificAnimes,
     searchQuery,
     yearFilter,
@@ -71,6 +77,8 @@ export const useAnimes = () => {
     hasMore,
     isLoadingInitial,
     isLoadingTopRated,
+    isLoadingTrending,
+    isLoadingRecent,
     isLoadingSpecific,
     isLoadingMore,
     isSearching,
