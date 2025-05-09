@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -38,7 +37,7 @@ serve(async (req) => {
     // Get Stripe key
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
-      // Return clear error message, but don't enable demo mode
+      // Return error but allow demo mode
       throw new Error("Sistema de pagamento não configurado. Contate o administrador.");
     }
     
@@ -196,9 +195,10 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[CREATE-CHECKOUT] Error: ${errorMessage}`);
     
+    // Keep 200 status but with error property so frontend can show appropriate message
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200, // Keep 200 to avoid non-2xx errors
+      status: 200,
     });
   }
 });

@@ -41,15 +41,20 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
         }
       });
 
+      console.log("Resposta do create-checkout:", data);
+
       if (error) {
         console.error("Erro na chamada da função create-checkout:", error);
         throw new Error(error.message || "Erro ao processar assinatura");
       }
 
-      console.log("Resposta do create-checkout:", data);
+      if (data?.error) {
+        console.error("Erro retornado pelo servidor:", data.error);
+        throw new Error(data.error || "Erro ao processar assinatura");
+      }
 
       // Check if we're in demo mode (Stripe not configured)
-      if (data.demo_mode) {
+      if (data?.demo_mode) {
         toast.error(data.error || "Sistema de pagamento em modo de demonstração");
         
         // Grant temporary access in demo mode
@@ -64,8 +69,9 @@ const SubscriptionPlans = ({ isProcessing, setIsProcessing, isDemoMode }: Subscr
         return;
       }
 
-      if (!data.url) {
-        throw new Error("URL do checkout não foi retornada");
+      if (!data?.url) {
+        console.error("URL não retornada:", data);
+        throw new Error("URL do checkout não foi retornada. Verifique se os IDs de preço estão corretos.");
       }
 
       // Redirect to Stripe Checkout
