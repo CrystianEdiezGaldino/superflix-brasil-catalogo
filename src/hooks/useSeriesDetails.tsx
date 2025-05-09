@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { fetchSeriesDetails, fetchSeriesSeasonDetails } from "@/services/tmdbApi";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useAccessControl } from "@/hooks/useAccessControl";
 import { toast } from "sonner";
 import { Series, Season } from "@/types/movie";
 
@@ -15,15 +15,7 @@ export const useSeriesDetails = (id: string | undefined) => {
   const navigate = useNavigate();
   
   const { user, loading: authLoading } = useAuth();
-  const { 
-    isSubscribed, 
-    isAdmin, 
-    hasTempAccess,
-    hasTrialAccess,
-    isLoading: subscriptionLoading 
-  } = useSubscription();
-
-  const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
+  const { hasAccess, subscriptionLoading } = useAccessControl();
 
   // Redirect to auth if not logged in
   useEffect(() => {

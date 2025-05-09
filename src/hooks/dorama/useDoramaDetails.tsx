@@ -5,16 +5,13 @@ import { useParams } from "react-router-dom";
 import { fetchDoramaDetails, fetchSimilarDoramas } from "@/services/tmdbApi";
 import { Series, MediaItem } from "@/types/movie";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useAccessControl } from "@/hooks/useAccessControl";
 
 export const useDoramaDetails = () => {
   const { id } = useParams<{ id: string }>();
   const [showPlayer, setShowPlayer] = useState(false);
   const { user, loading: authLoading } = useAuth();
-  const { isSubscribed, isAdmin, hasTempAccess, hasTrialAccess, isLoading: subscriptionLoading } = useSubscription();
-  
-  // Check if user has access to content
-  const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
+  const { hasAccess, subscriptionLoading } = useAccessControl();
 
   // Scroll to top when component mounts or ID changes
   useEffect(() => {

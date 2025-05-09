@@ -1,15 +1,13 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useSubscription } from "@/contexts/SubscriptionContext";
 
 interface SeriesAccessPromptProps {
   hasAccess: boolean;
+  isLoading: boolean;
 }
 
-const SeriesAccessPrompt = ({ hasAccess }: SeriesAccessPromptProps) => {
-  const { isLoading } = useSubscription();
-  
+const SeriesAccessPrompt = ({ hasAccess, isLoading }: SeriesAccessPromptProps) => {
   // Não mostrar nada durante o carregamento ou se tiver acesso válido
   if (isLoading || hasAccess) return null;
   

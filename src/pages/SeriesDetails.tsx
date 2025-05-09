@@ -129,7 +129,7 @@ const SeriesDetails = () => {
               </div>
             )}
             
-            <SeriesAccessPrompt hasAccess={hasAccess} />
+            <SeriesAccessPrompt hasAccess={hasAccess} isLoading={subscriptionLoading} />
           </div>
 
           {/* Informações da série */}
