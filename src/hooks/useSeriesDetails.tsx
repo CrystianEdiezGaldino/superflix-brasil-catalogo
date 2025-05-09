@@ -34,13 +34,13 @@ export const useSeriesDetails = (id: string | undefined) => {
 
   const { data: series, isLoading: isLoadingSeries } = useQuery({
     queryKey: ["series", id],
-    queryFn: () => fetchSeriesDetails(id as string),
+    queryFn: () => fetchSeriesDetails(id || ""),
     enabled: !!id && !!user,
   });
 
   const { data: seasonData, isLoading: isLoadingSeason } = useQuery({
     queryKey: ["season", id, selectedSeason],
-    queryFn: () => fetchSeriesSeasonDetails(id as string, selectedSeason),
+    queryFn: () => fetchSeriesSeasonDetails(id || "", selectedSeason),
     enabled: !!id && !!series && !!user,
   });
 

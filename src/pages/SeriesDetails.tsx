@@ -1,6 +1,6 @@
 
-import { useParams } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { Heart, Play, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SeriesBanner from "@/components/series/SeriesBanner";
 import EpisodesList from "@/components/series/EpisodesList";
@@ -8,9 +8,13 @@ import SeriesAccessPrompt from "@/components/series/SeriesAccessPrompt";
 import SeriesVideoPlayer from "@/components/series/SeriesVideoPlayer";
 import SeriesLoadingState from "@/components/series/SeriesLoadingState";
 import { useSeriesDetails } from "@/hooks/useSeriesDetails";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { toast } from "sonner";
+import { useState, useEffect } from "react";
 
 const SeriesDetails = () => {
   const { id } = useParams<{ id: string }>();
+  const [isFavorite, setIsFavorite] = useState(false);
   
   const {
     series,
@@ -28,6 +32,30 @@ const SeriesDetails = () => {
     user,
     hasAccess
   } = useSeriesDetails(id);
+
+  // Scroll to player when it becomes visible
+  useEffect(() => {
+    if (showPlayer) {
+      const playerElement = document.getElementById('video-player');
+      if (playerElement) {
+        setTimeout(() => {
+          playerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [showPlayer]);
+
+  // Toggle favorite
+  const toggleFavorite = () => {
+    if (!user) {
+      toast.error("É necessário fazer login para adicionar aos favoritos");
+      return;
+    }
+    
+    setIsFavorite(!isFavorite);
+    toast.success(isFavorite ? "Removido dos favoritos" : "Adicionado aos favoritos");
+    // Here you would integrate with a favorites API
+  };
 
   // Loading, auth and error states
   const isLoading = authLoading || subscriptionLoading || isLoadingSeries || isLoadingSeason;
@@ -52,11 +80,40 @@ const SeriesDetails = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      {/* Banner da série */}
-      <SeriesBanner series={series} />
+      {/* Banner da série com favorite button */}
+      <SeriesBanner 
+        series={series} 
+        isFavorite={isFavorite}
+        onToggleFavorite={toggleFavorite}
+      />
+
+      {/* Watch Button - Prominent Call to Action */}
+      <div className="relative z-10 -mt-10 px-6 md:px-10 mb-8">
+        <Button 
+          onClick={togglePlayer} 
+          className={`${hasAccess ? "bg-netflix-red" : "bg-gray-700"} hover:bg-red-700 text-lg py-6 px-8 rounded-xl flex items-center gap-2`}
+          disabled={!hasAccess}
+        >
+          <Play fill="white" size={20} />
+          {showPlayer ? "Ocultar Player" : "Assistir Agora"}
+        </Button>
+      </div>
+
+      {/* Player de vídeo - More visible position */}
+      {showPlayer && (
+        <div id="video-player" className="px-6 md:px-10 mb-10">
+          <SeriesVideoPlayer 
+            showPlayer={true}
+            imdbId={imdbId}
+            selectedSeason={selectedSeason}
+            selectedEpisode={selectedEpisode}
+            hasAccess={hasAccess}
+          />
+        </div>
+      )}
 
       {/* Conteúdo da série */}
-      <div className="container max-w-5xl mx-auto px-6 -mt-32 relative z-10">
+      <div className="container max-w-5xl mx-auto px-6">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Poster */}
           <div className="w-full md:w-1/3 flex-shrink-0">
@@ -77,65 +134,53 @@ const SeriesDetails = () => {
 
           {/* Informações da série */}
           <div className="flex-1">
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
-              {series.name}
-            </h1>
+            <Collapsible className="w-full" defaultOpen={true}>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-white">Sinopse</h2>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-1">
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </CollapsibleTrigger>
+              </div>
+              <CollapsibleContent>
+                <p className="text-gray-300 mb-6">{series.overview || "Nenhuma sinopse disponível."}</p>
+              </CollapsibleContent>
+            </Collapsible>
             
-            <div className="flex items-center gap-3 mt-4">
-              <span className="px-2 py-1 bg-netflix-red rounded text-xs text-white">
-                {Math.round(series.vote_average * 10)}% Aprovação
-              </span>
-              <span className="text-gray-400">{series.first_air_date}</span>
-            </div>
-
-            <div className="mt-6">
-              <h2 className="text-xl font-semibold text-white mb-2">Sinopse</h2>
-              <p className="text-gray-300">{series.overview || "Nenhuma sinopse disponível."}</p>
-            </div>
-
-            <div className="mt-8">
-              <Button 
-                onClick={togglePlayer} 
-                className={hasAccess ? "bg-netflix-red hover:bg-red-700" : "bg-gray-500 hover:bg-gray-600"}
-              >
-                {showPlayer ? "Ocultar Player" : hasAccess ? "Assistir Agora" : "Assinar para Assistir"}
-              </Button>
-              
-              {!hasAccess && (
-                <Link to="/subscribe">
+            {!hasAccess && (
+              <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-md">
+                <p className="text-amber-400 text-sm">
+                  É necessário ter uma assinatura ativa para assistir a este conteúdo.
+                  Assine um de nossos planos para ter acesso ilimitado.
+                </p>
+                <Link to="/subscribe" className="mt-2 block">
                   <Button 
                     variant="outline" 
-                    className="ml-4 border-netflix-red text-netflix-red hover:bg-netflix-red/10"
+                    className="border-netflix-red text-netflix-red hover:bg-netflix-red/10"
                   >
                     Ver Planos
                   </Button>
                 </Link>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Player de vídeo */}
-        <SeriesVideoPlayer 
-          showPlayer={showPlayer}
-          imdbId={imdbId}
-          selectedSeason={selectedSeason}
-          selectedEpisode={selectedEpisode}
-          hasAccess={hasAccess}
-        />
-
-        {/* Lista de episódios */}
+        {/* Lista de episódios com melhor UX */}
         {series.number_of_seasons > 0 && (
-          <EpisodesList
-            seasonData={seasonData}
-            seasons={seasons}
-            selectedSeason={selectedSeason}
-            selectedEpisode={selectedEpisode}
-            setSelectedSeason={setSelectedSeason}
-            handleEpisodeSelect={handleEpisodeSelect}
-            isLoading={isLoadingSeason}
-            hasAccess={hasAccess}
-          />
+          <div className="mt-8">
+            <EpisodesList
+              seasonData={seasonData}
+              seasons={seasons}
+              selectedSeason={selectedSeason}
+              selectedEpisode={selectedEpisode}
+              setSelectedSeason={setSelectedSeason}
+              handleEpisodeSelect={handleEpisodeSelect}
+              isLoading={isLoadingSeason}
+              hasAccess={hasAccess}
+            />
+          </div>
         )}
       </div>
     </div>

@@ -1,6 +1,5 @@
 
 import VideoPlayer from "@/components/VideoPlayer";
-import { useSubscription } from "@/contexts/SubscriptionContext";
 
 interface SeriesVideoPlayerProps {
   showPlayer: boolean;
@@ -17,15 +16,10 @@ const SeriesVideoPlayer = ({
   selectedEpisode,
   hasAccess
 }: SeriesVideoPlayerProps) => {
-  const { isSubscribed, hasTrialAccess, hasTempAccess, isAdmin } = useSubscription();
-  
-  // Consider all valid access types
-  const hasValidAccess = hasAccess || isSubscribed || hasTrialAccess || hasTempAccess || isAdmin;
-  
-  if (!showPlayer || !imdbId || !hasValidAccess) return null;
+  if (!showPlayer || !imdbId || !hasAccess) return null;
   
   return (
-    <div className="mt-10">
+    <div className="w-full">
       <VideoPlayer 
         type="serie" 
         imdbId={imdbId} 

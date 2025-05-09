@@ -2,18 +2,20 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Heart, Play, ChevronDown } from "lucide-react";
 import { fetchMovieDetails } from "@/services/tmdbApi";
 import VideoPlayer from "@/components/VideoPlayer";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { toast } from "sonner";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -40,9 +42,33 @@ const MovieDetails = () => {
     enabled: !!id && !!user,
   });
 
+  // Scroll to player when it becomes visible
+  useEffect(() => {
+    if (showPlayer) {
+      const playerElement = document.getElementById('video-player');
+      if (playerElement) {
+        setTimeout(() => {
+          playerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }, [showPlayer]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
+
+  // Toggle favorite
+  const toggleFavorite = () => {
+    if (!user) {
+      toast.error("É necessário fazer login para adicionar aos favoritos");
+      return;
+    }
+    
+    setIsFavorite(!isFavorite);
+    toast.success(isFavorite ? "Removido dos favoritos" : "Adicionado aos favoritos");
+    // Here you would integrate with a favorites API
+  };
 
   // Show subscription modal if trying to watch without access
   const handleWatchClick = () => {
@@ -103,15 +129,55 @@ const MovieDetails = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-netflix-background via-netflix-background/70 to-transparent"></div>
         </div>
         
-        <Link to="/" className="absolute top-6 left-6 z-10">
-          <Button variant="ghost" size="icon" className="rounded-full bg-black/50">
-            <ArrowLeft className="text-white" />
+        <div className="absolute top-6 left-6 z-10 flex gap-4">
+          <Link to="/">
+            <Button variant="ghost" size="icon" className="rounded-full bg-black/50 hover:bg-black/70">
+              <ArrowLeft className="text-white" />
+            </Button>
+          </Link>
+          
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className={`rounded-full ${isFavorite ? 'bg-netflix-red' : 'bg-black/50 hover:bg-black/70'}`}
+            onClick={toggleFavorite}
+          >
+            <Heart className={`${isFavorite ? 'text-white fill-current' : 'text-white'}`} />
           </Button>
-        </Link>
+        </div>
+        
+        <div className="absolute bottom-0 left-0 w-full p-6">
+          <h1 className="text-4xl font-bold text-white mb-2">{movie.title}</h1>
+          <div className="flex items-center gap-2 text-sm text-gray-300">
+            <span>{releaseYear}</span>
+            <span className="px-2 py-1 bg-netflix-red rounded text-xs text-white">
+              {Math.round(movie.vote_average * 10)}% Aprovação
+            </span>
+          </div>
+        </div>
       </div>
 
+      {/* Watch Button - Prominent Call to Action */}
+      <div className="relative z-10 -mt-10 px-6 md:px-10 mb-8">
+        <Button 
+          onClick={handleWatchClick} 
+          className={`${hasAccess ? "bg-netflix-red" : "bg-gray-700"} hover:bg-red-700 text-lg py-6 px-8 rounded-xl flex items-center gap-2`}
+          disabled={!hasAccess}
+        >
+          <Play fill="white" size={20} />
+          {showPlayer ? "Ocultar Player" : "Assistir Agora"}
+        </Button>
+      </div>
+
+      {/* Player de vídeo - More visible position */}
+      {showPlayer && movie.imdb_id && hasAccess && (
+        <div id="video-player" className="px-6 md:px-10 mb-10">
+          <VideoPlayer type="filme" imdbId={movie.imdb_id} />
+        </div>
+      )}
+
       {/* Conteúdo do filme */}
-      <div className="container max-w-5xl mx-auto px-6 -mt-32 relative z-10">
+      <div className="container max-w-5xl mx-auto px-6">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Poster */}
           <div className="w-full md:w-1/3 flex-shrink-0">
@@ -130,43 +196,19 @@ const MovieDetails = () => {
 
           {/* Detalhes */}
           <div className="flex-1">
-            <h1 className="text-3xl md:text-4xl font-bold text-white">
-              {movie.title} <span className="font-normal text-gray-400">({releaseYear})</span>
-            </h1>
-            
-            <div className="flex items-center gap-3 mt-4">
-              <span className="px-2 py-1 bg-netflix-red rounded text-xs text-white">
-                {Math.round(movie.vote_average * 10)}% Aprovação
-              </span>
-              <span className="text-gray-400">{movie.release_date}</span>
-            </div>
-
-            <div className="mt-6">
-              <h2 className="text-xl font-semibold text-white mb-2">Sinopse</h2>
-              <p className="text-gray-300">{movie.overview || "Nenhuma sinopse disponível."}</p>
-            </div>
-
-            {movie.imdb_id && (
-              <div className="mt-8">
-                <Button 
-                  onClick={handleWatchClick} 
-                  className={hasAccess ? "bg-netflix-red hover:bg-red-700" : "bg-gray-500 hover:bg-gray-600"}
-                >
-                  {showPlayer ? "Ocultar Player" : hasAccess ? "Assistir Agora" : "Assinar para Assistir"}
-                </Button>
-                
-                {!hasAccess && (
-                  <Link to="/subscribe">
-                    <Button 
-                      variant="outline" 
-                      className="ml-4 border-netflix-red text-netflix-red hover:bg-netflix-red/10"
-                    >
-                      Ver Planos
-                    </Button>
-                  </Link>
-                )}
+            <Collapsible className="w-full" defaultOpen={true}>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-white">Sinopse</h2>
+                <CollapsibleTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-1">
+                    <ChevronDown className="h-4 w-4" />
+                  </Button>
+                </CollapsibleTrigger>
               </div>
-            )}
+              <CollapsibleContent>
+                <p className="text-gray-300 mb-6">{movie.overview || "Nenhuma sinopse disponível."}</p>
+              </CollapsibleContent>
+            </Collapsible>
             
             {!hasAccess && (
               <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-md">
@@ -174,17 +216,18 @@ const MovieDetails = () => {
                   É necessário ter uma assinatura ativa para assistir a este conteúdo.
                   Assine um de nossos planos para ter acesso ilimitado.
                 </p>
+                <Link to="/subscribe" className="mt-2 block">
+                  <Button 
+                    variant="outline" 
+                    className="border-netflix-red text-netflix-red hover:bg-netflix-red/10"
+                  >
+                    Ver Planos
+                  </Button>
+                </Link>
               </div>
             )}
           </div>
         </div>
-
-        {/* Player de vídeo */}
-        {showPlayer && movie.imdb_id && hasAccess && (
-          <div className="mt-10">
-            <VideoPlayer type="filme" imdbId={movie.imdb_id} />
-          </div>
-        )}
       </div>
     </div>
   );
