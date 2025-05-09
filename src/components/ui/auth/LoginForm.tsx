@@ -49,8 +49,8 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
       console.log("Attempting login with:", data.email);
       await signIn(data.email, data.password);
       console.log("Login successful, navigating to home");
-      // No need to manually navigate or show toast
-      // The AuthContext will handle this and Auth.tsx will redirect
+      // For direct forms, we'll force a navigation to home
+      navigate("/", { replace: true });
     } catch (error: any) {
       console.error("Authentication error:", error);
       if (error.message?.includes("Invalid login")) {

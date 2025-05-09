@@ -32,34 +32,52 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
     const handleIframeLoad = () => {
       setLoading(false);
       
-      // Add event listener to the iframe to prevent default behavior
+      // Add event listener to prevent default navigation
+      const handleClick = (e: MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      };
+      
+      // Try to add click interceptor to iframe
       if (iframeRef.current) {
         try {
-          // This might fail due to cross-origin restrictions
-          const iframeDocument = iframeRef.current.contentDocument || 
-                               (iframeRef.current.contentWindow?.document);
+          const iframe = iframeRef.current;
           
-          if (iframeDocument) {
-            iframeDocument.addEventListener('click', (e) => {
-              e.preventDefault();
-              return false;
-            });
-          }
+          // Try to access iframe content and add event listener
+          iframe.addEventListener('load', () => {
+            try {
+              const iframeDocument = iframe.contentDocument || 
+                                    (iframe.contentWindow?.document);
+                
+              if (iframeDocument) {
+                iframeDocument.addEventListener('click', handleClick, true);
+                // Prevent context menu to block right-click new tabs
+                iframeDocument.addEventListener('contextmenu', handleClick, true);
+              }
+            } catch (error) {
+              console.log("Could not access iframe document: cross-origin restriction");
+            }
+          });
         } catch (error) {
-          console.log("Could not access iframe document due to cross-origin policy");
+          console.log("Error setting up iframe event handlers:", error);
         }
       }
     };
+    
+    if (iframeRef.current) {
+      handleIframeLoad();
+    }
 
-    // Clean up when component unmounts
     return () => {
+      // Cleanup attempt (will likely fail due to cross-origin)
       if (iframeRef.current) {
         try {
           const iframeDocument = iframeRef.current.contentDocument || 
                                (iframeRef.current.contentWindow?.document);
-          
           if (iframeDocument) {
             iframeDocument.removeEventListener('click', () => {});
+            iframeDocument.removeEventListener('contextmenu', () => {});
           }
         } catch (error) {
           // Silently fail as this is just cleanup
@@ -68,7 +86,36 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
     };
   }, []);
 
-  // Removed the sandbox attribute from the iframe
+  // Persist player state in sessionStorage
+  useEffect(() => {
+    // Save current player state to session storage
+    sessionStorage.setItem('currentVideoState', JSON.stringify({
+      type,
+      imdbId,
+      season,
+      episode,
+      scrollPosition: window.scrollY
+    }));
+    
+    // Listen for beforeunload to save state
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem('currentVideoState', JSON.stringify({
+        type,
+        imdbId,
+        season,
+        episode,
+        scrollPosition: window.scrollY
+      }));
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [type, imdbId, season, episode]);
+
+  // Removed sandbox attribute to allow full functionality
   return (
     <div className="w-full aspect-video relative rounded-lg overflow-hidden shadow-xl border-2 border-gray-800">
       {loading && (
@@ -87,6 +134,9 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
         frameBorder="0"
         allowFullScreen
         onLoad={() => setLoading(false)}
+        // Additional security attributes but NOT sandbox which blocks functionality
+        referrerPolicy="no-referrer"
+        scrolling="no"
       ></iframe>
     </div>
   );

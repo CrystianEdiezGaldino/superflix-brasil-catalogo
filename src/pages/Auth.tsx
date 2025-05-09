@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchPopularMovies } from "@/services/tmdbApi";
 import { getFilteredSeries } from "@/data/series";
@@ -18,9 +18,13 @@ import { Progress } from "@/components/ui/progress";
 const Auth = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [backgroundImage, setBackgroundImage] = useState("");
   const [redirecting, setRedirecting] = useState(false);
   const [progress, setProgress] = useState(0);
+  
+  // Get the intended redirect path from state, or default to home page
+  const redirectTo = location.state?.from?.pathname || "/";
   
   // Buscar dados de filmes populares
   const { data: moviesPreview = [] } = useQuery({
@@ -53,7 +57,7 @@ const Auth = () => {
     let intervalId: number | undefined;
     
     if (user && !redirecting) {
-      console.log("User authenticated, starting redirection process");
+      console.log("User authenticated, starting redirection process to:", redirectTo);
       setRedirecting(true);
       
       // Animate progress bar before redirecting
@@ -61,8 +65,8 @@ const Auth = () => {
         setProgress(prev => {
           const newProgress = prev + 5;
           if (newProgress >= 100) {
-            console.log("Progress complete, navigating to home page");
-            navigate("/", { replace: true });
+            console.log("Progress complete, navigating to:", redirectTo);
+            navigate(redirectTo, { replace: true });
             return 100;
           }
           return newProgress;
@@ -76,7 +80,7 @@ const Auth = () => {
         clearInterval(intervalId);
       }
     };
-  }, [user, redirecting, navigate]);
+  }, [user, redirecting, navigate, redirectTo]);
   
   // Display loading during authentication check
   if (loading) {
@@ -89,23 +93,8 @@ const Auth = () => {
   }
   
   // Skip progress animation and redirect immediately if on another page
-  if (user && !window.location.pathname.includes("/auth")) {
-    return <Navigate to="/" replace />;
-  }
-  
-  // Show progress animation if on auth page and logged in
   if (user) {
-    return (
-      <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
-        <h2 className="text-white text-xl mb-2">Login realizado com sucesso!</h2>
-        <p className="text-gray-300 mb-6">Redirecionando para a página inicial...</p>
-        <div className="w-64">
-          <Progress value={progress} className="h-2 bg-gray-700">
-            <div className="bg-netflix-red h-full" style={{ width: `${progress}%` }} />
-          </Progress>
-        </div>
-      </div>
-    );
+    return <Navigate to={redirectTo} replace />;
   }
   
   return (

@@ -31,7 +31,7 @@ export const useHomePageData = () => {
     if (user) {
       checkSubscription();
     }
-  }, []);
+  }, [user, checkSubscription]);
 
   // Redirect to auth if not logged in
   useEffect(() => {
