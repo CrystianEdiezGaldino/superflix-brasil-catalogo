@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -27,10 +28,6 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
-
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    logStep("Stripe key verified");
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -106,76 +103,68 @@ serve(async (req) => {
       });
     }
 
-    // Otherwise, check for Stripe subscription
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-    
-    // Find customer in Stripe
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    
-    if (customers.data.length === 0) {
-      logStep("No customer found, updating as unsubscribed");
-      
-      // Ensure subscription record exists (or update existing)
-      await supabaseClient.from("subscriptions").upsert({
-        user_id: user.id,
-        subscribed: false,
-        status: 'inactive',
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' });
-      
-      return new Response(JSON.stringify({ 
-        subscribed: false,
-        is_admin: false,
-        has_temp_access: false
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
-
-    // Check for active subscriptions
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "active",
-      limit: 1,
-    });
-    
-    const hasActiveSub = subscriptions.data.length > 0;
+    // Check for Stripe subscription if Stripe is configured
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    let hasActiveSub = false;
     let planType = null;
     let subscriptionEnd = null;
     let stripeSubscriptionId = null;
+    let customerId = null;
 
-    if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      stripeSubscriptionId = subscription.id;
+    if (stripeKey) {
+      logStep("Stripe key available, checking subscriptions");
+      const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
       
-      logStep("Active subscription found", { 
-        subscriptionId: subscription.id, 
-        endDate: subscriptionEnd 
-      });
+      // Find customer in Stripe
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
       
-      // Determine plan type from price
-      const priceId = subscription.items.data[0].price.id;
-      const price = await stripe.prices.retrieve(priceId);
-      const amount = price.unit_amount || 0;
-      
-      if (amount <= 1000) {  // R$10.00
-        planType = "monthly";
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+        logStep("Found Stripe customer", { customerId });
+
+        // Check for active subscriptions
+        const subscriptions = await stripe.subscriptions.list({
+          customer: customerId,
+          status: "active",
+          limit: 1,
+        });
+        
+        hasActiveSub = subscriptions.data.length > 0;
+
+        if (hasActiveSub) {
+          const subscription = subscriptions.data[0];
+          subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+          stripeSubscriptionId = subscription.id;
+          
+          logStep("Active subscription found", { 
+            subscriptionId: subscription.id, 
+            endDate: subscriptionEnd 
+          });
+          
+          // Determine plan type from price
+          const priceId = subscription.items.data[0].price.id;
+          const price = await stripe.prices.retrieve(priceId);
+          const amount = price.unit_amount || 0;
+          
+          if (amount <= 1000) {  // R$10.00
+            planType = "monthly";
+          } else {
+            planType = "annual";
+          }
+          
+          logStep("Determined subscription plan", { 
+            priceId, 
+            amount, 
+            planType 
+          });
+        } else {
+          logStep("No active subscription found");
+        }
       } else {
-        planType = "annual";
+        logStep("No Stripe customer found for this user");
       }
-      
-      logStep("Determined subscription plan", { 
-        priceId, 
-        amount, 
-        planType 
-      });
     } else {
-      logStep("No active subscription found");
+      logStep("No Stripe key configured, skipping Stripe checks");
     }
 
     // Update user subscription in database

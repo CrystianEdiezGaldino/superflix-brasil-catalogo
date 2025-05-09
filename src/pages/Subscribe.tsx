@@ -14,6 +14,7 @@ const Subscribe = () => {
   const { user } = useAuth();
   const { isSubscribed, subscriptionTier, isLoading, checkSubscription } = useSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(false);
   const navigate = useNavigate();
 
   const handleSubscribe = async (priceId: string, isMonthly: boolean) => {
@@ -34,6 +35,24 @@ const Subscribe = () => {
 
       if (error) {
         throw new Error(error.message);
+      }
+
+      // Check if we're in demo mode (Stripe not configured)
+      if (data.demo_mode) {
+        setIsDemoMode(true);
+        toast.error(data.error || "Sistema de pagamento em modo de demonstração");
+        
+        // Grant temporary access in demo mode
+        await supabase.functions.invoke("grant-temp-access", {
+          body: {
+            userId: user.id,
+            days: 30
+          }
+        });
+        
+        await checkSubscription();
+        navigate("/subscription-success");
+        return;
       }
 
       // Redirect to Stripe Checkout
@@ -83,6 +102,16 @@ const Subscribe = () => {
         <div className="max-w-4xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-2 text-center">Escolha seu plano</h1>
           <p className="text-gray-300 mb-8 text-center">Cancele quando quiser. Todos os planos incluem uma avaliação gratuita de 7 dias.</p>
+          
+          {isDemoMode && (
+            <div className="bg-yellow-600/20 border border-yellow-600 rounded-md p-4 mb-8 text-center">
+              <h3 className="text-lg font-semibold text-yellow-500 mb-2">Modo de Demonstração</h3>
+              <p className="text-gray-300">
+                O sistema de pagamentos está em modo de demonstração. 
+                Clique em qualquer plano para receber acesso temporário gratuito por 30 dias.
+              </p>
+            </div>
+          )}
           
           <div className="grid md:grid-cols-2 gap-8">
             {/* Monthly Plan */}

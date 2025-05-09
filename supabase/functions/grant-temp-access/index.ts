@@ -20,7 +20,7 @@ serve(async (req) => {
       auth: { persistSession: false }
     });
 
-    // Get admin user from auth header
+    // Get user from auth header
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
 
@@ -28,24 +28,14 @@ serve(async (req) => {
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError) throw new Error(`Authentication error: ${userError.message}`);
     
-    const adminUser = userData.user;
-    if (!adminUser?.id) throw new Error("Admin not authenticated");
-
-    // Check if user is an admin
-    const { data: roleData } = await supabaseClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', adminUser.id)
-      .eq('role', 'admin')
-      .single();
-    
-    if (!roleData || roleData.role !== 'admin') {
-      throw new Error("Only admins can grant temporary access");
-    }
+    const user = userData.user;
+    if (!user?.id) throw new Error("User not authenticated");
 
     // Parse request body
     const { userId, days = 30 } = await req.json();
-    if (!userId) throw new Error("User ID is required");
+    
+    // In demo mode, we allow any user to grant themselves temporary access
+    let grantedBy = user.id;
 
     // Calculate expiration date
     const expiresAt = new Date();
@@ -55,8 +45,8 @@ serve(async (req) => {
     const { data, error } = await supabaseClient
       .from('temp_access')
       .insert({
-        user_id: userId,
-        granted_by: adminUser.id,
+        user_id: userId || user.id,
+        granted_by: grantedBy,
         expires_at: expiresAt.toISOString()
       })
       .select()

@@ -22,15 +22,25 @@ serve(async (req) => {
 
   try {
     logStep("Function started");
+    
+    // Get Stripe key
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      return new Response(JSON.stringify({ 
+        error: "Sistema de pagamento não configurado. Contate o administrador.",
+        demo_mode: true 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, // Returning 200 with error message in demo mode
+      });
+    }
+    
     const { priceId, mode } = await req.json();
     
     if (!priceId || !mode) {
       throw new Error("Price ID and mode are required");
     }
 
-    // Get Stripe key
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
     logStep("Stripe key verified");
 
     // Create Supabase client
