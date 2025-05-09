@@ -8,6 +8,7 @@ import { useMediaData } from "./useMediaData";
 import { useMediaSearch } from "./useMediaSearch";
 import { useRecommendations } from "./useRecommendations";
 import { useFeaturedMedia } from "./useFeaturedMedia";
+import { useAccessControl } from "./useAccessControl";
 
 export const useHomePageData = () => {
   const navigate = useNavigate();
@@ -21,7 +22,8 @@ export const useHomePageData = () => {
     trialEnd 
   } = useSubscription();
   
-  const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
+  // Use the access control hook to get the hasAccess flag
+  const { hasAccess } = useAccessControl();
 
   // Redirect to auth if not logged in
   useEffect(() => {

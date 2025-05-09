@@ -76,20 +76,38 @@ const Index = () => {
     };
   }, []);
   
-  // Show loading indicator while data is loading
+  // Guard for loading state with more debugging
   if (isLoading) {
+    console.log("Home page is loading:", { 
+      authLoading: user === undefined,
+      subscriptionData: { hasAccess, isAdmin, hasTrialAccess },
+      mediaLoaded: !!(moviesData && seriesData && animeData)
+    });
     return <LoadingState />;
   }
   
   // Show unauthenticated state if user is not logged in
   if (!user) {
+    console.log("No user found, showing unauthenticated state");
     return <UnauthenticatedState />;
   }
   
   // Show error state if there was an error loading data
   if (hasError) {
+    console.log("Error occurred loading media data");
     return <ErrorState />;
   }
+
+  // Debug data availability
+  console.log("Data loaded successfully:", {
+    hasMovies: moviesData && moviesData.length > 0,
+    hasSeries: seriesData && seriesData.length > 0,
+    hasAnime: animeData && animeData.length > 0,
+    hasAccess,
+    isAdmin,
+    hasTrialAccess,
+    hasFeaturedMedia: !!featuredMedia
+  });
 
   return (
     <div className="min-h-screen bg-netflix-background text-white">
@@ -120,18 +138,18 @@ const Index = () => {
             {/* Content sections */}
             {!hasAccess ? (
               <ContentPreview 
-                movies={moviesData} 
-                series={seriesData} 
-                anime={animeData} 
+                movies={moviesData || []} 
+                series={seriesData || []} 
+                anime={animeData || []} 
               />
             ) : (
               <FullContent 
-                movies={moviesData}
-                series={seriesData}
-                anime={animeData}
-                topRatedAnime={topRatedAnimeData}
-                recommendations={recommendations}
-                doramas={doramasData as MediaItem[]}
+                movies={moviesData || []}
+                series={seriesData || []}
+                anime={animeData || []}
+                topRatedAnime={topRatedAnimeData || []}
+                recommendations={recommendations || []}
+                doramas={doramasData as MediaItem[] || []}
               />
             )}
             
