@@ -5,6 +5,8 @@ import NavLogo from "./navbar/NavLogo";
 import NavLinks from "./navbar/NavLinks";
 import SearchBar from "./navbar/SearchBar";
 import UserAction from "./navbar/UserAction";
+import MobileMenu from "./navbar/MobileMenu";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
 import { Film, Heart, Tv, Baby } from "lucide-react";
 
@@ -16,6 +18,7 @@ const Navbar = ({ onSearch }: NavbarProps) => {
   const location = useLocation();
   const { user } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
+  const isMobile = useIsMobile();
 
   // Navigation links for mobile menu
   const navigationLinks = [
@@ -25,7 +28,6 @@ const Navbar = ({ onSearch }: NavbarProps) => {
     { path: "/animes", label: "Animes", icon: <Film className="mr-1 h-4 w-4" /> },
     { path: "/doramas", label: "Doramas", icon: <Tv className="mr-1 h-4 w-4" /> },
     { path: "/kids", label: "Kids", icon: <Baby className="mr-1 h-4 w-4" /> },
-    { path: "/favoritos", label: "Meus Favoritos", icon: <Heart className="mr-1 h-4 w-4" /> },
   ];
 
   useEffect(() => {
@@ -52,11 +54,14 @@ const Navbar = ({ onSearch }: NavbarProps) => {
       <div className="container max-w-full px-4 py-3 flex items-center justify-between">
         <div className="flex items-center">
           <NavLogo />
-          <NavLinks isAuthenticated={!!user} />
+          {!isMobile && <NavLinks isAuthenticated={!!user} />}
         </div>
 
         <div className="flex items-center">
           <SearchBar onSearch={onSearch} />
+          {isMobile && (
+            <MobileMenu isAuthenticated={!!user} navigationLinks={navigationLinks} />
+          )}
           <UserAction isAuthenticated={!!user} />
         </div>
       </div>
