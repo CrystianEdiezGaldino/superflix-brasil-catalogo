@@ -1,1 +1,11 @@
+
 project_id = "juamkehykcohwufehqfv"
+
+[functions.create-checkout]
+verify_jwt = true
+
+[functions.check-subscription]
+verify_jwt = true
+
+[functions.grant-temp-access]
+verify_jwt = true

@@ -1,3 +1,4 @@
+
 import { Movie, Series, Season, Episode, MediaItem } from "@/types/movie";
 
 const API_KEY = "062def1aa1f84c69eb8cd943df2ccc0d";
@@ -128,11 +129,11 @@ export async function searchMedia(query: string): Promise<(Movie | Series)[]> {
   }
 }
 
-// Add new function to fetch anime series
+// Fetch popular anime
 export const fetchAnime = async (): Promise<Series[]> => {
   try {
     const response = await fetch(
-      `https://api.themoviedb.org/3/discover/tv?api_key=${API_KEY}&with_keywords=210024&language=pt-BR&sort_by=popularity.desc`
+      `${BASE_URL}/discover/tv?api_key=${API_KEY}&with_keywords=210024&language=${LANGUAGE}&sort_by=popularity.desc&vote_count.gte=100`
     );
     
     if (!response.ok) {
@@ -151,6 +152,55 @@ export const fetchAnime = async (): Promise<Series[]> => {
   }
 };
 
+// Fetch top rated anime
+export const fetchTopRatedAnime = async (): Promise<Series[]> => {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/discover/tv?api_key=${API_KEY}&with_keywords=210024&language=${LANGUAGE}&sort_by=vote_average.desc&vote_count.gte=200`
+    );
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch top rated anime");
+    }
+    
+    const data = await response.json();
+    
+    return data.results.map((item: any) => ({
+      ...item,
+      media_type: "tv"
+    }));
+  } catch (error) {
+    console.error("Error fetching top rated anime:", error);
+    return [];
+  }
+};
+
+// Get specific anime recommendations like Solo Leveling
+export const fetchSpecificAnimeRecommendations = async (): Promise<Series[]> => {
+  try {
+    // Solo Leveling ID
+    const soloLevelingId = 156680;
+    
+    const response = await fetch(
+      `${BASE_URL}/tv/${soloLevelingId}/recommendations?api_key=${API_KEY}&language=${LANGUAGE}`
+    );
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch anime recommendations");
+    }
+    
+    const data = await response.json();
+    
+    return data.results.map((item: any) => ({
+      ...item,
+      media_type: "tv"
+    }));
+  } catch (error) {
+    console.error("Error fetching anime recommendations:", error);
+    return [];
+  }
+};
+
 // Add function to fetch recommendations
 export const fetchRecommendations = async (mediaIds: number[], mediaType: "movie" | "tv"): Promise<MediaItem[]> => {
   try {
@@ -162,7 +212,7 @@ export const fetchRecommendations = async (mediaIds: number[], mediaType: "movie
     const randomId = mediaIds[randomIndex];
     
     const response = await fetch(
-      `https://api.themoviedb.org/3/${mediaType}/${randomId}/recommendations?api_key=${API_KEY}&language=pt-BR`
+      `${BASE_URL}/${mediaType}/${randomId}/recommendations?api_key=${API_KEY}&language=${LANGUAGE}`
     );
     
     if (!response.ok) {
