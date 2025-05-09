@@ -1,64 +1,59 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
-import { useSubscription } from "@/contexts/SubscriptionContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AdminStats, UserWithSubscription } from "@/types/admin";
 import StatsOverview from "@/components/admin/StatsOverview";
 import UsersTab from "@/components/admin/UsersTab";
 import SubscriptionsTab from "@/components/admin/SubscriptionsTab";
 import TempAccessTab from "@/components/admin/TempAccessTab";
+import PromoCodesTab from "@/components/admin/PromoCodesTab";
 import { fetchAdminData } from "@/components/admin/AdminDataService";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { AdminStats, UserWithSubscription } from "@/types/admin";
 
 const Admin = () => {
-  const { isAdmin, isLoading: isSubscriptionLoading } = useSubscription();
   const navigate = useNavigate();
-  const [users, setUsers] = useState<UserWithSubscription[]>([]);
-  const [subscriptions, setSubscriptions] = useState<any[]>([]);
-  const [tempAccesses, setTempAccesses] = useState<any[]>([]);
+  const { isAdmin, isLoading: isSubscriptionLoading } = useSubscription();
+  const { loading: isAuthLoading } = useAuth();
+  const [activeTab, setActiveTab] = useState("overview");
   const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState<AdminStats>({
-    totalUsers: 0,
-    activeSubscriptions: 0,
-    tempAccesses: 0,
-    adminUsers: 0,
-    monthlyRevenue: 0,
-    yearlyRevenue: 0
-  });
-
-  // Fetch users and subscription data
-  useEffect(() => {
-    if (isSubscriptionLoading) return;
-    
-    if (!isAdmin) {
-      toast.error("Área restrita a administradores");
-      navigate("/");
-      return;
-    }
-
-    loadAdminData();
-  }, [isAdmin, isSubscriptionLoading, navigate]);
-
-  const loadAdminData = async () => {
+  const [adminData, setAdminData] = useState<{
+    users: UserWithSubscription[];
+    subscriptions: any[];
+    tempAccesses: any[];
+    stats: AdminStats;
+  } | null>(null);
+  
+  const loadData = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const data = await fetchAdminData();
-      console.log("Admin data loaded:", data);
-      setUsers(data.users || []);
-      setSubscriptions(data.subscriptions || []);
-      setTempAccesses(data.tempAccesses || []);
-      setStats(data.stats);
+      setAdminData(data);
     } catch (error) {
-      console.error('Error loading admin data:', error);
-      toast.error('Erro ao carregar dados administrativos');
+      console.error("Error loading admin data:", error);
+      toast.error("Erro ao carregar dados administrativos");
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (isLoading || isSubscriptionLoading) {
+  
+  useEffect(() => {
+    // Só carrega os dados quando soubermos que é um admin
+    if (!isAuthLoading && !isSubscriptionLoading) {
+      if (isAdmin) {
+        loadData();
+      } else if (!isAdmin) {
+        // Redireciona se não for admin
+        navigate("/");
+        toast.error("Acesso restrito a administradores");
+      }
+    }
+  }, [isAdmin, isAuthLoading, isSubscriptionLoading, navigate]);
+  
+  if (isAuthLoading || isSubscriptionLoading || (isLoading && !adminData)) {
     return (
       <div className="min-h-screen bg-netflix-background flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
@@ -70,28 +65,36 @@ const Admin = () => {
     <div className="min-h-screen bg-netflix-background">
       <Navbar onSearch={() => {}} />
       
-      <div className="container max-w-full pt-20 pb-20 px-4">
-        <h1 className="text-3xl font-bold text-white mb-6">Painel Administrativo</h1>
+      <div className="container mx-auto pt-24 px-4 pb-16">
+        <h1 className="text-3xl font-bold text-white mb-8">Painel Administrativo</h1>
         
-        <StatsOverview stats={stats} />
-        
-        <Tabs defaultValue="users" className="w-full">
-          <TabsList className="mb-4 bg-gray-800">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="bg-gray-800">
+            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="users">Usuários</TabsTrigger>
             <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
-            <TabsTrigger value="temp_access">Acessos Temporários</TabsTrigger>
+            <TabsTrigger value="temp-access">Acessos Temporários</TabsTrigger>
+            <TabsTrigger value="promo-codes">Códigos Promocionais</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="users">
-            <UsersTab users={users} onUserUpdate={loadAdminData} />
+          <TabsContent value="overview" className="space-y-6">
+            {adminData && <StatsOverview stats={adminData.stats} onRefresh={loadData} />}
           </TabsContent>
           
-          <TabsContent value="subscriptions">
-            <SubscriptionsTab subscriptions={subscriptions} users={users} />
+          <TabsContent value="users" className="space-y-6">
+            {adminData && <UsersTab users={adminData.users} onUserUpdate={loadData} />}
           </TabsContent>
           
-          <TabsContent value="temp_access">
-            <TempAccessTab tempAccesses={tempAccesses} users={users} />
+          <TabsContent value="subscriptions" className="space-y-6">
+            {adminData && <SubscriptionsTab subscriptions={adminData.subscriptions} users={adminData.users} />}
+          </TabsContent>
+          
+          <TabsContent value="temp-access" className="space-y-6">
+            {adminData && <TempAccessTab tempAccesses={adminData.tempAccesses} users={adminData.users} />}
+          </TabsContent>
+          
+          <TabsContent value="promo-codes" className="space-y-6">
+            <PromoCodesTab />
           </TabsContent>
         </Tabs>
       </div>

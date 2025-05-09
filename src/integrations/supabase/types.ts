@@ -63,6 +63,74 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_code_redemptions: {
+        Row: {
+          id: string
+          promo_code_id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          promo_code_id: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          promo_code_id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_redemptions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          days_valid: number
+          description: string | null
+          expires_at: string
+          id: string
+          is_active: boolean
+          usage_count: number
+          usage_limit: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          days_valid?: number
+          description?: string | null
+          expires_at: string
+          id?: string
+          is_active?: boolean
+          usage_count?: number
+          usage_limit?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          days_valid?: number
+          description?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean
+          usage_count?: number
+          usage_limit?: number | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -158,6 +226,10 @@ export type Database = {
       has_role: {
         Args: { user_id: string; role: string }
         Returns: boolean
+      }
+      redeem_promo_code: {
+        Args: { code_text: string }
+        Returns: Json
       }
     }
     Enums: {

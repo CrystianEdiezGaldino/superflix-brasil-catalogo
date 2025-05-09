@@ -52,13 +52,22 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         return;
       }
       
-      setIsSubscribed(data.subscribed);
-      setIsAdmin(data.is_admin || false);
-      setHasTempAccess(data.has_temp_access || false);
+      // Verificar se o usuário tem uma assinatura ativa ou acesso temporário/trial
+      setIsSubscribed(data.hasActiveSubscription || false);
+      setIsAdmin(data.isAdmin || false);
+      setHasTempAccess(data.hasTempAccess || false);
       setHasTrialAccess(data.has_trial_access || false);
       setSubscriptionTier(data.subscription_tier || null);
-      setSubscriptionEnd(data.subscription_end || null);
+      setSubscriptionEnd(data.subscription_end || data.tempAccess?.expires_at || null);
       setTrialEnd(data.trial_end || null);
+      
+      console.log('Subscription check result:', {
+        isSubscribed: data.hasActiveSubscription || false,
+        isAdmin: data.isAdmin || false,
+        hasTempAccess: data.hasTempAccess || false,
+        hasTrialAccess: data.has_trial_access || false,
+        subscriptionTier: data.subscription_tier || null
+      });
     } catch (error) {
       console.error('Failed to check subscription:', error);
       toast.error('Erro ao verificar assinatura');

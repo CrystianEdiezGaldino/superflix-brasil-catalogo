@@ -1,19 +1,25 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 
 interface SeriesAccessPromptProps {
   hasAccess: boolean;
 }
 
 const SeriesAccessPrompt = ({ hasAccess }: SeriesAccessPromptProps) => {
-  if (hasAccess) return null;
+  const { isSubscribed, hasTrialAccess, hasTempAccess } = useSubscription();
+  
+  // Considera todos os tipos de acesso válidos
+  const hasValidAccess = hasAccess || isSubscribed || hasTrialAccess || hasTempAccess;
+  
+  if (hasValidAccess) return null;
   
   return (
     <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-md">
       <p className="text-amber-400 text-sm">
         É necessário ter uma assinatura ativa para assistir a este conteúdo.
-        Assine um de nossos planos para ter acesso ilimitado.
+        Assine um de nossos planos para ter acesso ilimitado ou resgate um código promocional.
       </p>
       <Link to="/subscribe" className="mt-2 inline-block">
         <Button 

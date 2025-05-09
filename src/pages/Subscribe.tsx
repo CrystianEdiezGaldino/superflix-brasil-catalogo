@@ -7,18 +7,26 @@ import ContentCategories from "@/components/subscribe/ContentCategories";
 import ActiveSubscription from "@/components/subscribe/ActiveSubscription";
 import SubscriptionHeader from "@/components/subscribe/SubscriptionHeader";
 import DemoModeNotification from "@/components/subscribe/DemoModeNotification";
+import PromoCodeSection from "@/components/subscribe/PromoCodeSection";
 
 const Subscribe = () => {
-  const { isSubscribed, subscriptionTier, isLoading } = useSubscription();
+  const { isSubscribed, subscriptionTier, isLoading, hasTrialAccess, hasTempAccess } = useSubscription();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
   
-  // If already subscribed, show current plan
-  if (isSubscribed && !isLoading) {
+  // Verifica se o usuário tem qualquer tipo de acesso válido
+  const hasValidAccess = isSubscribed || hasTrialAccess || hasTempAccess;
+  
+  // Se já possui qualquer tipo de acesso válido, mostra o plano atual
+  if (hasValidAccess && !isLoading) {
     return (
       <>
         <Navbar onSearch={() => {}} />
-        <ActiveSubscription subscriptionTier={subscriptionTier} />
+        <ActiveSubscription 
+          subscriptionTier={subscriptionTier} 
+          hasTrialAccess={hasTrialAccess}
+          hasTempAccess={hasTempAccess}
+        />
       </>
     );
   }
@@ -37,6 +45,8 @@ const Subscribe = () => {
             setIsProcessing={setIsProcessing} 
             isDemoMode={isDemoMode}
           />
+          
+          <PromoCodeSection />
           
           <ContentCategories />
           
