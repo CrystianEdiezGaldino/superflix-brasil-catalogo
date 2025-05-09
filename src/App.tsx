@@ -1,7 +1,6 @@
 
 import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "sonner"; // Use only one toaster implementation
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
@@ -35,7 +34,6 @@ const App = () => {
         <SubscriptionProvider>
           <TooltipProvider>
             <Toaster />
-            <Sonner />
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />
