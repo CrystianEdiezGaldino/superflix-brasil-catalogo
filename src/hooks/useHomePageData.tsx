@@ -12,7 +12,7 @@ import {
   fetchPopularSeries, 
   fetchAnime, 
   fetchTopRatedAnime,
-  fetchSpecificAnimeRecommendations,
+  fetchKoreanDramas,
   searchMedia, 
   fetchRecommendations 
 } from "@/services/tmdbApi";
@@ -29,8 +29,6 @@ export const useHomePageData = () => {
     trialEnd 
   } = useSubscription();
   
-  const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [featuredMedia, setFeaturedMedia] = useState<MediaItem | undefined>(undefined);
   const [recommendations, setRecommendations] = useState<MediaItem[]>([]);
 
@@ -72,10 +70,10 @@ export const useHomePageData = () => {
     enabled: !!user && hasAccess, // Only fetch if user has access
   });
   
-  // Fetch specific anime recommendations like Solo Leveling
-  const specificAnimeQuery = useQuery({
-    queryKey: ["specificAnimeRecommendations"],
-    queryFn: () => fetchSpecificAnimeRecommendations(),
+  // Fetch Korean dramas
+  const doramasQuery = useQuery({
+    queryKey: ["koreanDramas"],
+    queryFn: () => fetchKoreanDramas(),
     enabled: !!user && hasAccess, // Only fetch if user has access
   });
 
@@ -140,7 +138,7 @@ export const useHomePageData = () => {
         ...(seriesQuery.data || []),
         ...(animeQuery.data || []),
         ...(topRatedAnimeQuery.data || []),
-        ...(specificAnimeQuery.data || [])
+        ...(doramasQuery.data || [])
       ];
       
       if (allMedia.length > 0) {
@@ -167,7 +165,7 @@ export const useHomePageData = () => {
     seriesQuery.data, 
     animeQuery.data, 
     topRatedAnimeQuery.data, 
-    specificAnimeQuery.data
+    doramasQuery.data
   ]);
 
   // Search function
@@ -175,35 +173,46 @@ export const useHomePageData = () => {
     if (!user) {
       toast.error("É necessário fazer login para pesquisar");
       navigate("/auth");
-      return;
+      return [];
     }
     
-    setIsSearching(true);
     try {
+      // If query is empty, return featured content instead of empty array
+      if (!query || query.trim() === "") {
+        const featuredContent = [
+          ...(moviesQuery.data || []).slice(0, 8),
+          ...(seriesQuery.data || []).slice(0, 8),
+          ...(animeQuery.data || []).slice(0, 8)
+        ];
+        return featuredContent;
+      }
+      
       const results = await searchMedia(query);
-      setSearchResults(results);
       
       if (results.length === 0) {
         toast.info("Nenhum resultado encontrado para sua pesquisa.");
       }
+      
+      return results;
     } catch (error) {
       console.error("Erro na pesquisa:", error);
       toast.error("Ocorreu um erro durante a pesquisa.");
+      return [];
     }
-    setIsSearching(false);
   };
 
-  // Clear search when leaving the page
-  useEffect(() => {
-    return () => {
-      setSearchResults([]);
-      setIsSearching(false);
-    };
-  }, []);
-
   // Loading and error states
-  const isLoading = authLoading || subscriptionLoading || moviesQuery.isPending || seriesQuery.isPending || animeQuery.isPending;
-  const hasError = moviesQuery.isError || seriesQuery.isError || animeQuery.isError;
+  const isLoading = authLoading || 
+    subscriptionLoading || 
+    moviesQuery.isPending || 
+    seriesQuery.isPending || 
+    animeQuery.isPending || 
+    doramasQuery.isPending;
+    
+  const hasError = moviesQuery.isError || 
+    seriesQuery.isError || 
+    animeQuery.isError || 
+    doramasQuery.isError;
   
   return {
     user,
@@ -211,15 +220,13 @@ export const useHomePageData = () => {
     hasAccess,
     hasTrialAccess,
     trialEnd,
-    searchResults,
-    isSearching,
     featuredMedia,
     recommendations,
     moviesData: moviesQuery.data || [],
     seriesData: seriesQuery.data || [],
     animeData: animeQuery.data || [],
     topRatedAnimeData: topRatedAnimeQuery.data,
-    specificAnimeData: specificAnimeQuery.data,
+    doramasData: doramasQuery.data,
     isLoading,
     hasError,
     handleSearch,

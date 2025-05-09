@@ -9,38 +9,47 @@ interface FullContentProps {
   topRatedAnime?: MediaItem[];
   specificAnimeRecommendations?: MediaItem[];
   recommendations?: MediaItem[];
+  doramas?: MediaItem[]; // New section for doramas
 }
 
 const FullContent = ({ 
   movies, 
   series, 
   anime, 
-  topRatedAnime, 
-  specificAnimeRecommendations,
-  recommendations 
+  topRatedAnime,
+  recommendations,
+  doramas 
 }: FullContentProps) => {
   return (
-    <>
+    <div className="space-y-2">
       {recommendations && recommendations.length > 0 && (
         <MediaSection 
           title="Recomendados para Você" 
           medias={recommendations} 
+          viewAllPath="/recommendations"
+          mediaType="mixed"
         />
       )}
       
       <MediaSection 
         title="Filmes Populares" 
         medias={movies || []} 
+        viewAllPath="/filmes"
+        mediaType="movie"
       />
       
       <MediaSection 
         title="Séries Populares" 
         medias={series || []} 
+        viewAllPath="/series"
+        mediaType="tv"
       />
       
       <MediaSection 
         title="Anime em Alta" 
         medias={anime || []} 
+        viewAllPath="/animes"
+        mediaType="anime"
       />
       
       {/* Premium content */}
@@ -48,17 +57,21 @@ const FullContent = ({
         <MediaSection 
           title="Animes Melhor Avaliados" 
           medias={topRatedAnime} 
+          viewAllPath="/animes?sort=top-rated"
+          mediaType="anime"
         />
       )}
       
-      {/* Specific anime recommendations featuring Solo Leveling */}
-      {specificAnimeRecommendations && (
+      {/* Doramas section */}
+      {doramas && doramas.length > 0 && (
         <MediaSection 
-          title="Semelhantes a Solo Leveling" 
-          medias={specificAnimeRecommendations} 
+          title="Doramas" 
+          medias={doramas} 
+          viewAllPath="/doramas"
+          mediaType="dorama"
         />
       )}
-    </>
+    </div>
   );
 };
 

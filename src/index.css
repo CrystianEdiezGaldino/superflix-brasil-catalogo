@@ -65,6 +65,15 @@
     animation-fill-mode: both;
     animation-delay: calc(var(--delay, 0) * 50ms);
   }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
 }
 
 @keyframes fade-in {

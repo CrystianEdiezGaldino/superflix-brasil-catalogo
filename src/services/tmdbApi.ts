@@ -1,4 +1,3 @@
-
 import { Movie, Series, Season, Episode, MediaItem } from "@/types/movie";
 
 const API_KEY = "062def1aa1f84c69eb8cd943df2ccc0d";
@@ -197,6 +196,32 @@ export const fetchSpecificAnimeRecommendations = async (): Promise<Series[]> => 
     }));
   } catch (error) {
     console.error("Error fetching anime recommendations:", error);
+    return [];
+  }
+};
+
+// Fetch Korean dramas (doramas)
+export const fetchKoreanDramas = async (): Promise<Series[]> => {
+  try {
+    // Korean drama keyword ID (K-drama)
+    const koreanDramaKeywordId = 10735;
+    
+    const response = await fetch(
+      `${BASE_URL}/discover/tv?api_key=${API_KEY}&with_keywords=${koreanDramaKeywordId}&language=${LANGUAGE}&sort_by=popularity.desc&vote_count.gte=50`
+    );
+    
+    if (!response.ok) {
+      throw new Error("Failed to fetch Korean dramas");
+    }
+    
+    const data = await response.json();
+    
+    return data.results.map((item: any) => ({
+      ...item,
+      media_type: "tv"
+    }));
+  } catch (error) {
+    console.error("Error fetching Korean dramas:", error);
     return [];
   }
 };
