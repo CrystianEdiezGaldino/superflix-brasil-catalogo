@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDoramaDetails } from "@/hooks/dorama/useDoramaDetails";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDoramaCast } from "@/services/tmdbApi";
+import { Series } from "@/types/movie";
 
 const DoramaDetails = () => {
   // Get dorama details and related functionality
@@ -99,7 +100,7 @@ const DoramaDetails = () => {
           />
           
           <RelatedDoramas 
-            doramas={similarDoramas || []} 
+            doramas={similarDoramas as Series[]} 
             isLoading={isLoadingSimilar} 
           />
         </div>

@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { fetchDoramaDetails, fetchSimilarDoramas } from "@/services/tmdbApi";
-import { Series } from "@/types/movie";
+import { Series, MediaItem } from "@/types/movie";
 
 export const useDoramaData = (id: string | undefined) => {
   // Scroll to top when component mounts or ID changes

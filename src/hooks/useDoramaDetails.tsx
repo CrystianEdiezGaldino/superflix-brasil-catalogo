@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
 import { fetchDoramaDetails, fetchSimilarDoramas } from "@/services/tmdbApi";
-import { Series } from "@/types/movie";
+import { Series, MediaItem } from "@/types/movie";
 
 export const useDoramaDetails = () => {
   const { id } = useParams<{ id: string }>();
