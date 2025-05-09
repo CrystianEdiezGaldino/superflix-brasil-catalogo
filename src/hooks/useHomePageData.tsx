@@ -1,21 +1,13 @@
 
-import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { supabase } from "@/integrations/supabase/client";
-import { MediaItem } from "@/types/movie";
-import { 
-  fetchPopularMovies, 
-  fetchPopularSeries, 
-  fetchAnime, 
-  fetchTopRatedAnime,
-  fetchKoreanDramas,
-  searchMedia, 
-  fetchRecommendations 
-} from "@/services/tmdbApi";
+import { useMediaData } from "./useMediaData";
+import { useMediaSearch } from "./useMediaSearch";
+import { useRecommendations } from "./useRecommendations";
+import { useFeaturedMedia } from "./useFeaturedMedia";
 
 export const useHomePageData = () => {
   const navigate = useNavigate();
@@ -29,9 +21,6 @@ export const useHomePageData = () => {
     trialEnd 
   } = useSubscription();
   
-  const [featuredMedia, setFeaturedMedia] = useState<MediaItem | undefined>(undefined);
-  const [recommendations, setRecommendations] = useState<MediaItem[]>([]);
-
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
   // Redirect to auth if not logged in
@@ -42,183 +31,31 @@ export const useHomePageData = () => {
     }
   }, [user, authLoading, navigate]);
   
-  // Fetch popular movies
-  const moviesQuery = useQuery({
-    queryKey: ["popularMovies"],
-    queryFn: () => fetchPopularMovies(),
-    enabled: !!user,
-  });
-
-  // Fetch popular TV series
-  const seriesQuery = useQuery({
-    queryKey: ["popularSeries"],
-    queryFn: () => fetchPopularSeries(),
-    enabled: !!user,
-  });
+  // Import data from smaller hooks
+  const { handleSearch: originalHandleSearch } = useMediaSearch();
+  const { recommendations } = useRecommendations();
+  const { 
+    moviesData, 
+    seriesData, 
+    animeData, 
+    topRatedAnimeData, 
+    doramasData,
+    isLoading: mediaLoading,
+    hasError
+  } = useMediaData();
   
-  // Fetch popular anime
-  const animeQuery = useQuery({
-    queryKey: ["anime"],
-    queryFn: () => fetchAnime(),
-    enabled: !!user,
-  });
-  
-  // Fetch top rated anime
-  const topRatedAnimeQuery = useQuery({
-    queryKey: ["topRatedAnime"],
-    queryFn: () => fetchTopRatedAnime(),
-    enabled: !!user && hasAccess, // Only fetch if user has access
-  });
-  
-  // Fetch Korean dramas
-  const doramasQuery = useQuery({
-    queryKey: ["koreanDramas"],
-    queryFn: () => fetchKoreanDramas(),
-    enabled: !!user && hasAccess, // Only fetch if user has access
-  });
-
-  // Fetch favorites and recommendations for logged-in users
-  useEffect(() => {
-    const fetchFavoritesAndRecommendations = async () => {
-      if (!user) {
-        setRecommendations([]);
-        return;
-      }
-
-      try {
-        const { data: favorites, error } = await supabase
-          .from("favorites")
-          .select("media_id, media_type")
-          .eq("user_id", user.id);
-
-        if (error) throw error;
-
-        if (favorites && favorites.length > 0) {
-          // Separate movies and TV shows
-          const movieIds = favorites
-            .filter(fav => fav.media_type === "movie")
-            .map(fav => fav.media_id);
-            
-          const tvIds = favorites
-            .filter(fav => fav.media_type === "tv")
-            .map(fav => fav.media_id);
-
-          // Get recommendations based on favorites
-          let recs: MediaItem[] = [];
-          
-          if (movieIds.length > 0) {
-            // Fix: Process each ID individually to avoid type errors
-            for (const id of movieIds) {
-              const movieRecs = await fetchRecommendations(String(id), "movie");
-              recs = [...recs, ...movieRecs];
-            }
-          }
-          
-          if (tvIds.length > 0) {
-            // Fix: Process each ID individually to avoid type errors
-            for (const id of tvIds) {
-              const tvRecs = await fetchRecommendations(String(id), "tv");
-              recs = [...recs, ...tvRecs];
-            }
-          }
-          
-          // Shuffle and limit recommendations
-          setRecommendations(recs.slice(0, 20));
-        }
-      } catch (error) {
-        console.error("Error fetching favorites:", error);
-      }
-    };
-
-    fetchFavoritesAndRecommendations();
-  }, [user]);
-
-  // Select a random item for the banner
-  useEffect(() => {
-    if (!user) return;
-    
-    // If user has access to premium content, include all media
-    if (hasAccess) {
-      const allMedia = [
-        ...(moviesQuery.data || []),
-        ...(seriesQuery.data || []),
-        ...(animeQuery.data || []),
-        ...(topRatedAnimeQuery.data || []),
-        ...(doramasQuery.data || [])
-      ];
-      
-      if (allMedia.length > 0) {
-        const randomIndex = Math.floor(Math.random() * allMedia.length);
-        setFeaturedMedia(allMedia[randomIndex]);
-      }
-    } else {
-      // Show preview content only
-      const freeMedia = [
-        ...(moviesQuery.data || []).slice(0, 2),
-        ...(seriesQuery.data || []).slice(0, 2),
-        ...(animeQuery.data || []).slice(0, 2)
-      ];
-      
-      if (freeMedia.length > 0) {
-        const randomIndex = Math.floor(Math.random() * freeMedia.length);
-        setFeaturedMedia(freeMedia[randomIndex]);
-      }
-    }
-  }, [
-    user,
+  const { featuredMedia } = useFeaturedMedia(
     hasAccess,
-    moviesQuery.data, 
-    seriesQuery.data, 
-    animeQuery.data, 
-    topRatedAnimeQuery.data, 
-    doramasQuery.data
-  ]);
+    user,
+    moviesData,
+    seriesData,
+    animeData,
+    topRatedAnimeData,
+    doramasData
+  );
 
-  // Search function
-  const handleSearch = async (query: string) => {
-    if (!user) {
-      toast.error("É necessário fazer login para pesquisar");
-      navigate("/auth");
-      return [];
-    }
-    
-    try {
-      // If query is empty, return featured content instead of empty array
-      if (!query || query.trim() === "") {
-        const featuredContent = [
-          ...(moviesQuery.data || []).slice(0, 8),
-          ...(seriesQuery.data || []).slice(0, 8),
-          ...(animeQuery.data || []).slice(0, 8)
-        ];
-        return featuredContent;
-      }
-      
-      const results = await searchMedia(query);
-      
-      if (results.length === 0) {
-        toast.info("Nenhum resultado encontrado para sua pesquisa.");
-      }
-      
-      return results;
-    } catch (error) {
-      console.error("Erro na pesquisa:", error);
-      toast.error("Ocorreu um erro durante a pesquisa.");
-      return [];
-    }
-  };
-
-  // Loading and error states
-  const isLoading = authLoading || 
-    subscriptionLoading || 
-    moviesQuery.isPending || 
-    seriesQuery.isPending || 
-    animeQuery.isPending || 
-    doramasQuery.isPending;
-    
-  const hasError = moviesQuery.isError || 
-    seriesQuery.isError || 
-    animeQuery.isError || 
-    doramasQuery.isError;
+  // Loading state
+  const isLoading = authLoading || subscriptionLoading || mediaLoading;
   
   return {
     user,
@@ -228,13 +65,13 @@ export const useHomePageData = () => {
     trialEnd,
     featuredMedia,
     recommendations,
-    moviesData: moviesQuery.data || [],
-    seriesData: seriesQuery.data || [],
-    animeData: animeQuery.data || [],
-    topRatedAnimeData: topRatedAnimeQuery.data || [],
-    doramasData: doramasQuery.data || [],
+    moviesData,
+    seriesData,
+    animeData,
+    topRatedAnimeData,
+    doramasData,
     isLoading,
     hasError,
-    handleSearch,
+    handleSearch: originalHandleSearch,
   };
 };

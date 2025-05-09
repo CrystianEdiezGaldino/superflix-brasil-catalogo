@@ -14,8 +14,6 @@ import ContentPreview from "@/components/home/ContentPreview";
 import FullContent from "@/components/home/FullContent";
 import LargeSubscriptionUpsell from "@/components/home/LargeSubscriptionUpsell";
 import SearchResults from "@/components/home/SearchResults";
-import { useQuery } from "@tanstack/react-query";
-import { fetchKoreanDramas } from "@/services/tmdbApi";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,20 +32,12 @@ const Index = () => {
     seriesData,
     animeData,
     topRatedAnimeData,
-    isLoading: homeDataLoading,
+    doramasData,
+    isLoading,
     hasError,
     handleSearch: originalHandleSearch,
   } = useHomePageData();
-  
-  // Fetch Korean dramas (doramas)
-  const { data: doramasData = [], isLoading: doramasLoading } = useQuery({
-    queryKey: ["koreanDramas"],
-    queryFn: () => fetchKoreanDramas(),
-    enabled: !!user && hasAccess
-  });
-  
-  const isLoading = homeDataLoading || doramasLoading;
-  
+
   // Enhanced search handler
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
