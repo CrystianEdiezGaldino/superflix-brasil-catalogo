@@ -19,7 +19,7 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -35,7 +35,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const retryDelay = 3000; // 3 seconds
 
   const checkSubscription = async () => {
-    if (!user) {
+    if (!user || !session) {
       setIsSubscribed(false);
       setIsAdmin(false);
       setHasTempAccess(false);
@@ -58,7 +58,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
       console.log('Checking subscription status...');
-      const { data, error } = await supabase.functions.invoke('check-subscription');
+      
+      // Use the session access token directly to avoid JWT expiration issues
+      const { data, error } = await supabase.functions.invoke('check-subscription', {
+        body: { user_id: user.id },
+        headers: session ? { Authorization: `Bearer ${session.access_token}` } : undefined
+      });
       
       if (error) {
         console.error('Error checking subscription:', error);
@@ -107,10 +112,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   // Check subscription when user changes (login/logout)
   useEffect(() => {
     // Only check if user exists and not during tab visibility changes
-    if (user && !visibilityChanged) {
+    if (user && session && !visibilityChanged) {
       checkSubscription();
     }
-  }, [user]);
+  }, [user, session]);
 
   // Handle tab visibility changes
   useEffect(() => {
@@ -139,7 +144,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   // Retry logic for initial load failures - with reduced frequency
   useEffect(() => {
-    if (retryCount > 0 && retryCount <= maxRetries && user && !visibilityChanged) {
+    if (retryCount > 0 && retryCount <= maxRetries && user && session && !visibilityChanged) {
       const retryTimeout = setTimeout(() => {
         console.log(`Retrying subscription check (attempt ${retryCount})...`);
         checkSubscription();
@@ -147,7 +152,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       
       return () => clearTimeout(retryTimeout);
     }
-  }, [retryCount, user]);
+  }, [retryCount, user, session]);
 
   return (
     <SubscriptionContext.Provider 

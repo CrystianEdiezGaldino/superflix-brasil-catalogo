@@ -22,13 +22,18 @@ const ActiveSubscription = ({
   trialEnd = null
 }: ActiveSubscriptionProps) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   
   const handleSubscribe = async (productId: string) => {
     if (!user) {
       toast.error("Você precisa estar logado para assinar");
       navigate("/auth");
+      return;
+    }
+
+    if (!session) {
+      toast.error("Sessão inválida. Por favor, faça login novamente");
       return;
     }
 
@@ -39,7 +44,8 @@ const ActiveSubscription = ({
         body: {
           priceId: productId,
           mode: "subscription"
-        }
+        },
+        headers: { Authorization: `Bearer ${session.access_token}` }
       });
 
       console.log("Resposta do create-checkout:", data);
@@ -73,7 +79,7 @@ const ActiveSubscription = ({
       setIsProcessing(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-netflix-background">
       <div className="container mx-auto pt-24 px-4 pb-16">
@@ -84,7 +90,8 @@ const ActiveSubscription = ({
           trialEnd={trialEnd}
         />
         
-        {(hasTrialAccess || hasTempAccess) && (
+        {/* Only show subscription plans for temp or trial access, not for active subscribers */}
+        {(hasTrialAccess || hasTempAccess) && !subscriptionTier?.match(/monthly|annual/) && (
           <SubscriptionPlansSection 
             handleSubscribe={handleSubscribe}
             isProcessing={isProcessing}

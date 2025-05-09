@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [visibilityChanged, setVisibilityChanged] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener first - IMPORTANT: this sets up the listener before anything else
@@ -26,20 +28,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (event, newSession) => {
         console.log("Auth state changed:", event);
         
-        // Only update the state if it's not just a tab visibility change to prevent unnecessary refreshing
-        if (!(document.visibilityState === 'visible' && visibilityChanged)) {
+        // Skip redundant updates and UI refreshes when just returning from tab switch
+        if (visibilityChanged && event === "INITIAL_SESSION" && newSession?.user?.id === user?.id) {
+          console.log("Skipping redundant auth update after tab switch");
+          return;
+        }
+        
+        // Only update state if actually changed to prevent unnecessary re-renders
+        const userChanged = newSession?.user?.id !== user?.id;
+        const sessionChanged = newSession?.access_token !== session?.access_token;
+        
+        if (userChanged || sessionChanged) {
           setSession(newSession);
           setUser(newSession?.user ?? null);
-        }
-        
-        if (event === "SIGNED_IN") {
-          console.log("User signed in:", newSession?.user?.email);
-          toast.success("Login realizado com sucesso!");
-        }
-        
-        if (event === "SIGNED_OUT") {
-          console.log("User signed out");
-          toast.info("Você saiu da sua conta");
+          
+          // Only show toast for actual login events, not restoration of session
+          if (event === "SIGNED_IN" && !sessionChecked) {
+            console.log("User signed in:", newSession?.user?.email);
+            toast.success("Login realizado com sucesso!");
+          }
+          
+          if (event === "SIGNED_OUT") {
+            console.log("User signed out");
+            toast.info("Você saiu da sua conta");
+          }
         }
       }
     );
@@ -55,13 +67,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log("Initial session check:", currentSession?.user?.email);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
+      setSessionChecked(true);
       setLoading(false);
     });
 
     // Handle tab visibility changes - improved logic to prevent unnecessary refreshes
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && visibilityChanged) {
-        // Tab became visible again - no need to refresh
+        // Tab became visible again - flag that we're returning from a tab switch
         setVisibilityChanged(false);
         console.log("Tab visible again, maintaining session state");
       } else if (document.visibilityState === 'hidden') {
@@ -77,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [visibilityChanged]);
+  }, [visibilityChanged, user?.id, session?.access_token]);
 
   const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
     try {

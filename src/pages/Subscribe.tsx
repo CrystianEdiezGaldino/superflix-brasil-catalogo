@@ -22,13 +22,25 @@ const Subscribe = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
   
-  // Simplificamos a lógica para evitar recargas ao trocar de abas
-  
   // Verifica se o usuário tem qualquer tipo de acesso válido
   const hasValidAccess = isSubscribed || hasTrialAccess || hasTempAccess;
   
+  if (isLoading) {
+    return (
+      <>
+        <Navbar onSearch={() => {}} />
+        <div className="min-h-screen bg-netflix-background flex justify-center items-center">
+          <div className="flex flex-col items-center">
+            <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p className="text-white text-lg">Verificando assinatura...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+  
   // Se já possui qualquer tipo de acesso válido, mostra o plano atual
-  if (hasValidAccess && !isLoading) {
+  if (hasValidAccess) {
     return (
       <>
         <Navbar onSearch={() => {}} />

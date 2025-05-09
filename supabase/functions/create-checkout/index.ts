@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -129,15 +130,15 @@ serve(async (req) => {
     };
 
     // Determine metadata based on price ID
-    const isAnnual = priceId.includes("anual") || priceId.includes("annual");
+    const isAnnual = priceId === "prod_SHSce9XGUSazQq";
     const simultaneousAccesses = isAnnual ? 6 : 3;
-    const productId = isAnnual ? "prod_SHSce9XGUSazQq" : "prod_SHSb9G94AXb8Nl";
+    const productType = isAnnual ? "annual" : "monthly";
     
     logStep("Creating checkout session", { 
       priceId, 
       customerId, 
       simultaneousAccesses, 
-      productId
+      productType
     });
 
     try {
@@ -148,7 +149,7 @@ serve(async (req) => {
           {
             price_data: {
               currency: 'brl',
-              product: productId,
+              product: priceId,
               unit_amount: isAnnual ? 10000 : 990,
               recurring: mode === 'subscription' ? {
                 interval: isAnnual ? 'year' : 'month',
@@ -165,7 +166,8 @@ serve(async (req) => {
         metadata: {
           user_id: user.id,
           simultaneous_accesses: simultaneousAccesses.toString(),
-          product_id: productId
+          product_id: priceId,
+          product_type: productType
         }
       });
 
