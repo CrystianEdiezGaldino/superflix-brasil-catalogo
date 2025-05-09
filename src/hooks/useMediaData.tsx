@@ -16,6 +16,9 @@ export const useMediaData = () => {
   const { isLoading: subscriptionLoading } = useSubscription();
   const { hasAccess } = useAccessControl();
 
+  // Debug log user access status
+  console.log("useMediaData access status:", { hasAccess, userId: user?.id });
+
   // Fetch popular movies
   const moviesQuery = useQuery({
     queryKey: ["popularMovies"],
@@ -40,7 +43,7 @@ export const useMediaData = () => {
     staleTime: 1000 * 60 * 5
   });
   
-  // Fetch top rated anime
+  // Fetch top rated anime - now properly checking hasAccess
   const topRatedAnimeQuery = useQuery({
     queryKey: ["topRatedAnime"],
     queryFn: () => fetchTopRatedAnime(),
@@ -48,7 +51,7 @@ export const useMediaData = () => {
     staleTime: 1000 * 60 * 5
   });
   
-  // Fetch Korean dramas
+  // Fetch Korean dramas - now properly checking hasAccess
   const doramasQuery = useQuery({
     queryKey: ["koreanDramas"],
     queryFn: () => fetchKoreanDramas(),

@@ -91,10 +91,11 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           hasTempAccess: data?.hasTempAccess || false,
           hasTrialAccess: data?.has_trial_access || false,
           subscriptionTier: data?.subscription_tier || null,
+          trialEnd: data?.trial_end,
           user: user?.id
         });
 
-        // If direct DB check is needed on API failure, implement as fallback
+        // Enhanced fallback check for trial subscriptions
         if (!data?.hasActiveSubscription && !data?.isAdmin && !data?.has_trial_access) {
           try {
             // Direct database check for trial subscriptions and active subscriptions
@@ -114,7 +115,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
                 const isTrialValid = trialEndDate > new Date();
                 
                 if (isTrialValid) {
-                  console.log('Valid trial subscription found');
+                  console.log('Valid trial subscription found, enabling access');
                   setHasTrialAccess(true);
                   setSubscriptionTier(subData.plan_type || 'trial');
                   setTrialEnd(subData.trial_end);

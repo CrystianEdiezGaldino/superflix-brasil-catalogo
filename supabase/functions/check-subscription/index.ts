@@ -117,7 +117,10 @@ serve(async (req) => {
     }
 
     const hasTrialAccess = !trialError && subscriptionWithTrial;
-    console.log(`[CHECK-SUBSCRIPTION] Trial access check - ${JSON.stringify({hasTrialAccess: !!hasTrialAccess})}`);
+    console.log(`[CHECK-SUBSCRIPTION] Trial access check - ${JSON.stringify({
+      hasTrialAccess: !!hasTrialAccess,
+      trialData: subscriptionWithTrial
+    })}`);
 
     // Check for temporary access
     const { data: tempAccess, error: tempAccessError } = await supabaseClient
@@ -180,7 +183,7 @@ serve(async (req) => {
       JSON.stringify({
         hasActiveSubscription: !subscriptionError && subscription?.status === 'active',
         hasTempAccess: !!hasTempAccess,
-        has_trial_access: !!hasTrialAccess,
+        has_trial_access: !!hasTrialAccess || (subscriptionWithTrial?.status === 'trialing' && new Date(subscriptionWithTrial?.trial_end) > now),
         isAdmin: !!isAdmin,
         subscribed: (!subscriptionError && subscription?.status === 'active') || !!hasTrialAccess,
         subscription,
@@ -189,7 +192,7 @@ serve(async (req) => {
         trial_end: subscriptionWithTrial?.trial_end || null,
         user: user,
         authUsers: allAuthUsers,
-        subscription_tier: subscription?.plan_type || (hasTrialAccess ? 'trial' : null),
+        subscription_tier: subscription?.plan_type || (hasTrialAccess ? 'trial' : (subscriptionWithTrial?.plan_type || null)),
         subscription_end: subscription?.current_period_end || null
       }),
       { 

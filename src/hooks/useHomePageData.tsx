@@ -19,11 +19,19 @@ export const useHomePageData = () => {
     hasTempAccess,
     hasTrialAccess,
     isLoading: subscriptionLoading, 
-    trialEnd 
+    trialEnd,
+    checkSubscription
   } = useSubscription();
   
   // Use the access control hook to get the hasAccess flag
   const { hasAccess } = useAccessControl();
+
+  // Force a subscription check on mount to ensure we have the latest data
+  useEffect(() => {
+    if (user) {
+      checkSubscription();
+    }
+  }, []);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -55,6 +63,21 @@ export const useHomePageData = () => {
     topRatedAnimeData,
     doramasData
   );
+
+  // Debug log to help track subscription state
+  console.log("Home page data:", { 
+    hasUser: !!user, 
+    isSubscribed, 
+    isAdmin, 
+    hasTrialAccess, 
+    hasTempAccess, 
+    hasAccess,
+    mediaDataLoaded: {
+      movies: !!moviesData?.length,
+      series: !!seriesData?.length,
+      anime: !!animeData?.length
+    }
+  });
 
   // Loading state
   const isLoading = authLoading || subscriptionLoading || mediaLoading;
