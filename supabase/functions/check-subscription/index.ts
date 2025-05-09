@@ -10,10 +10,10 @@ import {
   checkTrialAccess, 
   checkTempAccess 
 } from "./subscription-queries.ts";
-import { 
-  updateAdminSubscription, 
-  getAuthUsers 
-} from "./admin-operations.ts";
+
+// Objeto para armazenar em cache verificações recentes
+const verificationCache = new Map();
+const CACHE_TTL = 60000; // 1 minuto de TTL para cache
 
 // Main handler function
 console.log("[CHECK-SUBSCRIPTION] Function started");
@@ -31,8 +31,6 @@ serve(async (req) => {
       return createErrorResponse("No authorization header", 401);
     }
 
-    console.log("[CHECK-SUBSCRIPTION] Authorization header found");
-
     // Initialize Supabase client and get user
     let supabaseClient, user;
     try {
@@ -42,80 +40,87 @@ serve(async (req) => {
       console.error("[CHECK-SUBSCRIPTION] Auth error:", error);
       return createErrorResponse(
         error instanceof Error ? error.message : "Authentication error", 
-        401, 
-        error
+        401
       );
     }
 
-    // Check user privileges and subscriptions
-    const now = new Date();
+    // Verificar cache para resultados recentes
+    const cacheKey = user.id;
+    const cachedResult = verificationCache.get(cacheKey);
+    const now = Date.now();
+    
+    if (cachedResult && (now - cachedResult.timestamp < CACHE_TTL)) {
+      console.log("[CHECK-SUBSCRIPTION] Returning cached result for user:", user.id);
+      return createSuccessResponse(cachedResult.data);
+    }
+
+    // Verificar status do usuário
+    const currentTime = new Date();
     const isAdmin = await checkAdminStatus(supabaseClient, user.id);
     const { subscription } = await checkSubscription(supabaseClient, user.id);
     const { subscriptionWithTrial } = await checkTrialAccess(supabaseClient, user.id);
     const { tempAccess } = await checkTempAccess(supabaseClient, user.id);
     
-    // Fix: Improve has_trial_access logic to consider both trial_end date and status
+    // Determinar estado de acesso do usuário
     const hasTrialAccess = 
       subscriptionWithTrial && 
       subscriptionWithTrial.status === 'trialing' && 
-      new Date(subscriptionWithTrial.trial_end) > now;
+      new Date(subscriptionWithTrial.trial_end) > currentTime;
       
-    // Fix: Correctly determine if subscription is active
     const hasActiveSubscription = 
       subscription && 
       subscription.status === 'active';
       
-    // Fix: Check for temp access
     const hasTempAccess = 
       tempAccess && 
-      new Date(tempAccess.expires_at) > now;
+      new Date(tempAccess.expires_at) > currentTime;
 
-    // Update admin subscription if needed
-    await updateAdminSubscription(supabaseClient, user.id, !!isAdmin);
-
-    // Fetch auth users for admin
-    const allAuthUsers = await getAuthUsers(supabaseClient, !!isAdmin);
-
-    // Log what we determined for debugging
+    // Log dos resultados para debug
     console.log(`[CHECK-SUBSCRIPTION] Access check results:`, {
       userId: user.id,
       email: user.email,
       hasActiveSubscription,
       hasTrialAccess,
       hasTempAccess,
-      isAdmin: !!isAdmin,
-      subscriptionType: subscription?.plan_type || subscriptionWithTrial?.plan_type || 'none'
+      isAdmin: !!isAdmin
     });
 
-    // Prepare response data
+    // Preparar dados de resposta
     const responseData = {
       hasActiveSubscription,
       hasTempAccess,
       has_trial_access: hasTrialAccess,
       isAdmin: !!isAdmin,
-      subscribed: hasActiveSubscription || hasTrialAccess,
-      subscription,
-      tempAccess,
-      trial_access: subscriptionWithTrial,
-      trial_end: subscriptionWithTrial?.trial_end || null,
-      user: user,
-      authUsers: allAuthUsers,
-      subscription_tier: subscription?.plan_type || (hasTrialAccess ? 'trial' : (subscriptionWithTrial?.plan_type || null)),
-      subscription_end: subscription?.current_period_end || tempAccess?.expires_at || null
+      user: { id: user.id, email: user.email },
+      subscription_tier: subscription?.plan_type || (hasTrialAccess ? 'trial' : null),
+      subscription_end: subscription?.current_period_end || tempAccess?.expires_at || null,
+      trial_end: subscriptionWithTrial?.trial_end || null
     };
 
-    // Return success response
+    // Armazenar resultado em cache
+    verificationCache.set(cacheKey, {
+      timestamp: now,
+      data: responseData
+    });
+
+    // Retornar resposta de sucesso
     return createSuccessResponse(responseData);
     
   } catch (error) {
     console.error('[CHECK-SUBSCRIPTION] Error:', error);
-    // Even on error, return 200 with default values to prevent blocking the user
-    return createErrorResponse("Internal Server Error", 500, { 
-      message: String(error),
-      hasActiveSubscription: false,
-      isAdmin: false,
-      hasTempAccess: false,
-      has_trial_access: false
-    });
+    // Em caso de erro, retornar 200 com valores padrão para não bloquear o usuário
+    return new Response(
+      JSON.stringify({
+        error: String(error),
+        hasActiveSubscription: false,
+        isAdmin: false,
+        hasTempAccess: false,
+        has_trial_access: false
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      }
+    );
   }
 });

@@ -1,92 +1,51 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 /**
- * Checks the subscription status of a user
- * @param userId - The user's ID
- * @param sessionToken - The user's session token for authorization
+ * Verifica o estado da assinatura do usuário
+ * @param userId - ID do usuário
+ * @param sessionToken - Token de sessão para autorização
  */
 export const checkSubscriptionStatus = async (userId: string, sessionToken?: string) => {
   if (!userId) {
-    console.error('Cannot check subscription status: No user ID provided');
+    console.error('Não foi possível verificar a assinatura: ID de usuário não fornecido');
     return null;
   }
 
   try {
-    console.log('Checking subscription status...');
-    
-    // Use the session token for authorization
+    // Usar o token de sessão para autorização
     const { data, error } = await supabase.functions.invoke('check-subscription', {
       body: { user_id: userId },
       headers: sessionToken ? { Authorization: `Bearer ${sessionToken}` } : undefined
     });
     
     if (error) {
-      console.error('Error checking subscription:', error);
-      return null;
+      console.error('Erro ao verificar assinatura:', error);
+      throw error;
     }
     
-    console.log('Subscription check result:', {
+    // Log simplificado do resultado
+    console.log('Resultado da verificação de assinatura:', {
       isSubscribed: data?.hasActiveSubscription || false,
       isAdmin: data?.isAdmin || false,
       hasTempAccess: data?.hasTempAccess || false,
       hasTrialAccess: data?.has_trial_access || false,
-      subscriptionTier: data?.subscription_tier || null,
-      user: userId
+      subscriptionTier: data?.subscription_tier || null
     });
     
     return data;
   } catch (error) {
-    console.error('Failed to check subscription:', error);
-    return null;
+    console.error('Falha ao verificar assinatura:', error);
+    throw error;
   }
 };
 
 /**
- * Manages throttling for subscription checks
- * @param lastCheckTime - Timestamp of the last check
- * @param visibilityChanged - Whether the tab visibility has changed
- * @returns Whether the check should be throttled
- */
-export const shouldThrottleCheck = (lastCheckTime: number, visibilityChanged: boolean) => {
-  const now = Date.now();
-  const timeSinceLastCheck = now - lastCheckTime;
-  // Permite verificações mais frequentes (1 segundo em vez de 2)
-  const isThrottled = timeSinceLastCheck < 1000;
-  
-  if (isThrottled) {
-    console.log(`Skipping subscription check - throttled (last check was ${timeSinceLastCheck}ms ago)`);
-  }
-  
-  return isThrottled;
-};
-
-/**
- * Handles errors from subscription checks
- * @param error - The error that occurred
- * @param retryCount - The current retry count
- * @param maxRetries - The maximum number of retries
- * @returns Updated retry count
- */
-export const handleSubscriptionError = (error: any, retryCount: number, maxRetries: number): number => {
-  console.error('Error checking subscription:', error);
-  
-  if (retryCount >= maxRetries) {
-    toast.error('Erro ao verificar assinatura. Tente recarregar a página.');
-    return retryCount;
-  }
-  
-  return retryCount + 1;
-};
-
-/**
- * Updates subscription state based on check result
- * @param data - The subscription data returned from check-subscription
- * @returns Object with subscription state values
+ * Processa os dados da assinatura retornados da verificação
+ * @param data - Dados retornados da função check-subscription
  */
 export const processSubscriptionData = (data: any) => {
-  // Default values in case data is invalid
+  // Valores padrão caso os dados sejam inválidos
   const defaults = {
     isSubscribed: false,
     isAdmin: false,
@@ -99,27 +58,12 @@ export const processSubscriptionData = (data: any) => {
 
   if (!data) return defaults;
 
-  // Melhor processamento para identificar corretamente o estado da assinatura
-  const isSubscribed = data?.hasActiveSubscription || false;
-  const isAdmin = data?.isAdmin || false;
-  const hasTempAccess = data?.hasTempAccess || false;
-  const hasTrialAccess = data?.has_trial_access || false;
-  
-  console.log("Processing subscription data:", {
-    isSubscribed,
-    isAdmin,
-    hasTempAccess,
-    hasTrialAccess,
-    subscriptionTier: data?.subscription_tier || null,
-    subscriptionEnd: data?.subscription_end || null,
-    trialEnd: data?.trial_end || null
-  });
-
+  // Processamento simplificado para determinar o estado da assinatura
   return {
-    isSubscribed,
-    isAdmin,
-    hasTempAccess,
-    hasTrialAccess,
+    isSubscribed: Boolean(data?.hasActiveSubscription),
+    isAdmin: Boolean(data?.isAdmin),
+    hasTempAccess: Boolean(data?.hasTempAccess),
+    hasTrialAccess: Boolean(data?.has_trial_access),
     subscriptionTier: data?.subscription_tier || null,
     subscriptionEnd: data?.subscription_end || data?.tempAccess?.expires_at || null,
     trialEnd: data?.trial_end || null

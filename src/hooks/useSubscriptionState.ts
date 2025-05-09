@@ -1,7 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Session } from "@supabase/supabase-js";
-import { checkSubscriptionStatus, shouldThrottleCheck, handleSubscriptionError, processSubscriptionData } from '@/utils/subscriptionUtils';
+import { checkSubscriptionStatus, processSubscriptionData } from '@/utils/subscriptionUtils';
+import { toast } from "sonner";
 
 export const useSubscriptionState = (user: any, session: Session | null) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -12,15 +13,73 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [trialEnd, setTrialEnd] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const [lastCheckTime, setLastCheckTime] = useState(0);
-  const [visibilityChanged, setVisibilityChanged] = useState(false);
   
-  const maxRetries = 5; // Aumentando o número máximo de tentativas
+  // Use refs para controlar estados de verificação
+  const lastCheckTimeRef = useRef(0);
+  const checkInProgressRef = useRef(false);
+  const errorCountRef = useRef(0);
+  const maxErrors = 3;
 
-  const checkSubscription = async () => {
+  // Função memoizada para verificar a assinatura
+  const checkSubscription = useCallback(async () => {
+    // Não verificar se não houver usuário ou sessão
     if (!user || !session) {
-      console.log("Cannot check subscription: No user or session");
+      setIsLoading(false);
+      return;
+    }
+
+    // Evitar verificações simultâneas ou muito frequentes
+    const now = Date.now();
+    if (checkInProgressRef.current || (now - lastCheckTimeRef.current < 2000)) {
+      return;
+    }
+
+    checkInProgressRef.current = true;
+    setIsLoading(true);
+    lastCheckTimeRef.current = now;
+    
+    try {
+      const data = await checkSubscriptionStatus(user.id, session.access_token);
+      
+      if (!data) {
+        throw new Error("Nenhum dado retornado pela verificação de assinatura");
+      }
+      
+      // Processar os dados da assinatura
+      const subscriptionState = processSubscriptionData(data);
+      
+      // Atualizar o estado com os dados processados
+      setIsSubscribed(subscriptionState.isSubscribed);
+      setIsAdmin(subscriptionState.isAdmin);
+      setHasTempAccess(subscriptionState.hasTempAccess);
+      setHasTrialAccess(subscriptionState.hasTrialAccess);
+      setSubscriptionTier(subscriptionState.subscriptionTier);
+      setSubscriptionEnd(subscriptionState.subscriptionEnd);
+      setTrialEnd(subscriptionState.trialEnd);
+      
+      // Reset error count on success
+      errorCountRef.current = 0;
+    } catch (error) {
+      // Incrementar contador de erros
+      errorCountRef.current += 1;
+      console.error("Erro ao verificar assinatura:", error);
+      
+      // Só mostrar toast após múltiplas falhas para evitar spam
+      if (errorCountRef.current >= maxErrors) {
+        toast.error("Erro ao verificar assinatura. Tente recarregar a página.");
+      }
+    } finally {
+      setIsLoading(false);
+      checkInProgressRef.current = false;
+    }
+  }, [user, session]);
+
+  // Verificação inicial quando o usuário/sessão muda
+  useEffect(() => {
+    if (user && session) {
+      checkSubscription();
+    } else {
+      // Resetar estados quando não há usuário ou sessão
       setIsSubscribed(false);
       setIsAdmin(false);
       setHasTempAccess(false);
@@ -29,98 +88,19 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
       setSubscriptionEnd(null);
       setTrialEnd(null);
       setIsLoading(false);
-      return;
     }
+  }, [user, session, checkSubscription]);
 
-    // Prevent multiple rapid checks and don't check on tab visibility change
-    if (shouldThrottleCheck(lastCheckTime, visibilityChanged)) {
-      return;
-    }
-    
-    setLastCheckTime(Date.now());
-    setIsLoading(true);
-    
-    try {
-      console.log(`Checking subscription for user ${user.id}`);
-      const data = await checkSubscriptionStatus(user.id, session.access_token);
-      
-      if (!data) {
-        // Handle error case
-        setRetryCount(prev => handleSubscriptionError('No data returned', prev, maxRetries));
-      } else {
-        // Reset retry counter on success and process data
-        setRetryCount(0);
-        
-        const subscriptionState = processSubscriptionData(data);
-        
-        console.log("Processed subscription data:", subscriptionState);
-        
-        setIsSubscribed(subscriptionState.isSubscribed);
-        setIsAdmin(subscriptionState.isAdmin);
-        setHasTempAccess(subscriptionState.hasTempAccess);
-        setHasTrialAccess(subscriptionState.hasTrialAccess);
-        setSubscriptionTier(subscriptionState.subscriptionTier);
-        setSubscriptionEnd(subscriptionState.subscriptionEnd);
-        setTrialEnd(subscriptionState.trialEnd);
-      }
-    } catch (error) {
-      console.error("Error checking subscription:", error);
-      setRetryCount(prev => handleSubscriptionError(error, prev, maxRetries));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle tab visibility changes
+  // Verificação periódica (menos frequente)
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        if (visibilityChanged) {
-          setVisibilityChanged(false);
-          console.log("Tab visible again, checking subscription");
-          checkSubscription();
-        }
-      } else if (document.visibilityState === 'hidden') {
-        setVisibilityChanged(true);
-        console.log("Tab hidden");
-      }
-    };
+    if (!user || !session) return;
     
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, [visibilityChanged]);
-
-  // Initial subscription check when user/session changes
-  useEffect(() => {
-    if (user && session) {
-      console.log("User or session changed, checking subscription");
+    const intervalId = setInterval(() => {
       checkSubscription();
-    }
-  }, [user, session]);
-
-  // Retry logic for initial load failures
-  useEffect(() => {
-    if (retryCount > 0 && retryCount <= maxRetries && user && session) {
-      const retryTimeout = setTimeout(() => {
-        console.log(`Retrying subscription check (attempt ${retryCount})...`);
-        checkSubscription();
-      }, 2000 * retryCount); // Exponential backoff
-      
-      return () => clearTimeout(retryTimeout);
-    }
-  }, [retryCount, user, session]);
-
-  // Adicionar verificação periódica para garantir que o estado da assinatura esteja sempre atualizado
-  useEffect(() => {
-    if (user && session) {
-      const periodicCheck = setInterval(() => {
-        console.log("Performing periodic subscription check");
-        checkSubscription();
-      }, 5 * 60 * 1000); // Verificar a cada 5 minutos
-      
-      return () => clearInterval(periodicCheck);
-    }
-  }, [user, session]);
+    }, 5 * 60 * 1000); // A cada 5 minutos
+    
+    return () => clearInterval(intervalId);
+  }, [user, session, checkSubscription]);
 
   return {
     isSubscribed,

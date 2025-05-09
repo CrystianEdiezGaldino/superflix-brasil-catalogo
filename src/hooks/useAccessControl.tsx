@@ -12,19 +12,9 @@ export const useAccessControl = () => {
     isLoading: subscriptionLoading 
   } = useSubscription();
 
-  // Enhanced access check to properly handle all subscription types
-  const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
-
-  // Add debug logging to track access control decisions
-  console.log("Access control check:", {
-    user: !!user,
-    isSubscribed,
-    isAdmin,
-    hasTempAccess,
-    hasTrialAccess,
-    hasAccess
-  });
-
+  // Simplificamos a verificação de acesso para evitar cálculos redundantes
+  const hasAccess = Boolean(isSubscribed || isAdmin || hasTempAccess || hasTrialAccess);
+  
   return {
     user,
     authLoading,
