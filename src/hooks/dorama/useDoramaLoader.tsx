@@ -1,37 +1,42 @@
 
 import { useState, useEffect } from "react";
-import { Series } from "@/types/movie";
-import { fetchKoreanDramas, fetchPopularDoramas, fetchTopRatedDoramas } from "@/services/tmdbApi";
+import { MediaItem } from "@/types/movie";
+import { fetchKoreanDramas, fetchPopularDoramas, fetchTopRatedDoramas, fetchKoreanMovies } from "@/services/tmdbApi";
 import { toast } from "sonner";
 
 interface UseDoramaLoaderProps {
-  filterDoramas: (doramaList: Series[]) => Series[];
+  filterDoramas: (contentList: MediaItem[]) => MediaItem[];
 }
 
 export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
-  const [doramas, setDoramas] = useState<Series[]>([]);
-  const [topRatedDoramas, setTopRatedDoramas] = useState<Series[]>([]);
-  const [popularDoramas, setPopularDoramas] = useState<Series[]>([]);
+  const [doramas, setDoramas] = useState<MediaItem[]>([]);
+  const [topRatedDoramas, setTopRatedDoramas] = useState<MediaItem[]>([]);
+  const [popularDoramas, setPopularDoramas] = useState<MediaItem[]>([]);
+  const [koreanMovies, setKoreanMovies] = useState<MediaItem[]>([]);
   const [isLoadingInitial, setIsLoadingInitial] = useState(true);
   const [isLoadingPopular, setIsLoadingPopular] = useState(true);
   const [isLoadingTopRated, setIsLoadingTopRated] = useState(true);
+  const [isLoadingMovies, setIsLoadingMovies] = useState(true);
   
-  // Carrega os doramas iniciais (30 doramas inicialmente)
+  // Carrega os doramas iniciais (50 conteúdos inicialmente)
   useEffect(() => {
     const loadInitialDoramas = async () => {
       try {
-        // Carregamos 30 doramas inicialmente
-        const initialDoramas = await fetchKoreanDramas(1, 30);
+        // Carregamos 50 conteúdos inicialmente
+        const initialContent = await fetchKoreanDramas(1, 50);
         
-        if (initialDoramas.length === 0) {
+        if (initialContent.length === 0) {
           toast.error("Não foi possível carregar os doramas. Tente novamente mais tarde.");
         }
         
-        const filteredDoramas = filterDoramas(initialDoramas);
-        setDoramas(filteredDoramas);
+        const filteredContent = filterDoramas(initialContent);
+        setDoramas(filteredContent);
+        
+        console.log(`Carregados ${filteredContent.length} conteúdos coreanos iniciais`);
+        
         setIsLoadingInitial(false);
       } catch (error) {
-        console.error("Erro ao carregar doramas iniciais:", error);
+        console.error("Erro ao carregar conteúdo inicial:", error);
         toast.error("Erro ao carregar doramas. Tente novamente mais tarde.");
         setIsLoadingInitial(false);
       }
@@ -40,7 +45,7 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
     loadInitialDoramas();
   }, [filterDoramas]);
   
-  // Carrega doramas populares e mais bem avaliados
+  // Carrega doramas populares, mais bem avaliados e filmes coreanos
   useEffect(() => {
     const loadPopularDoramas = async () => {
       try {
@@ -68,8 +73,21 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
       }
     };
     
+    const loadKoreanMovies = async () => {
+      try {
+        const movies = await fetchKoreanMovies(12);
+        setKoreanMovies(movies);
+        setIsLoadingMovies(false);
+      } catch (error) {
+        console.error("Erro ao carregar filmes coreanos:", error);
+        toast.error("Erro ao carregar filmes coreanos.");
+        setIsLoadingMovies(false);
+      }
+    };
+    
     loadPopularDoramas();
     loadTopRatedDoramas();
+    loadKoreanMovies();
   }, [filterDoramas]);
 
   return {
@@ -77,8 +95,10 @@ export const useDoramaLoader = ({ filterDoramas }: UseDoramaLoaderProps) => {
     setDoramas,
     topRatedDoramas,
     popularDoramas,
+    koreanMovies,
     isLoadingInitial,
     isLoadingPopular,
-    isLoadingTopRated
+    isLoadingTopRated,
+    isLoadingMovies
   };
 };

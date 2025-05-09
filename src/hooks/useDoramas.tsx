@@ -9,15 +9,17 @@ export const useDoramas = () => {
   // Get dorama filters
   const { filterDoramas, applyFilters } = useDoramaFilters();
   
-  // Load initial, popular and top rated doramas
+  // Load initial, popular, top rated doramas and Korean movies
   const { 
     doramas, 
     setDoramas, 
     topRatedDoramas, 
     popularDoramas, 
+    koreanMovies,
     isLoadingInitial, 
     isLoadingPopular, 
-    isLoadingTopRated 
+    isLoadingTopRated, 
+    isLoadingMovies
   } = useDoramaLoader({ filterDoramas });
   
   // Setup pagination
@@ -61,6 +63,7 @@ export const useDoramas = () => {
     doramas,
     topRatedDoramas,
     popularDoramas,
+    koreanMovies,
     page,
     hasMore,
     isLoadingMore,
@@ -72,6 +75,7 @@ export const useDoramas = () => {
     isLoadingInitial,
     isLoadingPopular,
     isLoadingTopRated,
+    isLoadingMovies,
     handleSearch,
     loadMoreDoramas: handleLoadMoreDoramas,
     setYearFilter,

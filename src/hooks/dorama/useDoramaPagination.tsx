@@ -1,12 +1,12 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Series } from "@/types/movie";
+import { Series, Movie, MediaItem } from "@/types/movie";
 import { fetchKoreanDramas } from "@/services/tmdbApi";
 
 interface UseDoramaPaginationProps {
-  filterDoramas: (doramaList: Series[]) => Series[];
-  setDoramas: React.Dispatch<React.SetStateAction<Series[]>>;
+  filterDoramas: (contentList: MediaItem[]) => MediaItem[];
+  setDoramas: React.Dispatch<React.SetStateAction<MediaItem[]>>;
 }
 
 export const useDoramaPagination = ({ filterDoramas, setDoramas }: UseDoramaPaginationProps) => {
@@ -14,7 +14,7 @@ export const useDoramaPagination = ({ filterDoramas, setDoramas }: UseDoramaPagi
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   
-  // Load more doramas
+  // Load more doramas and Korean movies
   const loadMoreDoramas = async (isSearching: boolean, isFiltering: boolean) => {
     if (isSearching || isFiltering || !hasMore || isLoadingMore) return;
     
@@ -22,22 +22,30 @@ export const useDoramaPagination = ({ filterDoramas, setDoramas }: UseDoramaPagi
     
     try {
       const nextPage = page + 1;
-      const newDoramas = await fetchKoreanDramas(nextPage, 30);
+      // Carrega 30 conteúdos por vez (doramas e filmes coreanos)
+      const newContent = await fetchKoreanDramas(nextPage, 30);
       
-      // Filtra para garantir apenas doramas coreanos com imagens
-      const filteredDoramas = filterDoramas(newDoramas);
+      // Filtra para garantir apenas conteúdo coreano com imagens
+      const filteredContent = filterDoramas(newContent);
       
-      if (filteredDoramas.length === 0) {
+      if (filteredContent.length === 0) {
         setHasMore(false);
-        toast.info("Não há mais doramas para carregar.");
+        toast.info("Não há mais conteúdo para carregar.");
         return;
       }
       
-      setDoramas((prevDoramas) => [...prevDoramas, ...filteredDoramas]);
+      setDoramas((prevContent) => [...prevContent, ...filteredContent]);
       setPage(nextPage);
+      
+      // Verifica se ainda existem mais conteúdos para carregar
+      if (filteredContent.length < 30) {
+        setHasMore(false);
+        toast.info("Você chegou ao fim da lista de doramas e filmes coreanos.");
+      }
+      
     } catch (error) {
-      console.error("Erro ao carregar mais doramas:", error);
-      toast.error("Erro ao carregar mais doramas.");
+      console.error("Erro ao carregar mais conteúdo:", error);
+      toast.error("Erro ao carregar mais conteúdo coreano.");
     } finally {
       setIsLoadingMore(false);
     }

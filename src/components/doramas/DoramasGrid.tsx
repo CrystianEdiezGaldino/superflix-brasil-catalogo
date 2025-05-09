@@ -1,13 +1,13 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Series } from "@/types/movie";
+import { MediaItem } from "@/types/movie";
 import DoramaCard from "@/components/doramas/DoramaCard";
 import { useDoramaVideos } from "@/hooks/useDoramaVideos";
 import { ChevronDown } from "lucide-react";
 
 interface DoramasGridProps {
-  doramas: Series[];
+  doramas: MediaItem[];
   isLoading: boolean;
   hasMore: boolean;
   isLoadingMore: boolean;
@@ -41,7 +41,7 @@ const DoramasGrid = ({
     return (
       <Card className="bg-black/40 border-gray-800">
         <CardContent className="flex flex-col items-center justify-center h-64">
-          <p className="text-gray-400 text-lg">Nenhum dorama encontrado</p>
+          <p className="text-gray-400 text-lg">Nenhum conteúdo encontrado</p>
           <Button 
             onClick={onResetFilters}
             variant="link" 
@@ -58,7 +58,7 @@ const DoramasGrid = ({
     <div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
         {doramas.map((dorama) => (
-          <div key={dorama.id} className="dorama-grid-item">
+          <div key={`${dorama.media_type}-${dorama.id}`} className="dorama-grid-item">
             <DoramaCard 
               dorama={dorama} 
               videoKey={videoMap[dorama.id] || undefined}
@@ -82,7 +82,7 @@ const DoramasGrid = ({
               </>
             ) : (
               <>
-                Carregar mais doramas
+                Carregar mais conteúdo
                 <ChevronDown className="ml-1" />
               </>
             )}

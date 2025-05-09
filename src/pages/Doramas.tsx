@@ -11,6 +11,7 @@ const Doramas = () => {
     doramas,
     topRatedDoramas,
     popularDoramas,
+    koreanMovies,
     hasMore,
     isLoadingMore,
     yearFilter,
@@ -20,6 +21,7 @@ const Doramas = () => {
     isLoadingInitial,
     isLoadingPopular,
     isLoadingTopRated,
+    isLoadingMovies,
     handleSearch,
     loadMoreDoramas,
     setYearFilter,
@@ -32,7 +34,7 @@ const Doramas = () => {
       <Navbar onSearch={handleSearch} />
       
       <div className="pt-24 pb-10 px-4 md:px-8">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">Doramas Coreanos</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">Conteúdo Coreano</h1>
         
         {/* Search and Filter Section */}
         <DoramaSearchFilters 
@@ -58,9 +60,16 @@ const Doramas = () => {
           isLoading={isLoadingPopular}
         />
         
-        {/* All Doramas Grid */}
+        {/* Korean Movies */}
+        <DoramaSection 
+          title="Filmes Coreanos"
+          doramas={koreanMovies}
+          isLoading={isLoadingMovies}
+        />
+        
+        {/* All Korean Content Grid */}
         <section>
-          <h2 className="text-xl md:text-2xl font-semibold text-white mb-4">Todos os Doramas</h2>
+          <h2 className="text-xl md:text-2xl font-semibold text-white mb-4">Todo Conteúdo Coreano</h2>
           <DoramasGrid 
             doramas={doramas}
             isLoading={isLoadingInitial}
