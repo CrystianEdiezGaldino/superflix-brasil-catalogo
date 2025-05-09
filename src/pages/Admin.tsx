@@ -45,9 +45,10 @@ const Admin = () => {
     try {
       setIsLoading(true);
       const data = await fetchAdminData();
-      setUsers(data.users);
-      setSubscriptions(data.subscriptions);
-      setTempAccesses(data.tempAccesses);
+      console.log("Admin data loaded:", data);
+      setUsers(data.users || []);
+      setSubscriptions(data.subscriptions || []);
+      setTempAccesses(data.tempAccesses || []);
       setStats(data.stats);
     } catch (error) {
       console.error('Error loading admin data:', error);

@@ -1,205 +1,142 @@
 
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+// Import required modules
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { corsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
-// Helper logging function
-const logStep = (step: string, details?: any) => {
-  const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
-};
+console.log("[CHECK-SUBSCRIPTION] Function started");
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+    return new Response("ok", { headers: corsHeaders });
   }
 
-  // Use the service role key to bypass RLS
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-  const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, { 
-    auth: { persistSession: false }
-  });
-
   try {
-    logStep("Function started");
+    // Get authorization header
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'No authorization header' }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    logStep("Authorization header found");
+    console.log("[CHECK-SUBSCRIPTION] Authorization header found");
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
-    
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    // Create supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    );
 
-    // Check if user has admin role
-    const { data: roleData } = await supabaseClient
+    // Get user from token
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseClient.auth.getUser();
+
+    if (userError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Failed to get user', details: userError }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[CHECK-SUBSCRIPTION] User authenticated - ${JSON.stringify({userId: user.id, email: user.email})}`);
+
+    // Check if user is admin
+    const { data: adminData, error: adminError } = await supabaseClient
       .from('user_roles')
-      .select('role')
+      .select('*')
       .eq('user_id', user.id)
       .eq('role', 'admin')
-      .maybeSingle();
-    
-    const isAdmin = roleData?.role === 'admin';
-    logStep("Admin check", { isAdmin });
+      .single();
 
-    // Check if user has temporary access
-    const now = new Date().toISOString();
-    const { data: tempAccess } = await supabaseClient
-      .from('temp_access')
-      .select('expires_at')
+    const isAdmin = !adminError && adminData;
+    console.log(`[CHECK-SUBSCRIPTION] Admin check - ${JSON.stringify({isAdmin: !!isAdmin})}`);
+
+    // Check for active subscription
+    const { data: subscription, error: subscriptionError } = await supabaseClient
+      .from('subscriptions')
+      .select('*')
       .eq('user_id', user.id)
-      .gt('expires_at', now)
-      .order('expires_at', { ascending: false })
-      .limit(1)
+      .eq('status', 'active')
       .maybeSingle();
 
-    const hasTempAccess = !!tempAccess;
-    logStep("Temp access check", { 
-      hasTempAccess, 
-      expiresAt: tempAccess?.expires_at 
-    });
+    // Check for temporary access
+    const now = new Date();
+    const { data: tempAccess, error: tempAccessError } = await supabaseClient
+      .from('temp_access')
+      .select('*')
+      .eq('user_id', user.id)
+      .gt('expires_at', now.toISOString())
+      .maybeSingle();
 
-    // First check if admin or temp access, in which case they have access
-    if (isAdmin || hasTempAccess) {
-      // Get or create subscription record for the admin
-      if (isAdmin) {
-        const { error: subscriptionError } = await supabaseClient
+    const hasTempAccess = !tempAccessError && tempAccess;
+    console.log(`[CHECK-SUBSCRIPTION] Temp access check - ${JSON.stringify({hasTempAccess: !!hasTempAccess})}`);
+
+    // If user is admin, try to update admin subscription if not exists
+    if (isAdmin) {
+      try {
+        // Check if admin already has a subscription
+        const { data: existingAdminSub } = await supabaseClient
           .from('subscriptions')
-          .upsert({
-            user_id: user.id,
-            plan_type: 'annual',
-            status: 'active',
-            current_period_start: new Date().toISOString(),
-            current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'user_id' });
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-        if (subscriptionError) {
-          console.error("Error updating admin subscription:", subscriptionError);
-        }
-      }
-
-      return new Response(JSON.stringify({ 
-        subscribed: true,
-        subscription_tier: isAdmin ? 'annual' : 'temp',
-        subscription_end: isAdmin 
-          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
-          : tempAccess?.expires_at,
-        is_admin: isAdmin,
-        has_temp_access: hasTempAccess
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      });
-    }
-
-    // Check for Stripe subscription if Stripe is configured
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    let hasActiveSub = false;
-    let planType = null;
-    let subscriptionEnd = null;
-    let stripeSubscriptionId = null;
-    let customerId = null;
-
-    if (stripeKey) {
-      logStep("Stripe key available, checking subscriptions");
-      const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
-      
-      // Find customer in Stripe
-      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-      
-      if (customers.data.length > 0) {
-        customerId = customers.data[0].id;
-        logStep("Found Stripe customer", { customerId });
-
-        // Check for active subscriptions
-        const subscriptions = await stripe.subscriptions.list({
-          customer: customerId,
-          status: "active",
-          limit: 1,
-        });
-        
-        hasActiveSub = subscriptions.data.length > 0;
-
-        if (hasActiveSub) {
-          const subscription = subscriptions.data[0];
-          subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-          stripeSubscriptionId = subscription.id;
+        if (!existingAdminSub) {
+          // Create admin subscription if not exists
+          const { error: createError } = await supabaseClient
+            .from('subscriptions')
+            .insert({
+              user_id: user.id,
+              status: 'active',
+              plan_type: 'admin',
+              current_period_end: new Date(now.getFullYear() + 10, now.getMonth(), now.getDate()).toISOString(),
+            });
           
-          logStep("Active subscription found", { 
-            subscriptionId: subscription.id, 
-            endDate: subscriptionEnd 
-          });
-          
-          // Determine plan type from price
-          const priceId = subscription.items.data[0].price.id;
-          const price = await stripe.prices.retrieve(priceId);
-          const amount = price.unit_amount || 0;
-          
-          if (amount <= 1000) {  // R$10.00
-            planType = "monthly";
-          } else {
-            planType = "annual";
+          if (createError) {
+            console.error('Error updating admin subscription:', createError);
           }
-          
-          logStep("Determined subscription plan", { 
-            priceId, 
-            amount, 
-            planType 
-          });
-        } else {
-          logStep("No active subscription found");
         }
-      } else {
-        logStep("No Stripe customer found for this user");
+      } catch (error) {
+        console.error('Error updating admin subscription:', error);
       }
-    } else {
-      logStep("No Stripe key configured, skipping Stripe checks");
     }
 
-    // Update user subscription in database
-    await supabaseClient.from("subscriptions").upsert({
-      user_id: user.id,
-      stripe_customer_id: customerId,
-      stripe_subscription_id: stripeSubscriptionId,
-      plan_type: planType,
-      status: hasActiveSub ? 'active' : 'inactive',
-      current_period_end: subscriptionEnd,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
+    // Fetch all auth users for admin
+    let allAuthUsers = null;
+    if (isAdmin) {
+      const { data: authUsers, error: authUsersError } = await supabaseClient.auth.admin.listUsers();
+      if (!authUsersError) {
+        allAuthUsers = authUsers;
+      }
+    }
 
-    logStep("Updated database with subscription info", { 
-      subscribed: hasActiveSub, 
-      planType 
-    });
-    
-    return new Response(JSON.stringify({
-      subscribed: hasActiveSub,
-      subscription_tier: planType,
-      subscription_end: subscriptionEnd,
-      is_admin: false,
-      has_temp_access: false
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    // Prepare response
+    return new Response(
+      JSON.stringify({
+        hasActiveSubscription: !subscriptionError && subscription?.status === 'active',
+        hasTempAccess: !!hasTempAccess,
+        isAdmin: !!isAdmin,
+        subscription,
+        tempAccess,
+        user: user,
+        authUsers: allAuthUsers
+      }),
+      { 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200
+      }
+    );
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[CHECK-SUBSCRIPTION] Error: ${errorMessage}`);
-    
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    console.error('Error:', error);
+    return new Response(
+      JSON.stringify({ error: 'Internal Server Error' }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 });

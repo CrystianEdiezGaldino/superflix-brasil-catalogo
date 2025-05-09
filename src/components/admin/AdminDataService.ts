@@ -4,15 +4,7 @@ import { AdminStats, UserWithSubscription } from "@/types/admin";
 
 export async function fetchAdminData() {
   try {
-    // Get all users with improved error handling
-    const { data: authData, error: usersError } = await supabase.auth.admin.listUsers();
-    
-    if (usersError) {
-      console.error("Error fetching users:", usersError);
-      throw usersError;
-    }
-
-    // Get user roles to identify admins
+    // Get user roles to identify admins - this works with regular permissions
     const { data: userRolesData, error: userRolesError } = await supabase
       .from('user_roles')
       .select('*');
@@ -20,6 +12,16 @@ export async function fetchAdminData() {
     if (userRolesError) {
       console.error("Error fetching user roles:", userRolesError);
       throw userRolesError;
+    }
+    
+    // Get all profiles instead of using auth.admin.listUsers
+    const { data: profilesData, error: profilesError } = await supabase
+      .from('profiles')
+      .select('*');
+    
+    if (profilesError) {
+      console.error("Error fetching profiles:", profilesError);
+      throw profilesError;
     }
     
     // Get all subscriptions
@@ -42,6 +44,14 @@ export async function fetchAdminData() {
       throw tempAccessesError;
     }
     
+    // Get auth users - we'll now use the check-subscription edge function to get auth data
+    const { data: authData, error: authError } = await supabase.functions.invoke('check-subscription');
+    
+    if (authError) {
+      console.error("Error fetching auth data:", authError);
+      throw authError;
+    }
+    
     // Create an admin users map for quick lookups
     const adminsMap = new Map();
     if (userRolesData) {
@@ -52,38 +62,60 @@ export async function fetchAdminData() {
       });
     }
     
+    // Create a map of profiles by user ID for quick lookups
+    const profilesMap = new Map();
+    if (profilesData) {
+      profilesData.forEach((profile: any) => {
+        profilesMap.set(profile.id, profile);
+      });
+    }
+    
     // Combine user data with subscription and admin data
-    const usersData = authData?.users || [];
-    const combinedUsers: UserWithSubscription[] = usersData.map(user => {
+    const userData = authData?.user ? [authData.user] : [];
+    const combinedUsers: UserWithSubscription[] = userData.map((user: any) => {
       const subscription = subscriptionsData?.find(sub => sub.user_id === user.id);
       const tempAccess = tempAccessesData?.find(
         access => access.user_id === user.id && new Date(access.expires_at) > new Date()
       );
       const isAdmin = adminsMap.has(user.id);
+      const profile = profilesMap.get(user.id);
       
       return {
         id: user.id,
         email: user.email || '',
         last_sign_in_at: user.last_sign_in_at,
-        created_at: user.created_at,
+        created_at: user.created_at || profile?.created_at,
         subscription: subscription,
         temp_access: tempAccess,
         is_admin: isAdmin
       };
     });
     
+    // Get all users from the database
+    const { data: allProfiles, error: allProfilesError } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        created_at
+      `);
+    
+    if (allProfilesError) {
+      console.error("Error fetching all profiles:", allProfilesError);
+      throw allProfilesError;
+    }
+    
     // Calculate stats
     const activeSubscriptions = subscriptionsData?.filter(sub => sub.status === 'active') || [];
     const activeTempAccesses = tempAccessesData?.filter(
       access => new Date(access.expires_at) > new Date()
     ) || [];
-    const adminUsersCount = adminsMap.size;
+    const adminUsersCount = adminsMap.size || 0;
     
     const monthlyRevenue = activeSubscriptions.filter(sub => sub.plan_type === 'monthly').length * 9.9;
     const annualRevenue = activeSubscriptions.filter(sub => sub.plan_type === 'annual').length * (100 / 12);
     
     const stats: AdminStats = {
-      totalUsers: usersData.length || 0,
+      totalUsers: allProfiles?.length || 0,
       activeSubscriptions: activeSubscriptions.length,
       tempAccesses: activeTempAccesses.length,
       adminUsers: adminUsersCount,
