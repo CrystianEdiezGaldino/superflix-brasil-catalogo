@@ -14,6 +14,7 @@ import Series from "./pages/Series";
 import Animes from "./pages/Animes";
 import Favorites from "./pages/Favorites";
 import Doramas from "./pages/Doramas";
+import DoramaDetails from "./pages/DoramaDetails";
 import MovieDetails from "./pages/MovieDetails";
 import SeriesDetails from "./pages/SeriesDetails";
 import NotFound from "./pages/NotFound";
@@ -43,6 +44,7 @@ const App = () => {
                 <Route path="/serie/:id" element={<SeriesDetails />} />
                 <Route path="/animes" element={<Animes />} />
                 <Route path="/doramas" element={<Doramas />} />
+                <Route path="/dorama/:id" element={<DoramaDetails />} />
                 <Route path="/favoritos" element={<Favorites />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/profile" element={<Profile />} />

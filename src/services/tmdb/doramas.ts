@@ -92,10 +92,39 @@ export const fetchKoreanDramas = async (page = 1, limit = 20) => {
 // Fetch dorama details
 export const fetchDoramaDetails = async (id: string): Promise<Series> => {
   try {
-    const url = buildApiUrl(`/tv/${id}`, "&append_to_response=external_ids");
+    const url = buildApiUrl(`/tv/${id}`, "&append_to_response=credits,similar,videos,external_ids");
     return await fetchFromApi<Series>(url);
   } catch (error) {
     console.error("Error fetching dorama details:", error);
     return {} as Series;
+  }
+};
+
+// Fetch similar doramas
+export const fetchSimilarDoramas = async (id: string, limit = 6): Promise<Series[]> => {
+  try {
+    const url = buildApiUrl(`/tv/${id}/similar`);
+    const data = await fetchFromApi<{results: Series[]}>(url);
+    const results = data.results?.map(item => ({
+      ...item,
+      media_type: "tv" as const
+    })) || [];
+    
+    return limitResults(results, limit);
+  } catch (error) {
+    console.error("Error fetching similar doramas:", error);
+    return [];
+  }
+};
+
+// Fetch cast for a dorama
+export const fetchDoramaCast = async (id: string, limit = 10) => {
+  try {
+    const url = buildApiUrl(`/tv/${id}/credits`);
+    const data = await fetchFromApi<{cast?: any[]}>(url);
+    return (data.cast || []).slice(0, limit);
+  } catch (error) {
+    console.error("Error fetching dorama cast:", error);
+    return [];
   }
 };
