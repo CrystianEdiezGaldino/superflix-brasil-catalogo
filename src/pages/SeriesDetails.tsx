@@ -1,118 +1,53 @@
 
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { fetchSeriesDetails, fetchSeasonDetails } from "@/services/tmdbApi";
-import VideoPlayer from "@/components/VideoPlayer";
-import SeriesBanner from "@/components/series/SeriesBanner";
-import SeriesInfo from "@/components/series/SeriesInfo";
-import EpisodesList from "@/components/series/EpisodesList";
-import { useAuth } from "@/contexts/AuthContext";
-import { useSubscription } from "@/contexts/SubscriptionContext";
-import { toast } from "sonner";
+import { useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import SeriesBanner from "@/components/series/SeriesBanner";
+import EpisodesList from "@/components/series/EpisodesList";
+import SeriesAccessPrompt from "@/components/series/SeriesAccessPrompt";
+import SeriesVideoPlayer from "@/components/series/SeriesVideoPlayer";
+import SeriesLoadingState from "@/components/series/SeriesLoadingState";
+import { useSeriesDetails } from "@/hooks/useSeriesDetails";
 
 const SeriesDetails = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [showPlayer, setShowPlayer] = useState(false);
-  const [selectedSeason, setSelectedSeason] = useState(1);
-  const [selectedEpisode, setSelectedEpisode] = useState(1);
   
-  const { user, loading: authLoading } = useAuth();
-  const { 
-    isSubscribed, 
-    isAdmin, 
-    hasTempAccess,
-    hasTrialAccess,
-    isLoading: subscriptionLoading 
-  } = useSubscription();
+  const {
+    series,
+    seasonData,
+    showPlayer,
+    selectedSeason,
+    selectedEpisode,
+    setSelectedSeason,
+    handleEpisodeSelect,
+    togglePlayer,
+    isLoadingSeries,
+    isLoadingSeason,
+    authLoading,
+    subscriptionLoading,
+    user,
+    hasAccess
+  } = useSeriesDetails(id);
 
-  const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
-
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!authLoading && !user) {
-      toast.error("É necessário fazer login para acessar este conteúdo");
-      navigate("/auth");
-    }
-  }, [user, authLoading, navigate]);
-
-  const { data: series, isLoading: isLoadingSeries } = useQuery({
-    queryKey: ["series", id],
-    queryFn: () => fetchSeriesDetails(Number(id)),
-    enabled: !!id && !!user,
-  });
-
-  const { data: seasonData, isLoading: isLoadingSeason } = useQuery({
-    queryKey: ["season", id, selectedSeason],
-    queryFn: () => fetchSeasonDetails(Number(id), selectedSeason),
-    enabled: !!id && !!series && !!user,
-  });
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
-
-  useEffect(() => {
-    if (seasonData && seasonData.episodes && seasonData.episodes.length > 0) {
-      setSelectedEpisode(seasonData.episodes[0].episode_number);
-    }
-  }, [seasonData]);
-
-  const handleEpisodeSelect = (episodeNumber: number) => {
-    if (!hasAccess) {
-      toast.error("É necessário ter uma assinatura para assistir");
-      navigate("/subscribe");
-      return;
-    }
-    
-    setSelectedEpisode(episodeNumber);
-    setShowPlayer(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-
-  const togglePlayer = () => {
-    if (!hasAccess) {
-      toast.error("É necessário ter uma assinatura para assistir");
-      navigate("/subscribe");
-      return;
-    }
-    
-    setShowPlayer(!showPlayer);
-  };
-
-  if (authLoading || subscriptionLoading || isLoadingSeries || isLoadingSeason) {
+  // Loading, auth and error states
+  const isLoading = authLoading || subscriptionLoading || isLoadingSeries || isLoadingSeason;
+  const hasError = !isLoading && !series;
+  
+  if (isLoading || !user || hasError) {
     return (
-      <div className="min-h-screen bg-netflix-background flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
-      </div>
+      <SeriesLoadingState 
+        isLoading={isLoading}
+        hasUser={!!user}
+        hasError={hasError}
+      />
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-bold text-white mb-4">Faça login para acessar</h1>
-        <Button onClick={() => navigate("/auth")} className="bg-netflix-red hover:bg-red-700">
-          Ir para login
-        </Button>
-      </div>
-    );
-  }
-
-  if (!series) {
-    return (
-      <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-bold text-white mb-4">Série não encontrada</h1>
-        <a href="/" className="text-netflix-red hover:underline">
-          Voltar para a página inicial
-        </a>
-      </div>
-    );
-  }
-
-  const seasons = Array.from({ length: series.number_of_seasons || 0 }, (_, i) => i + 1);
+  const seasons = Array.from(
+    { length: series.number_of_seasons || 0 }, 
+    (_, i) => i + 1
+  );
+  
   const imdbId = series.external_ids?.imdb_id;
 
   return (
@@ -137,26 +72,10 @@ const SeriesDetails = () => {
               </div>
             )}
             
-            {!hasAccess && (
-              <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-md">
-                <p className="text-amber-400 text-sm">
-                  É necessário ter uma assinatura ativa para assistir a este conteúdo.
-                  Assine um de nossos planos para ter acesso ilimitado.
-                </p>
-                <Link to="/subscribe" className="mt-2 inline-block">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="border-netflix-red text-netflix-red hover:bg-netflix-red/10"
-                  >
-                    Ver Planos
-                  </Button>
-                </Link>
-              </div>
-            )}
+            <SeriesAccessPrompt hasAccess={hasAccess} />
           </div>
 
-          {/* Informações da série - modificado para passar a prop togglePlayer */}
+          {/* Informações da série */}
           <div className="flex-1">
             <h1 className="text-3xl md:text-4xl font-bold text-white">
               {series.name}
@@ -197,16 +116,13 @@ const SeriesDetails = () => {
         </div>
 
         {/* Player de vídeo */}
-        {showPlayer && imdbId && hasAccess && (
-          <div className="mt-10">
-            <VideoPlayer 
-              type="serie" 
-              imdbId={imdbId} 
-              season={selectedSeason}
-              episode={selectedEpisode}
-            />
-          </div>
-        )}
+        <SeriesVideoPlayer 
+          showPlayer={showPlayer}
+          imdbId={imdbId}
+          selectedSeason={selectedSeason}
+          selectedEpisode={selectedEpisode}
+          hasAccess={hasAccess}
+        />
 
         {/* Lista de episódios */}
         {series.number_of_seasons > 0 && (
