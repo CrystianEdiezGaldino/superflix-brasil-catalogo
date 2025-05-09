@@ -57,6 +57,7 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
     
     // Handle tab visibility change
     const handleVisibilityChange = () => {
+      visibilityChangeRef.current = document.visibilityState === 'hidden';
       if (document.visibilityState === 'hidden') {
         saveState();
       }
@@ -78,6 +79,21 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
 
     const handleIframeLoad = () => {
       setLoading(false);
+      
+      // Add event listener to capture player state messages if iframe supports it
+      window.addEventListener('message', (event) => {
+        // Only accept messages from our iframe source
+        if (event.source !== iframeRef.current?.contentWindow) return;
+        
+        try {
+          // This assumes the player sends state updates via postMessage
+          if (event.data && typeof event.data === 'object' && 'playerState' in event.data) {
+            playerStateRef.current = event.data.playerState;
+          }
+        } catch (error) {
+          console.error("Error processing player message:", error);
+        }
+      });
     };
     
     iframeRef.current.addEventListener('load', handleIframeLoad);
@@ -94,6 +110,7 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
       if (iframeRef.current) {
         iframeRef.current.removeEventListener('load', handleIframeLoad);
       }
+      window.removeEventListener('message', handleIframeLoad);
     };
   }, []);
 
