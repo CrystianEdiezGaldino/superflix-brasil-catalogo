@@ -49,22 +49,6 @@ const ActiveSubscription = ({
 
       console.log("Resposta do create-checkout:", data);
 
-      // Handle demo mode or Stripe errors
-      if (data.demo_mode) {
-        toast.error(data.error || "Sistema de pagamento em modo de demonstração");
-        
-        // Grant temporary access in demo mode
-        await supabase.functions.invoke("grant-temp-access", {
-          body: {
-            userId: user.id,
-            days: 30
-          }
-        });
-        
-        navigate("/subscription-success");
-        return;
-      }
-
       if (data.error) {
         console.error("Erro retornado pelo servidor:", data.error);
         throw new Error(data.error);

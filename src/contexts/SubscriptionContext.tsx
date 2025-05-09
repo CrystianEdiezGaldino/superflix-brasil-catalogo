@@ -30,7 +30,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [trialEnd, setTrialEnd] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [lastCheckTime, setLastCheckTime] = useState(0);
-  const maxRetries = 5;
+  const [visibilityChanged, setVisibilityChanged] = useState(false);
+  const maxRetries = 3; // Reduced from 5 to minimize retries
   const retryDelay = 3000; // 3 seconds
 
   const checkSubscription = async () => {
@@ -46,10 +47,10 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Prevent multiple rapid checks
+    // Prevent multiple rapid checks and don't check on tab visibility change
     const now = Date.now();
-    if (now - lastCheckTime < 1000) {
-      console.log('Throttling subscription checks');
+    if (now - lastCheckTime < 2000 || visibilityChanged) {
+      console.log('Skipping subscription check - throttled or tab visibility change');
       return;
     }
     setLastCheckTime(now);
@@ -62,21 +63,17 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error('Error checking subscription:', error);
         
-        // On error, don't fail completely - retry or use cached data
+        // Only retry a limited number of times
         if (retryCount < maxRetries) {
-          setRetryCount(retryCount + 1);
-          // Don't update state yet, will retry
+          setRetryCount(prev => prev + 1);
         } else {
-          // Show error after max retries
-          toast.error('Erro ao verificar assinatura. Tentaremos novamente em breve.');
-          // Keep the last known state
+          toast.error('Erro ao verificar assinatura');
         }
       } else {
         // Reset retry counter on success
         setRetryCount(0);
         
-        // Always update state regardless of response content
-        // This ensures we have some state even if the function had issues
+        // Update state with subscription data
         setIsSubscribed(data?.hasActiveSubscription || false);
         setIsAdmin(data?.isAdmin || false);
         setHasTempAccess(data?.hasTempAccess || false);
@@ -94,71 +91,55 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
           trialEnd: data?.trial_end,
           user: user?.id
         });
-
-        // Enhanced fallback check for trial subscriptions
-        if (!data?.hasActiveSubscription && !data?.isAdmin && !data?.has_trial_access) {
-          try {
-            // Direct database check for trial subscriptions and active subscriptions
-            const { data: subData } = await supabase
-              .from('subscriptions')
-              .select('status, plan_type, trial_end')
-              .eq('user_id', user.id)
-              .or('status.eq.active,status.eq.trialing')
-              .maybeSingle();
-              
-            if (subData) {
-              console.log('Fallback subscription check found subscription:', subData);
-              
-              // Check if it's a trial subscription with valid trial date
-              if (subData.status === 'trialing' && subData.trial_end) {
-                const trialEndDate = new Date(subData.trial_end);
-                const isTrialValid = trialEndDate > new Date();
-                
-                if (isTrialValid) {
-                  console.log('Valid trial subscription found, enabling access');
-                  setHasTrialAccess(true);
-                  setSubscriptionTier(subData.plan_type || 'trial');
-                  setTrialEnd(subData.trial_end);
-                }
-              } else if (subData.status === 'active') {
-                setIsSubscribed(true);
-                setSubscriptionTier(subData.plan_type);
-              }
-            }
-          } catch (dbError) {
-            console.error('Fallback subscription check failed:', dbError);
-          }
-        }
       }
     } catch (error) {
       console.error('Failed to check subscription:', error);
       
-      // Don't show toast on every error, only after max retries
       if (retryCount >= maxRetries) {
         toast.error('Erro ao verificar assinatura');
       }
-      setRetryCount(retryCount + 1);
+      setRetryCount(prev => prev + 1);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Check subscription on user change
+  // Check subscription when user changes (login/logout)
   useEffect(() => {
-    checkSubscription();
+    // Only check if user exists and not during tab visibility changes
+    if (user && !visibilityChanged) {
+      checkSubscription();
+    }
   }, [user]);
 
-  // Also check subscription every 5 minutes in case it changes externally
+  // Handle tab visibility changes
   useEffect(() => {
-    if (!user) return;
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && visibilityChanged) {
+        setVisibilityChanged(false);
+        console.log("Tab visible again, maintaining subscription state");
+        
+        // Only recheck subscription after a longer period of absence (over 5 minutes)
+        const storedTime = sessionStorage.getItem('subscriptionLastVisibleTime');
+        const now = Date.now();
+        if (storedTime && now - parseInt(storedTime) > 5 * 60 * 1000) {
+          console.log("Tab was hidden for over 5 minutes, checking subscription");
+          checkSubscription();
+        }
+      } else if (document.visibilityState === 'hidden') {
+        setVisibilityChanged(true);
+        sessionStorage.setItem('subscriptionLastVisibleTime', Date.now().toString());
+        console.log("Tab hidden, storing time and maintaining subscription state");
+      }
+    };
     
-    const interval = setInterval(checkSubscription, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [user]);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [visibilityChanged]);
 
-  // Retry logic for initial load failures
+  // Retry logic for initial load failures - with reduced frequency
   useEffect(() => {
-    if (retryCount > 0 && retryCount <= maxRetries && user) {
+    if (retryCount > 0 && retryCount <= maxRetries && user && !visibilityChanged) {
       const retryTimeout = setTimeout(() => {
         console.log(`Retrying subscription check (attempt ${retryCount})...`);
         checkSubscription();

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,51 +21,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [visibilityChanged, setVisibilityChanged] = useState(false);
 
   useEffect(() => {
-    // Improved tab visibility handling to prevent relogging
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && visibilityChanged) {
-        // Coming back to the tab, don't trigger full reload
-        setVisibilityChanged(false);
-        
-        // Check session status without triggering auth events
-        const checkSession = async () => {
-          const { data } = await supabase.auth.getSession();
-          if (data.session) {
-            // Session still valid, no need for full reload
-            console.log("Session still valid after tab visibility change");
-          }
-        };
-        
-        // Use setTimeout to avoid auth deadlocks
-        setTimeout(() => {
-          checkSession();
-        }, 0);
-      } else if (document.visibilityState === 'hidden') {
-        setVisibilityChanged(true);
-        // Save auth state to sessionStorage before tab loses focus
-        try {
-          if (session && user) {
-            sessionStorage.setItem('authState', JSON.stringify({
-              hasSession: true,
-              userId: user.id,
-              email: user.email,
-              timestamp: new Date().getTime()
-            }));
-          }
-        } catch (error) {
-          console.error("Error saving auth state:", error);
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Set up auth state listener first
+    // Set up auth state listener first - IMPORTANT: this sets up the listener before anything else
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        console.log("Auth state changed:", event, newSession?.user?.email);
+        console.log("Auth state changed:", event);
         
-        // Don't update state if change was just from switching tabs
+        // Only update the state if it's not just a tab visibility change to prevent unnecessary refreshing
         if (!(document.visibilityState === 'visible' && visibilityChanged)) {
           setSession(newSession);
           setUser(newSession?.user ?? null);
@@ -84,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // Then check for existing session with better error handling
+    // Get initial session state - do this after setting up the listener
     supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
       if (error) {
         console.error("Error getting session:", error);
@@ -96,30 +56,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);
-      
-      // Also check sessionStorage for persisted auth state
-      try {
-        const savedAuthState = sessionStorage.getItem('authState');
-        if (savedAuthState && !currentSession) {
-          const parsedState = JSON.parse(savedAuthState);
-          // If we have a saved state but no current session,
-          // this could be a tab switch causing auth issues
-          const timeDiff = Date.now() - parsedState.timestamp;
-          if (timeDiff < 3600000) { // Less than an hour old
-            console.log("Found recent auth state in sessionStorage, might need refresh");
-          }
-        }
-      } catch (error) {
-        console.error("Error checking saved auth state:", error);
-      }
-    }).catch(error => {
-      console.error("Unexpected error in getSession:", error);
-      setLoading(false);
     });
 
+    // Handle tab visibility changes - improved logic to prevent unnecessary refreshes
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && visibilityChanged) {
+        // Tab became visible again - no need to refresh
+        setVisibilityChanged(false);
+        console.log("Tab visible again, maintaining session state");
+      } else if (document.visibilityState === 'hidden') {
+        // Tab hidden - store this fact but don't refresh
+        setVisibilityChanged(true);
+        console.log("Tab hidden, maintaining session state");
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
       subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [visibilityChanged]);
 

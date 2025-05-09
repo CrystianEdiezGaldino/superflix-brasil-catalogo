@@ -26,13 +26,8 @@ serve(async (req) => {
     // Get Stripe key
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) {
-      return new Response(JSON.stringify({ 
-        error: "Sistema de pagamento não configurado. Contate o administrador.",
-        demo_mode: true 
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200, // Return 200 with error message in demo mode
-      });
+      // Return clear error message, but don't enable demo mode
+      throw new Error("Sistema de pagamento não configurado. Contate o administrador.");
     }
     
     const { priceId, mode } = await req.json();
@@ -155,6 +150,10 @@ serve(async (req) => {
         }
       });
 
+      if (!session || !session.url) {
+        throw new Error("Falha ao criar sessão de checkout. URL não retornada.");
+      }
+
       logStep("Checkout session created successfully", { 
         sessionId: session.id, 
         url: session.url,
@@ -185,7 +184,7 @@ serve(async (req) => {
     
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200, // Changing to 200 to avoid the non-2xx error, but with error message
+      status: 200, // Keep 200 to avoid non-2xx errors
     });
   }
 });

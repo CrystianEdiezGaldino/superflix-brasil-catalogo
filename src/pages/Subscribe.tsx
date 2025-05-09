@@ -21,55 +21,52 @@ const Subscribe = () => {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
-  const [pageLoadCount, setPageLoadCount] = useState(0);
-
-  // Prevenir recarregamentos desnecessários ao mudar de abas
+  
+  // Store page state in sessionStorage to prevent reloads when switching tabs
   useEffect(() => {
-    // Guarda o estado da página na sessionStorage
-    const savePageState = () => {
-      sessionStorage.setItem('subscribePageState', JSON.stringify({
-        isProcessing,
-        isDemoMode,
-        timestamp: new Date().getTime()
-      }));
-    };
-
-    // Carrega o estado da página da sessionStorage
-    const loadPageState = () => {
-      try {
-        const savedState = sessionStorage.getItem('subscribePageState');
-        if (savedState) {
-          const parsedState = JSON.parse(savedState);
-          setIsDemoMode(parsedState.isDemoMode);
-          setIsProcessing(parsedState.isProcessing);
-        }
-      } catch (error) {
-        console.error("Error restoring page state:", error);
+    const storeKey = 'subscribePageState';
+    
+    // Load previous state if available
+    try {
+      const savedState = sessionStorage.getItem(storeKey);
+      if (savedState) {
+        const parsedState = JSON.parse(savedState);
+        setIsProcessing(parsedState.isProcessing || false);
+        setIsDemoMode(parsedState.isDemoMode || false);
       }
-    };
-
-    // Só carrega o estado se não for o primeiro carregamento da página
-    if (pageLoadCount === 0) {
-      loadPageState();
-      setPageLoadCount(prevCount => prevCount + 1);
+    } catch (error) {
+      console.error("Error loading page state:", error);
     }
-
-    // Salva o estado sempre que mudar
-    savePageState();
-
-    // Evento para quando a página fica visível novamente
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // Não recarregamos a página, apenas confirmamos o estado
+    
+    // Store state when component unmounts or tab switches
+    const saveState = () => {
+      try {
+        sessionStorage.setItem(storeKey, JSON.stringify({ 
+          isProcessing,
+          isDemoMode,
+          timestamp: new Date().getTime()
+        }));
+      } catch (error) {
+        console.error("Error saving page state:", error);
       }
     };
-
+    
+    // Save state when tab visibility changes
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        saveState();
+      }
+    };
+    
+    window.addEventListener('beforeunload', saveState);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
+      saveState();
+      window.removeEventListener('beforeunload', saveState);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [isProcessing, isDemoMode, pageLoadCount]);
+  }, [isProcessing, isDemoMode]);
   
   // Verifica se o usuário tem qualquer tipo de acesso válido
   const hasValidAccess = isSubscribed || hasTrialAccess || hasTempAccess;

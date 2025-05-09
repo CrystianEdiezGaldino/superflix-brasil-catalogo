@@ -32,212 +32,70 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
   // Adicionar parâmetros para otimizar a visualização
   playerUrl += "#noBackground";
 
-  // Prevent new tabs from opening and handle iframe navigation
+  // Store current video state in sessionStorage to preserve across tab switches
   useEffect(() => {
-    const handleIframeLoad = () => {
-      setLoading(false);
-      
-      // Add event listener to prevent default navigation
-      const handleClick = (e: MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      };
-      
-      // Try to add click interceptor to iframe
-      if (iframeRef.current) {
-        try {
-          const iframe = iframeRef.current;
-          
-          // Try to access iframe content and add event listener
-          iframe.addEventListener('load', () => {
-            try {
-              const iframeDocument = iframe.contentDocument || 
-                                    (iframe.contentWindow?.document);
-                
-              if (iframeDocument) {
-                iframeDocument.addEventListener('click', handleClick, true);
-                // Prevent context menu to block right-click new tabs
-                iframeDocument.addEventListener('contextmenu', handleClick, true);
-              }
-            } catch (error) {
-              console.log("Could not access iframe document: cross-origin restriction");
-            }
-          });
-        } catch (error) {
-          console.log("Error setting up iframe event handlers:", error);
-        }
-      }
-    };
+    const storeKey = `video_${type}_${imdbId}_${season || ''}_${episode || ''}`;
     
-    if (iframeRef.current) {
-      handleIframeLoad();
-    }
-
-    // Page visibility change handler with improved state preservation
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && visibilityChangeRef.current) {
-        // Avoid complete reload when returning to the tab
-        visibilityChangeRef.current = false;
-        
-        // Try to restore player state if we saved it
-        try {
-          const savedState = sessionStorage.getItem('videoPlayerState');
-          if (savedState && iframeRef.current?.contentWindow) {
-            const parsedState = JSON.parse(savedState);
-            if (parsedState.imdbId === imdbId && 
-                parsedState.type === type &&
-                parsedState.season === season && 
-                parsedState.episode === episode) {
-              
-              // We won't reload the iframe, just use existing one
-              console.log("Tab visible again, maintaining player state");
-            }
-          }
-        } catch (error) {
-          console.error("Error restoring player state:", error);
-        }
-      } else if (document.visibilityState === 'hidden') {
-        visibilityChangeRef.current = true;
-        
-        // Save current state before leaving
-        try {
-          const state = {
-            type,
-            imdbId,
-            season,
-            episode,
-            lastActive: new Date().getTime(),
-            ...playerStateRef.current
-          };
-          sessionStorage.setItem('videoPlayerState', JSON.stringify(state));
-          console.log("Tab hidden, saved player state");
-        } catch (error) {
-          console.error("Error saving player state:", error);
-        }
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Save player state on unload
-    const handleBeforeUnload = () => {
-      try {
-        const state = {
-          type,
-          imdbId,
-          season,
-          episode,
-          lastActive: new Date().getTime(),
-          ...playerStateRef.current
-        };
-        sessionStorage.setItem('videoPlayerState', JSON.stringify(state));
-      } catch (error) {
-        // Silent error in unload event
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      
-      // Cleanup attempt (will likely fail due to cross-origin)
-      if (iframeRef.current) {
-        try {
-          const iframeDocument = iframeRef.current.contentDocument || 
-                               (iframeRef.current.contentWindow?.document);
-          if (iframeDocument) {
-            iframeDocument.removeEventListener('click', () => {});
-            iframeDocument.removeEventListener('contextmenu', () => {});
-          }
-        } catch (error) {
-          // Silently fail as this is just cleanup
-        }
-      }
-    };
-  }, [type, imdbId, season, episode]);
-
-  // Improve state persistence with postMessage API
-  useEffect(() => {
-    // Try to communicate with iframe using postMessage
-    const messageHandler = (event: MessageEvent) => {
-      // Check origin for security (adapt to your video player's domain)
-      try {
-        if (event.data && typeof event.data === 'object') {
-          if (event.data.type === 'videoState') {
-            playerStateRef.current = {
-              currentTime: event.data.currentTime,
-              paused: event.data.paused
-            };
-          }
-        }
-      } catch (error) {
-        console.error("Error handling message from iframe:", error);
-      }
-    };
-    
-    window.addEventListener('message', messageHandler);
-    return () => window.removeEventListener('message', messageHandler);
-  }, []);
-
-  // Persist player state in sessionStorage with improved handling
-  useEffect(() => {
     // Load previous state if available
     try {
-      const savedState = sessionStorage.getItem('videoPlayerState');
+      const savedState = sessionStorage.getItem(storeKey);
       if (savedState) {
-        const parsedState = JSON.parse(savedState);
-        
-        // Only restore for same content
-        if (parsedState.imdbId === imdbId && 
-            parsedState.type === type &&
-            parsedState.season === season && 
-            parsedState.episode === episode) {
-          
-          playerStateRef.current = {
-            currentTime: parsedState.currentTime,
-            paused: parsedState.paused
-          };
-          
-          // If we have time info, we could potentially seek the player here
-          // But this requires iframe cooperation
-        }
+        playerStateRef.current = JSON.parse(savedState);
       }
     } catch (error) {
       console.error("Error loading player state:", error);
     }
     
-    // Save current video state on component mount
-    sessionStorage.setItem('currentVideoState', JSON.stringify({
-      type,
-      imdbId,
-      season,
-      episode,
-      scrollPosition: window.scrollY,
-      lastActive: new Date().getTime()
-    }));
-    
-    // Handle beforeunload to save state
-    const handleBeforeUnload = () => {
-      sessionStorage.setItem('currentVideoState', JSON.stringify({
-        type,
-        imdbId,
-        season,
-        episode,
-        scrollPosition: window.scrollY,
-        lastActive: new Date().getTime(),
-        ...playerStateRef.current
-      }));
+    // Store state when component unmounts or tab switches
+    const saveState = () => {
+      try {
+        sessionStorage.setItem(storeKey, JSON.stringify(playerStateRef.current));
+      } catch (error) {
+        console.error("Error saving player state:", error);
+      }
     };
     
-    window.addEventListener('beforeunload', handleBeforeUnload);
+    // Handle tab visibility change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        saveState();
+      }
+    };
+    
+    window.addEventListener('beforeunload', saveState);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
+      saveState();
+      window.removeEventListener('beforeunload', saveState);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [type, imdbId, season, episode]);
+
+  // Prevent iframe from reloading when switching tabs
+  useEffect(() => {
+    if (!iframeRef.current) return;
+
+    const handleIframeLoad = () => {
+      setLoading(false);
+    };
+    
+    iframeRef.current.addEventListener('load', handleIframeLoad);
+    
+    // Handle visibility changes to prevent iframe reloading
+    const handleVisibilityChange = () => {
+      visibilityChangeRef.current = document.visibilityState === 'hidden';
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (iframeRef.current) {
+        iframeRef.current.removeEventListener('load', handleIframeLoad);
+      }
+    };
+  }, []);
 
   return (
     <div className="w-full aspect-video relative rounded-lg overflow-hidden shadow-xl border-2 border-gray-800">
@@ -257,7 +115,6 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
         frameBorder="0"
         allowFullScreen
         onLoad={() => setLoading(false)}
-        // Additional security attributes but NOT sandbox which blocks functionality
         referrerPolicy="no-referrer"
         scrolling="no"
       ></iframe>
