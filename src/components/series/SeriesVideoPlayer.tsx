@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import VideoPlayer from "@/components/VideoPlayer";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,11 +20,21 @@ const SeriesVideoPlayer = ({
   hasAccess
 }: SeriesVideoPlayerProps) => {
   const [playerKey, setPlayerKey] = useState<string>(`${imdbId}-${selectedSeason}-${selectedEpisode}`);
+  const previousEpisodeRef = useRef({ season: selectedSeason, episode: selectedEpisode });
   
-  // Atualizar a chave do player quando a fonte muda para forçar o recarregamento adequado
+  // Only update the player key when essential source data changes
+  // Not on every tab switch or visibility change
   useEffect(() => {
-    if (showPlayer && imdbId) {
-      setPlayerKey(`${imdbId}-${selectedSeason}-${selectedEpisode}-${Date.now()}`);
+    // Compare current episode with previous to detect real changes
+    const currentEpisode = { season: selectedSeason, episode: selectedEpisode };
+    const episodeChanged = 
+      previousEpisodeRef.current.season !== currentEpisode.season || 
+      previousEpisodeRef.current.episode !== currentEpisode.episode;
+    
+    // Only regenerate player key when the actual content changes
+    if (showPlayer && imdbId && episodeChanged) {
+      setPlayerKey(`${imdbId}-${selectedSeason}-${selectedEpisode}`);
+      previousEpisodeRef.current = currentEpisode;
     }
   }, [showPlayer, imdbId, selectedSeason, selectedEpisode]);
   
