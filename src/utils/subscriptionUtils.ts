@@ -51,10 +51,12 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
  */
 export const shouldThrottleCheck = (lastCheckTime: number, visibilityChanged: boolean) => {
   const now = Date.now();
-  const isThrottled = now - lastCheckTime < 2000 || visibilityChanged;
+  const timeSinceLastCheck = now - lastCheckTime;
+  // Permite verificações mais frequentes (1 segundo em vez de 2)
+  const isThrottled = timeSinceLastCheck < 1000;
   
   if (isThrottled) {
-    console.log('Skipping subscription check - throttled or tab visibility change');
+    console.log(`Skipping subscription check - throttled (last check was ${timeSinceLastCheck}ms ago)`);
   }
   
   return isThrottled;
@@ -71,7 +73,7 @@ export const handleSubscriptionError = (error: any, retryCount: number, maxRetri
   console.error('Error checking subscription:', error);
   
   if (retryCount >= maxRetries) {
-    toast.error('Erro ao verificar assinatura');
+    toast.error('Erro ao verificar assinatura. Tente recarregar a página.');
     return retryCount;
   }
   
@@ -97,11 +99,27 @@ export const processSubscriptionData = (data: any) => {
 
   if (!data) return defaults;
 
+  // Melhor processamento para identificar corretamente o estado da assinatura
+  const isSubscribed = data?.hasActiveSubscription || false;
+  const isAdmin = data?.isAdmin || false;
+  const hasTempAccess = data?.hasTempAccess || false;
+  const hasTrialAccess = data?.has_trial_access || false;
+  
+  console.log("Processing subscription data:", {
+    isSubscribed,
+    isAdmin,
+    hasTempAccess,
+    hasTrialAccess,
+    subscriptionTier: data?.subscription_tier || null,
+    subscriptionEnd: data?.subscription_end || null,
+    trialEnd: data?.trial_end || null
+  });
+
   return {
-    isSubscribed: data?.hasActiveSubscription || false,
-    isAdmin: data?.isAdmin || false,
-    hasTempAccess: data?.hasTempAccess || false,
-    hasTrialAccess: data?.has_trial_access || false,
+    isSubscribed,
+    isAdmin,
+    hasTempAccess,
+    hasTrialAccess,
     subscriptionTier: data?.subscription_tier || null,
     subscriptionEnd: data?.subscription_end || data?.tempAccess?.expires_at || null,
     trialEnd: data?.trial_end || null

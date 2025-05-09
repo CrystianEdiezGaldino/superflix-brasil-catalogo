@@ -16,6 +16,7 @@ export const checkAdminStatus = async (supabaseClient: any, userId: string) => {
 
 // Check for active subscription
 export const checkSubscription = async (supabaseClient: any, userId: string) => {
+  // Fix: Especificamente buscando por assinaturas com status "active"
   const { data: subscription, error: subscriptionError } = await supabaseClient
     .from('subscriptions')
     .select('*')
@@ -27,7 +28,11 @@ export const checkSubscription = async (supabaseClient: any, userId: string) => 
     console.error("[CHECK-SUBSCRIPTION] Subscription check error:", subscriptionError);
   }
   
-  console.log(`[CHECK-SUBSCRIPTION] Subscription check result - ${JSON.stringify({hasSubscription: !!subscription})}`);
+  console.log(`[CHECK-SUBSCRIPTION] Active subscription check result - ${JSON.stringify({
+    hasActiveSubscription: !!subscription,
+    status: subscription?.status,
+    planType: subscription?.plan_type
+  })}`);
   
   return { subscription, error: subscriptionError };
 };
@@ -35,6 +40,8 @@ export const checkSubscription = async (supabaseClient: any, userId: string) => 
 // Check for trial access
 export const checkTrialAccess = async (supabaseClient: any, userId: string) => {
   const now = new Date();
+  
+  // Fix: Melhoramos a query para pegar explicitamente assinaturas em período de teste
   const { data: subscriptionWithTrial, error: trialError } = await supabaseClient
     .from('subscriptions')
     .select('*')
@@ -47,10 +54,11 @@ export const checkTrialAccess = async (supabaseClient: any, userId: string) => {
     console.error("[CHECK-SUBSCRIPTION] Trial check error:", trialError);
   }
 
-  const hasTrialAccess = !trialError && subscriptionWithTrial;
+  const hasTrialAccess = subscriptionWithTrial && new Date(subscriptionWithTrial.trial_end) > now;
   console.log(`[CHECK-SUBSCRIPTION] Trial access check - ${JSON.stringify({
     hasTrialAccess: !!hasTrialAccess,
-    trialData: subscriptionWithTrial
+    trialEnd: subscriptionWithTrial?.trial_end,
+    now: now.toISOString()
   })}`);
   
   return { subscriptionWithTrial, error: trialError };
@@ -59,6 +67,8 @@ export const checkTrialAccess = async (supabaseClient: any, userId: string) => {
 // Check for temporary access
 export const checkTempAccess = async (supabaseClient: any, userId: string) => {
   const now = new Date();
+  
+  // Fix: Melhoramos a query para garantir que apenas acessos temporários válidos sejam considerados
   const { data: tempAccess, error: tempAccessError } = await supabaseClient
     .from('temp_access')
     .select('*')
@@ -70,8 +80,12 @@ export const checkTempAccess = async (supabaseClient: any, userId: string) => {
     console.error("[CHECK-SUBSCRIPTION] Temp access check error:", tempAccessError);
   }
 
-  const hasTempAccess = !tempAccessError && tempAccess;
-  console.log(`[CHECK-SUBSCRIPTION] Temp access check - ${JSON.stringify({hasTempAccess: !!hasTempAccess})}`);
+  const hasTempAccess = tempAccess && new Date(tempAccess.expires_at) > now;
+  console.log(`[CHECK-SUBSCRIPTION] Temp access check - ${JSON.stringify({
+    hasTempAccess: !!hasTempAccess, 
+    expiresAt: tempAccess?.expires_at,
+    now: now.toISOString()
+  })}`);
   
   return { tempAccess, error: tempAccessError };
 };

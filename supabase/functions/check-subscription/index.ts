@@ -39,9 +39,10 @@ serve(async (req) => {
       supabaseClient = initSupabaseClient(authHeader);
       user = await getUser(supabaseClient);
     } catch (error) {
+      console.error("[CHECK-SUBSCRIPTION] Auth error:", error);
       return createErrorResponse(
         error instanceof Error ? error.message : "Authentication error", 
-        200, // Using 200 for auth errors per existing pattern
+        401, 
         error
       );
     }
@@ -53,9 +54,21 @@ serve(async (req) => {
     const { subscriptionWithTrial } = await checkTrialAccess(supabaseClient, user.id);
     const { tempAccess } = await checkTempAccess(supabaseClient, user.id);
     
+    // Fix: Improve has_trial_access logic to consider both trial_end date and status
     const hasTrialAccess = 
-      !!subscriptionWithTrial || 
-      (subscriptionWithTrial?.status === 'trialing' && new Date(subscriptionWithTrial?.trial_end) > now);
+      subscriptionWithTrial && 
+      subscriptionWithTrial.status === 'trialing' && 
+      new Date(subscriptionWithTrial.trial_end) > now;
+      
+    // Fix: Correctly determine if subscription is active
+    const hasActiveSubscription = 
+      subscription && 
+      subscription.status === 'active';
+      
+    // Fix: Check for temp access
+    const hasTempAccess = 
+      tempAccess && 
+      new Date(tempAccess.expires_at) > now;
 
     // Update admin subscription if needed
     await updateAdminSubscription(supabaseClient, user.id, !!isAdmin);
@@ -63,13 +76,24 @@ serve(async (req) => {
     // Fetch auth users for admin
     const allAuthUsers = await getAuthUsers(supabaseClient, !!isAdmin);
 
+    // Log what we determined for debugging
+    console.log(`[CHECK-SUBSCRIPTION] Access check results:`, {
+      userId: user.id,
+      email: user.email,
+      hasActiveSubscription,
+      hasTrialAccess,
+      hasTempAccess,
+      isAdmin: !!isAdmin,
+      subscriptionType: subscription?.plan_type || subscriptionWithTrial?.plan_type || 'none'
+    });
+
     // Prepare response data
     const responseData = {
-      hasActiveSubscription: !!subscription && subscription?.status === 'active',
-      hasTempAccess: !!tempAccess,
+      hasActiveSubscription,
+      hasTempAccess,
       has_trial_access: hasTrialAccess,
       isAdmin: !!isAdmin,
-      subscribed: (!!subscription && subscription?.status === 'active') || !!hasTrialAccess,
+      subscribed: hasActiveSubscription || hasTrialAccess,
       subscription,
       tempAccess,
       trial_access: subscriptionWithTrial,
@@ -86,8 +110,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('[CHECK-SUBSCRIPTION] Error:', error);
     // Even on error, return 200 with default values to prevent blocking the user
-    return createSuccessResponse({ 
-      error: 'Internal Server Error', 
+    return createErrorResponse("Internal Server Error", 500, { 
       message: String(error),
       hasActiveSubscription: false,
       isAdmin: false,

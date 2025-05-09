@@ -16,10 +16,11 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
   const [lastCheckTime, setLastCheckTime] = useState(0);
   const [visibilityChanged, setVisibilityChanged] = useState(false);
   
-  const maxRetries = 3; // Maximum number of retries
+  const maxRetries = 5; // Aumentando o número máximo de tentativas
 
   const checkSubscription = async () => {
     if (!user || !session) {
+      console.log("Cannot check subscription: No user or session");
       setIsSubscribed(false);
       setIsAdmin(false);
       setHasTempAccess(false);
@@ -40,6 +41,7 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     setIsLoading(true);
     
     try {
+      console.log(`Checking subscription for user ${user.id}`);
       const data = await checkSubscriptionStatus(user.id, session.access_token);
       
       if (!data) {
@@ -50,6 +52,9 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
         setRetryCount(0);
         
         const subscriptionState = processSubscriptionData(data);
+        
+        console.log("Processed subscription data:", subscriptionState);
+        
         setIsSubscribed(subscriptionState.isSubscribed);
         setIsAdmin(subscriptionState.isAdmin);
         setHasTempAccess(subscriptionState.hasTempAccess);
@@ -59,6 +64,7 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
         setTrialEnd(subscriptionState.trialEnd);
       }
     } catch (error) {
+      console.error("Error checking subscription:", error);
       setRetryCount(prev => handleSubscriptionError(error, prev, maxRetries));
     } finally {
       setIsLoading(false);
@@ -68,21 +74,15 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
   // Handle tab visibility changes
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && visibilityChanged) {
-        setVisibilityChanged(false);
-        console.log("Tab visible again, maintaining subscription state");
-        
-        // Only recheck subscription after a longer period of absence (over 5 minutes)
-        const storedTime = sessionStorage.getItem('subscriptionLastVisibleTime');
-        const now = Date.now();
-        if (storedTime && now - parseInt(storedTime) > 5 * 60 * 1000) {
-          console.log("Tab was hidden for over 5 minutes, checking subscription");
+      if (document.visibilityState === 'visible') {
+        if (visibilityChanged) {
+          setVisibilityChanged(false);
+          console.log("Tab visible again, checking subscription");
           checkSubscription();
         }
       } else if (document.visibilityState === 'hidden') {
         setVisibilityChanged(true);
-        sessionStorage.setItem('subscriptionLastVisibleTime', Date.now().toString());
-        console.log("Tab hidden, storing time and maintaining subscription state");
+        console.log("Tab hidden");
       }
     };
     
@@ -92,22 +92,35 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
 
   // Initial subscription check when user/session changes
   useEffect(() => {
-    if (user && session && !visibilityChanged) {
+    if (user && session) {
+      console.log("User or session changed, checking subscription");
       checkSubscription();
     }
   }, [user, session]);
 
   // Retry logic for initial load failures
   useEffect(() => {
-    if (retryCount > 0 && retryCount <= maxRetries && user && session && !visibilityChanged) {
+    if (retryCount > 0 && retryCount <= maxRetries && user && session) {
       const retryTimeout = setTimeout(() => {
         console.log(`Retrying subscription check (attempt ${retryCount})...`);
         checkSubscription();
-      }, 3000 * retryCount); // Exponential backoff
+      }, 2000 * retryCount); // Exponential backoff
       
       return () => clearTimeout(retryTimeout);
     }
   }, [retryCount, user, session]);
+
+  // Adicionar verificação periódica para garantir que o estado da assinatura esteja sempre atualizado
+  useEffect(() => {
+    if (user && session) {
+      const periodicCheck = setInterval(() => {
+        console.log("Performing periodic subscription check");
+        checkSubscription();
+      }, 5 * 60 * 1000); // Verificar a cada 5 minutos
+      
+      return () => clearInterval(periodicCheck);
+    }
+  }, [user, session]);
 
   return {
     isSubscribed,

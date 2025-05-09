@@ -1,6 +1,8 @@
-
 import { useEffect, useState } from "react";
 import VideoPlayer from "@/components/VideoPlayer";
+import { toast } from "sonner";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 interface SeriesVideoPlayerProps {
   showPlayer: boolean;
@@ -25,6 +27,22 @@ const SeriesVideoPlayer = ({
       setPlayerKey(`${imdbId}-${selectedSeason}-${selectedEpisode}-${Date.now()}`);
     }
   }, [showPlayer, imdbId, selectedSeason, selectedEpisode]);
+
+  // Log de debug para rastrear o acesso
+  useEffect(() => {
+    if (showPlayer) {
+      console.log("SeriesVideoPlayer - Access check:", { 
+        hasAccess, 
+        imdbId, 
+        selectedSeason, 
+        selectedEpisode 
+      });
+      
+      if (!hasAccess) {
+        toast.error("Você não tem acesso a este conteúdo. Faça uma assinatura para continuar.");
+      }
+    }
+  }, [showPlayer, hasAccess, imdbId, selectedSeason, selectedEpisode]);
   
   // Store player state in session storage to persist through refreshes and tab changes
   useEffect(() => {
@@ -93,7 +111,24 @@ const SeriesVideoPlayer = ({
     }
   }, [showPlayer, imdbId, selectedSeason, selectedEpisode]);
   
-  if (!showPlayer || !imdbId || !hasAccess) return null;
+  if (!showPlayer || !imdbId) return null;
+  
+  // Garantir que o player só seja exibido se o usuário tiver acesso
+  if (!hasAccess) {
+    return (
+      <div className="w-full aspect-video flex items-center justify-center bg-gray-900 rounded-lg border-2 border-gray-800">
+        <div className="text-center p-8">
+          <h3 className="text-xl text-netflix-red font-semibold mb-2">Acesso Restrito</h3>
+          <p className="text-white mb-4">Você precisa de uma assinatura ativa para assistir este conteúdo.</p>
+          <Link to="/subscribe">
+            <Button className="bg-netflix-red hover:bg-red-700">
+              Ver Planos
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="w-full">

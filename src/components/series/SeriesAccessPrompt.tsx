@@ -8,12 +8,24 @@ interface SeriesAccessPromptProps {
 }
 
 const SeriesAccessPrompt = ({ hasAccess }: SeriesAccessPromptProps) => {
-  const { isSubscribed, hasTrialAccess, hasTempAccess, isAdmin } = useSubscription();
+  const { isSubscribed, hasTrialAccess, hasTempAccess, isAdmin, isLoading } = useSubscription();
   
-  // Consider all valid access types
+  // Consider all valid access types and don't show prompt when loading
   const hasValidAccess = hasAccess || isSubscribed || hasTrialAccess || hasTempAccess || isAdmin;
   
-  if (hasValidAccess) return null;
+  // Adicionando um log para depuração
+  console.log("SeriesAccessPrompt - Access state:", {
+    hasAccess,
+    isSubscribed,
+    hasTrialAccess,
+    hasTempAccess,
+    isAdmin,
+    hasValidAccess,
+    isLoading
+  });
+  
+  // Não mostrar nada durante o carregamento ou se tiver acesso válido
+  if (isLoading || hasValidAccess) return null;
   
   return (
     <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-md">

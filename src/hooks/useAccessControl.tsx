@@ -12,7 +12,7 @@ export const useAccessControl = () => {
     isLoading: subscriptionLoading 
   } = useSubscription();
 
-  // Enhanced access check to properly handle trial subscriptions
+  // Enhanced access check to properly handle all subscription types
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
   // Add debug logging to track access control decisions
