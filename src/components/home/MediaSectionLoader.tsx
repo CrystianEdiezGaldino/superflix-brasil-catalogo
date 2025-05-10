@@ -15,7 +15,7 @@ const MediaSectionLoader = ({
   title, 
   medias, 
   sectionId, 
-  initialLoadCount = 30, 
+  initialLoadCount = 60, 
   loadIncrement = 30 
 }: MediaSectionLoaderProps) => {
   const [loadedItems, setLoadedItems] = useState<number>(initialLoadCount);

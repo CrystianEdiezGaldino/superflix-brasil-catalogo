@@ -96,7 +96,6 @@ const MediaView = ({
           <MediaSection 
             title={`Tendências em ${getContentTypeTitle(type)}`}
             medias={trendingItems}
-            viewAllPath={`/${type === 'movie' ? 'filmes' : type === 'tv' ? 'series' : type === 'anime' ? 'animes' : 'doramas'}`}
           />
         )}
         
@@ -105,7 +104,6 @@ const MediaView = ({
           <MediaSection 
             title={`${getContentTypeTitle(type)} Mais Bem Avaliados`}
             medias={topRatedItems}
-            viewAllPath={`/${type === 'movie' ? 'filmes' : type === 'tv' ? 'series' : type === 'anime' ? 'animes' : 'doramas'}`}
           />
         )}
         
@@ -114,7 +112,6 @@ const MediaView = ({
           <MediaSection 
             title={`${getContentTypeTitle(type)} Populares`}
             medias={popularItems}
-            viewAllPath={`/${type === 'movie' ? 'filmes' : type === 'tv' ? 'series' : type === 'anime' ? 'animes' : 'doramas'}`}
           />
         )}
         
@@ -123,7 +120,6 @@ const MediaView = ({
           <MediaSection 
             title={`${getContentTypeTitle(type)} Recentes`}
             medias={recentItems}
-            viewAllPath={`/${type === 'movie' ? 'filmes' : type === 'tv' ? 'series' : type === 'anime' ? 'animes' : 'doramas'}`}
           />
         )}
         

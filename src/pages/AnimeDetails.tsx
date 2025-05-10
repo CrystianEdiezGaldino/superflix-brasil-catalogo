@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +13,7 @@ import MovieActions from "@/components/movies/MovieActions";
 import MovieLoadingState from "@/components/movies/MovieLoadingState";
 import MovieVideoPlayer from "@/components/movies/MovieVideoPlayer";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
+import AdblockSuggestion from "@/components/AdblockSuggestion";
 
 const AnimeDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -107,6 +109,10 @@ const AnimeDetails = () => {
             toggleFavorite={toggleFavorite} 
           />
 
+          <div className="px-6 md:px-10">
+            <AdblockSuggestion />
+          </div>
+
           <MovieActions 
             showPlayer={showPlayer} 
             hasAccess={hasAccess} 
@@ -137,4 +143,4 @@ const AnimeDetails = () => {
   );
 };
 
-export default AnimeDetails; 
+export default AnimeDetails;

@@ -11,6 +11,7 @@ import SeriesActions from "@/components/series/SeriesActions";
 import SeriesLoadingState from "@/components/series/SeriesLoadingState";
 import SeriesVideoPlayer from "@/components/series/SeriesVideoPlayer";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
+import AdblockSuggestion from "@/components/AdblockSuggestion";
 import { Series, Season } from "@/types/movie";
 import Navbar from "@/components/Navbar";
 
@@ -44,7 +45,7 @@ const SeriesDetails = () => {
 
   const { data: series, isLoading, error } = useQuery<Series>({
     queryKey: ["series", id],
-    queryFn: () => fetchSeriesDetails(id as string, 1),
+    queryFn: () => fetchSeriesDetails(id as string),
     enabled: !!id && !!user,
   });
 
@@ -129,6 +130,10 @@ const SeriesDetails = () => {
             isFavorite={isFavorite} 
             toggleFavorite={toggleFavorite} 
           />
+          
+          <div className="px-6 md:px-10">
+            <AdblockSuggestion />
+          </div>
 
           <SeriesActions 
             showPlayer={showPlayer} 
@@ -173,4 +178,4 @@ const SeriesDetails = () => {
   );
 };
 
-export default SeriesDetails; 
+export default SeriesDetails;
