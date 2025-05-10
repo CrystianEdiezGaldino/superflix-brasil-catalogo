@@ -2,7 +2,6 @@
 import { Plus } from 'lucide-react';
 import { MediaItem } from '@/types/movie';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 
 interface MediaSectionProps {
   title: string;
