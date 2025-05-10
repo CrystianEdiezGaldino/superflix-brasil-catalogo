@@ -1,18 +1,16 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { fetchMovieDetails } from "@/services/tmdbApi";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { fetchDoramaCast } from "@/services/tmdbApi";
-import { Series } from "@/types/movie";
-import { useDoramaDetails } from "@/hooks/dorama/useDoramaDetails";
-import DoramaBanner from "@/components/doramas/DoramaBanner";
-import DoramaSynopsis from "@/components/doramas/DoramaSynopsis";
-import DoramaCastSection from "@/components/doramas/DoramaCastSection";
-import RelatedDoramas from "@/components/doramas/RelatedDoramas";
-import DoramaVideoPlayer from "@/components/doramas/DoramaVideoPlayer";
-import DoramaLoadingState from "@/components/doramas/DoramaLoadingState";
+import Navbar from "@/components/Navbar";
+import MovieHeader from "@/components/movies/MovieHeader";
+import MovieContent from "@/components/movies/MovieContent";
+import MovieActions from "@/components/movies/MovieActions";
+import MovieLoadingState from "@/components/movies/MovieLoadingState";
+import MovieVideoPlayer from "@/components/movies/MovieVideoPlayer";
 
 const DoramaDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -31,21 +29,6 @@ const DoramaDetails = () => {
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
-  // Get dorama details and related functionality
-  const {
-    dorama,
-    similarDoramas,
-    isLoadingDorama,
-    isLoadingSimilar,
-  } = useDoramaDetails();
-
-  // Fetch cast information
-  const { data: cast, isLoading: isLoadingCast } = useQuery({
-    queryKey: ["dorama-cast", id],
-    queryFn: () => fetchDoramaCast(id?.toString() || "", 12),
-    enabled: !!id,
-  });
-
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
@@ -53,6 +36,12 @@ const DoramaDetails = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
+
+  const { data: dorama, isLoading, error } = useQuery({
+    queryKey: ["dorama", id],
+    queryFn: () => fetchMovieDetails(id as string),
+    enabled: !!id && !!user,
+  });
 
   // Scroll to player when it becomes visible
   useEffect(() => {
@@ -79,7 +68,6 @@ const DoramaDetails = () => {
     
     setIsFavorite(!isFavorite);
     toast.success(isFavorite ? "Removido dos favoritos" : "Adicionado aos favoritos");
-    // Here you would integrate with a favorites API
   };
 
   // Show subscription modal if trying to watch without access
@@ -92,66 +80,46 @@ const DoramaDetails = () => {
     }
   };
 
-  // Loading, auth and error states
-  const isLoading = authLoading || subscriptionLoading || isLoadingDorama || isLoadingCast;
-  const hasError = !isLoading && !dorama;
-
-  if (isLoading || !user || hasError) {
-    return (
-      <DoramaLoadingState 
-        isLoading={isLoading}
-        hasUser={!!user}
-        hasError={hasError}
-      />
-    );
-  }
-
-  const imdbId = dorama?.external_ids?.imdb_id;
-
   return (
     <div className="min-h-screen bg-netflix-background">
-      <div className="pt-16">
-        {/* Video Player or Banner */}
-        {showPlayer && imdbId ? (
-          <div className="p-4 md:p-8 bg-black">
-            <DoramaVideoPlayer 
-              showPlayer={true}
-              imdbId={imdbId}
-              hasAccess={hasAccess}
-            />
-            <button 
-              onClick={() => setShowPlayer(false)}
-              className="mt-4 text-white hover:underline"
-            >
-              Voltar para detalhes
-            </button>
-          </div>
-        ) : (
-          <DoramaBanner 
-            dorama={dorama} 
-            onPlay={handleWatchClick}
-            isFavorite={isFavorite}
-            toggleFavorite={toggleFavorite}
+      <Navbar onSearch={() => {}} />
+      
+      <MovieLoadingState 
+        isLoading={authLoading || subscriptionLoading || isLoading}
+        hasUser={!!user}
+        hasError={!!error || !dorama}
+      />
+
+      {dorama && (
+        <>
+          <MovieHeader 
+            movie={dorama} 
+            isFavorite={isFavorite} 
+            toggleFavorite={toggleFavorite} 
           />
-        )}
-        
-        {/* Main Content */}
-        <div className="container mx-auto px-4 py-8">
-          <DoramaSynopsis overview={dorama.overview} />
-          
-          <DoramaCastSection 
-            cast={cast || []} 
-            isLoading={isLoadingCast} 
+
+          <MovieActions 
+            showPlayer={showPlayer} 
+            hasAccess={hasAccess} 
+            onPlayClick={handleWatchClick} 
           />
-          
-          <RelatedDoramas 
-            doramas={similarDoramas as Series[]} 
-            isLoading={isLoadingSimilar} 
-          />
-        </div>
-      </div>
+
+          {/* Player de vídeo usando componente dedicado */}
+          {showPlayer && dorama.imdb_id && (
+            <div className="px-6 md:px-10 mb-10">
+              <MovieVideoPlayer 
+                showPlayer={true}
+                imdbId={dorama.imdb_id}
+                hasAccess={hasAccess}
+              />
+            </div>
+          )}
+
+          <MovieContent movie={dorama} hasAccess={hasAccess} />
+        </>
+      )}
     </div>
   );
 };
 
-export default DoramaDetails;
+export default DoramaDetails; 

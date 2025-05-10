@@ -1,20 +1,24 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { fetchSeriesDetails, fetchSeriesSeasonDetails } from "@/services/tmdbApi";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useSeriesDetails } from "@/hooks/useSeriesDetails";
-import SeriesLoadingState from "@/components/series/SeriesLoadingState";
 import SeriesHeader from "@/components/series/SeriesHeader";
-import SeriesActions from "@/components/series/SeriesActions";
-import SeriesPlayer from "@/components/series/SeriesPlayer";
 import SeriesContent from "@/components/series/SeriesContent";
+import SeriesActions from "@/components/series/SeriesActions";
+import SeriesLoadingState from "@/components/series/SeriesLoadingState";
+import SeriesVideoPlayer from "@/components/series/SeriesVideoPlayer";
+import { Series, Season } from "@/types/movie";
 
 const SeriesDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [selectedSeason, setSelectedSeason] = useState(1);
+  const [selectedEpisode, setSelectedEpisode] = useState(1);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -26,17 +30,6 @@ const SeriesDetails = () => {
   } = useSubscription();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
-  
-  const {
-    series,
-    seasonData,
-    selectedSeason,
-    selectedEpisode,
-    setSelectedSeason,
-    handleEpisodeSelect,
-    isLoadingSeries,
-    isLoadingSeason,
-  } = useSeriesDetails(id);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -45,6 +38,18 @@ const SeriesDetails = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
+
+  const { data: series, isLoading, error } = useQuery<Series>({
+    queryKey: ["series", id],
+    queryFn: () => fetchSeriesDetails(id as string, 1),
+    enabled: !!id && !!user,
+  });
+
+  const { data: seasonData, isLoading: isLoadingSeason } = useQuery<Season>({
+    queryKey: ["series-season", id, selectedSeason],
+    queryFn: () => fetchSeriesSeasonDetails(id as string, selectedSeason),
+    enabled: !!id && !!user && !!selectedSeason,
+  });
 
   // Scroll to player when it becomes visible
   useEffect(() => {
@@ -71,7 +76,6 @@ const SeriesDetails = () => {
     
     setIsFavorite(!isFavorite);
     toast.success(isFavorite ? "Removido dos favoritos" : "Adicionado aos favoritos");
-    // Here you would integrate with a favorites API
   };
 
   // Show subscription modal if trying to watch without access
@@ -84,65 +88,72 @@ const SeriesDetails = () => {
     }
   };
 
-  // Loading, auth and error states
-  const isLoading = authLoading || subscriptionLoading || isLoadingSeries || isLoadingSeason;
-  const hasError = !isLoading && !series;
+  const handleEpisodeSelect = (episode: number) => {
+    setSelectedEpisode(episode);
+    setShowPlayer(true);
+  };
 
-  if (isLoading || !user || hasError) {
-    return (
-      <SeriesLoadingState 
-        isLoading={isLoading}
-        hasUser={!!user}
-        hasError={hasError}
-      />
-    );
-  }
+  const handleSeasonSelect = (season: number) => {
+    setSelectedSeason(season);
+    setSelectedEpisode(1);
+  };
 
   const seasons = Array.from(
-    { length: series.number_of_seasons || 0 }, 
+    { length: series?.number_of_seasons || 0 }, 
     (_, i) => i + 1
   );
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      <SeriesHeader 
-        series={series} 
-        isFavorite={isFavorite}
-        toggleFavorite={toggleFavorite}
+      <SeriesLoadingState 
+        isLoading={authLoading || subscriptionLoading || isLoading}
+        hasUser={!!user}
+        hasError={!!error || !series}
       />
 
-      <SeriesActions 
-        showPlayer={showPlayer} 
-        hasAccess={hasAccess}
-        onPlayClick={handleWatchClick}
-      />
+      {series && (
+        <>
+          <SeriesHeader 
+            series={series} 
+            isFavorite={isFavorite} 
+            toggleFavorite={toggleFavorite} 
+          />
 
-      {showPlayer && (
-        <div className="px-6 md:px-10 mb-10">
-          <SeriesPlayer 
-            showPlayer={true}
-            series={series}
+          <SeriesActions 
+            showPlayer={showPlayer} 
+            hasAccess={hasAccess} 
+            togglePlayer={handleWatchClick} 
+          />
+
+          {/* Player de vídeo usando componente dedicado */}
+          {showPlayer && series.external_ids?.imdb_id && (
+            <div className="px-6 md:px-10 mb-10">
+              <SeriesVideoPlayer 
+                showPlayer={true}
+                imdbId={series.external_ids.imdb_id}
+                hasAccess={hasAccess}
+                selectedSeason={selectedSeason}
+                selectedEpisode={selectedEpisode}
+              />
+            </div>
+          )}
+
+          <SeriesContent 
+            series={series} 
+            hasAccess={hasAccess}
+            seasonData={seasonData}
             selectedSeason={selectedSeason}
             selectedEpisode={selectedEpisode}
-            hasAccess={hasAccess}
+            seasons={seasons}
+            setSelectedSeason={handleSeasonSelect}
+            handleEpisodeSelect={handleEpisodeSelect}
+            isLoadingSeason={isLoadingSeason}
+            subscriptionLoading={subscriptionLoading}
           />
-        </div>
+        </>
       )}
-
-      <SeriesContent 
-        series={series}
-        seasonData={seasonData}
-        selectedSeason={selectedSeason}
-        selectedEpisode={selectedEpisode}
-        seasons={seasons}
-        setSelectedSeason={setSelectedSeason}
-        handleEpisodeSelect={handleEpisodeSelect}
-        isLoadingSeason={isLoadingSeason}
-        subscriptionLoading={subscriptionLoading}
-        hasAccess={hasAccess}
-      />
     </div>
   );
 };
 
-export default SeriesDetails;
+export default SeriesDetails; 
