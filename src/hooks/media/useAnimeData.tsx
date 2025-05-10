@@ -14,7 +14,7 @@ export const useAnimeData = () => {
   // Fetch popular anime
   const animeQuery = useQuery({
     queryKey: ["anime"],
-    queryFn: () => fetchAnime(1, 60),
+    queryFn: () => fetchAnime(),
     enabled: isUserAuthenticated,
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
@@ -22,7 +22,7 @@ export const useAnimeData = () => {
   // Fetch top rated anime
   const topRatedAnimeQuery = useQuery({
     queryKey: ["topRatedAnime"],
-    queryFn: () => fetchTopRatedAnime(1, 60),
+    queryFn: () => fetchTopRatedAnime(),
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5
   });
@@ -30,7 +30,7 @@ export const useAnimeData = () => {
   // Fetch recent anime
   const recentAnimesQuery = useQuery({
     queryKey: ["recentAnimes"],
-    queryFn: () => fetchRecentAnime(1, 60),
+    queryFn: () => fetchRecentAnime(),
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5
   });

@@ -83,8 +83,10 @@ export async function fetchAdminData() {
       return {
         id: user.id,
         email: user.email || '',
+        name: user.email || '', // Using email as name if not available
         last_sign_in_at: user.last_sign_in_at,
         created_at: user.created_at || profile?.created_at,
+        updated_at: user.updated_at || profile?.updated_at || user.created_at || new Date().toISOString(),
         subscription: subscription,
         temp_access: tempAccess,
         is_admin: isAdmin
@@ -118,6 +120,7 @@ export async function fetchAdminData() {
       totalUsers: allProfiles?.length || 0,
       activeSubscriptions: activeSubscriptions.length,
       tempAccesses: activeTempAccesses.length,
+      promoCodes: 0, // Default value
       adminUsers: adminUsersCount,
       monthlyRevenue: monthlyRevenue + annualRevenue,
       yearlyRevenue: (monthlyRevenue + annualRevenue) * 12

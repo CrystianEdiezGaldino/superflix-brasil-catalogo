@@ -17,7 +17,7 @@ export const useMoviesData = () => {
   // Fetch popular movies
   const moviesQuery = useQuery({
     queryKey: ["popularMovies"],
-    queryFn: () => fetchPopularMovies(1, 60),
+    queryFn: () => fetchPopularMovies(),
     enabled: isUserAuthenticated,
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
@@ -25,7 +25,7 @@ export const useMoviesData = () => {
   // Fetch action movies
   const actionMoviesQuery = useQuery({
     queryKey: ["actionMovies"],
-    queryFn: () => fetchMoviesByGenre(28, 1, 60), // 28 is action genre ID
+    queryFn: () => fetchMoviesByGenre(28), // 28 is action genre ID
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5
   });
@@ -33,7 +33,7 @@ export const useMoviesData = () => {
   // Fetch comedy movies
   const comedyMoviesQuery = useQuery({
     queryKey: ["comedyMovies"],
-    queryFn: () => fetchMoviesByGenre(35, 1, 60), // 35 is comedy genre ID
+    queryFn: () => fetchMoviesByGenre(35), // 35 is comedy genre ID
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5
   });
@@ -41,7 +41,7 @@ export const useMoviesData = () => {
   // Fetch adventure movies
   const adventureMoviesQuery = useQuery({
     queryKey: ["adventureMovies"],
-    queryFn: () => fetchMoviesByGenre(12, 1, 60), // 12 is adventure genre ID
+    queryFn: () => fetchMoviesByGenre(12), // 12 is adventure genre ID
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5
   });
@@ -49,7 +49,7 @@ export const useMoviesData = () => {
   // Fetch sci-fi movies
   const sciFiMoviesQuery = useQuery({
     queryKey: ["sciFiMovies"],
-    queryFn: () => fetchMoviesByGenre(878, 1, 60), // 878 is sci-fi genre ID
+    queryFn: () => fetchMoviesByGenre(878), // 878 is sci-fi genre ID
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5
   });
@@ -57,7 +57,7 @@ export const useMoviesData = () => {
   // Fetch Marvel movies by keyword
   const marvelMoviesQuery = useQuery({
     queryKey: ["marvelMovies"],
-    queryFn: () => fetchMoviesByKeyword(180547, 1, 60),
+    queryFn: () => fetchMoviesByKeyword(180547),
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5
   });
@@ -65,7 +65,7 @@ export const useMoviesData = () => {
   // Fetch DC movies by keyword
   const dcMoviesQuery = useQuery({
     queryKey: ["dcMovies"],
-    queryFn: () => fetchMoviesByKeyword(9715, 1, 60),
+    queryFn: () => fetchMoviesByKeyword(9715),
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5
   });

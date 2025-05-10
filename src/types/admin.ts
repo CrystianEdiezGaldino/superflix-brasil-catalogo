@@ -1,3 +1,4 @@
+
 export interface UserWithSubscription {
   id: string;
   email: string;
@@ -6,6 +7,9 @@ export interface UserWithSubscription {
   created_at: string;
   updated_at: string;
   subscription?: Subscription;
+  temp_access?: TempAccess;
+  last_sign_in_at?: string;
+  is_admin?: boolean;
 }
 
 export interface AdminStats {
@@ -13,6 +17,9 @@ export interface AdminStats {
   activeSubscriptions: number;
   tempAccesses: number;
   promoCodes: number;
+  adminUsers: number;
+  monthlyRevenue: number;
+  yearlyRevenue: number;
 }
 
 export interface Subscription {
@@ -40,6 +47,7 @@ export interface TempAccess {
   end_date: string;
   is_active: boolean;
   created_at: string;
+  expires_at: string;
   user?: UserWithSubscription;
 }
 
