@@ -24,90 +24,90 @@ export const useMediaData = () => {
   // Debug log user access status
   console.log("useMediaData access status:", { hasAccess, userId: user?.id });
 
-  // Fetch popular movies
+  // Fetch popular movies - increased limit to 40
   const moviesQuery = useQuery({
     queryKey: ["popularMovies"],
-    queryFn: () => fetchPopularMovies(),
+    queryFn: () => fetchPopularMovies(1, 40),
     enabled: !!user,
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
 
-  // Fetch popular TV series
+  // Fetch popular TV series - increased limit to 40
   const seriesQuery = useQuery({
     queryKey: ["popularSeries"],
-    queryFn: () => fetchPopularSeries(),
+    queryFn: () => fetchPopularSeries(1, 40),
     enabled: !!user,
     staleTime: 1000 * 60 * 5
   });
   
-  // Fetch popular anime
+  // Fetch popular anime - increased limit to 40
   const animeQuery = useQuery({
     queryKey: ["anime"],
-    queryFn: () => fetchAnime(),
+    queryFn: () => fetchAnime(1, 40),
     enabled: !!user,
     staleTime: 1000 * 60 * 5
   });
   
-  // Fetch top rated anime - now properly checking hasAccess
+  // Fetch top rated anime - now properly checking hasAccess - increased limit to 40
   const topRatedAnimeQuery = useQuery({
     queryKey: ["topRatedAnime"],
-    queryFn: () => fetchTopRatedAnime(),
+    queryFn: () => fetchTopRatedAnime(1, 40),
     enabled: !!user && hasAccess, // Only fetch if user has access
     staleTime: 1000 * 60 * 5
   });
   
-  // Fetch Korean dramas
+  // Fetch Korean dramas - increased limit to 40
   const doramasQuery = useQuery({
     queryKey: ["koreanDramas"],
-    queryFn: () => fetchKoreanDramas(),
+    queryFn: () => fetchKoreanDramas(1, 40),
     enabled: !!user && hasAccess,
     staleTime: 1000 * 60 * 5
   });
 
-  // Fetch action movies
+  // Fetch action movies - increased limit to 40
   const actionMoviesQuery = useQuery({
     queryKey: ["actionMovies"],
-    queryFn: () => fetchMoviesByGenre(28), // 28 is action genre ID
+    queryFn: () => fetchMoviesByGenre(28, 1, 40), // 28 is action genre ID
     enabled: !!user && hasAccess,
     staleTime: 1000 * 60 * 5
   });
   
-  // Fetch comedy movies
+  // Fetch comedy movies - increased limit to 40
   const comedyMoviesQuery = useQuery({
     queryKey: ["comedyMovies"],
-    queryFn: () => fetchMoviesByGenre(35), // 35 is comedy genre ID
+    queryFn: () => fetchMoviesByGenre(35, 1, 40), // 35 is comedy genre ID
     enabled: !!user && hasAccess,
     staleTime: 1000 * 60 * 5
   });
 
-  // Fetch adventure movies
+  // Fetch adventure movies - increased limit to 40
   const adventureMoviesQuery = useQuery({
     queryKey: ["adventureMovies"],
-    queryFn: () => fetchMoviesByGenre(12), // 12 is adventure genre ID
+    queryFn: () => fetchMoviesByGenre(12, 1, 40), // 12 is adventure genre ID
     enabled: !!user && hasAccess,
     staleTime: 1000 * 60 * 5
   });
 
-  // Fetch sci-fi movies
+  // Fetch sci-fi movies - increased limit to 40
   const sciFiMoviesQuery = useQuery({
     queryKey: ["sciFiMovies"],
-    queryFn: () => fetchMoviesByGenre(878), // 878 is sci-fi genre ID
+    queryFn: () => fetchMoviesByGenre(878, 1, 40), // 878 is sci-fi genre ID
     enabled: !!user && hasAccess,
     staleTime: 1000 * 60 * 5
   });
 
-  // Fetch Marvel movies by keyword (Marvel is 180547 in TMDB)
+  // Fetch Marvel movies by keyword (Marvel is 180547 in TMDB) - increased limit to 40
   const marvelMoviesQuery = useQuery({
     queryKey: ["marvelMovies"],
-    queryFn: () => fetchMoviesByKeyword(180547),
+    queryFn: () => fetchMoviesByKeyword(180547, 1, 40),
     enabled: !!user && hasAccess,
     staleTime: 1000 * 60 * 5
   });
 
-  // Fetch DC movies by keyword (DC is 9715 in TMDB)
+  // Fetch DC movies by keyword (DC is 9715 in TMDB) - increased limit to 40
   const dcMoviesQuery = useQuery({
     queryKey: ["dcMovies"],
-    queryFn: () => fetchMoviesByKeyword(9715),
+    queryFn: () => fetchMoviesByKeyword(9715, 1, 40),
     enabled: !!user && hasAccess,
     staleTime: 1000 * 60 * 5
   });

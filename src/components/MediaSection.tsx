@@ -1,15 +1,18 @@
+
 import { Plus } from 'lucide-react';
 import { MediaItem } from '@/types/movie';
 import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 
 interface MediaSectionProps {
   title: string;
   medias: MediaItem[];
   showLoadMore?: boolean;
   onLoadMore?: () => void;
+  isLoading?: boolean;
 }
 
-const MediaSection = ({ title, medias, showLoadMore, onLoadMore }: MediaSectionProps) => {
+const MediaSection = ({ title, medias, showLoadMore = false, onLoadMore, isLoading = false }: MediaSectionProps) => {
   return (
     <div className="space-y-4">
       <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
@@ -34,14 +37,21 @@ const MediaSection = ({ title, medias, showLoadMore, onLoadMore }: MediaSectionP
             </div>
           </Link>
         ))}
+        
+        {/* Load more button */}
         {showLoadMore && onLoadMore && (
           <button
             onClick={onLoadMore}
             className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 hover:bg-gray-700 transition-colors duration-300 flex items-center justify-center"
+            disabled={isLoading}
           >
             <div className="flex flex-col items-center space-y-2">
-              <Plus className="w-8 h-8 text-white" />
-              <span className="text-sm text-white">Ver mais</span>
+              {isLoading ? (
+                <div className="w-8 h-8 border-4 border-t-white border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Plus className="w-8 h-8 text-white" />
+              )}
+              <span className="text-sm text-white">{isLoading ? "Carregando..." : "Ver mais"}</span>
             </div>
           </button>
         )}

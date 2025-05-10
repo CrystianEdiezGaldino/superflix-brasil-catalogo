@@ -79,7 +79,8 @@ export const useHomePageData = () => {
       
       setIsLoadingPopularSeries(true);
       try {
-        const series = await fetchPopularAmericanSeries();
+        // Fetch 40 items to have enough content for load more
+        const series = await fetchPopularAmericanSeries(1, 40);
         
         // Prioritize our list of popular series
         const prioritizedSeries = [...series];
@@ -98,7 +99,7 @@ export const useHomePageData = () => {
           return (b.vote_average || 0) - (a.vote_average || 0);
         });
         
-        setPopularSeries(prioritizedSeries.slice(0, 20));
+        setPopularSeries(prioritizedSeries);
       } catch (error) {
         console.error("Error loading popular series:", error);
       } finally {
@@ -116,7 +117,8 @@ export const useHomePageData = () => {
       
       setIsLoadingRecentAnimes(true);
       try {
-        const animes = await fetchRecentAnime();
+        // Fetch 40 items for load more functionality
+        const animes = await fetchRecentAnime(1, 40);
         setRecentAnimes(animes);
       } catch (error) {
         console.error("Error loading recent animes:", error);
