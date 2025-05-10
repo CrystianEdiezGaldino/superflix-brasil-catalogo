@@ -1,4 +1,3 @@
-
 export interface Movie {
   id: number;
   title: string;
@@ -7,8 +6,12 @@ export interface Movie {
   backdrop_path: string;
   release_date: string;
   vote_average: number;
+  media_type: 'movie';
   imdb_id?: string;
-  media_type: "movie";
+  original_language?: string;
+  external_ids?: {
+    imdb_id?: string;
+  };
 }
 
 export interface Series {
@@ -19,12 +22,13 @@ export interface Series {
   backdrop_path: string;
   first_air_date: string;
   vote_average: number;
-  original_language: string;
+  media_type: 'tv';
+  imdb_id?: string;
+  original_language?: string;
+  number_of_seasons?: number;
   external_ids?: {
     imdb_id?: string;
   };
-  number_of_seasons?: number;
-  media_type: "tv";
 }
 
 export interface Season {

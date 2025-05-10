@@ -1,4 +1,3 @@
-
 import AnimeVideoPlayer from "./AnimeVideoPlayer";
 import { Series } from "@/types/movie";
 import { useEffect } from "react";
@@ -18,7 +17,7 @@ const AnimePlayer = ({
   selectedEpisode,
   hasAccess
 }: AnimePlayerProps) => {
-  const imdbId = anime.external_ids?.imdb_id;
+  const imdbId = anime.imdb_id || anime.external_ids?.imdb_id;
   
   // Scroll to player when it becomes visible
   useEffect(() => {

@@ -10,6 +10,7 @@ import MovieContent from "@/components/movies/MovieContent";
 import MovieActions from "@/components/movies/MovieActions";
 import MovieLoadingState from "@/components/movies/MovieLoadingState";
 import MovieVideoPlayer from "@/components/movies/MovieVideoPlayer";
+import ContentNotAvailable from "@/components/ContentNotAvailable";
 import Navbar from "@/components/Navbar";
 
 const MovieDetails = () => {
@@ -17,6 +18,7 @@ const MovieDetails = () => {
   const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isContentAvailable, setIsContentAvailable] = useState(true);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -42,6 +44,13 @@ const MovieDetails = () => {
     queryFn: () => fetchMovieDetails(id as string),
     enabled: !!id && !!user,
   });
+
+  // Verificar se o conteúdo está disponível
+  useEffect(() => {
+    if (movie && !movie.imdb_id && !movie.external_ids?.imdb_id) {
+      setIsContentAvailable(false);
+    }
+  }, [movie]);
 
   // Scroll to player when it becomes visible
   useEffect(() => {
@@ -105,13 +114,19 @@ const MovieDetails = () => {
           />
 
           {/* Player de vídeo usando componente dedicado */}
-          {showPlayer && movie.imdb_id && (
+          {showPlayer && (movie.imdb_id || movie.external_ids?.imdb_id) && (
             <div className="px-6 md:px-10 mb-10">
               <MovieVideoPlayer 
                 showPlayer={true}
-                imdbId={movie.imdb_id}
+                imdbId={movie.imdb_id || movie.external_ids?.imdb_id || ''}
                 hasAccess={hasAccess}
               />
+            </div>
+          )}
+
+          {!isContentAvailable && (
+            <div className="px-6 md:px-10 mb-10">
+              <ContentNotAvailable onAddToFavorites={toggleFavorite} />
             </div>
           )}
 

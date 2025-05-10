@@ -1,88 +1,52 @@
-
-import { useRef, useState } from "react";
-import { MediaItem } from "@/types/movie";
-import MediaCard from "@/components/MediaCard";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus } from 'lucide-react';
+import { MediaItem } from '@/types/movie';
+import { Link } from 'react-router-dom';
 
 interface MediaSectionProps {
   title: string;
   medias: MediaItem[];
-  viewAllPath?: string;
-  mediaType?: string;
+  showLoadMore?: boolean;
+  onLoadMore?: () => void;
 }
 
-const MediaSection = ({ title, medias }: MediaSectionProps) => {
-  const rowRef = useRef<HTMLDivElement>(null);
-  const [showLeftArrow, setShowLeftArrow] = useState(false);
-  const [showRightArrow, setShowRightArrow] = useState(true);
-
-  const scroll = (direction: "left" | "right") => {
-    if (rowRef.current) {
-      const { current } = rowRef;
-      const scrollAmount = direction === "left" 
-        ? -current.clientWidth * 0.75
-        : current.clientWidth * 0.75;
-      
-      current.scrollBy({ left: scrollAmount, behavior: "smooth" });
-    }
-  };
-
-  const handleScroll = () => {
-    if (!rowRef.current) return;
-    
-    const { scrollLeft, scrollWidth, clientWidth } = rowRef.current;
-    setShowLeftArrow(scrollLeft > 20);
-    setShowRightArrow(scrollLeft < scrollWidth - clientWidth - 20);
-  };
-
-  if (!medias || medias.length === 0) {
-    return null;
-  }
-
+const MediaSection = ({ title, medias, showLoadMore, onLoadMore }: MediaSectionProps) => {
   return (
-    <section className="py-6 px-4 relative">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
-      </div>
-      
-      <div className="relative">
-        {showLeftArrow && (
-          <Button 
-            variant="ghost"
-            size="icon"
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/70 rounded-full h-10 w-10 shadow-lg opacity-70 hover:opacity-100 transition-opacity"
-            onClick={() => scroll("left")}
+    <div className="space-y-4">
+      <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+        {medias.map((media) => (
+          <Link 
+            key={media.id} 
+            to={`/${media.media_type}/${media.id}`}
+            className="relative aspect-[2/3] rounded-lg overflow-hidden group"
           >
-            <ChevronLeft size={20} className="text-white" />
-          </Button>
-        )}
-        
-        <div 
-          ref={rowRef} 
-          className="flex space-x-4 overflow-x-auto scrollbar-hide pb-4"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          onScroll={handleScroll}
-        >
-          {medias.map((media) => (
-            <div key={`${media.media_type}-${media.id}`} className="flex-none w-[160px] md:w-[200px] transition-transform hover:scale-105 duration-300">
-              <MediaCard media={media} />
+            <img
+              src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
+              alt={media.media_type === 'movie' ? (media as any).title : (media as any).name}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute bottom-0 left-0 right-0 p-2">
+                <h3 className="text-sm font-medium text-white truncate">
+                  {media.media_type === 'movie' ? (media as any).title : (media as any).name}
+                </h3>
+              </div>
             </div>
-          ))}
-        </div>
-        
-        {showRightArrow && (
-          <Button 
-            variant="ghost"
-            size="icon"
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/70 rounded-full h-10 w-10 shadow-lg opacity-70 hover:opacity-100 transition-opacity"
-            onClick={() => scroll("right")}
+          </Link>
+        ))}
+        {showLoadMore && onLoadMore && (
+          <button
+            onClick={onLoadMore}
+            className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 hover:bg-gray-700 transition-colors duration-300 flex items-center justify-center"
           >
-            <ChevronRight size={20} className="text-white" />
-          </Button>
+            <div className="flex flex-col items-center space-y-2">
+              <Plus className="w-8 h-8 text-white" />
+              <span className="text-sm text-white">Ver mais</span>
+            </div>
+          </button>
         )}
       </div>
-    </section>
+    </div>
   );
 };
 

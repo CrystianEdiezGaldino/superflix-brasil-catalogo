@@ -10,6 +10,7 @@ import SeriesContent from "@/components/series/SeriesContent";
 import SeriesActions from "@/components/series/SeriesActions";
 import SeriesLoadingState from "@/components/series/SeriesLoadingState";
 import SeriesVideoPlayer from "@/components/series/SeriesVideoPlayer";
+import ContentNotAvailable from "@/components/ContentNotAvailable";
 import { Series, Season } from "@/types/movie";
 import Navbar from "@/components/Navbar";
 
@@ -20,6 +21,7 @@ const SeriesDetails = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const [isContentAvailable, setIsContentAvailable] = useState(true);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -51,6 +53,13 @@ const SeriesDetails = () => {
     queryFn: () => fetchSeriesSeasonDetails(id as string, selectedSeason),
     enabled: !!id && !!user && !!selectedSeason,
   });
+
+  // Verificar se o conteúdo está disponível
+  useEffect(() => {
+    if (series && !series.imdb_id && !series.external_ids?.imdb_id) {
+      setIsContentAvailable(false);
+    }
+  }, [series]);
 
   // Scroll to player when it becomes visible
   useEffect(() => {
@@ -128,15 +137,21 @@ const SeriesDetails = () => {
           />
 
           {/* Player de vídeo usando componente dedicado */}
-          {showPlayer && series.external_ids?.imdb_id && (
+          {showPlayer && (series.imdb_id || series.external_ids?.imdb_id) && (
             <div className="px-6 md:px-10 mb-10">
               <SeriesVideoPlayer 
                 showPlayer={true}
-                imdbId={series.external_ids.imdb_id}
+                imdbId={series.imdb_id || series.external_ids?.imdb_id || ''}
                 hasAccess={hasAccess}
                 selectedSeason={selectedSeason}
                 selectedEpisode={selectedEpisode}
               />
+            </div>
+          )}
+
+          {!isContentAvailable && (
+            <div className="px-6 md:px-10 mb-10">
+              <ContentNotAvailable onAddToFavorites={toggleFavorite} />
             </div>
           )}
 
