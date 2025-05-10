@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import RecommendationsSection from "./sections/RecommendationsSection";
 import MoviesSections from "./sections/MoviesSections";
@@ -46,6 +45,9 @@ interface FullContentProps {
   mysterySeries?: MediaItem[];
   realitySeries?: MediaItem[];
   talkShows?: MediaItem[];
+  onLoadMore: () => void;
+  isLoading: boolean;
+  hasMore: boolean;
 }
 
 const FullContent = ({ 
@@ -87,7 +89,10 @@ const FullContent = ({
   crimeSeries = [],
   mysterySeries = [],
   realitySeries = [],
-  talkShows = []
+  talkShows = [],
+  onLoadMore,
+  isLoading,
+  hasMore
 }: FullContentProps) => {
   
   return (
@@ -114,6 +119,9 @@ const FullContent = ({
         awardWinningMovies={awardWinningMovies}
         popularMovies={popularMovies}
         trendingMovies={trendingMovies}
+        onLoadMore={onLoadMore}
+        isLoading={isLoading}
+        hasMore={hasMore}
       />
       
       {/* Series Sections */}
@@ -144,8 +152,8 @@ const FullContent = ({
       <DoramaSections 
         doramas={doramas}
         koreanDramas={koreanDramas}
-        japaneseDramas={japaneseDramas}
-        chineseDramas={chineseDramas}
+        // japaneseDramas={japaneseDramas}
+        // chineseDramas={chineseDramas}
         netflixDoramas={netflixDoramas}
       />
     </div>

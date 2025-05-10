@@ -7,22 +7,54 @@ interface AnimeSectionsProps {
   topRatedAnime: MediaItem[];
   recentAnimes?: MediaItem[];
   trendingAnime?: MediaItem[];
+  onLoadMore?: () => void;
+  isLoading?: boolean;
+  hasMore?: boolean;
 }
 
 const AnimeSections = ({
   anime,
   topRatedAnime,
   recentAnimes = [],
-  trendingAnime = []
+  trendingAnime = [],
+  onLoadMore = () => {},
+  isLoading = false,
+  hasMore = false
 }: AnimeSectionsProps) => {
+  // Função padrão para sessões sem paginação real
+  const noop = () => {};
+  
+  // Funções específicas para cada seção
+  const handleLoadMoreAnime = () => {
+    onLoadMore();
+    console.log("Carregando mais animes populares");
+  };
+  
+  const handleLoadMoreTopRatedAnime = () => {
+    onLoadMore();
+    console.log("Carregando mais animes bem avaliados");
+  };
+  
+  const handleLoadMoreRecentAnimes = () => {
+    onLoadMore();
+    console.log("Carregando mais animes recentes");
+  };
+  
+  const handleLoadMoreTrendingAnime = () => {
+    onLoadMore();
+    console.log("Carregando mais animes em alta");
+  };
+  
   return (
-    <>
+    <div className="anime-sections-container">
       {recentAnimes.length > 0 && (
         <MediaSectionLoader 
           title="Anime em Alta" 
           medias={recentAnimes}
           sectionId="recentAnimes"
-          initialLoadCount={60}
+          onLoadMore={handleLoadMoreRecentAnimes}
+          isLoading={isLoading}
+          hasMore={hasMore}
         />
       )}
       
@@ -30,14 +62,18 @@ const AnimeSections = ({
         title="Animes Populares" 
         medias={anime}
         sectionId="anime"
-        initialLoadCount={60}
+        onLoadMore={handleLoadMoreAnime}
+        isLoading={isLoading}
+        hasMore={hasMore}
       />
       
       <MediaSectionLoader 
         title="Animes Bem Avaliados" 
         medias={topRatedAnime}
         sectionId="topRatedAnime"
-        initialLoadCount={60}
+        onLoadMore={handleLoadMoreTopRatedAnime}
+        isLoading={isLoading}
+        hasMore={hasMore}
       />
       
       {trendingAnime.length > 0 && (
@@ -45,10 +81,12 @@ const AnimeSections = ({
           title="Animes em Alta no Brasil" 
           medias={trendingAnime}
           sectionId="trendingAnime"
-          initialLoadCount={60}
+          onLoadMore={handleLoadMoreAnime}
+          isLoading={isLoading}
+          hasMore={hasMore}
         />
       )}
-    </>
+    </div>
   );
 };
 

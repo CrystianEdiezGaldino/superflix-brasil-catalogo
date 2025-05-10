@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Banner from "@/components/Banner";
@@ -14,6 +13,7 @@ import ContentPreview from "@/components/home/ContentPreview";
 import FullContent from "@/components/home/FullContent";
 import LargeSubscriptionUpsell from "@/components/home/LargeSubscriptionUpsell";
 import SearchResults from "@/components/home/SearchResults";
+import { useMovies } from "@/hooks/movies/useMovies";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -45,6 +45,14 @@ const Index = () => {
     hasError,
     handleSearch: originalHandleSearch,
   } = useHomePageData();
+
+  // Adicionar hook de filmes para paginação
+  const {
+    movies,
+    loadMoreMovies,
+    isLoadingMore,
+    hasMore
+  } = useMovies();
 
   // Enhanced search handler
   const handleSearch = async (query: string) => {
@@ -141,20 +149,31 @@ const Index = () => {
               />
             ) : (
               <FullContent 
-                movies={moviesData || []}
-                series={seriesData || []}
-                anime={animeData || []}
-                topRatedAnime={topRatedAnimeData || []}
-                recommendations={recommendations || []}
-                doramas={doramasData || []}
+                movies={movies}
                 actionMovies={actionMoviesData || []}
                 comedyMovies={comedyMoviesData || []}
                 adventureMovies={adventureMoviesData || []}
                 sciFiMovies={sciFiMoviesData || []}
                 marvelMovies={marvelMoviesData || []}
                 dcMovies={dcMoviesData || []}
-                popularSeries={popularSeries || []}
-                recentAnimes={recentAnimes || []}
+                horrorMovies={[]}
+                romanceMovies={[]}
+                dramaMovies={[]}
+                thrillerMovies={[]}
+                familyMovies={[]}
+                animationMovies={[]}
+                documentaryMovies={[]}
+                awardWinningMovies={[]}
+                popularMovies={[]}
+                trendingMovies={[]}
+                series={seriesData || []}
+                anime={animeData || []}
+                topRatedAnime={topRatedAnimeData || []}
+                recommendations={recommendations || []}
+                doramas={doramasData || []}
+                onLoadMore={loadMoreMovies}
+                isLoading={isLoadingMore}
+                hasMore={hasMore}
               />
             )}
             

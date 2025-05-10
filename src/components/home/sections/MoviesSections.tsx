@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import MediaSectionLoader from "../MediaSectionLoader";
 
@@ -20,6 +19,9 @@ interface MoviesSectionsProps {
   awardWinningMovies?: MediaItem[];
   popularMovies?: MediaItem[];
   trendingMovies?: MediaItem[];
+  onLoadMore: (sectionId: string) => void; // Modified to accept sectionId
+  isLoading: boolean;
+  hasMore: boolean;
 }
 
 const MoviesSections = ({
@@ -39,8 +41,91 @@ const MoviesSections = ({
   documentaryMovies = [],
   awardWinningMovies = [],
   popularMovies = [],
-  trendingMovies = []
+  trendingMovies = [],
+  onLoadMore,
+  isLoading,
+  hasMore
 }: MoviesSectionsProps) => {
+  // Funções e estados padrão para sessões sem paginação real
+  const noop = () => {};
+  
+  // Funções específicas para cada seção
+  const handleLoadMoreMovies = () => {
+    onLoadMore("movies");
+    console.log("Carregando mais filmes populares");
+  };
+  
+  const handleLoadMoreAction = () => {
+    onLoadMore("actionMovies");
+    console.log("Carregando mais filmes de ação");
+  };
+  
+  const handleLoadMoreComedy = () => {
+    onLoadMore("comedyMovies");
+    console.log("Carregando mais comédias");
+  };
+  
+  const handleLoadMoreAdventure = () => {
+    onLoadMore("adventureMovies");
+    console.log("Carregando mais filmes de aventura");
+  };
+  
+  const handleLoadMoreSciFi = () => {
+    onLoadMore("sciFiMovies");
+    console.log("Carregando mais filmes de ficção científica");
+  };
+  
+  const handleLoadMoreMarvel = () => {
+    onLoadMore("marvelMovies");
+    console.log("Carregando mais filmes da Marvel");
+  };
+  
+  const handleLoadMoreDC = () => {
+    onLoadMore("dcMovies");
+    console.log("Carregando mais filmes da DC");
+  };
+  
+  // Additional handlers for optional sections
+  const handleLoadMoreHorror = () => {
+    onLoadMore("horrorMovies");
+    console.log("Carregando mais filmes de terror");
+  };
+  
+  const handleLoadMoreRomance = () => {
+    onLoadMore("romanceMovies");
+    console.log("Carregando mais filmes de romance");
+  };
+  
+  const handleLoadMoreDrama = () => {
+    onLoadMore("dramaMovies");
+    console.log("Carregando mais filmes de drama");
+  };
+  
+  const handleLoadMoreThriller = () => {
+    onLoadMore("thrillerMovies");
+    console.log("Carregando mais filmes de suspense");
+  };
+  
+  const handleLoadMoreFamily = () => {
+    onLoadMore("familyMovies");
+    console.log("Carregando mais filmes para família");
+  };
+  
+  const handleLoadMoreAnimation = () => {
+    onLoadMore("animationMovies");
+    console.log("Carregando mais filmes de animação");
+  };
+  
+  const handleLoadMoreDocumentary = () => {
+    onLoadMore("documentaryMovies");
+    console.log("Carregando mais documentários");
+  };
+  
+  const handleLoadMoreAwardWinning = () => {
+    onLoadMore("awardWinningMovies");
+    console.log("Carregando mais filmes premiados");
+  };
+  
   return (
     <>
       {/* Main movie sections */}
@@ -48,6 +133,9 @@ const MoviesSections = ({
         title="Filmes Populares" 
         medias={movies}
         sectionId="movies"
+        onLoadMore={handleLoadMoreMovies}
+        isLoading={isLoading}
+        hasMore={hasMore}
       />
       
       {/* Genre-specific movie sections */}
@@ -55,24 +143,36 @@ const MoviesSections = ({
         title="Filmes de Ação" 
         medias={actionMovies}
         sectionId="actionMovies"
+        onLoadMore={handleLoadMoreAction}
+        isLoading={isLoading}
+        hasMore={hasMore}
       />
       
       <MediaSectionLoader 
         title="Comédias" 
         medias={comedyMovies}
         sectionId="comedyMovies"
+        onLoadMore={handleLoadMoreComedy}
+        isLoading={isLoading}
+        hasMore={hasMore}
       />
       
       <MediaSectionLoader 
         title="Filmes de Aventura" 
         medias={adventureMovies}
         sectionId="adventureMovies"
+        onLoadMore={handleLoadMoreAdventure}
+        isLoading={isLoading}
+        hasMore={hasMore}
       />
       
       <MediaSectionLoader 
         title="Ficção Científica" 
         medias={sciFiMovies}
         sectionId="sciFiMovies"
+        onLoadMore={handleLoadMoreSciFi}
+        isLoading={isLoading}
+        hasMore={hasMore}
       />
       
       {/* Franchise-specific movie sections */}
@@ -80,12 +180,18 @@ const MoviesSections = ({
         title="Universo Marvel" 
         medias={marvelMovies}
         sectionId="marvelMovies"
+        onLoadMore={handleLoadMoreMarvel}
+        isLoading={isLoading}
+        hasMore={hasMore}
       />
       
       <MediaSectionLoader 
         title="DC Comics" 
         medias={dcMovies}
         sectionId="dcMovies"
+        onLoadMore={handleLoadMoreDC}
+        isLoading={isLoading}
+        hasMore={hasMore}
       />
 
       {/* Additional movie sections */}
@@ -94,6 +200,9 @@ const MoviesSections = ({
           title="Filmes de Terror" 
           medias={horrorMovies}
           sectionId="horrorMovies"
+          onLoadMore={handleLoadMoreHorror}
+          isLoading={isLoading}
+          hasMore={hasMore}
         />
       )}
       
@@ -102,6 +211,9 @@ const MoviesSections = ({
           title="Filmes de Romance" 
           medias={romanceMovies}
           sectionId="romanceMovies"
+          onLoadMore={handleLoadMoreRomance}
+          isLoading={isLoading}
+          hasMore={hasMore}
         />
       )}
       
@@ -110,6 +222,9 @@ const MoviesSections = ({
           title="Filmes de Drama" 
           medias={dramaMovies}
           sectionId="dramaMovies"
+          onLoadMore={handleLoadMoreDrama}
+          isLoading={isLoading}
+          hasMore={hasMore}
         />
       )}
       
@@ -118,6 +233,9 @@ const MoviesSections = ({
           title="Filmes de Suspense" 
           medias={thrillerMovies}
           sectionId="thrillerMovies"
+          onLoadMore={handleLoadMoreThriller}
+          isLoading={isLoading}
+          hasMore={hasMore}
         />
       )}
       
@@ -126,6 +244,9 @@ const MoviesSections = ({
           title="Filmes para a Família" 
           medias={familyMovies}
           sectionId="familyMovies"
+          onLoadMore={handleLoadMoreFamily}
+          isLoading={isLoading}
+          hasMore={hasMore}
         />
       )}
       
@@ -134,6 +255,9 @@ const MoviesSections = ({
           title="Filmes de Animação" 
           medias={animationMovies}
           sectionId="animationMovies"
+          onLoadMore={handleLoadMoreAnimation}
+          isLoading={isLoading}
+          hasMore={hasMore}
         />
       )}
       
@@ -142,6 +266,9 @@ const MoviesSections = ({
           title="Documentários" 
           medias={documentaryMovies}
           sectionId="documentaryMovies"
+          onLoadMore={handleLoadMoreDocumentary}
+          isLoading={isLoading}
+          hasMore={hasMore}
         />
       )}
       
@@ -150,6 +277,9 @@ const MoviesSections = ({
           title="Filmes Premiados" 
           medias={awardWinningMovies}
           sectionId="awardWinningMovies"
+          onLoadMore={handleLoadMoreAwardWinning}
+          isLoading={isLoading}
+          hasMore={hasMore}
         />
       )}
     </>

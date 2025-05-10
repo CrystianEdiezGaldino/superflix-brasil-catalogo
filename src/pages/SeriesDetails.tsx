@@ -43,15 +43,18 @@ const SeriesDetails = () => {
     }
   }, [user, authLoading, navigate]);
 
-  const { data: series, isLoading, error } = useQuery<Series>({
-    queryKey: ["series", id],
-    queryFn: () => fetchSeriesDetails(id as string),
+  const { data: series, isLoading, error } = useQuery<Series>([
+    "series",
+    id
+  ], () => fetchSeriesDetails(id as string), {
     enabled: !!id && !!user,
   });
 
-  const { data: seasonData, isLoading: isLoadingSeason } = useQuery<Season>({
-    queryKey: ["series-season", id, selectedSeason],
-    queryFn: () => fetchSeriesSeasonDetails(id as string, selectedSeason),
+  const { data: seasonData, isLoading: isLoadingSeason } = useQuery<Season>([
+    "series-season",
+    id,
+    selectedSeason
+  ], () => fetchSeriesSeasonDetails(id as string, selectedSeason), {
     enabled: !!id && !!user && !!selectedSeason,
   });
 

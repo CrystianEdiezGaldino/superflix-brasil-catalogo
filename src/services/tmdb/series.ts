@@ -60,7 +60,7 @@ export const fetchRecentSeries = async (limit = 12) => {
 };
 
 // Fetch TV series details
-export const fetchSeriesDetails = async (id: string): Promise<Series> => {
+export const fetchSeriesDetails = async (id: string, selectedSeason: number): Promise<Series> => {
   try {
     const url = buildApiUrl(`/tv/${id}`, "&append_to_response=external_ids");
     return await fetchFromApi<Series>(url);

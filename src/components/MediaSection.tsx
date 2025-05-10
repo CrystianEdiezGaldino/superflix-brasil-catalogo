@@ -1,41 +1,50 @@
-
 import { Plus } from 'lucide-react';
 import { MediaItem } from '@/types/movie';
 import { Link } from 'react-router-dom';
 
-interface MediaSectionProps {
+type MediaSectionProps = {
   title: string;
-  medias: MediaItem[];
+  medias?: MediaItem[];
   showLoadMore?: boolean;
   onLoadMore?: () => void;
   isLoading?: boolean;
-}
+};
 
-const MediaSection = ({ title, medias, showLoadMore = false, onLoadMore, isLoading = false }: MediaSectionProps) => {
+const MediaSection = ({ title, medias = [], showLoadMore = false, onLoadMore, isLoading = false }: MediaSectionProps) => {
+  // Função para mapear o tipo para a rota correta
+  const getLinkPath = (media: MediaItem) => {
+    if (media.media_type === 'movie') return `/filme/${media.id}`;
+    if (media.media_type === 'tv') return `/serie/${media.id}`;
+    return `/filme/${media.id}`;
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-        {medias.map((media) => (
-          <Link 
-            key={media.id} 
-            to={`/${media.media_type}/${media.id}`}
-            className="relative aspect-[2/3] rounded-lg overflow-hidden group"
-          >
-            <img
-              src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
-              alt={media.media_type === 'movie' ? (media as any).title : (media as any).name}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="absolute bottom-0 left-0 right-0 p-2">
-                <h3 className="text-sm font-medium text-white truncate">
-                  {media.media_type === 'movie' ? (media as any).title : (media as any).name}
-                </h3>
+        {medias.map((media) => {
+          const m = media as MediaItem;
+          return (
+            <Link 
+              key={m.id} 
+              to={getLinkPath(m)}
+              className="relative aspect-[2/3] rounded-lg overflow-hidden group"
+            >
+              <img
+                src={`https://image.tmdb.org/t/p/w342${m.poster_path}`}
+                alt={m.media_type === 'movie' ? (m as any).title : (m as any).name}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute bottom-0 left-0 right-0 p-2">
+                  <h3 className="text-sm font-medium text-white truncate">
+                    {m.media_type === 'movie' ? (m as any).title : (m as any).name}
+                  </h3>
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
         
         {/* Load more button */}
         {showLoadMore && onLoadMore && (
