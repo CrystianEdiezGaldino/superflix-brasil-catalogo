@@ -1,50 +1,68 @@
-import { useQuery } from '@tanstack/react-query';
-import { fetchSeriesDetails } from '@/services/tmdb/series';
-import MediaView from '@/components/media/MediaView';
-import type { Series } from '@/types/movie';
-import { useState } from 'react';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getSeries } from "@/services/series";
+import MediaView from "@/components/media/MediaView";
+import type { Series } from "@/types/movie";
 
 const Series = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [yearFilter, setYearFilter] = useState('');
-  const [ratingFilter, setRatingFilter] = useState('');
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [yearFilter, setYearFilter] = useState("");
+  const [ratingFilter, setRatingFilter] = useState("");
+  const [allSeries, setAllSeries] = useState<Series[]>([]);
 
-  const { data: series, isLoading } = useQuery({
-    queryKey: ['series'],
-    queryFn: async () => {
-      const ids = [259486, 259487, 259488]; // IDs das séries
-      const results = await Promise.all(
-        ids.map(id => fetchSeriesDetails(id.toString(), 'pt-BR'))
-      );
-      return results.filter(series => 
-        !['ko', 'ja', 'zh'].includes(series.original_language)
-      ) as Series[];
-    },
+  const { data: newSeries = [], isLoading, isFetching } = useQuery({
+    queryKey: ["series", page],
+    queryFn: () => getSeries(page)
+  });
+
+  useEffect(() => {
+    if (newSeries.length > 0) {
+      setAllSeries(prev => [...prev, ...newSeries]);
+    }
+  }, [newSeries]);
+
+  const handleMediaClick = (media: Series) => {
+    navigate(`/serie/${media.id}`);
+  };
+
+  const handleLoadMore = () => {
+    setPage(prev => prev + 1);
+  };
+
+  const filteredSeries = allSeries.filter((serie) => {
+    const matchesSearch = serie.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesYear = !yearFilter || serie.first_air_date?.startsWith(yearFilter);
+    const matchesRating = !ratingFilter || serie.vote_average >= parseFloat(ratingFilter);
+    return matchesSearch && matchesYear && matchesRating;
   });
 
   return (
     <MediaView
       title="Séries"
       type="tv"
-      mediaItems={series || []}
+      mediaItems={filteredSeries}
       isLoading={isLoading}
-      isLoadingMore={false}
-      hasMore={false}
-      isFiltering={false}
-      isSearching={false}
-      page={1}
+      isLoadingMore={isFetching}
+      hasMore={true}
+      isFiltering={!!yearFilter || !!ratingFilter}
+      isSearching={!!searchQuery}
+      page={page}
       yearFilter={yearFilter}
       ratingFilter={ratingFilter}
       searchQuery={searchQuery}
       onSearch={setSearchQuery}
       onYearFilterChange={setYearFilter}
       onRatingFilterChange={setRatingFilter}
-      onLoadMore={() => {}}
+      onLoadMore={handleLoadMore}
       onResetFilters={() => {
-        setYearFilter('');
-        setRatingFilter('');
-        setSearchQuery('');
+        setYearFilter("");
+        setRatingFilter("");
+        setSearchQuery("");
       }}
+      onMediaClick={handleMediaClick}
     />
   );
 };

@@ -1,27 +1,25 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchSeriesDetails } from "@/services/tmdb/series";
+import { fetchMovieDetails } from "@/services/tmdb/movies";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import Navbar from "@/components/Navbar";
-import SeriesHeader from "@/components/series/SeriesHeader";
-import SeriesContent from "@/components/series/SeriesContent";
-import SeriesActions from "@/components/series/SeriesActions";
-import SeriesLoadingState from "@/components/series/SeriesLoadingState";
+import MovieHeader from "@/components/movies/MovieHeader";
+import MovieContent from "@/components/movies/MovieContent";
+import MovieActions from "@/components/movies/MovieActions";
+import MovieLoadingState from "@/components/movies/MovieLoadingState";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
 import SuperFlixPlayer from "@/components/series/SuperFlixPlayer";
-import { Series } from "@/types/movie";
+import { Movie } from "@/types/movie";
 
-const DoramaDetails = () => {
+const FilmeDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
-  const [selectedSeason, setSelectedSeason] = useState(1);
-  const [selectedEpisode, setSelectedEpisode] = useState(1);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -43,9 +41,9 @@ const DoramaDetails = () => {
     }
   }, [user, authLoading, navigate]);
 
-  const { data: dorama, isLoading, error } = useQuery({
-    queryKey: ["dorama", id],
-    queryFn: () => fetchSeriesDetails(id as string, 'pt-BR'),
+  const { data: filme, isLoading, error } = useQuery({
+    queryKey: ["filme", id],
+    queryFn: () => fetchMovieDetails(id as string),
     enabled: !!id
   });
 
@@ -81,16 +79,16 @@ const DoramaDetails = () => {
       return;
     }
     
-    if (isFavorite(dorama?.id)) {
-      removeFromFavorites(dorama?.id);
+    if (isFavorite(filme?.id)) {
+      removeFromFavorites(filme?.id);
       toast.success("Removido dos favoritos");
     } else {
-      addToFavorites(dorama?.id);
+      addToFavorites(filme?.id);
       toast.success("Adicionado aos favoritos");
     }
   };
 
-  if (isLoading || !dorama) {
+  if (isLoading || !filme) {
     return (
       <div className="min-h-screen bg-gray-900">
         <div className="container mx-auto px-4 py-8">
@@ -109,58 +107,45 @@ const DoramaDetails = () => {
     <div className="min-h-screen bg-gray-900">
       <Navbar onSearch={() => {}} />
       
-      <SeriesLoadingState 
+      <MovieLoadingState 
         isLoading={authLoading || subscriptionLoading || isLoading}
         hasUser={!!user}
-        hasError={!!error || !dorama}
+        hasError={!!error || !filme}
       />
 
-      {dorama && (
+      {filme && (
         <>
-          <SeriesHeader 
-            series={dorama} 
-            isFavorite={isFavorite(dorama.id)} 
-            toggleFavorite={toggleFavorite} 
+          <MovieHeader 
+            movie={filme} 
           />
 
           <div className="px-6 md:px-10">
             <AdblockSuggestion />
           </div>
 
-          <SeriesActions 
+          <MovieActions 
             showPlayer={showPlayer} 
             hasAccess={hasAccess} 
-            togglePlayer={handleWatchClick} 
+            onPlayClick={handleWatchClick} 
           />
 
           {/* Player de vídeo do SuperFlix */}
           {showPlayer && (
             <div className="px-6 md:px-10 mb-10">
               <SuperFlixPlayer
-                type="serie"
-                imdb={dorama.id.toString()}
-                season={selectedSeason.toString()}
-                episode={selectedEpisode.toString()}
+                type="filme"
+                imdb={filme.id.toString()}
                 options={{
                   transparent: true,
-                  noLink: true,
-                  noEpList: true
+                  noLink: true
                 }}
               />
             </div>
           )}
 
-          <SeriesContent 
-            series={dorama} 
+          <MovieContent 
+            movie={filme} 
             hasAccess={hasAccess}
-            seasonData={undefined}
-            selectedSeason={selectedSeason}
-            selectedEpisode={selectedEpisode}
-            seasons={[1]}
-            setSelectedSeason={setSelectedSeason}
-            handleEpisodeSelect={setSelectedEpisode}
-            isLoadingSeason={false}
-            subscriptionLoading={subscriptionLoading}
           />
         </>
       )}
@@ -168,4 +153,4 @@ const DoramaDetails = () => {
   );
 };
 
-export default DoramaDetails;
+export default FilmeDetails; 

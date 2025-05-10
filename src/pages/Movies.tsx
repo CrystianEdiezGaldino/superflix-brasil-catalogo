@@ -1,8 +1,10 @@
-
+import { useNavigate } from "react-router-dom";
 import MediaView from "@/components/media/MediaView";
 import { useMovies } from "@/hooks/movies/useMovies";
+import type { Movie } from "@/types/movie";
 
 const Movies = () => {
+  const navigate = useNavigate();
   const {
     movies,
     trendingMovies,
@@ -22,6 +24,10 @@ const Movies = () => {
     setRatingFilter,
     resetFilters
   } = useMovies();
+
+  const handleMediaClick = (media: Movie) => {
+    navigate(`/filme/${media.id}`);
+  };
 
   return (
     <MediaView
@@ -45,6 +51,7 @@ const Movies = () => {
       onRatingFilterChange={setRatingFilter}
       onLoadMore={loadMoreMovies}
       onResetFilters={resetFilters}
+      onMediaClick={handleMediaClick}
     />
   );
 };

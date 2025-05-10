@@ -16,7 +16,7 @@ import AdblockSuggestion from "@/components/AdblockSuggestion";
 import SuperFlixPlayer from "@/components/series/SuperFlixPlayer";
 import { Series } from "@/types/movie";
 
-const DoramaDetails = () => {
+const SerieDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
@@ -43,8 +43,8 @@ const DoramaDetails = () => {
     }
   }, [user, authLoading, navigate]);
 
-  const { data: dorama, isLoading, error } = useQuery({
-    queryKey: ["dorama", id],
+  const { data: serie, isLoading, error } = useQuery({
+    queryKey: ["serie", id],
     queryFn: () => fetchSeriesDetails(id as string, 'pt-BR'),
     enabled: !!id
   });
@@ -81,16 +81,16 @@ const DoramaDetails = () => {
       return;
     }
     
-    if (isFavorite(dorama?.id)) {
-      removeFromFavorites(dorama?.id);
+    if (isFavorite(serie?.id)) {
+      removeFromFavorites(serie?.id);
       toast.success("Removido dos favoritos");
     } else {
-      addToFavorites(dorama?.id);
+      addToFavorites(serie?.id);
       toast.success("Adicionado aos favoritos");
     }
   };
 
-  if (isLoading || !dorama) {
+  if (isLoading || !serie) {
     return (
       <div className="min-h-screen bg-gray-900">
         <div className="container mx-auto px-4 py-8">
@@ -112,14 +112,14 @@ const DoramaDetails = () => {
       <SeriesLoadingState 
         isLoading={authLoading || subscriptionLoading || isLoading}
         hasUser={!!user}
-        hasError={!!error || !dorama}
+        hasError={!!error || !serie}
       />
 
-      {dorama && (
+      {serie && (
         <>
           <SeriesHeader 
-            series={dorama} 
-            isFavorite={isFavorite(dorama.id)} 
+            series={serie} 
+            isFavorite={isFavorite(serie.id)} 
             toggleFavorite={toggleFavorite} 
           />
 
@@ -138,7 +138,7 @@ const DoramaDetails = () => {
             <div className="px-6 md:px-10 mb-10">
               <SuperFlixPlayer
                 type="serie"
-                imdb={dorama.id.toString()}
+                imdb={serie.id.toString()}
                 season={selectedSeason.toString()}
                 episode={selectedEpisode.toString()}
                 options={{
@@ -151,7 +151,7 @@ const DoramaDetails = () => {
           )}
 
           <SeriesContent 
-            series={dorama} 
+            series={serie} 
             hasAccess={hasAccess}
             seasonData={undefined}
             selectedSeason={selectedSeason}
@@ -168,4 +168,4 @@ const DoramaDetails = () => {
   );
 };
 
-export default DoramaDetails;
+export default SerieDetails; 

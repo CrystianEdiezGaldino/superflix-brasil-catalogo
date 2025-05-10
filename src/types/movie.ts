@@ -6,6 +6,7 @@ export interface Movie {
   backdrop_path: string;
   release_date: string;
   vote_average: number;
+  vote_count: number;
   media_type: 'movie';
   imdb_id?: string;
   original_language?: string;
@@ -24,6 +25,13 @@ export interface Series {
   first_air_date: string;
   release_date?: string;
   vote_average: number;
+  vote_count: number;
+  media_type: 'tv';
+  imdb_id?: string;
+  external_ids?: {
+    imdb_id?: string;
+  };
+  number_of_seasons?: number;
   original_language: string;
   genres: Array<{
     id: number;
@@ -35,12 +43,6 @@ export interface Series {
     logo_path: string;
   }>;
   episode_run_time: number[];
-  media_type?: 'tv';
-  imdb_id?: string;
-  external_ids?: {
-    imdb_id?: string;
-  };
-  number_of_seasons?: number;
 }
 
 export interface Season {
