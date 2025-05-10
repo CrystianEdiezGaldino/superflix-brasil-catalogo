@@ -1,62 +1,50 @@
-
-import MediaView from "@/components/media/MediaView";
-import { useDoramas } from "@/hooks/useDoramas";
-import DoramaSection from "@/components/doramas/DoramaSection";
-import { MediaItem } from "@/types/movie";
+import { useQuery } from '@tanstack/react-query';
+import MediaView from '@/components/media/MediaView';
+import { Series } from '@/types/movie';
+import { useState } from 'react';
+import { getDoramas } from '@/services/doramas';
+import { useNavigate } from 'react-router-dom';
 
 const Doramas = () => {
-  const {
-    doramas,
-    topRatedDoramas,
-    popularDoramas,
-    koreanMovies,
-    hasMore,
-    isLoadingMore,
-    yearFilter,
-    genreFilter,
-    isSearching,
-    isFiltering,
-    isLoadingInitial,
-    isLoadingPopular,
-    isLoadingTopRated,
-    isLoadingMovies,
-    searchQuery,
-    handleSearch,
-    loadMoreDoramas,
-    setYearFilter,
-    setGenreFilter,
-    resetFilters
-  } = useDoramas();
-  
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [yearFilter, setYearFilter] = useState('');
+  const [ratingFilter, setRatingFilter] = useState('');
+
+  const { data: doramas, isLoading } = useQuery({
+    queryKey: ['doramas'],
+    queryFn: getDoramas,
+  });
+
+  const handleMediaClick = (media: Series) => {
+    navigate(`/dorama/${media.id}`);
+  };
+
   return (
     <MediaView
-      title="Conteúdo Coreano"
+      title="Doramas"
       type="dorama"
-      mediaItems={doramas}
-      topRatedItems={topRatedDoramas}
-      popularItems={popularDoramas}
-      searchQuery={searchQuery}
-      yearFilter={yearFilter}
-      ratingFilter={genreFilter}
-      isLoading={isLoadingInitial}
-      isLoadingMore={isLoadingMore}
-      hasMore={hasMore}
-      isFiltering={isFiltering}
-      isSearching={isSearching}
+      mediaItems={doramas || []}
+      isLoading={isLoading}
+      isLoadingMore={false}
+      hasMore={false}
+      isFiltering={false}
+      isSearching={false}
       page={1}
-      onSearch={handleSearch}
+      yearFilter={yearFilter}
+      ratingFilter={ratingFilter}
+      searchQuery={searchQuery}
+      onSearch={setSearchQuery}
       onYearFilterChange={setYearFilter}
-      onRatingFilterChange={setGenreFilter}
-      onLoadMore={loadMoreDoramas}
-      onResetFilters={resetFilters}
-    >
-      {/* Seção específica para filmes coreanos */}
-      <DoramaSection 
-        title="Filmes Coreanos"
-        doramas={koreanMovies}
-        isLoading={isLoadingMovies}
-      />
-    </MediaView>
+      onRatingFilterChange={setRatingFilter}
+      onLoadMore={() => {}}
+      onResetFilters={() => {
+        setYearFilter('');
+        setRatingFilter('');
+        setSearchQuery('');
+      }}
+      onMediaClick={handleMediaClick}
+    />
   );
 };
 

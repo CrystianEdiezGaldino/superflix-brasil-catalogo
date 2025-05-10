@@ -1,4 +1,3 @@
-
 import { Series, Season } from "@/types/movie";
 import { buildApiUrl, fetchFromApi, addMediaTypeToResults, limitResults } from "./utils";
 
@@ -60,9 +59,9 @@ export const fetchRecentSeries = async (limit = 12) => {
 };
 
 // Fetch TV series details
-export const fetchSeriesDetails = async (id: string, selectedSeason: number): Promise<Series> => {
+export const fetchSeriesDetails = async (id: string | number, language: string = 'pt-BR'): Promise<Series> => {
   try {
-    const url = buildApiUrl(`/tv/${id}`, "&append_to_response=external_ids");
+    const url = buildApiUrl(`/tv/${id}`, `&language=${language}&append_to_response=external_ids`);
     return await fetchFromApi<Series>(url);
   } catch (error) {
     console.error("Error fetching series details:", error);

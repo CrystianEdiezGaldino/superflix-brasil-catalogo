@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { useHover } from "@/hooks/useHover";
 import { Play, Info, Volume2, VolumeX } from "lucide-react";
@@ -96,7 +95,7 @@ const DoramaVideoPreview = ({ dorama, videoId }: DoramaVideoPreviewProps) => {
                     className="rounded-full bg-white text-black hover:bg-white/90"
                     asChild
                   >
-                    <Link to={`/serie/${dorama.id}`}>
+                    <Link to={`/dorama/${dorama.id}`}>
                       <Play size={16} />
                     </Link>
                   </Button>
@@ -107,7 +106,7 @@ const DoramaVideoPreview = ({ dorama, videoId }: DoramaVideoPreviewProps) => {
                     className="rounded-full bg-gray-700 text-white hover:bg-gray-600"
                     asChild
                   >
-                    <Link to={`/serie/${dorama.id}`}>
+                    <Link to={`/dorama/${dorama.id}`}>
                       <Info size={16} />
                     </Link>
                   </Button>

@@ -50,12 +50,12 @@ interface FullContentProps {
   hasMore: boolean;
 }
 
-const FullContent = ({ 
-  movies, 
-  series, 
-  anime, 
-  topRatedAnime, 
-  recommendations, 
+const FullContent = ({
+  movies,
+  series,
+  anime,
+  topRatedAnime,
+  recommendations,
   doramas,
   actionMovies,
   comedyMovies,
@@ -63,45 +63,45 @@ const FullContent = ({
   sciFiMovies,
   marvelMovies,
   dcMovies,
-  popularSeries = [],
-  recentAnimes = [],
-  netflixOriginals = [],
-  primeOriginals = [],
-  hboOriginals = [],
-  disneyOriginals = [],
-  netflixDoramas = [],
-  trendingAnime = [],
-  koreanDramas = [],
-  japaneseDramas = [],
-  chineseDramas = [],
-  popularMovies = [],
-  trendingMovies = [],
-  awardWinningMovies = [],
-  awardWinningSeries = [],
-  documentaryMovies = [],
-  documentarySeries = [],
-  horrorMovies = [],
-  romanceMovies = [],
-  dramaMovies = [],
-  thrillerMovies = [],
-  familyMovies = [],
-  animationMovies = [],
-  crimeSeries = [],
-  mysterySeries = [],
-  realitySeries = [],
-  talkShows = [],
+  popularSeries,
+  recentAnimes,
+  netflixOriginals,
+  primeOriginals,
+  hboOriginals,
+  disneyOriginals,
+  netflixDoramas,
+  trendingAnime,
+  koreanDramas,
+  japaneseDramas,
+  chineseDramas,
+  popularMovies,
+  trendingMovies,
+  awardWinningMovies,
+  awardWinningSeries,
+  documentaryMovies,
+  documentarySeries,
+  horrorMovies,
+  romanceMovies,
+  dramaMovies,
+  thrillerMovies,
+  familyMovies,
+  animationMovies,
+  crimeSeries,
+  mysterySeries,
+  realitySeries,
+  talkShows,
   onLoadMore,
   isLoading,
   hasMore
 }: FullContentProps) => {
-  
   return (
-    <div className="space-y-8 pb-10">
-      {/* Recommendations Section */}
-      <RecommendationsSection recommendations={recommendations} />
-      
-      {/* Movies Sections */}
-      <MoviesSections 
+    <div className="space-y-8">
+      <RecommendationsSection
+        recommendations={recommendations}
+        isLoading={isLoading}
+      />
+
+      <MoviesSections
         movies={movies}
         actionMovies={actionMovies}
         comedyMovies={comedyMovies}
@@ -109,23 +109,22 @@ const FullContent = ({
         sciFiMovies={sciFiMovies}
         marvelMovies={marvelMovies}
         dcMovies={dcMovies}
+        popularMovies={popularMovies}
+        trendingMovies={trendingMovies}
+        awardWinningMovies={awardWinningMovies}
+        documentaryMovies={documentaryMovies}
         horrorMovies={horrorMovies}
         romanceMovies={romanceMovies}
         dramaMovies={dramaMovies}
         thrillerMovies={thrillerMovies}
         familyMovies={familyMovies}
         animationMovies={animationMovies}
-        documentaryMovies={documentaryMovies}
-        awardWinningMovies={awardWinningMovies}
-        popularMovies={popularMovies}
-        trendingMovies={trendingMovies}
-        onLoadMore={onLoadMore}
         isLoading={isLoading}
         hasMore={hasMore}
+        onLoadMore={onLoadMore}
       />
-      
-      {/* Series Sections */}
-      <SeriesSections 
+
+      <SeriesSections
         series={series}
         popularSeries={popularSeries}
         awardWinningSeries={awardWinningSeries}
@@ -138,23 +137,26 @@ const FullContent = ({
         primeOriginals={primeOriginals}
         hboOriginals={hboOriginals}
         disneyOriginals={disneyOriginals}
+        isLoading={isLoading}
+        hasMore={hasMore}
+        onLoadMore={onLoadMore}
       />
-      
-      {/* Anime Sections */}
-      <AnimeSections 
+
+      <AnimeSections
         anime={anime}
         topRatedAnime={topRatedAnime}
         recentAnimes={recentAnimes}
         trendingAnime={trendingAnime}
+        isLoading={isLoading}
+        hasMore={hasMore}
+        onLoadMore={onLoadMore}
       />
-      
-      {/* Dorama Sections */}
-      <DoramaSections 
+
+      <DoramaSections
         doramas={doramas}
-        koreanDramas={koreanDramas}
-        // japaneseDramas={japaneseDramas}
-        // chineseDramas={chineseDramas}
-        netflixDoramas={netflixDoramas}
+        topRatedDoramas={koreanDramas || []}
+        popularDoramas={japaneseDramas || []}
+        koreanMovies={chineseDramas || []}
       />
     </div>
   );

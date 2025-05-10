@@ -1,26 +1,26 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchMovieDetails } from "@/services/tmdbApi";
+import { fetchSeriesDetails } from "@/services/tmdb/series";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useFavorites } from "@/hooks/useFavorites";
 import Navbar from "@/components/Navbar";
-import MovieHeader from "@/components/movies/MovieHeader";
-import MovieContent from "@/components/movies/MovieContent";
-import MovieActions from "@/components/movies/MovieActions";
-import MovieLoadingState from "@/components/movies/MovieLoadingState";
-import MovieVideoPlayer from "@/components/movies/MovieVideoPlayer";
+import SeriesHeader from "@/components/series/SeriesHeader";
+import SeriesContent from "@/components/series/SeriesContent";
+import SeriesActions from "@/components/series/SeriesActions";
+import SeriesLoadingState from "@/components/series/SeriesLoadingState";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
+import { Series } from "@/types/movie";
 
 const DoramaDetails = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
   const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [isContentAvailable, setIsContentAvailable] = useState(true);
+  const [selectedSeason, setSelectedSeason] = useState(1);
+  const [selectedEpisode, setSelectedEpisode] = useState(1);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -30,6 +30,7 @@ const DoramaDetails = () => {
     hasTrialAccess,
     isLoading: subscriptionLoading 
   } = useSubscription();
+  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
@@ -43,21 +44,14 @@ const DoramaDetails = () => {
 
   const { data: dorama, isLoading, error } = useQuery({
     queryKey: ["dorama", id],
-    queryFn: () => fetchMovieDetails(id as string),
-    enabled: !!id && !!user,
+    queryFn: () => fetchSeriesDetails(id as string, 'pt-BR'),
+    enabled: !!id
   });
-
-  // Verificar se o conteúdo está disponível
-  useEffect(() => {
-    if (dorama && !dorama.imdb_id && !dorama.external_ids?.imdb_id) {
-      setIsContentAvailable(false);
-    }
-  }, [dorama]);
 
   // Scroll to player when it becomes visible
   useEffect(() => {
     if (showPlayer) {
-      const playerElement = document.getElementById('video-player');
+      const playerElement = document.getElementById('SuperFlixAPIContainerVideo');
       if (playerElement) {
         setTimeout(() => {
           playerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -70,17 +64,6 @@ const DoramaDetails = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  // Toggle favorite
-  const toggleFavorite = () => {
-    if (!user) {
-      toast.error("É necessário fazer login para adicionar aos favoritos");
-      return;
-    }
-    
-    setIsFavorite(!isFavorite);
-    toast.success(isFavorite ? "Removido dos favoritos" : "Adicionado aos favoritos");
-  };
-
   // Show subscription modal if trying to watch without access
   const handleWatchClick = () => {
     if (!hasAccess) {
@@ -91,11 +74,64 @@ const DoramaDetails = () => {
     }
   };
 
+  const toggleFavorite = () => {
+    if (!user) {
+      toast.error("É necessário fazer login para adicionar aos favoritos");
+      return;
+    }
+    
+    if (isFavorite(dorama?.id)) {
+      removeFromFavorites(dorama?.id);
+      toast.success("Removido dos favoritos");
+    } else {
+      addToFavorites(dorama?.id);
+      toast.success("Adicionado aos favoritos");
+    }
+  };
+
+  // Função para carregar o player do SuperFlix
+  useEffect(() => {
+    if (showPlayer && dorama) {
+      const script = document.createElement('script');
+      script.innerHTML = `
+        var type = "serie";
+        var imdb = "${dorama.id}";
+        var season = "${selectedSeason}";
+        var episode = "${selectedEpisode}";
+        SuperFlixAPIPluginJS(type, imdb, season, episode);
+        function SuperFlixAPIPluginJS(type, imdb, season, episode){
+          if (type == "filme") { season=""; episode=""; }
+          var frame = document.getElementById('SuperFlixAPIContainerVideo');
+          frame.innerHTML = '<iframe src="https://superflixapi.nexus/'+type+'/'+imdb+'/'+season+'/'+episode+'#transparent#noLink#noEpList" style="width:100%;height:600px;border:none;"></iframe>';
+        }
+      `;
+      document.body.appendChild(script);
+      return () => {
+        document.body.removeChild(script);
+      };
+    }
+  }, [showPlayer, dorama, selectedSeason, selectedEpisode]);
+
+  if (isLoading || !dorama) {
+    return (
+      <div className="min-h-screen bg-gray-900">
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse">
+            <div className="h-96 bg-gray-800 rounded-lg mb-8"></div>
+            <div className="h-8 bg-gray-800 rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-gray-800 rounded w-2/3 mb-2"></div>
+            <div className="h-4 bg-gray-800 rounded w-1/2"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-netflix-background">
+    <div className="min-h-screen bg-gray-900">
       <Navbar onSearch={() => {}} />
       
-      <MovieLoadingState 
+      <SeriesLoadingState 
         isLoading={authLoading || subscriptionLoading || isLoading}
         hasUser={!!user}
         hasError={!!error || !dorama}
@@ -103,9 +139,9 @@ const DoramaDetails = () => {
 
       {dorama && (
         <>
-          <MovieHeader 
-            movie={dorama} 
-            isFavorite={isFavorite} 
+          <SeriesHeader 
+            series={dorama} 
+            isFavorite={isFavorite(dorama.id)} 
             toggleFavorite={toggleFavorite} 
           />
 
@@ -113,30 +149,31 @@ const DoramaDetails = () => {
             <AdblockSuggestion />
           </div>
 
-          <MovieActions 
+          <SeriesActions 
             showPlayer={showPlayer} 
             hasAccess={hasAccess} 
-            onPlayClick={handleWatchClick} 
+            togglePlayer={handleWatchClick} 
           />
 
-          {/* Player de vídeo usando componente dedicado */}
-          {showPlayer && (dorama.imdb_id || dorama.external_ids?.imdb_id) && (
+          {/* Player de vídeo do SuperFlix */}
+          {showPlayer && (
             <div className="px-6 md:px-10 mb-10">
-              <MovieVideoPlayer 
-                showPlayer={true}
-                imdbId={dorama.imdb_id || dorama.external_ids?.imdb_id || ''}
-                hasAccess={hasAccess}
-              />
+              <div id="SuperFlixAPIContainerVideo"></div>
             </div>
           )}
 
-          {!isContentAvailable && (
-            <div className="px-6 md:px-10 mb-10">
-              <ContentNotAvailable onAddToFavorites={toggleFavorite} />
-            </div>
-          )}
-
-          <MovieContent movie={dorama} hasAccess={hasAccess} />
+          <SeriesContent 
+            series={dorama} 
+            hasAccess={hasAccess}
+            seasonData={undefined}
+            selectedSeason={selectedSeason}
+            selectedEpisode={selectedEpisode}
+            seasons={[1]}
+            setSelectedSeason={setSelectedSeason}
+            handleEpisodeSelect={setSelectedEpisode}
+            isLoadingSeason={false}
+            subscriptionLoading={subscriptionLoading}
+          />
         </>
       )}
     </div>

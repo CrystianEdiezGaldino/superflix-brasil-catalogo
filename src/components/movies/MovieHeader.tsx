@@ -1,16 +1,13 @@
-
 import { Movie } from "@/types/movie";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Heart } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface MovieHeaderProps {
   movie: Movie;
-  isFavorite: boolean;
-  toggleFavorite: () => void;
 }
 
-const MovieHeader = ({ movie, isFavorite, toggleFavorite }: MovieHeaderProps) => {
+const MovieHeader = ({ movie }: MovieHeaderProps) => {
   const releaseYear = new Date(movie.release_date).getFullYear();
   
   return (
@@ -28,21 +25,12 @@ const MovieHeader = ({ movie, isFavorite, toggleFavorite }: MovieHeaderProps) =>
         <div className="absolute inset-0 bg-gradient-to-t from-netflix-background via-netflix-background/70 to-transparent"></div>
       </div>
       
-      <div className="absolute top-6 left-6 z-10 flex gap-4">
+      <div className="absolute top-12 left-6 z-10">
         <Link to="/">
           <Button variant="ghost" size="icon" className="rounded-full bg-black/50 hover:bg-black/70">
             <ArrowLeft className="text-white" />
           </Button>
         </Link>
-        
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className={`rounded-full ${isFavorite ? 'bg-netflix-red' : 'bg-black/50 hover:bg-black/70'}`}
-          onClick={toggleFavorite}
-        >
-          <Heart className={`${isFavorite ? 'text-white fill-current' : 'text-white'}`} />
-        </Button>
       </div>
       
       <div className="absolute bottom-0 left-0 w-full p-6">

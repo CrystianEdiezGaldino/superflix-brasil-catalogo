@@ -1,53 +1,52 @@
+import { useQuery } from '@tanstack/react-query';
+import { fetchSeriesDetails } from '@/services/tmdb/series';
+import MediaView from '@/components/media/MediaView';
+import type { Series } from '@/types/movie';
+import { useState } from 'react';
 
-import { useSeries } from "@/hooks/series/useSeries";
-import MediaView from "@/components/media/MediaView";
+const Series = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [yearFilter, setYearFilter] = useState('');
+  const [ratingFilter, setRatingFilter] = useState('');
 
-const SeriesPage = () => {
-  const {
-    series,
-    trendingSeries,
-    topRatedSeries,
-    recentSeries,
-    searchQuery,
-    yearFilter,
-    ratingFilter,
-    hasMore,
-    isLoadingInitial,
-    isLoadingMore,
-    isFiltering,
-    isSearching,
-    page,
-    handleSearch,
-    loadMoreSeries,
-    setYearFilter,
-    setRatingFilter,
-    resetFilters
-  } = useSeries();
+  const { data: series, isLoading } = useQuery({
+    queryKey: ['series'],
+    queryFn: async () => {
+      const ids = [259486, 259487, 259488]; // IDs das séries
+      const results = await Promise.all(
+        ids.map(id => fetchSeriesDetails(id.toString(), 'pt-BR'))
+      );
+      return results.filter(series => 
+        !['ko', 'ja', 'zh'].includes(series.original_language)
+      ) as Series[];
+    },
+  });
 
   return (
     <MediaView
-      title="Séries Dubladas em Português"
+      title="Séries"
       type="tv"
-      mediaItems={series}
-      trendingItems={trendingSeries}
-      topRatedItems={topRatedSeries}
-      recentItems={recentSeries}
-      searchQuery={searchQuery}
+      mediaItems={series || []}
+      isLoading={isLoading}
+      isLoadingMore={false}
+      hasMore={false}
+      isFiltering={false}
+      isSearching={false}
+      page={1}
       yearFilter={yearFilter}
       ratingFilter={ratingFilter}
-      isLoading={isLoadingInitial}
-      isLoadingMore={isLoadingMore}
-      hasMore={hasMore}
-      isFiltering={isFiltering}
-      isSearching={isSearching}
-      page={page}
-      onSearch={handleSearch}
+      searchQuery={searchQuery}
+      onSearch={setSearchQuery}
       onYearFilterChange={setYearFilter}
       onRatingFilterChange={setRatingFilter}
-      onLoadMore={loadMoreSeries}
-      onResetFilters={resetFilters}
+      onLoadMore={() => {}}
+      onResetFilters={() => {
+        setYearFilter('');
+        setRatingFilter('');
+        setSearchQuery('');
+      }}
     />
   );
 };
 
-export default SeriesPage;
+export default Series;

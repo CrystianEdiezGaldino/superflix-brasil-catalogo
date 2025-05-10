@@ -1,4 +1,3 @@
-
 import React from "react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -31,6 +30,7 @@ interface MediaViewProps {
   onRatingFilterChange: (rating: string) => void;
   onLoadMore: () => void;
   onResetFilters: () => void;
+  onMediaClick?: (media: MediaItem) => void;
   children?: React.ReactNode;
 }
 
@@ -56,6 +56,7 @@ const MediaView = ({
   onRatingFilterChange,
   onLoadMore,
   onResetFilters,
+  onMediaClick,
   children
 }: MediaViewProps) => {
   
@@ -96,6 +97,7 @@ const MediaView = ({
           <MediaSection 
             title={`Tendências em ${getContentTypeTitle(type)}`}
             medias={trendingItems}
+            onMediaClick={onMediaClick}
           />
         )}
         
@@ -104,6 +106,7 @@ const MediaView = ({
           <MediaSection 
             title={`${getContentTypeTitle(type)} Mais Bem Avaliados`}
             medias={topRatedItems}
+            onMediaClick={onMediaClick}
           />
         )}
         
@@ -112,6 +115,7 @@ const MediaView = ({
           <MediaSection 
             title={`${getContentTypeTitle(type)} Populares`}
             medias={popularItems}
+            onMediaClick={onMediaClick}
           />
         )}
         
@@ -120,6 +124,7 @@ const MediaView = ({
           <MediaSection 
             title={`${getContentTypeTitle(type)} Recentes`}
             medias={recentItems}
+            onMediaClick={onMediaClick}
           />
         )}
         
@@ -142,6 +147,7 @@ const MediaView = ({
             isFiltering={isFiltering}
             onLoadMore={onLoadMore}
             onResetFilters={onResetFilters}
+            onMediaClick={onMediaClick}
           />
         </section>
       </div>

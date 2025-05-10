@@ -38,7 +38,7 @@ export const useDoramaPagination = ({ filterDoramas, setDoramas }: UseDoramaPagi
       setPage(nextPage);
       
       // Verifica se ainda existem mais conteúdos para carregar
-      if (filteredContent.length < 30) {
+      if (filteredContent.length >150) {
         setHasMore(false);
         toast.info("Você chegou ao fim da lista de doramas e filmes coreanos.");
       }

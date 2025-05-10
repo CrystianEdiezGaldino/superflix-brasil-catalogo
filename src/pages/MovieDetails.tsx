@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -6,9 +5,10 @@ import { fetchMovieDetails } from "@/services/tmdbApi";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useFavorites } from "@/hooks/useFavorites";
 import MovieHeader from "@/components/movies/MovieHeader";
 import MovieContent from "@/components/movies/MovieContent";
-import MovieActions from "@/components/movies/MovieActions";
+import MediaActions from "@/components/shared/MediaActions";
 import MovieLoadingState from "@/components/movies/MovieLoadingState";
 import MovieVideoPlayer from "@/components/movies/MovieVideoPlayer";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
@@ -19,7 +19,6 @@ const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [isContentAvailable, setIsContentAvailable] = useState(true);
   
   const { user, loading: authLoading } = useAuth();
@@ -30,6 +29,7 @@ const MovieDetails = () => {
     hasTrialAccess,
     isLoading: subscriptionLoading 
   } = useSubscription();
+  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
@@ -72,14 +72,13 @@ const MovieDetails = () => {
 
   // Toggle favorite
   const toggleFavorite = () => {
-    if (!user) {
-      toast.error("É necessário fazer login para adicionar aos favoritos");
-      return;
-    }
+    if (!movie) return;
     
-    setIsFavorite(!isFavorite);
-    toast.success(isFavorite ? "Removido dos favoritos" : "Adicionado aos favoritos");
-    // Here you would integrate with a favorites API
+    if (isFavorite(movie.id)) {
+      removeFromFavorites(movie.id);
+    } else {
+      addToFavorites(movie.id);
+    }
   };
 
   // Show subscription modal if trying to watch without access
@@ -105,18 +104,17 @@ const MovieDetails = () => {
         <>
           <MovieHeader 
             movie={movie} 
-            isFavorite={isFavorite} 
-            toggleFavorite={toggleFavorite} 
           />
           
           <div className="px-6 md:px-10">
             <AdblockSuggestion />
           </div>
 
-          <MovieActions 
-            showPlayer={showPlayer} 
-            hasAccess={hasAccess} 
-            onPlayClick={handleWatchClick} 
+          <MediaActions 
+            onPlayClick={handleWatchClick}
+            onFavoriteClick={toggleFavorite}
+            isFavorite={isFavorite(movie.id)}
+            hasAccess={hasAccess}
           />
 
           {/* Player de vídeo usando componente dedicado */}

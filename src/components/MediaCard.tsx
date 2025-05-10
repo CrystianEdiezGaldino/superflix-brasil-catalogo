@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
 import { Card } from "@/components/ui/card";
@@ -12,7 +11,9 @@ const MediaCard = ({ media }: MediaCardProps) => {
   // Determine link path based on media type
   const linkPath = media.media_type === 'movie'
     ? `/filme/${media.id}`
-    : `/serie/${media.id}`;
+    : media.original_language === 'ko'
+      ? `/dorama/${media.id}`
+      : `/serie/${media.id}`;
 
   // Handle missing poster image
   const posterUrl = media.poster_path

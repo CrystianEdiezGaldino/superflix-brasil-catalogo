@@ -1,7 +1,6 @@
-
 import React, { useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, isMovie, isSeries } from "@/types/movie";
 import MediaCard from "@/components/media/MediaCard";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
@@ -15,6 +14,7 @@ interface MediaGridProps {
   isFiltering: boolean;
   onLoadMore: () => void;
   onResetFilters: () => void;
+  onMediaClick?: (media: MediaItem) => void;
 }
 
 const MediaGrid = ({
@@ -25,83 +25,107 @@ const MediaGrid = ({
   isSearching,
   isFiltering,
   onLoadMore,
-  onResetFilters
+  onResetFilters,
+  onMediaClick
 }: MediaGridProps) => {
-  const observerTarget = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
 
-  // Set up intersection observer for infinite scrolling
   useEffect(() => {
-    if (!hasMore || isSearching || isFiltering || isLoadingMore) return;
-    
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting) {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
           onLoadMore();
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.1 }
     );
-    
-    const currentTarget = observerTarget.current;
-    
-    if (currentTarget) {
-      observer.observe(currentTarget);
+
+    if (gridRef.current) {
+      observer.observe(gridRef.current);
     }
-    
+
     return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
+      if (gridRef.current) {
+        observer.unobserve(gridRef.current);
       }
     };
-  }, [hasMore, isSearching, isFiltering, isLoadingMore, onLoadMore]);
+  }, [hasMore, isLoadingMore, onLoadMore]);
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-20">
-        <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+        {Array.from({ length: 20 }).map((_, index) => (
+          <div key={index} className="aspect-[2/3] bg-gray-800 rounded-lg animate-pulse" />
+        ))}
       </div>
     );
   }
 
   if (mediaItems.length === 0) {
     return (
-      <Card className="bg-black/40 border-gray-800">
-        <CardContent className="flex flex-col items-center justify-center h-64">
-          <p className="text-gray-400 text-lg">Nenhum conteúdo encontrado</p>
-          <Button 
+      <div className="text-center py-8">
+        <p className="text-gray-400 mb-4">
+          {isSearching
+            ? "Nenhum resultado encontrado para sua busca."
+            : isFiltering
+            ? "Nenhum conteúdo encontrado com os filtros selecionados."
+            : "Nenhum conteúdo disponível no momento."}
+        </p>
+        {(isSearching || isFiltering) && (
+          <Button
+            variant="outline"
             onClick={onResetFilters}
-            variant="link" 
-            className="text-netflix-red mt-2"
+            className="text-white border-white hover:bg-white/10"
           >
-            Limpar filtros
+            Limpar Filtros
           </Button>
-        </CardContent>
-      </Card>
+        )}
+      </div>
     );
   }
 
   return (
-    <div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-        {mediaItems.map((media, index) => (
-          <div key={`${media.media_type}-${media.id}-${index}`} className="media-grid-item animate-fade-in">
-            <MediaCard media={media} />
+    <div className="space-y-8">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+        {mediaItems.map((media) => (
+          <div
+            key={media.id}
+            onClick={() => onMediaClick?.(media)}
+            className="relative aspect-[2/3] rounded-lg overflow-hidden group cursor-pointer"
+          >
+            <img
+              src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
+              alt={isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute bottom-0 left-0 right-0 p-2">
+                <h3 className="text-sm font-medium text-white truncate">
+                  {isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
+                </h3>
+              </div>
+            </div>
           </div>
         ))}
       </div>
-      
-      {/* Infinite scroll loading indicator */}
-      {hasMore && !isSearching && !isFiltering && (
-        <div 
-          ref={observerTarget} 
-          className="flex justify-center my-8"
-        >
-          {isLoadingMore && (
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 border-2 border-t-transparent border-netflix-red rounded-full animate-spin"></div>
-              <span className="text-gray-400">Carregando mais conteúdo...</span>
-            </div>
-          )}
+
+      {hasMore && (
+        <div ref={gridRef} className="flex justify-center">
+          <Button
+            variant="outline"
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            className="text-white border-white hover:bg-white/10"
+          >
+            {isLoadingMore ? (
+              "Carregando..."
+            ) : (
+              <>
+                <ChevronDown className="mr-2 h-4 w-4" />
+                Carregar Mais
+              </>
+            )}
+          </Button>
         </div>
       )}
     </div>

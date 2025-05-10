@@ -1,79 +1,65 @@
-
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFavorites } from "@/hooks/useFavorites";
+import { useQuery } from "@tanstack/react-query";
+import { fetchMovieDetails, fetchSeriesDetails } from "@/services/tmdbApi";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Heart, Trash2 } from "lucide-react";
-import { MediaItem } from "@/types/movie";
-import { useAuth } from "@/contexts/AuthContext";
-import MediaGrid from "@/components/media/MediaGrid";
-import { useFavorites } from "@/hooks/useFavorites";
-import { supabase } from "@/integrations/supabase/client";
+import MediaSection from "@/components/MediaSection";
 
 const Favorites = () => {
-  const { user } = useAuth();
-  const { favorites, refetchFavorites, isLoading } = useFavorites();
-  
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { favorites } = useFavorites();
+
+  // Redirect to auth if not logged in
   useEffect(() => {
-    if (user) {
-      refetchFavorites();
+    if (!authLoading && !user) {
+      toast.error("É necessário fazer login para acessar esta página");
+      navigate("/auth");
     }
-  }, [user, refetchFavorites]);
+  }, [user, authLoading, navigate]);
 
-  const handleClearFavorites = async () => {
-    if (!user || !favorites?.length) return;
-    
-    try {
-      // Delete all favorites for this user
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('user_id', user.id);
-        
-      if (error) throw error;
+  // Fetch details for each favorite
+  const { data: favoriteDetails, isLoading } = useQuery({
+    queryKey: ["favorites", favorites],
+    queryFn: async () => {
+      const details = await Promise.all(
+        favorites.map(async (id) => {
+          try {
+            // Try to fetch as movie first
+            const movie = await fetchMovieDetails(id.toString());
+            if (movie) return movie;
+            
+            // If not found as movie, try as series
+            const series = await fetchSeriesDetails(id.toString());
+            return series;
+          } catch (error) {
+            console.error(`Error fetching details for ID ${id}:`, error);
+            return null;
+          }
+        })
+      );
       
-      refetchFavorites();
-      toast.success("Favoritos limpos com sucesso");
-    } catch (error) {
-      console.error("Erro ao limpar favoritos:", error);
-      toast.error("Erro ao limpar favoritos");
-    }
-  };
+      return details.filter(Boolean);
+    },
+    enabled: favorites.length > 0 && !!user,
+  });
 
-  // Placeholder for empty favorites state
-  const EmptyFavoritesPlaceholder = () => (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="bg-gray-800 p-6 rounded-full mb-6">
-        <Heart className="h-12 w-12 text-gray-400" />
-      </div>
-      <h2 className="text-2xl font-semibold text-white mb-2">Sua lista de favoritos está vazia</h2>
-      <p className="text-gray-400 max-w-md mb-8">
-        Adicione filmes, séries e doramas aos seus favoritos para encontrá-los aqui.
-      </p>
-      <Button 
-        onClick={() => window.location.href = "/"}
-        className="bg-white text-black hover:bg-gray-200"
-      >
-        Explorar Conteúdo
-      </Button>
-    </div>
-  );
-
-  if (!user) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-netflix-background">
         <Navbar onSearch={() => {}} />
-        <div className="flex flex-col items-center justify-center h-[80vh] text-center px-4">
-          <h2 className="text-2xl font-semibold text-white mb-4">
-            Faça login para acessar seus favoritos
-          </h2>
-          <Button 
-            onClick={() => window.location.href = "/auth"}
-            className="bg-netflix-red hover:bg-red-700"
-          >
-            Fazer Login
-          </Button>
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 w-48 bg-gray-700 rounded"></div>
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="aspect-[2/3] bg-gray-700 rounded-lg"></div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -82,39 +68,22 @@ const Favorites = () => {
   return (
     <div className="min-h-screen bg-netflix-background">
       <Navbar onSearch={() => {}} />
-      
-      <div className="pt-20 px-4 md:px-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-white">Meus Favoritos</h1>
-          {favorites && favorites.length > 0 && (
-            <Button 
-              variant="ghost"
-              className="text-gray-400 hover:text-white"
-              onClick={handleClearFavorites}
-            >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Limpar tudo
-            </Button>
-          )}
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-8">
+          Meus Favoritos
+        </h1>
 
-        {isLoading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
+        {favorites.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-lg">
+              Você ainda não adicionou nenhum título aos favoritos.
+            </p>
           </div>
-        ) : favorites && favorites.length > 0 ? (
-          <MediaGrid 
-            mediaItems={favorites}
-            isLoading={false}
-            isLoadingMore={false}
-            hasMore={false}
-            isSearching={false}
-            isFiltering={false}
-            onLoadMore={() => {}}
-            onResetFilters={() => {}}
-          />
         ) : (
-          <EmptyFavoritesPlaceholder />
+          <MediaSection 
+            title="Favoritos"
+            medias={favoriteDetails || []}
+          />
         )}
       </div>
     </div>

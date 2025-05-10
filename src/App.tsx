@@ -1,6 +1,5 @@
-
 import React from "react";
-import { Toaster } from "sonner"; // Use only one toaster implementation
+import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
@@ -11,7 +10,7 @@ import Index from "./pages/Index";
 import Movies from "./pages/Movies";
 import Series from "./pages/Series";
 import Animes from "./pages/Animes";
-import Favorites from "./pages/Favorites";
+import Favorites from "@/pages/Favorites";
 import Doramas from "./pages/Doramas";
 import DoramaDetails from "./pages/DoramaDetails";
 import MovieDetails from "./pages/MovieDetails";
@@ -26,7 +25,6 @@ import Admin from "./pages/Admin";
 import Kids from "./pages/Kids";
 
 const App = () => {
-  // Create a new QueryClient for each app instance
   const [queryClient] = useState(() => new QueryClient());
 
   return (
