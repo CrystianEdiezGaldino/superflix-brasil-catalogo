@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -11,6 +10,7 @@ import MovieContent from "@/components/movies/MovieContent";
 import MovieActions from "@/components/movies/MovieActions";
 import MovieLoadingState from "@/components/movies/MovieLoadingState";
 import MovieVideoPlayer from "@/components/movies/MovieVideoPlayer";
+import Navbar from "@/components/Navbar";
 
 const MovieDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -83,6 +83,7 @@ const MovieDetails = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
+      <Navbar onSearch={() => {}} />
       <MovieLoadingState 
         isLoading={authLoading || subscriptionLoading || isLoading}
         hasUser={!!user}

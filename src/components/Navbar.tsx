@@ -1,6 +1,6 @@
-
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import NavLogo from "./navbar/NavLogo";
 import NavLinks from "./navbar/NavLinks";
 import SearchBar from "./navbar/SearchBar";
@@ -8,7 +8,8 @@ import UserAction from "./navbar/UserAction";
 import MobileMenu from "./navbar/MobileMenu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState, useEffect } from "react";
-import { Film, Heart, Tv, Baby } from "lucide-react";
+import { Film, Heart, Tv, Baby, Shield } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface NavbarProps {
   onSearch: (query: string) => void;
@@ -17,6 +18,7 @@ interface NavbarProps {
 const Navbar = ({ onSearch }: NavbarProps) => {
   const location = useLocation();
   const { user } = useAuth();
+  const { isAdmin } = useSubscription();
   const [isScrolled, setIsScrolled] = useState(false);
   const isMobile = useIsMobile();
 
@@ -47,18 +49,33 @@ const Navbar = ({ onSearch }: NavbarProps) => {
 
   return (
     <header 
-      className={`fixed top-0 w-full z-50 transition-colors duration-300 ${
-        isScrolled ? "bg-black shadow-lg" : "bg-gradient-to-b from-black/80 to-transparent"
+      className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+        isScrolled 
+          ? "bg-black/95 backdrop-blur-sm shadow-lg" 
+          : "bg-gradient-to-b from-black/80 to-transparent"
       }`}
     >
       <div className="container max-w-full px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center">
+        <div className="flex items-center space-x-6">
           <NavLogo />
           {!isMobile && <NavLinks isAuthenticated={!!user} />}
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-center space-x-4">
           <SearchBar onSearch={onSearch} />
+          
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:text-netflix-red transition-colors"
+              onClick={() => window.location.href = "/admin"}
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Admin
+            </Button>
+          )}
+          
           {isMobile && (
             <MobileMenu isAuthenticated={!!user} navigationLinks={navigationLinks} />
           )}

@@ -11,6 +11,7 @@ import SeriesActions from "@/components/series/SeriesActions";
 import SeriesLoadingState from "@/components/series/SeriesLoadingState";
 import SeriesVideoPlayer from "@/components/series/SeriesVideoPlayer";
 import { Series, Season } from "@/types/movie";
+import Navbar from "@/components/Navbar";
 
 const SeriesDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -105,6 +106,7 @@ const SeriesDetails = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
+      <Navbar onSearch={() => {}} />
       <SeriesLoadingState 
         isLoading={authLoading || subscriptionLoading || isLoading}
         hasUser={!!user}
