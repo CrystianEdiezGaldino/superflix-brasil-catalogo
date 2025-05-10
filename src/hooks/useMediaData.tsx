@@ -1,140 +1,76 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useAccessControl } from "@/hooks/useAccessControl";
-import { 
-  fetchPopularMovies, 
-  fetchTopRatedMovies,
-  fetchTrendingMovies,
-  fetchRecentMovies,
-  fetchMoviesByGenre,
-  fetchMoviesByKeyword,
-  fetchPopularSeries, 
-  fetchAnime, 
-  fetchTopRatedAnime,
-  fetchKoreanDramas
-} from "@/services/tmdbApi";
+import { useMoviesData } from "./media/useMoviesData";
+import { useSeriesData } from "./media/useSeriesData";
+import { useAnimeData } from "./media/useAnimeData";
+import { useDoramaData } from "./media/useDoramaData";
 
 export const useMediaData = () => {
-  const { user } = useAuth();
   const { isLoading: subscriptionLoading } = useSubscription();
-  const { hasAccess } = useAccessControl();
-
-  // Debug log user access status
-  console.log("useMediaData access status:", { hasAccess, userId: user?.id });
-
-  // Fetch popular movies - increased limit to 60
-  const moviesQuery = useQuery({
-    queryKey: ["popularMovies"],
-    queryFn: () => fetchPopularMovies(1, 60),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5 // 5 minutes
-  });
-
-  // Fetch popular TV series - increased limit to 60
-  const seriesQuery = useQuery({
-    queryKey: ["popularSeries"],
-    queryFn: () => fetchPopularSeries(1, 60),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
   
-  // Fetch popular anime - increased limit to 60
-  const animeQuery = useQuery({
-    queryKey: ["anime"],
-    queryFn: () => fetchAnime(1, 60),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  // Import data from specialized hooks
+  const { 
+    moviesData, 
+    actionMoviesData,
+    comedyMoviesData,
+    adventureMoviesData,
+    sciFiMoviesData,
+    marvelMoviesData,
+    dcMoviesData,
+    isLoading: moviesLoading, 
+    hasError: moviesError 
+  } = useMoviesData();
   
-  // Fetch top rated anime - now properly checking hasAccess - increased limit to 60
-  const topRatedAnimeQuery = useQuery({
-    queryKey: ["topRatedAnime"],
-    queryFn: () => fetchTopRatedAnime(1, 60),
-    enabled: !!user && hasAccess, // Only fetch if user has access
-    staleTime: 1000 * 60 * 5
-  });
+  const { 
+    seriesData, 
+    popularSeriesData,
+    isLoading: seriesLoading, 
+    hasError: seriesError 
+  } = useSeriesData();
   
-  // Fetch Korean dramas - increased limit to 60
-  const doramasQuery = useQuery({
-    queryKey: ["koreanDramas"],
-    queryFn: () => fetchKoreanDramas(1, 60),
-    enabled: !!user && hasAccess,
-    staleTime: 1000 * 60 * 5
-  });
-
-  // Fetch action movies - increased limit to 60
-  const actionMoviesQuery = useQuery({
-    queryKey: ["actionMovies"],
-    queryFn: () => fetchMoviesByGenre(28, 1, 60), // 28 is action genre ID
-    enabled: !!user && hasAccess,
-    staleTime: 1000 * 60 * 5
-  });
+  const { 
+    animeData, 
+    topRatedAnimeData,
+    recentAnimesData,
+    isLoading: animeLoading, 
+    hasError: animeError 
+  } = useAnimeData();
   
-  // Fetch comedy movies - increased limit to 60
-  const comedyMoviesQuery = useQuery({
-    queryKey: ["comedyMovies"],
-    queryFn: () => fetchMoviesByGenre(35, 1, 60), // 35 is comedy genre ID
-    enabled: !!user && hasAccess,
-    staleTime: 1000 * 60 * 5
-  });
+  const { 
+    doramasData, 
+    isLoading: doramasLoading, 
+    hasError: doramasError 
+  } = useDoramaData();
 
-  // Fetch adventure movies - increased limit to 60
-  const adventureMoviesQuery = useQuery({
-    queryKey: ["adventureMovies"],
-    queryFn: () => fetchMoviesByGenre(12, 1, 60), // 12 is adventure genre ID
-    enabled: !!user && hasAccess,
-    staleTime: 1000 * 60 * 5
-  });
-
-  // Fetch sci-fi movies - increased limit to 60
-  const sciFiMoviesQuery = useQuery({
-    queryKey: ["sciFiMovies"],
-    queryFn: () => fetchMoviesByGenre(878, 1, 60), // 878 is sci-fi genre ID
-    enabled: !!user && hasAccess,
-    staleTime: 1000 * 60 * 5
-  });
-
-  // Fetch Marvel movies by keyword (Marvel is 180547 in TMDB) - increased limit to 60
-  const marvelMoviesQuery = useQuery({
-    queryKey: ["marvelMovies"],
-    queryFn: () => fetchMoviesByKeyword(180547, 1, 60),
-    enabled: !!user && hasAccess,
-    staleTime: 1000 * 60 * 5
-  });
-
-  // Fetch DC movies by keyword (DC is 9715 in TMDB) - increased limit to 60
-  const dcMoviesQuery = useQuery({
-    queryKey: ["dcMovies"],
-    queryFn: () => fetchMoviesByKeyword(9715, 1, 60),
-    enabled: !!user && hasAccess,
-    staleTime: 1000 * 60 * 5
-  });
-
+  // Combined loading and error states
   const isLoading = 
     subscriptionLoading || 
-    moviesQuery.isPending || 
-    seriesQuery.isPending || 
-    animeQuery.isPending;
+    moviesLoading || 
+    seriesLoading || 
+    animeLoading ||
+    doramasLoading;
     
   const hasError = 
-    moviesQuery.isError || 
-    seriesQuery.isError || 
-    animeQuery.isError;
+    moviesError || 
+    seriesError || 
+    animeError ||
+    doramasError;
 
+  // Return all data in a structured format
   return {
-    moviesData: moviesQuery.data || [],
-    seriesData: seriesQuery.data || [],
-    animeData: animeQuery.data || [],
-    topRatedAnimeData: topRatedAnimeQuery.data || [],
-    doramasData: doramasQuery.data || [],
-    actionMoviesData: actionMoviesQuery.data || [],
-    comedyMoviesData: comedyMoviesQuery.data || [],
-    adventureMoviesData: adventureMoviesQuery.data || [],
-    sciFiMoviesData: sciFiMoviesQuery.data || [],
-    marvelMoviesData: marvelMoviesQuery.data || [],
-    dcMoviesData: dcMoviesQuery.data || [],
+    moviesData,
+    seriesData,
+    animeData,
+    topRatedAnimeData,
+    doramasData,
+    actionMoviesData,
+    comedyMoviesData,
+    adventureMoviesData,
+    sciFiMoviesData,
+    marvelMoviesData,
+    dcMoviesData,
+    popularSeriesData,
+    recentAnimesData,
     isLoading,
     hasError
   };
