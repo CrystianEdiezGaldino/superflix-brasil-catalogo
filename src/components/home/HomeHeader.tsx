@@ -5,6 +5,8 @@ import TrialNotification from "./TrialNotification";
 import SubscriptionUpsell from "./SubscriptionUpsell";
 import AdminIndicator from "./AdminIndicator";
 import ContentCalendar from "../calendar/ContentCalendar";
+import RecentReleases from "./sections/RecentReleases";
+import { useContentCalendar } from "@/hooks/useContentCalendar";
 
 interface HomeHeaderProps {
   featuredMedia: MediaItem | null;
@@ -23,6 +25,8 @@ const HomeHeader = ({
   trialEnd,
   searchQuery 
 }: HomeHeaderProps) => {
+  const { recentContent, isLoading } = useContentCalendar();
+
   return (
     <>
       {/* Show Banner only when not searching */}
@@ -38,6 +42,13 @@ const HomeHeader = ({
       
       {/* Admin indicator */}
       {isAdmin && <AdminIndicator />}
+      
+      {/* Recent Releases Section */}
+      {hasAccess && !searchQuery && (
+        <div className="mb-8 px-4 md:px-8">
+          <RecentReleases releases={recentContent} isLoading={isLoading} />
+        </div>
+      )}
       
       {/* Calendar Section */}
       {hasAccess && (

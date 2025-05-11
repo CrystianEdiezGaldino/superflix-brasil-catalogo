@@ -8,6 +8,15 @@ export interface ContentCalendarItem extends MediaItem {
   episode_number?: number;
   season_number?: number;
   is_new: boolean;
+  // Ensure these required fields from MediaItem are included
+  id: number;
+  media_type: string;
+  poster_path?: string;
+  backdrop_path?: string;
+  title?: string;
+  name?: string;
+  overview?: string;
+  original_language?: string;
 }
 
 // Function to fetch from the content calendar endpoint

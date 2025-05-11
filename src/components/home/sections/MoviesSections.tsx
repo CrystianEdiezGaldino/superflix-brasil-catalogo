@@ -1,3 +1,4 @@
+
 import { MediaItem } from "@/types/movie";
 import MediaSectionLoader from "../MediaSectionLoader";
 
@@ -19,8 +20,8 @@ interface MoviesSectionsProps {
   awardWinningMovies?: MediaItem[];
   popularMovies?: MediaItem[];
   trendingMovies?: MediaItem[];
-  onLoadMore: (sectionId: string) => void; // Modified to accept sectionId
-  onMediaClick?: (media: MediaItem) => void; // Add onMediaClick prop
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick?: (media: MediaItem) => void;
   isLoading: boolean;
   hasMore: boolean;
 }
@@ -48,102 +49,128 @@ const MoviesSections = ({
   isLoading,
   hasMore
 }: MoviesSectionsProps) => {
-  // Funções específicas para cada seção
-  const handleLoadMoreMovies = () => {
-    onLoadMore("movies");
-    console.log("Carregando mais filmes populares");
-  };
-  
-  const handleLoadMoreAction = () => {
-    onLoadMore("actionMovies");
-    console.log("Carregando mais filmes de ação");
-  };
-  
-  const handleLoadMoreComedy = () => {
-    onLoadMore("comedyMovies");
-    console.log("Carregando mais comédias");
-  };
-  
-  const handleLoadMoreAdventure = () => {
-    onLoadMore("adventureMovies");
-    console.log("Carregando mais filmes de aventura");
-  };
-  
-  const handleLoadMoreSciFi = () => {
-    onLoadMore("sciFiMovies");
-    console.log("Carregando mais filmes de ficção científica");
-  };
-  
-  const handleLoadMoreMarvel = () => {
-    onLoadMore("marvelMovies");
-    console.log("Carregando mais filmes da Marvel");
-  };
-  
-  const handleLoadMoreDC = () => {
-    onLoadMore("dcMovies");
-    console.log("Carregando mais filmes da DC");
-  };
-  
-  // Additional handlers for optional sections
-  const handleLoadMoreHorror = () => {
-    onLoadMore("horrorMovies");
-    console.log("Carregando mais filmes de terror");
-  };
-  
-  const handleLoadMoreRomance = () => {
-    onLoadMore("romanceMovies");
-    console.log("Carregando mais filmes de romance");
-  };
-  
-  const handleLoadMoreDrama = () => {
-    onLoadMore("dramaMovies");
-    console.log("Carregando mais filmes de drama");
-  };
-  
-  const handleLoadMoreThriller = () => {
-    onLoadMore("thrillerMovies");
-    console.log("Carregando mais filmes de suspense");
-  };
-  
-  const handleLoadMoreFamily = () => {
-    onLoadMore("familyMovies");
-    console.log("Carregando mais filmes para família");
-  };
-  
-  const handleLoadMoreAnimation = () => {
-    onLoadMore("animationMovies");
-    console.log("Carregando mais filmes de animação");
-  };
-  
-  const handleLoadMoreDocumentary = () => {
-    onLoadMore("documentaryMovies");
-    console.log("Carregando mais documentários");
-  };
-  
-  const handleLoadMoreAwardWinning = () => {
-    onLoadMore("awardWinningMovies");
-    console.log("Carregando mais filmes premiados");
-  };
-  
   return (
-    <>
-      {/* Main movie sections */}
-      <MediaSectionLoader 
-        title="Filmes Populares" 
-        medias={movies}
-        sectionId="movies"
-        onLoadMore={handleLoadMoreMovies}
+    <div className="space-y-8">
+      {/* Main Movie Categories */}
+      <PopularMovies
+        movies={movies}
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
         isLoading={isLoading}
         hasMore={hasMore}
-        onMediaClick={onMediaClick}
       />
       
-      {/* Genre-specific movie sections */}
+      {/* Genre-based Categories */}
+      <GenreBasedMovies
+        actionMovies={actionMovies}
+        comedyMovies={comedyMovies}
+        adventureMovies={adventureMovies}
+        sciFiMovies={sciFiMovies}
+        horrorMovies={horrorMovies}
+        romanceMovies={romanceMovies}
+        dramaMovies={dramaMovies}
+        thrillerMovies={thrillerMovies}
+        familyMovies={familyMovies}
+        animationMovies={animationMovies}
+        documentaryMovies={documentaryMovies}
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
+        isLoading={isLoading}
+        hasMore={hasMore}
+      />
+      
+      {/* Franchise Movies */}
+      <FranchiseMovies
+        marvelMovies={marvelMovies}
+        dcMovies={dcMovies}
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
+        isLoading={isLoading}
+        hasMore={hasMore}
+      />
+      
+      {/* Special Categories */}
+      <SpecialCategories
+        awardWinningMovies={awardWinningMovies}
+        popularMovies={popularMovies}
+        trendingMovies={trendingMovies}
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
+        isLoading={isLoading}
+        hasMore={hasMore}
+      />
+    </div>
+  );
+};
+
+// Component for Popular Movies
+const PopularMovies = ({ 
+  movies, 
+  onLoadMore, 
+  onMediaClick, 
+  isLoading, 
+  hasMore 
+}: {
+  movies: MediaItem[];
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick?: (media: MediaItem) => void;
+  isLoading: boolean;
+  hasMore: boolean;
+}) => {
+  return (
+    <MediaSectionLoader 
+      title="Filmes Populares" 
+      medias={movies}
+      sectionId="movies"
+      onLoadMore={onLoadMore}
+      isLoading={isLoading}
+      hasMore={hasMore}
+      onMediaClick={onMediaClick}
+    />
+  );
+};
+
+// Component for Genre-based Movies
+const GenreBasedMovies = ({
+  actionMovies,
+  comedyMovies,
+  adventureMovies,
+  sciFiMovies,
+  horrorMovies,
+  romanceMovies,
+  dramaMovies,
+  thrillerMovies,
+  familyMovies,
+  animationMovies,
+  documentaryMovies,
+  onLoadMore,
+  onMediaClick,
+  isLoading,
+  hasMore
+}: {
+  actionMovies: MediaItem[];
+  comedyMovies: MediaItem[];
+  adventureMovies: MediaItem[];
+  sciFiMovies: MediaItem[];
+  horrorMovies: MediaItem[];
+  romanceMovies: MediaItem[];
+  dramaMovies: MediaItem[];
+  thrillerMovies: MediaItem[];
+  familyMovies: MediaItem[];
+  animationMovies: MediaItem[];
+  documentaryMovies: MediaItem[];
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick?: (media: MediaItem) => void;
+  isLoading: boolean;
+  hasMore: boolean;
+}) => {
+  return (
+    <>
       <MediaSectionLoader 
         title="Filmes de Ação" 
         medias={actionMovies}
         sectionId="actionMovies"
-        onLoadMore={handleLoadMoreAction}
+        onLoadMore={onLoadMore}
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
@@ -153,7 +180,7 @@ const MoviesSections = ({
         title="Comédias" 
         medias={comedyMovies}
         sectionId="comedyMovies"
-        onLoadMore={handleLoadMoreComedy}
+        onLoadMore={onLoadMore}
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
@@ -163,7 +190,7 @@ const MoviesSections = ({
         title="Filmes de Aventura" 
         medias={adventureMovies}
         sectionId="adventureMovies"
-        onLoadMore={handleLoadMoreAdventure}
+        onLoadMore={onLoadMore}
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
@@ -173,40 +200,18 @@ const MoviesSections = ({
         title="Ficção Científica" 
         medias={sciFiMovies}
         sectionId="sciFiMovies"
-        onLoadMore={handleLoadMoreSciFi}
-        isLoading={isLoading}
-        hasMore={hasMore}
-        onMediaClick={onMediaClick}
-      />
-      
-      {/* Franchise-specific movie sections */}
-      <MediaSectionLoader 
-        title="Universo Marvel" 
-        medias={marvelMovies}
-        sectionId="marvelMovies"
-        onLoadMore={handleLoadMoreMarvel}
-        isLoading={isLoading}
-        hasMore={hasMore}
-        onMediaClick={onMediaClick}
-      />
-      
-      <MediaSectionLoader 
-        title="DC Comics" 
-        medias={dcMovies}
-        sectionId="dcMovies"
-        onLoadMore={handleLoadMoreDC}
+        onLoadMore={onLoadMore}
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
       />
 
-      {/* Additional movie sections */}
       {horrorMovies.length > 0 && (
         <MediaSectionLoader 
           title="Filmes de Terror" 
           medias={horrorMovies}
           sectionId="horrorMovies"
-          onLoadMore={handleLoadMoreHorror}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -218,7 +223,7 @@ const MoviesSections = ({
           title="Filmes de Romance" 
           medias={romanceMovies}
           sectionId="romanceMovies"
-          onLoadMore={handleLoadMoreRomance}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -230,7 +235,7 @@ const MoviesSections = ({
           title="Filmes de Drama" 
           medias={dramaMovies}
           sectionId="dramaMovies"
-          onLoadMore={handleLoadMoreDrama}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -242,7 +247,7 @@ const MoviesSections = ({
           title="Filmes de Suspense" 
           medias={thrillerMovies}
           sectionId="thrillerMovies"
-          onLoadMore={handleLoadMoreThriller}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -254,7 +259,7 @@ const MoviesSections = ({
           title="Filmes para a Família" 
           medias={familyMovies}
           sectionId="familyMovies"
-          onLoadMore={handleLoadMoreFamily}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -266,7 +271,7 @@ const MoviesSections = ({
           title="Filmes de Animação" 
           medias={animationMovies}
           sectionId="animationMovies"
-          onLoadMore={handleLoadMoreAnimation}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -278,19 +283,107 @@ const MoviesSections = ({
           title="Documentários" 
           medias={documentaryMovies}
           sectionId="documentaryMovies"
-          onLoadMore={handleLoadMoreDocumentary}
+          onLoadMore={onLoadMore}
+          isLoading={isLoading}
+          hasMore={hasMore}
+          onMediaClick={onMediaClick}
+        />
+      )}
+    </>
+  );
+};
+
+// Component for Franchise Movies
+const FranchiseMovies = ({
+  marvelMovies,
+  dcMovies,
+  onLoadMore,
+  onMediaClick,
+  isLoading,
+  hasMore
+}: {
+  marvelMovies: MediaItem[];
+  dcMovies: MediaItem[];
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick?: (media: MediaItem) => void;
+  isLoading: boolean;
+  hasMore: boolean;
+}) => {
+  return (
+    <>
+      <MediaSectionLoader 
+        title="Universo Marvel" 
+        medias={marvelMovies}
+        sectionId="marvelMovies"
+        onLoadMore={onLoadMore}
+        isLoading={isLoading}
+        hasMore={hasMore}
+        onMediaClick={onMediaClick}
+      />
+      
+      <MediaSectionLoader 
+        title="DC Comics" 
+        medias={dcMovies}
+        sectionId="dcMovies"
+        onLoadMore={onLoadMore}
+        isLoading={isLoading}
+        hasMore={hasMore}
+        onMediaClick={onMediaClick}
+      />
+    </>
+  );
+};
+
+// Component for Special Categories
+const SpecialCategories = ({
+  awardWinningMovies,
+  popularMovies,
+  trendingMovies,
+  onLoadMore,
+  onMediaClick,
+  isLoading,
+  hasMore
+}: {
+  awardWinningMovies: MediaItem[];
+  popularMovies: MediaItem[];
+  trendingMovies: MediaItem[];
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick?: (media: MediaItem) => void;
+  isLoading: boolean;
+  hasMore: boolean;
+}) => {
+  return (
+    <>
+      {awardWinningMovies.length > 0 && (
+        <MediaSectionLoader 
+          title="Filmes Premiados" 
+          medias={awardWinningMovies}
+          sectionId="awardWinningMovies"
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
       
-      {awardWinningMovies.length > 0 && (
+      {popularMovies.length > 0 && popularMovies !== awardWinningMovies && (
         <MediaSectionLoader 
-          title="Filmes Premiados" 
-          medias={awardWinningMovies}
-          sectionId="awardWinningMovies"
-          onLoadMore={handleLoadMoreAwardWinning}
+          title="Mais Populares" 
+          medias={popularMovies}
+          sectionId="popularMovies"
+          onLoadMore={onLoadMore}
+          isLoading={isLoading}
+          hasMore={hasMore}
+          onMediaClick={onMediaClick}
+        />
+      )}
+      
+      {trendingMovies.length > 0 && (
+        <MediaSectionLoader 
+          title="Em Alta" 
+          medias={trendingMovies}
+          sectionId="trendingMovies"
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}

@@ -15,7 +15,8 @@ interface SeriesSectionsProps {
   primeOriginals?: MediaItem[];
   hboOriginals?: MediaItem[];
   disneyOriginals?: MediaItem[];
-  onLoadMore?: () => void;
+  onLoadMore?: (sectionId: string) => void;
+  onMediaClick?: (media: MediaItem) => void;
   isLoading?: boolean;
   hasMore?: boolean;
 }
@@ -34,54 +35,78 @@ const SeriesSections = ({
   hboOriginals = [],
   disneyOriginals = [],
   onLoadMore = () => {},
+  onMediaClick,
   isLoading = false,
   hasMore = false
 }: SeriesSectionsProps) => {
-  // Função padrão para sessões sem paginação real
-  const noop = () => {};
-  
-  // Funções específicas para cada seção
-  const handleLoadMoreSeries = () => {
-    onLoadMore();
-    console.log("Carregando mais séries gerais");
-  };
-  
-  const handleLoadMorePopularSeries = () => {
-    onLoadMore();
-    console.log("Carregando mais séries populares");
-  };
-  
-  const handleLoadMoreNetflixOriginals = () => {
-    onLoadMore();
-    console.log("Carregando mais Netflix Originals");
-  };
-  
-  const handleLoadMorePrimeOriginals = () => {
-    onLoadMore();
-    console.log("Carregando mais Prime Originals");
-  };
-  
-  const handleLoadMoreHboOriginals = () => {
-    onLoadMore();
-    console.log("Carregando mais HBO Originals");
-  };
-  
-  const handleLoadMoreDisneyOriginals = () => {
-    onLoadMore();
-    console.log("Carregando mais Disney+ Originals");
-  };
-  
   return (
     <div className="series-sections-container">
-      {/* Main series sections */}
+      {/* Main Series Categories */}
+      <MainSeriesCategories
+        series={series}
+        popularSeries={popularSeries}
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
+        isLoading={isLoading}
+        hasMore={hasMore}
+      />
+      
+      {/* Streaming Platforms */}
+      <StreamingPlatformsSeries
+        netflixOriginals={netflixOriginals}
+        primeOriginals={primeOriginals}
+        hboOriginals={hboOriginals}
+        disneyOriginals={disneyOriginals}
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
+        isLoading={isLoading}
+        hasMore={hasMore}
+      />
+      
+      {/* Special Categories */}
+      <SpecialSeriesCategories
+        awardWinningSeries={awardWinningSeries}
+        documentarySeries={documentarySeries}
+        crimeSeries={crimeSeries}
+        mysterySeries={mysterySeries}
+        realitySeries={realitySeries}
+        talkShows={talkShows}
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
+        isLoading={isLoading}
+        hasMore={hasMore}
+      />
+    </div>
+  );
+};
+
+// Component for Main Series Categories
+const MainSeriesCategories = ({
+  series,
+  popularSeries,
+  onLoadMore,
+  onMediaClick,
+  isLoading,
+  hasMore
+}: {
+  series: MediaItem[];
+  popularSeries: MediaItem[];
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick?: (media: MediaItem) => void;
+  isLoading: boolean;
+  hasMore: boolean;
+}) => {
+  return (
+    <>
       {popularSeries.length > 0 && (
         <MediaSectionLoader 
           title="Séries Populares" 
           medias={popularSeries}
           sectionId="popularSeries"
-          onLoadMore={handleLoadMorePopularSeries}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -89,20 +114,46 @@ const SeriesSections = ({
         title="Séries e Programas de TV" 
         medias={series}
         sectionId="series"
-        onLoadMore={handleLoadMoreSeries}
+        onLoadMore={onLoadMore}
         isLoading={isLoading}
         hasMore={hasMore}
+        onMediaClick={onMediaClick}
       />
-      
-      {/* Streaming platform originals */}
+    </>
+  );
+};
+
+// Component for Streaming Platform Series
+const StreamingPlatformsSeries = ({
+  netflixOriginals,
+  primeOriginals,
+  hboOriginals,
+  disneyOriginals,
+  onLoadMore,
+  onMediaClick,
+  isLoading,
+  hasMore
+}: {
+  netflixOriginals: MediaItem[];
+  primeOriginals: MediaItem[];
+  hboOriginals: MediaItem[];
+  disneyOriginals: MediaItem[];
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick?: (media: MediaItem) => void;
+  isLoading: boolean;
+  hasMore: boolean;
+}) => {
+  return (
+    <>
       {netflixOriginals.length > 0 && (
         <MediaSectionLoader 
           title="Netflix Originals" 
           medias={netflixOriginals}
           sectionId="netflixOriginals"
-          onLoadMore={handleLoadMoreNetflixOriginals}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -111,9 +162,10 @@ const SeriesSections = ({
           title="Amazon Prime Originals" 
           medias={primeOriginals}
           sectionId="primeOriginals"
-          onLoadMore={handleLoadMoreSeries}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -122,9 +174,10 @@ const SeriesSections = ({
           title="HBO Max Originals" 
           medias={hboOriginals}
           sectionId="hboOriginals"
-          onLoadMore={handleLoadMoreSeries}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -133,21 +186,51 @@ const SeriesSections = ({
           title="Disney+ Originals" 
           medias={disneyOriginals}
           sectionId="disneyOriginals"
-          onLoadMore={handleLoadMoreSeries}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
-      
-      {/* Additional series sections */}
+    </>
+  );
+};
+
+// Component for Special Series Categories
+const SpecialSeriesCategories = ({
+  awardWinningSeries,
+  documentarySeries,
+  crimeSeries,
+  mysterySeries,
+  realitySeries,
+  talkShows,
+  onLoadMore,
+  onMediaClick,
+  isLoading,
+  hasMore
+}: {
+  awardWinningSeries: MediaItem[];
+  documentarySeries: MediaItem[];
+  crimeSeries: MediaItem[];
+  mysterySeries: MediaItem[];
+  realitySeries: MediaItem[];
+  talkShows: MediaItem[];
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick?: (media: MediaItem) => void;
+  isLoading: boolean;
+  hasMore: boolean;
+}) => {
+  return (
+    <>
       {awardWinningSeries.length > 0 && (
         <MediaSectionLoader 
           title="Séries Premiadas" 
           medias={awardWinningSeries}
           sectionId="awardWinningSeries"
-          onLoadMore={handleLoadMoreSeries}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -156,9 +239,10 @@ const SeriesSections = ({
           title="Séries Documentais" 
           medias={documentarySeries}
           sectionId="documentarySeries"
-          onLoadMore={handleLoadMoreSeries}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -167,9 +251,10 @@ const SeriesSections = ({
           title="Séries de Crime" 
           medias={crimeSeries}
           sectionId="crimeSeries"
-          onLoadMore={handleLoadMoreSeries}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -178,9 +263,10 @@ const SeriesSections = ({
           title="Séries de Mistério" 
           medias={mysterySeries}
           sectionId="mysterySeries"
-          onLoadMore={handleLoadMoreSeries}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -189,9 +275,10 @@ const SeriesSections = ({
           title="Reality Shows" 
           medias={realitySeries}
           sectionId="realitySeries"
-          onLoadMore={handleLoadMoreSeries}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -200,12 +287,13 @@ const SeriesSections = ({
           title="Talk Shows" 
           medias={talkShows}
           sectionId="talkShows"
-          onLoadMore={handleLoadMoreSeries}
+          onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
-    </div>
+    </>
   );
 };
 
