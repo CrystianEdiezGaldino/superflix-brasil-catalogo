@@ -9,7 +9,7 @@ type MediaSectionProps = {
   onLoadMore?: () => void;
   isLoading?: boolean;
   onMediaClick?: (media: MediaItem) => void;
-  sectionId?: string; // Add sectionId prop
+  sectionId?: string;
 };
 
 const MediaSection = ({ 
@@ -19,7 +19,7 @@ const MediaSection = ({
   onLoadMore, 
   isLoading = false,
   onMediaClick,
-  sectionId = 'default' // Default sectionId
+  sectionId = 'default'
 }: MediaSectionProps) => {
   // Function to handle click on "Load More" button
   const handleLoadMore = () => {

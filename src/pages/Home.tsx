@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -6,12 +7,20 @@ import { fetchTopRated } from "../services/tmdb/topRated";
 import { fetchUpcoming } from "../services/tmdb/upcoming";
 import MediaView from "../components/media/MediaView";
 import type { MediaItem } from "../types/movie";
+import { useMovies } from "../hooks/movies/useMovies";
 
 const Home = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
+
+  const {
+    movies,
+    loadMoreMovies,
+    isLoadingMore,
+    hasMore
+  } = useMovies();
 
   const { data: trending = [], isLoading: isLoadingTrending } = useQuery({
     queryKey: ["trending"],
@@ -42,6 +51,12 @@ const Home = () => {
     }
   };
 
+  // Update this function to load more content based on section id
+  const handleLoadMore = (sectionId: string) => {
+    console.log(`Loading more content for section: ${sectionId}`);
+    loadMoreMovies();
+  };
+
   return (
     <MediaView
       title="Bem-vindo ao SuperFlix"
@@ -51,8 +66,8 @@ const Home = () => {
       topRatedItems={topRated}
       recentItems={upcoming}
       isLoading={isLoadingTrending || isLoadingTopRated || isLoadingUpcoming}
-      isLoadingMore={false}
-      hasMore={false}
+      isLoadingMore={isLoadingMore}
+      hasMore={hasMore}
       isFiltering={!!yearFilter || !!ratingFilter}
       isSearching={!!searchQuery}
       page={1}
@@ -62,7 +77,7 @@ const Home = () => {
       onSearch={setSearchQuery}
       onYearFilterChange={setYearFilter}
       onRatingFilterChange={setRatingFilter}
-      onLoadMore={() => {}}
+      onLoadMore={handleLoadMore}
       onResetFilters={() => {
         setYearFilter("");
         setRatingFilter("");
@@ -73,4 +88,4 @@ const Home = () => {
   );
 };
 
-export default Home; 
+export default Home;

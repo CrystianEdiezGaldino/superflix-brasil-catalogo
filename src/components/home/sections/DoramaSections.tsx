@@ -23,30 +23,13 @@ const DoramaSections = ({
   isLoading = false,
   hasMore = false
 }: DoramaSectionsProps) => {
-  // Handler functions for each section
-  const handleLoadFeatured = () => {
-    if (onLoadMore) onLoadMore("featured-doramas");
-  };
-  
-  const handleLoadKorean = () => {
-    if (onLoadMore) onLoadMore("korean-doramas");
-  };
-  
-  const handleLoadPopular = () => {
-    if (onLoadMore) onLoadMore("popular-doramas");
-  };
-  
-  const handleLoadMovies = () => {
-    if (onLoadMore) onLoadMore("korean-movies");
-  };
-  
   return (
     <div className="space-y-8">
       <MediaSectionLoader
         title="Doramas em Destaque"
         medias={doramas}
         sectionId="featured-doramas"
-        onLoadMore={handleLoadFeatured}
+        onLoadMore={onLoadMore || (() => {})}
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
@@ -56,7 +39,7 @@ const DoramaSections = ({
         title="Doramas Coreanos"
         medias={topRatedDoramas}
         sectionId="korean-doramas"
-        onLoadMore={handleLoadKorean}
+        onLoadMore={onLoadMore || (() => {})}
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
@@ -67,7 +50,7 @@ const DoramaSections = ({
           title="Doramas Populares"
           medias={popularDoramas}
           sectionId="popular-doramas"
-          onLoadMore={handleLoadPopular}
+          onLoadMore={onLoadMore || (() => {})}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -79,7 +62,7 @@ const DoramaSections = ({
           title="Filmes Coreanos"
           medias={koreanMovies}
           sectionId="korean-movies"
-          onLoadMore={handleLoadMovies}
+          onLoadMore={onLoadMore || (() => {})}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}

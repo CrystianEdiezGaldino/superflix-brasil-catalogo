@@ -2,8 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { MediaItem } from "@/types/movie";
 
-// Interface for the content calendar data
-interface ContentCalendarItem extends MediaItem {
+// Interface for the content calendar data that extends MediaItem
+export interface ContentCalendarItem extends MediaItem {
   release_date: string;
   episode_number?: number;
   season_number?: number;
