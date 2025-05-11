@@ -6,7 +6,7 @@ interface MediaSectionLoaderProps {
   title: string;
   medias: MediaItem[];
   sectionId: string;
-  onLoadMore: () => void;
+  onLoadMore: (sectionId: string) => void;
   isLoading: boolean;
   hasMore: boolean;
   onMediaClick?: (media: MediaItem) => void;
@@ -32,7 +32,7 @@ const MediaSectionLoader = ({
   // Function to handle loading more for this specific section
   const handleSectionLoadMore = () => {
     console.log(`Loading more for section: ${sectionId}`);
-    onLoadMore();
+    onLoadMore(sectionId);
   };
 
   return (

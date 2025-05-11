@@ -7,7 +7,7 @@ interface AnimeSectionsProps {
   topRatedAnime: MediaItem[];
   recentAnimes?: MediaItem[];
   trendingAnime?: MediaItem[];
-  onLoadMore?: () => void;
+  onLoadMore?: (sectionId: string) => void;
   isLoading?: boolean;
   hasMore?: boolean;
   onMediaClick?: (media: MediaItem) => void;
@@ -18,30 +18,26 @@ const AnimeSections = ({
   topRatedAnime,
   recentAnimes = [],
   trendingAnime = [],
-  onLoadMore = () => {},
+  onLoadMore,
   isLoading = false,
   hasMore = false,
   onMediaClick
 }: AnimeSectionsProps) => {
   // Funções específicas para cada seção
   const handleLoadMoreAnime = () => {
-    onLoadMore();
-    console.log("Carregando mais animes populares");
+    if (onLoadMore) onLoadMore("anime");
   };
   
   const handleLoadMoreTopRatedAnime = () => {
-    onLoadMore();
-    console.log("Carregando mais animes bem avaliados");
+    if (onLoadMore) onLoadMore("topRatedAnime");
   };
   
   const handleLoadMoreRecentAnimes = () => {
-    onLoadMore();
-    console.log("Carregando mais animes recentes");
+    if (onLoadMore) onLoadMore("recentAnimes");
   };
   
   const handleLoadMoreTrendingAnime = () => {
-    onLoadMore();
-    console.log("Carregando mais animes em alta");
+    if (onLoadMore) onLoadMore("trendingAnime");
   };
   
   return (
@@ -78,12 +74,12 @@ const AnimeSections = ({
         onMediaClick={onMediaClick}
       />
       
-      {trendingAnime.length > 0 && (
+      {trendingAnime && trendingAnime.length > 0 && (
         <MediaSectionLoader 
           title="Animes em Alta no Brasil" 
           medias={trendingAnime}
           sectionId="trendingAnime"
-          onLoadMore={handleLoadMoreAnime}
+          onLoadMore={handleLoadMoreTrendingAnime}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}

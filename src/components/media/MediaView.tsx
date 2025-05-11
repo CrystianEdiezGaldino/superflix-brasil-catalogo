@@ -1,9 +1,11 @@
+
 import React from "react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import MediaFilters from "./MediaFilters";
 import MediaGrid from "./MediaGrid";
 import MediaSection from "@/components/MediaSection";
+import ContentCalendar from "@/components/calendar/ContentCalendar";
 import { Button } from "@/components/ui/button";
 import { MediaItem } from "@/types/movie";
 import { TrendingUp, Star, Clock } from "lucide-react";
@@ -88,6 +90,13 @@ const MediaView = ({
           onYearFilterChange={onYearFilterChange}
           onRatingFilterChange={onRatingFilterChange}
         />
+        
+        {/* Content Calendar Section - show only when not searching or filtering */}
+        {!isSearching && !isFiltering && (
+          <div className="mb-8">
+            <ContentCalendar compact />
+          </div>
+        )}
         
         {/* Conteúdo de destaque (renderizado condicionalmente) */}
         {!isSearching && !isFiltering && children}

@@ -14,6 +14,7 @@ import ContentPreview from "@/components/home/ContentPreview";
 import FullContent from "@/components/home/FullContent";
 import LargeSubscriptionUpsell from "@/components/home/LargeSubscriptionUpsell";
 import SearchResults from "@/components/home/SearchResults";
+import ContentCalendar from "@/components/calendar/ContentCalendar";
 import { useMovies } from "@/hooks/movies/useMovies";
 import { useNavigate } from "react-router-dom";
 
@@ -167,6 +168,13 @@ const Index = () => {
           <>
             {/* Admin indicator */}
             {isAdmin && <AdminIndicator />}
+            
+            {/* Calendar Section */}
+            {hasAccess && (
+              <div className="mb-8 px-4 md:px-8">
+                <ContentCalendar compact />
+              </div>
+            )}
             
             {/* Content sections */}
             {!hasAccess ? (
