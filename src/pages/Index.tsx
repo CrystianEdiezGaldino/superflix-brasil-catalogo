@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Banner from "@/components/Banner";
@@ -14,11 +15,14 @@ import FullContent from "@/components/home/FullContent";
 import LargeSubscriptionUpsell from "@/components/home/LargeSubscriptionUpsell";
 import SearchResults from "@/components/home/SearchResults";
 import { useMovies } from "@/hooks/movies/useMovies";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<MediaItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [currentSection, setCurrentSection] = useState<string>("movies");
   
   const {
     user,
@@ -91,6 +95,30 @@ const Index = () => {
       window.removeEventListener("popstate", handleNavigation);
     };
   }, []);
+
+  // Handle loading more content for a specific section
+  const handleLoadMoreSection = (sectionId: string) => {
+    setCurrentSection(sectionId);
+    console.log(`Loading more content for section: ${sectionId}`);
+    loadMoreMovies();
+  };
+  
+  // Handle media click to navigate to detail page
+  const handleMediaClick = (media: MediaItem) => {
+    if (!media || !media.id) return;
+    
+    if (media.media_type === 'tv') {
+      if (media.original_language === 'ko') {
+        navigate(`/dorama/${media.id}`);
+      } else if (media.original_language === 'ja') {
+        navigate(`/anime/${media.id}`);
+      } else {
+        navigate(`/serie/${media.id}`);
+      }
+    } else {
+      navigate(`/filme/${media.id}`);
+    }
+  };
   
   // Guard for loading state with more debugging
   if (isLoading) {
@@ -171,7 +199,8 @@ const Index = () => {
                 topRatedAnime={topRatedAnimeData || []}
                 recommendations={recommendations || []}
                 doramas={doramasData || []}
-                onLoadMore={loadMoreMovies}
+                onLoadMore={handleLoadMoreSection}
+                onMediaClick={handleMediaClick}
                 isLoading={isLoadingMore}
                 hasMore={hasMore}
               />

@@ -20,6 +20,7 @@ interface MoviesSectionsProps {
   popularMovies?: MediaItem[];
   trendingMovies?: MediaItem[];
   onLoadMore: (sectionId: string) => void; // Modified to accept sectionId
+  onMediaClick?: (media: MediaItem) => void; // Add onMediaClick prop
   isLoading: boolean;
   hasMore: boolean;
 }
@@ -43,12 +44,10 @@ const MoviesSections = ({
   popularMovies = [],
   trendingMovies = [],
   onLoadMore,
+  onMediaClick,
   isLoading,
   hasMore
 }: MoviesSectionsProps) => {
-  // Funções e estados padrão para sessões sem paginação real
-  const noop = () => {};
-  
   // Funções específicas para cada seção
   const handleLoadMoreMovies = () => {
     onLoadMore("movies");
@@ -136,6 +135,7 @@ const MoviesSections = ({
         onLoadMore={handleLoadMoreMovies}
         isLoading={isLoading}
         hasMore={hasMore}
+        onMediaClick={onMediaClick}
       />
       
       {/* Genre-specific movie sections */}
@@ -146,6 +146,7 @@ const MoviesSections = ({
         onLoadMore={handleLoadMoreAction}
         isLoading={isLoading}
         hasMore={hasMore}
+        onMediaClick={onMediaClick}
       />
       
       <MediaSectionLoader 
@@ -155,6 +156,7 @@ const MoviesSections = ({
         onLoadMore={handleLoadMoreComedy}
         isLoading={isLoading}
         hasMore={hasMore}
+        onMediaClick={onMediaClick}
       />
       
       <MediaSectionLoader 
@@ -164,6 +166,7 @@ const MoviesSections = ({
         onLoadMore={handleLoadMoreAdventure}
         isLoading={isLoading}
         hasMore={hasMore}
+        onMediaClick={onMediaClick}
       />
       
       <MediaSectionLoader 
@@ -173,6 +176,7 @@ const MoviesSections = ({
         onLoadMore={handleLoadMoreSciFi}
         isLoading={isLoading}
         hasMore={hasMore}
+        onMediaClick={onMediaClick}
       />
       
       {/* Franchise-specific movie sections */}
@@ -183,6 +187,7 @@ const MoviesSections = ({
         onLoadMore={handleLoadMoreMarvel}
         isLoading={isLoading}
         hasMore={hasMore}
+        onMediaClick={onMediaClick}
       />
       
       <MediaSectionLoader 
@@ -192,6 +197,7 @@ const MoviesSections = ({
         onLoadMore={handleLoadMoreDC}
         isLoading={isLoading}
         hasMore={hasMore}
+        onMediaClick={onMediaClick}
       />
 
       {/* Additional movie sections */}
@@ -203,6 +209,7 @@ const MoviesSections = ({
           onLoadMore={handleLoadMoreHorror}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -214,6 +221,7 @@ const MoviesSections = ({
           onLoadMore={handleLoadMoreRomance}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -225,6 +233,7 @@ const MoviesSections = ({
           onLoadMore={handleLoadMoreDrama}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -236,6 +245,7 @@ const MoviesSections = ({
           onLoadMore={handleLoadMoreThriller}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -247,6 +257,7 @@ const MoviesSections = ({
           onLoadMore={handleLoadMoreFamily}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -258,6 +269,7 @@ const MoviesSections = ({
           onLoadMore={handleLoadMoreAnimation}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -269,6 +281,7 @@ const MoviesSections = ({
           onLoadMore={handleLoadMoreDocumentary}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -280,6 +293,7 @@ const MoviesSections = ({
           onLoadMore={handleLoadMoreAwardWinning}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
     </>

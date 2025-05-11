@@ -1,3 +1,4 @@
+
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
 
@@ -8,6 +9,7 @@ interface MediaSectionLoaderProps {
   onLoadMore: () => void;
   isLoading: boolean;
   hasMore: boolean;
+  onMediaClick?: (media: MediaItem) => void;
 }
 
 const MediaSectionLoader = ({ 
@@ -16,7 +18,8 @@ const MediaSectionLoader = ({
   sectionId, 
   onLoadMore,
   isLoading,
-  hasMore
+  hasMore,
+  onMediaClick
 }: MediaSectionLoaderProps) => {
   // Filtrar apenas conteúdos com imagem
   const filteredMedias = medias.filter(media => media.poster_path || media.backdrop_path);
@@ -26,13 +29,21 @@ const MediaSectionLoader = ({
     return null;
   }
 
+  // Function to handle loading more for this specific section
+  const handleSectionLoadMore = () => {
+    console.log(`Loading more for section: ${sectionId}`);
+    onLoadMore();
+  };
+
   return (
     <MediaSection 
       title={title} 
       medias={filteredMedias}
       showLoadMore={hasMore}
-      onLoadMore={onLoadMore}
+      onLoadMore={handleSectionLoadMore}
       isLoading={isLoading}
+      onMediaClick={onMediaClick}
+      sectionId={sectionId}
     />
   );
 };

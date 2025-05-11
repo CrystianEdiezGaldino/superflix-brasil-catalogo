@@ -1,3 +1,4 @@
+
 import { MediaItem } from "@/types/movie";
 import RecommendationsSection from "./sections/RecommendationsSection";
 import MoviesSections from "./sections/MoviesSections";
@@ -45,7 +46,8 @@ interface FullContentProps {
   mysterySeries?: MediaItem[];
   realitySeries?: MediaItem[];
   talkShows?: MediaItem[];
-  onLoadMore: () => void;
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick?: (media: MediaItem) => void;
   isLoading: boolean;
   hasMore: boolean;
 }
@@ -91,6 +93,7 @@ const FullContent = ({
   realitySeries,
   talkShows,
   onLoadMore,
+  onMediaClick,
   isLoading,
   hasMore
 }: FullContentProps) => {
@@ -122,6 +125,7 @@ const FullContent = ({
         isLoading={isLoading}
         hasMore={hasMore}
         onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
       />
 
       <SeriesSections
@@ -140,6 +144,7 @@ const FullContent = ({
         isLoading={isLoading}
         hasMore={hasMore}
         onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
       />
 
       <AnimeSections
@@ -150,6 +155,7 @@ const FullContent = ({
         isLoading={isLoading}
         hasMore={hasMore}
         onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
       />
 
       <DoramaSections
@@ -157,6 +163,7 @@ const FullContent = ({
         topRatedDoramas={koreanDramas || []}
         popularDoramas={japaneseDramas || []}
         koreanMovies={chineseDramas || []}
+        onMediaClick={onMediaClick}
       />
     </div>
   );

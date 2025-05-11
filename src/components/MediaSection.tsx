@@ -1,6 +1,6 @@
+
 import { Plus } from 'lucide-react';
 import { MediaItem, isMovie, isSeries, Movie } from '@/types/movie';
-import { Link } from 'react-router-dom';
 
 type MediaSectionProps = {
   title: string;
@@ -9,6 +9,7 @@ type MediaSectionProps = {
   onLoadMore?: () => void;
   isLoading?: boolean;
   onMediaClick?: (media: MediaItem) => void;
+  sectionId?: string; // Add sectionId prop
 };
 
 const MediaSection = ({ 
@@ -17,21 +18,15 @@ const MediaSection = ({
   showLoadMore = false, 
   onLoadMore, 
   isLoading = false,
-  onMediaClick 
+  onMediaClick,
+  sectionId = 'default' // Default sectionId
 }: MediaSectionProps) => {
-  // Função para mapear o tipo para a rota correta
-  const getLinkPath = (media: MediaItem): string => {
-    if (isMovie(media)) {
-      return `/filme/${media.id}`;
+  // Function to handle click on "Load More" button
+  const handleLoadMore = () => {
+    if (onLoadMore) {
+      console.log(`Loading more items for section: ${sectionId}`);
+      onLoadMore();
     }
-    if (isSeries(media)) {
-      if (media.original_language === 'ko') {
-        return `/dorama/${media.id}`;
-      }
-      return `/serie/${media.id}`;
-    }
-    // Fallback para filmes
-    return `/filme/${(media as Movie).id}`;
   };
 
   const handleClick = (media: MediaItem) => {
@@ -41,7 +36,7 @@ const MediaSection = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" id={`media-section-${sectionId}`}>
       <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
         {medias.map((media) => (
@@ -68,7 +63,7 @@ const MediaSection = ({
         {/* Load more button */}
         {showLoadMore && onLoadMore && (
           <button
-            onClick={onLoadMore}
+            onClick={handleLoadMore}
             className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 hover:bg-gray-700 transition-colors duration-300 flex items-center justify-center"
             disabled={isLoading}
           >

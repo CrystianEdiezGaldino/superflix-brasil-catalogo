@@ -7,9 +7,10 @@ import FavoriteButton from "./FavoriteButton";
 
 interface MediaCardProps {
   media: MediaItem;
+  onClick?: (media: MediaItem) => void;
 }
 
-const MediaCard = ({ media }: MediaCardProps) => {
+const MediaCard = ({ media, onClick }: MediaCardProps) => {
   // Fail safe check for the media object
   if (!media) {
     return null;
@@ -58,11 +59,20 @@ const MediaCard = ({ media }: MediaCardProps) => {
   // Use type assertion to handle the ID for favorite button
   const mediaId = (media as any).id;
   
+  const handleClick = (e: React.MouseEvent) => {
+    // If a click handler is provided, use it
+    if (onClick) {
+      e.preventDefault();
+      onClick(media);
+    }
+  };
+  
   return (
     <Card className="bg-transparent border-none overflow-hidden group">
       <Link 
         to={getLinkPath()}
         className="block overflow-hidden rounded-lg transition-transform duration-300 relative"
+        onClick={handleClick}
       >
         <div className="relative aspect-[2/3] bg-gray-900 overflow-hidden">
           <img 

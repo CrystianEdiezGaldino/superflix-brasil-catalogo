@@ -1,3 +1,4 @@
+
 import { MediaItem, isSeries } from "@/types/movie";
 import MediaSectionLoader from "../MediaSectionLoader";
 
@@ -6,6 +7,7 @@ interface DoramaSectionsProps {
   topRatedDoramas: MediaItem[];
   popularDoramas: MediaItem[];
   koreanMovies: MediaItem[];
+  onMediaClick?: (media: MediaItem) => void;
 }
 
 const DoramaSections = ({
@@ -13,6 +15,7 @@ const DoramaSections = ({
   topRatedDoramas,
   popularDoramas,
   koreanMovies,
+  onMediaClick
 }: DoramaSectionsProps) => {
   return (
     <div className="space-y-8">
@@ -23,6 +26,7 @@ const DoramaSections = ({
         onLoadMore={() => {}}
         isLoading={false}
         hasMore={false}
+        onMediaClick={onMediaClick}
       />
 
       <MediaSectionLoader
@@ -32,6 +36,7 @@ const DoramaSections = ({
         onLoadMore={() => {}}
         isLoading={false}
         hasMore={false}
+        onMediaClick={onMediaClick}
       />
 
      

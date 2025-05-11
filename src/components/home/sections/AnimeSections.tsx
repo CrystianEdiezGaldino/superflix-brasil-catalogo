@@ -10,6 +10,7 @@ interface AnimeSectionsProps {
   onLoadMore?: () => void;
   isLoading?: boolean;
   hasMore?: boolean;
+  onMediaClick?: (media: MediaItem) => void;
 }
 
 const AnimeSections = ({
@@ -19,11 +20,9 @@ const AnimeSections = ({
   trendingAnime = [],
   onLoadMore = () => {},
   isLoading = false,
-  hasMore = false
+  hasMore = false,
+  onMediaClick
 }: AnimeSectionsProps) => {
-  // Função padrão para sessões sem paginação real
-  const noop = () => {};
-  
   // Funções específicas para cada seção
   const handleLoadMoreAnime = () => {
     onLoadMore();
@@ -55,6 +54,7 @@ const AnimeSections = ({
           onLoadMore={handleLoadMoreRecentAnimes}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
       
@@ -65,6 +65,7 @@ const AnimeSections = ({
         onLoadMore={handleLoadMoreAnime}
         isLoading={isLoading}
         hasMore={hasMore}
+        onMediaClick={onMediaClick}
       />
       
       <MediaSectionLoader 
@@ -74,6 +75,7 @@ const AnimeSections = ({
         onLoadMore={handleLoadMoreTopRatedAnime}
         isLoading={isLoading}
         hasMore={hasMore}
+        onMediaClick={onMediaClick}
       />
       
       {trendingAnime.length > 0 && (
@@ -84,6 +86,7 @@ const AnimeSections = ({
           onLoadMore={handleLoadMoreAnime}
           isLoading={isLoading}
           hasMore={hasMore}
+          onMediaClick={onMediaClick}
         />
       )}
     </div>

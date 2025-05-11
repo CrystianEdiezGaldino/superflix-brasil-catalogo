@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import MediaView from "@/components/media/MediaView";
 import { useMovies } from "@/hooks/movies/useMovies";
@@ -26,6 +27,7 @@ const Movies = () => {
   } = useMovies();
 
   const handleMediaClick = (media: Movie) => {
+    console.log("Navigating to movie with ID:", media.id);
     navigate(`/filme/${media.id}`);
   };
 

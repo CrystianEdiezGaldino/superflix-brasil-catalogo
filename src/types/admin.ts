@@ -27,13 +27,13 @@ export interface Subscription {
   user_id: string;
   plan_type: string;
   status: 'active' | 'inactive';
-  current_period_start: string;
-  current_period_end: string;
+  current_period_start: string | null;
+  current_period_end: string | null;
   start_date: string;
   end_date: string;
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
-  trial_end?: string;
+  trial_end?: string | null;
   created_at: string;
   updated_at: string;
   user?: UserWithSubscription;

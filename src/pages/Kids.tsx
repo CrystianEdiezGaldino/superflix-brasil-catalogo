@@ -1,10 +1,13 @@
 
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import MediaView from "@/components/media/MediaView";
 import { useKidsContent } from "@/hooks/kids/useKidsContent";
 import { Baby, Film, Tv } from "lucide-react";
+import { MediaItem } from "@/types/movie";
 
 const Kids = () => {
+  const navigate = useNavigate();
   const {
     kidsContent,
     trendingContent,
@@ -26,6 +29,23 @@ const Kids = () => {
     loadMore,
     resetFilters
   } = useKidsContent();
+
+  // Handle media click to navigate to correct page
+  const handleMediaClick = (media: MediaItem) => {
+    if (!media || !media.id) return;
+    
+    if (media.media_type === 'tv') {
+      if (media.original_language === 'ko') {
+        navigate(`/dorama/${media.id}`);
+      } else if (media.original_language === 'ja') {
+        navigate(`/anime/${media.id}`);
+      } else {
+        navigate(`/serie/${media.id}`);
+      }
+    } else {
+      navigate(`/filme/${media.id}`);
+    }
+  };
 
   return (
     <MediaView
@@ -50,6 +70,7 @@ const Kids = () => {
       onRatingFilterChange={handleRatingFilterChange}
       onLoadMore={loadMore}
       onResetFilters={resetFilters}
+      onMediaClick={handleMediaClick}
     >
       <div className="mb-8 bg-gradient-to-b from-purple-900/70 to-black/20 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-4">
