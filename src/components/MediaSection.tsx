@@ -21,6 +21,9 @@ const MediaSection = ({
   onMediaClick,
   sectionId = 'default'
 }: MediaSectionProps) => {
+  // Only show load more for Popular Movies section
+  const shouldShowLoadMore = sectionId === 'popular-movies' && showLoadMore && onLoadMore;
+  
   // Function to handle click on "Load More" button
   const handleLoadMore = () => {
     if (onLoadMore) {
@@ -63,8 +66,8 @@ const MediaSection = ({
           </div>
         ))}
         
-        {/* Load more button */}
-        {showLoadMore && onLoadMore && (
+        {/* Load more button - only for Popular Movies */}
+        {shouldShowLoadMore && (
           <button
             onClick={handleLoadMore}
             className="relative aspect-[2/3] rounded-lg overflow-hidden bg-gray-800 hover:bg-gray-700 transition-colors duration-300 flex items-center justify-center"

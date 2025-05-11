@@ -1,3 +1,4 @@
+
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -52,16 +53,16 @@ const Navbar = ({ onSearch }: NavbarProps) => {
       className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         isScrolled 
           ? "bg-black/95 backdrop-blur-sm shadow-lg" 
-          : "bg-gradient-to-b from-black/80 to-transparent"
+          : "bg-gradient-to-b from-black/80 via-black/50 to-transparent"
       }`}
     >
-      <div className="container max-w-full px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-6">
+      <div className="container max-w-full px-4 py-4 flex items-center justify-between">
+        <div className="flex items-center space-x-8">
           <NavLogo />
           {!isMobile && <NavLinks isAuthenticated={!!user} />}
         </div>
 
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-5">
           <SearchBar onSearch={onSearch} />
           
           {isAdmin && (

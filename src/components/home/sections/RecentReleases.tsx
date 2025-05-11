@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ContentCalendarItem } from "@/hooks/useContentCalendar";
-import { isMovie, isSeries } from "@/types/movie";
+import { isMovie, isSeries, MediaItem } from "@/types/movie";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 
@@ -64,7 +64,13 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-white">Lançamentos Recentes</h2>
+      <h2 className="text-2xl font-bold text-white relative">
+        Lançamentos Recentes
+        <span className="absolute top-0 -right-1 transform translate-x-full bg-red-600 text-white text-xs px-2 py-1 rounded-full">
+          Novo
+        </span>
+      </h2>
+      
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
         {displayedReleases.map((media) => (
           <div 
@@ -74,7 +80,7 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
           >
             <img
               src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
-              alt={isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
+              alt={isMovie(media as MediaItem) ? media.title : isSeries(media as MediaItem) ? media.name : ''}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = "/placeholder.svg";
@@ -83,7 +89,7 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <div className="absolute bottom-0 left-0 right-0 p-2">
                 <h3 className="text-sm font-medium text-white truncate">
-                  {isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
+                  {isMovie(media as MediaItem) ? media.title : isSeries(media as MediaItem) ? media.name : ''}
                 </h3>
                 <p className="text-xs text-gray-300">
                   {new Date(media.release_date).toLocaleDateString()}
@@ -95,6 +101,14 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
                 )}
               </div>
             </div>
+            
+            {media.is_new && (
+              <div className="absolute top-2 right-2">
+                <span className="inline-block px-2 py-1 text-xs bg-red-600 text-white rounded-full shadow-lg">
+                  Novo
+                </span>
+              </div>
+            )}
           </div>
         ))}
       </div>

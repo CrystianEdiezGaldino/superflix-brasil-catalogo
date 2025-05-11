@@ -22,40 +22,40 @@ const NavLinks = ({ isAuthenticated }: NavLinksProps) => {
 
   return (
     <nav className="hidden md:block">
-      <ul className="flex space-x-6">
+      <ul className="flex space-x-8">
         <NavLink to="/" checkActive={() => isHomeActive()}>
-          <Film className="mr-1 h-4 w-4" />
+          <Film className="mr-1.5 h-4 w-4" />
           Início
         </NavLink>
         
         <NavLink to="/filmes">
-          <Film className="mr-1 h-4 w-4" />
+          <Film className="mr-1.5 h-4 w-4" />
           Filmes
         </NavLink>
         
         <NavLink to="/series">
-          <Tv className="mr-1 h-4 w-4" />
+          <Tv className="mr-1.5 h-4 w-4" />
           Séries
         </NavLink>
         
         <NavLink to="/animes">
-          <Film className="mr-1 h-4 w-4" />
+          <Film className="mr-1.5 h-4 w-4" />
           Animes
         </NavLink>
         
         <NavLink to="/doramas">
-          <Tv className="mr-1 h-4 w-4" />
+          <Tv className="mr-1.5 h-4 w-4" />
           Doramas
         </NavLink>
         
         <NavLink to="/kids">
-          <Baby className="mr-1 h-4 w-4" />
+          <Baby className="mr-1.5 h-4 w-4" />
           Kids
         </NavLink>
         
         {isAuthenticated && (
           <NavLink to="/favoritos">
-            <Heart className="mr-1 h-4 w-4" />
+            <Heart className="mr-1.5 h-4 w-4" />
             Meus Favoritos
           </NavLink>
         )}

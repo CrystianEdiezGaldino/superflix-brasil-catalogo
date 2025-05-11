@@ -22,11 +22,11 @@ const NavLink = ({ to, children, checkActive }: NavLinkProps) => {
     <li>
       <Link
         to={to}
-        className={`flex items-center transition duration-300 ${
+        className={`flex items-center transition duration-300 border-b-2 ${
           isRouteActive(to)
-            ? "text-netflix-red font-medium"
-            : "text-white hover:text-netflix-red"
-        }`}
+            ? "text-white font-medium border-netflix-red"
+            : "text-white/80 hover:text-white border-transparent hover:border-white/30"
+        } py-1`}
       >
         {children}
       </Link>

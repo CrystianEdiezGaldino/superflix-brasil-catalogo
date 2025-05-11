@@ -3,12 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { MediaItem } from "@/types/movie";
 
 // Interface for the content calendar data that extends MediaItem
-export interface ContentCalendarItem extends MediaItem {
+export interface ContentCalendarItem {
   release_date: string;
   episode_number?: number;
   season_number?: number;
   is_new: boolean;
-  // Ensure these required fields from MediaItem are included
+  // Required fields from MediaItem
   id: number;
   media_type: string;
   poster_path?: string;
@@ -17,6 +17,19 @@ export interface ContentCalendarItem extends MediaItem {
   name?: string;
   overview?: string;
   original_language?: string;
+  
+  // Adding Series properties to make it compatible with the MediaItem type
+  first_air_date?: string;
+  vote_average?: number;
+  vote_count?: number;
+  genres?: Array<{ id: number; name: string }>;
+  networks?: Array<{ id: number; name: string; logo_path: string }>;
+  episode_run_time?: number[];
+  
+  // Adding Movie properties
+  release_date?: string;
+  imdb_id?: string;
+  external_ids?: { imdb_id?: string };
 }
 
 // Function to fetch from the content calendar endpoint

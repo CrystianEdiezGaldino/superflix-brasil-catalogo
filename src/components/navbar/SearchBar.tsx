@@ -45,7 +45,8 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
   return (
     <form onSubmit={handleSearchSubmit} className="relative">
       <div
-        className="flex items-center bg-black/60 rounded-full overflow-hidden transition-all duration-300"
+        className={`flex items-center rounded-full overflow-hidden transition-all duration-300 
+          ${isSearchOpen ? 'bg-gray-900/80 border border-white/20' : 'bg-transparent'}`}
         style={{ width: isSearchOpen ? "auto" : "40px" }}
       >
         {isSearchOpen && (
@@ -56,6 +57,7 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
               value={query}
               onChange={handleSearchInputChange}
               className="w-[200px] md:w-[300px] bg-transparent border-none pl-4 pr-8 placeholder:text-gray-400 text-white focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+              autoFocus
             />
             {query && (
               <button
@@ -73,7 +75,7 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
           onClick={!isSearchOpen ? toggleSearch : undefined}
           variant="ghost"
           size="icon"
-          className="text-white hover:text-netflix-red"
+          className={`text-white ${isSearchOpen ? 'hover:text-white' : 'hover:text-netflix-red'}`}
         >
           <Search size={20} />
         </Button>

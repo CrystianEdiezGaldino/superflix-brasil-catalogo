@@ -73,12 +73,19 @@ export async function fetchAdminData() {
     // Combine user data with subscription and admin data
     const userData = authData?.user ? [authData.user] : [];
     const combinedUsers: UserWithSubscription[] = userData.map((user: any) => {
-      const subscription = subscriptionsData?.find(sub => sub.user_id === user.id);
+      const subscription = subscriptionsData?.find((sub: any) => sub.user_id === user.id);
       const tempAccess = tempAccessesData?.find(
-        access => access.user_id === user.id && new Date(access.expires_at) > new Date()
+        (access: any) => access.user_id === user.id && new Date(access.expires_at) > new Date()
       );
       const isAdmin = adminsMap.has(user.id);
       const profile = profilesMap.get(user.id);
+      
+      // Convert subscription data to match UserWithSubscription type
+      const formattedSubscription = subscription ? {
+        ...subscription,
+        start_date: subscription.current_period_start || null,
+        end_date: subscription.current_period_end || null
+      } : null;
       
       return {
         id: user.id,
@@ -87,7 +94,7 @@ export async function fetchAdminData() {
         last_sign_in_at: user.last_sign_in_at,
         created_at: user.created_at || profile?.created_at,
         updated_at: user.updated_at || profile?.updated_at || user.created_at || new Date().toISOString(),
-        subscription: subscription,
+        subscription: formattedSubscription,
         temp_access: tempAccess,
         is_admin: isAdmin
       };
@@ -107,14 +114,14 @@ export async function fetchAdminData() {
     }
     
     // Calculate stats
-    const activeSubscriptions = subscriptionsData?.filter(sub => sub.status === 'active') || [];
+    const activeSubscriptions = subscriptionsData?.filter((sub: any) => sub.status === 'active') || [];
     const activeTempAccesses = tempAccessesData?.filter(
-      access => new Date(access.expires_at) > new Date()
+      (access: any) => new Date(access.expires_at) > new Date()
     ) || [];
     const adminUsersCount = adminsMap.size || 0;
     
-    const monthlyRevenue = activeSubscriptions.filter(sub => sub.plan_type === 'monthly').length * 9.9;
-    const annualRevenue = activeSubscriptions.filter(sub => sub.plan_type === 'annual').length * (100 / 12);
+    const monthlyRevenue = activeSubscriptions.filter((sub: any) => sub.plan_type === 'monthly').length * 9.9;
+    const annualRevenue = activeSubscriptions.filter((sub: any) => sub.plan_type === 'annual').length * (100 / 12);
     
     const stats: AdminStats = {
       totalUsers: allProfiles?.length || 0,
