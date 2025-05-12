@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ContentCalendarItem } from "@/hooks/useContentCalendar";
+import { ContentCalendarItem } from "@/types/calendar";
 import { isMovie, isSeries } from "@/types/movie";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
@@ -19,7 +19,7 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
     return (
       <div className="space-y-4">
         <h2 className="text-2xl font-bold text-white">Lançamentos Recentes</h2>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {Array.from({ length: 20 }).map((_, index) => (
             <div key={index} className="aspect-[2/3] bg-gray-800 rounded-lg animate-pulse" />
           ))}
@@ -54,9 +54,11 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
   };
 
   // Sort releases by date (newest first)
-  const sortedReleases = [...releases].sort((a, b) => 
-    new Date(b.release_date).getTime() - new Date(a.release_date).getTime()
-  );
+  const sortedReleases = [...releases].sort((a, b) => {
+    const dateA = a.release_date || a.first_air_date || "";
+    const dateB = b.release_date || b.first_air_date || "";
+    return new Date(dateB).getTime() - new Date(dateA).getTime();
+  });
 
   // Limit the display
   const displayedReleases = sortedReleases.slice(0, displayLimit);
@@ -71,10 +73,10 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
         </span>
       </h2>
       
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {displayedReleases.map((media) => (
           <div 
-            key={`${media.id}-${media.media_type}-${media.release_date}`} 
+            key={`${media.id}-${media.media_type}`} 
             onClick={() => handleMediaClick(media)}
             className="relative aspect-[2/3] rounded-lg overflow-hidden group cursor-pointer"
           >
@@ -92,7 +94,7 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
                   {isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
                 </h3>
                 <p className="text-xs text-gray-300">
-                  {new Date(media.release_date).toLocaleDateString()}
+                  {new Date(media.release_date || media.first_air_date || "").toLocaleDateString()}
                 </p>
                 {media.is_new && (
                   <span className="inline-block px-2 py-1 mt-1 text-xs bg-red-600 text-white rounded-full">

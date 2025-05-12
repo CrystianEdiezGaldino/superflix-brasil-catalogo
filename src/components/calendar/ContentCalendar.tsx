@@ -3,11 +3,12 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
-import { Calendar, CalendarDays } from "lucide-react";
+import { Calendar as CalendarIcon, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useContentCalendar, ContentCalendarItem } from "@/hooks/useContentCalendar";
+import { useContentCalendar } from "@/hooks/useContentCalendar";
+import { ContentCalendarItem } from "@/types/calendar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isMovie, isSeries } from "@/types/movie";
 
@@ -18,7 +19,7 @@ interface ContentCalendarProps {
 const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("today");
-  const { calendarItems, upcomingContent, recentContent, todayReleases, isLoading } = useContentCalendar();
+  const { calendarItems, todayReleases, recentContent, upcomingContent, isLoading } = useContentCalendar();
   
   // Handle media click to navigate to the correct detail page
   const handleMediaClick = (media: ContentCalendarItem) => {
@@ -39,6 +40,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
   
   // Format the release date
   const formatReleaseDate = (dateString: string) => {
+    if (!dateString) return "Data desconhecida";
     try {
       return format(new Date(dateString), "dd 'de' MMMM", { locale: ptBR });
     } catch (error) {
@@ -73,7 +75,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
         <h3 className="text-sm font-medium truncate">
           {isMovie(item) ? item.title : isSeries(item) ? item.name : 'Título Desconhecido'}
         </h3>
-        <p className="text-xs text-gray-400">{formatReleaseDate(item.release_date)}</p>
+        <p className="text-xs text-gray-400">{formatReleaseDate(item.release_date || item.first_air_date || '')}</p>
       </CardContent>
     </Card>
   );
@@ -87,7 +89,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
         </div>
         
         {isLoading ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {[...Array(6)].map((_, i) => (
               <div key={i} className="space-y-2">
                 <Skeleton className="w-full aspect-[2/3] rounded-lg" />
@@ -97,9 +99,9 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {recentContent.slice(0, 6).map((item) => (
-              <CalendarItemCard key={`${item.id}-${item.media_type}-${item.release_date}`} item={item} />
+              <CalendarItemCard key={`${item.id}-${item.media_type}`} item={item} />
             ))}
           </div>
         )}
@@ -121,7 +123,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
     <div className="bg-black/20 rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Calendar size={24} className="text-primary" />
+          <CalendarIcon size={24} className="text-primary" />
           <h2 className="text-xl font-bold">Calendário de Lançamentos</h2>
         </div>
       </div>
@@ -147,7 +149,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
           ) : todayReleases.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {todayReleases.map((item) => (
-                <CalendarItemCard key={`${item.id}-${item.media_type}-${item.release_date}`} item={item} />
+                <CalendarItemCard key={`${item.id}-${item.media_type}`} item={item} />
               ))}
             </div>
           ) : (
@@ -171,7 +173,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
           ) : recentContent.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {recentContent.map((item) => (
-                <CalendarItemCard key={`${item.id}-${item.media_type}-${item.release_date}`} item={item} />
+                <CalendarItemCard key={`${item.id}-${item.media_type}`} item={item} />
               ))}
             </div>
           ) : (
@@ -195,7 +197,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
           ) : upcomingContent.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {upcomingContent.map((item) => (
-                <CalendarItemCard key={`${item.id}-${item.media_type}-${item.release_date}`} item={item} />
+                <CalendarItemCard key={`${item.id}-${item.media_type}`} item={item} />
               ))}
             </div>
           ) : (

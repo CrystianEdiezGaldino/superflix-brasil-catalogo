@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { MediaItem } from "@/types/movie";
 import { ContentCalendarItem } from "@/types/calendar";
+import { format, addDays, subDays, isSameDay, parseISO, isAfter, isBefore } from "date-fns";
 
 // Mock data function for the content calendar
 export const useContentCalendar = () => {
@@ -27,9 +28,10 @@ export const useContentCalendar = () => {
             release_date: "2025-04-15",
             first_air_date: "",
             genres: [],
-            networks: [],
+            networks: [{id: 1, name: "Netflix", logo_path: "/logo.jpg"}],
             episode_run_time: [],
-            original_language: "en"
+            original_language: "en",
+            is_new: true
           },
           {
             id: 2,
@@ -44,7 +46,7 @@ export const useContentCalendar = () => {
             release_date: "",
             first_air_date: "2025-05-01",
             genres: [],
-            networks: [],
+            networks: [{id: 2, name: "HBO", logo_path: "/logo.jpg"}],
             episode_run_time: [],
             original_language: "en"
           },
@@ -61,7 +63,7 @@ export const useContentCalendar = () => {
             release_date: "",
             first_air_date: "2025-05-20", // Futuro
             genres: [],
-            networks: [],
+            networks: [{id: 3, name: "Viki", logo_path: "/logo.jpg"}],
             episode_run_time: [],
             original_language: "ko"
           },
@@ -78,9 +80,28 @@ export const useContentCalendar = () => {
             release_date: "",
             first_air_date: "2025-03-10", // Passado
             genres: [],
-            networks: [],
+            networks: [{id: 4, name: "Crunchyroll", logo_path: "/logo.jpg"}],
             episode_run_time: [],
-            original_language: "ja"
+            original_language: "ja",
+            is_new: true
+          },
+          {
+            id: 5,
+            title: "Anime Novo",
+            name: "Anime Novo",
+            overview: "Um novo anime lançado hoje",
+            poster_path: "/path/to/poster5.jpg",
+            backdrop_path: "/path/to/backdrop5.jpg",
+            vote_average: 8.7,
+            vote_count: 320,
+            media_type: "tv",
+            release_date: format(new Date(), "yyyy-MM-dd"),
+            first_air_date: format(new Date(), "yyyy-MM-dd"),
+            genres: [],
+            networks: [{id: 4, name: "Crunchyroll", logo_path: "/logo.jpg"}],
+            episode_run_time: [],
+            original_language: "ja",
+            is_new: true
           }
         ];
 
@@ -95,5 +116,41 @@ export const useContentCalendar = () => {
     fetchCalendar();
   }, []);
 
-  return { calendarItems, isLoading };
+  // Filter for today's releases
+  const todayReleases = calendarItems.filter(item => {
+    const releaseDate = item.release_date || item.first_air_date;
+    return releaseDate && isSameDay(parseISO(releaseDate), new Date());
+  });
+
+  // Filter for recent content (last 45 days)
+  const recentContent = calendarItems.filter(item => {
+    const releaseDate = item.release_date || item.first_air_date;
+    if (!releaseDate) return false;
+    
+    const parsedDate = parseISO(releaseDate);
+    const fortyFiveDaysAgo = subDays(new Date(), 45);
+    const today = new Date();
+    
+    return isAfter(parsedDate, fortyFiveDaysAgo) && isBefore(parsedDate, today);
+  });
+
+  // Filter for upcoming content (next 20 days)
+  const upcomingContent = calendarItems.filter(item => {
+    const releaseDate = item.release_date || item.first_air_date;
+    if (!releaseDate) return false;
+    
+    const parsedDate = parseISO(releaseDate);
+    const today = new Date();
+    const twentyDaysLater = addDays(today, 20);
+    
+    return isAfter(parsedDate, today) && isBefore(parsedDate, twentyDaysLater);
+  });
+
+  return {
+    calendarItems,
+    todayReleases,
+    recentContent,
+    upcomingContent,
+    isLoading
+  };
 };

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
@@ -40,7 +41,7 @@ export const useAnimeDetails = () => {
             { id: 10765, name: "Sci-Fi & Fantasia" }
           ],
           networks: [
-            { id: 1, name: "Crunchyroll" }
+            { id: 1, name: "Crunchyroll", logo_path: "/logo.jpg" }
           ],
           episode_run_time: [24],
           original_language: "ja"

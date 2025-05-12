@@ -2,6 +2,7 @@
 import { MediaItem } from "./movie";
 
 export interface ContentCalendarItem extends MediaItem {
-  // All properties needed are already in MediaItem
-  // This is just to make the type explicit and allow for future extensions
+  // This is just extending MediaItem with potentially calendar-specific fields
+  // Such as flags for new content
+  is_new?: boolean;
 }
