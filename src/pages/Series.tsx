@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -33,9 +34,17 @@ const Series = () => {
   };
 
   const filteredSeries = allSeries.filter((serie) => {
-    const matchesSearch = serie.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesYear = !yearFilter || serie.first_air_date?.startsWith(yearFilter);
-    const matchesRating = !ratingFilter || serie.vote_average >= parseFloat(ratingFilter);
+    // Add null/undefined checks for all properties being accessed
+    const matchesSearch = serie.name && searchQuery 
+      ? serie.name.toLowerCase().includes(searchQuery.toLowerCase())
+      : !searchQuery; // If no search query, all items match
+      
+    const matchesYear = !yearFilter || 
+      (serie.first_air_date && serie.first_air_date.startsWith(yearFilter));
+      
+    const matchesRating = !ratingFilter || 
+      (serie.vote_average !== undefined && serie.vote_average >= parseFloat(ratingFilter));
+      
     return matchesSearch && matchesYear && matchesRating;
   });
 
