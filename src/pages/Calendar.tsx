@@ -3,13 +3,20 @@ import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import ContentCalendar from "@/components/calendar/ContentCalendar";
 import { MediaItem } from "@/types/movie";
+import { useState } from "react";
 
 const Calendar = () => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    // Na implementação real, poderíamos adicionar lógica para filtrar o calendário baseado na busca
+  };
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      <Navbar />
+      <Navbar onSearch={handleSearch} />
       
       <div className="pt-24 pb-10 px-4 md:px-8">
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">Calendário de Lançamentos</h1>

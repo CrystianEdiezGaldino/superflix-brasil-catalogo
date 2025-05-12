@@ -1,8 +1,8 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { MediaItem, Series } from "@/types/movie";
+import { MediaItem, Movie, Series } from "@/types/movie";
 
-// Extending MediaItem directly to ensure compatibility
+// Definindo explicitamente o tipo ContentCalendarItem como uma extensão de MediaItem
 export interface ContentCalendarItem extends MediaItem {
   release_date: string;
   episode_number?: number;
@@ -27,7 +27,7 @@ const fetchContentCalendar = async (): Promise<ContentCalendarItem[]> => {
       const mediaType = item.media_type || 'tv';
       
       // Base properties required for all MediaItem types
-      const baseItem = {
+      const baseItem: ContentCalendarItem = {
         id: item.id || 0,
         title: item.title || '',
         name: item.name || '',
@@ -49,7 +49,7 @@ const fetchContentCalendar = async (): Promise<ContentCalendarItem[]> => {
         is_new: item.is_new || false
       };
       
-      return baseItem as ContentCalendarItem;
+      return baseItem;
     });
   } catch (error) {
     console.error("Error fetching content calendar:", error);

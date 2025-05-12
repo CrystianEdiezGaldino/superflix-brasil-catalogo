@@ -16,6 +16,7 @@ export const useFavorites = () => {
       if (storedFavorites) {
         setFavorites(JSON.parse(storedFavorites));
       }
+      setIsLoading(false);
     }
   }, [user]);
 
@@ -51,28 +52,30 @@ export const useFavorites = () => {
     toast.success('Removido dos favoritos');
   };
 
-  // Toggle favorite status - added for compatibility with new components
-  const toggleFavorite = useCallback((mediaId: number, mediaType: string = '') => {
-    if (isFavorite(mediaId)) {
-      removeFromFavorites(mediaId);
-    } else {
-      addToFavorites(mediaId);
-    }
-  }, [favorites]);
-
   // Verificar se está nos favoritos
   const isFavorite = useCallback((mediaId: number) => {
     return favorites.includes(mediaId);
   }, [favorites]);
 
-  // Mock function for refetchFavorites - for compatibility
+  // Mock function for refetchFavorites
   const refetchFavorites = useCallback(() => {
+    setIsLoading(true);
     // In a real implementation with an API, this would fetch the latest favorites
     const storedFavorites = user ? localStorage.getItem(`favorites_${user.id}`) : null;
     if (storedFavorites) {
       setFavorites(JSON.parse(storedFavorites));
     }
+    setIsLoading(false);
   }, [user]);
+
+  // Toggle favorite status - implementação explícita para compatibilidade
+  const toggleFavorite = useCallback((mediaId: number) => {
+    if (isFavorite(mediaId)) {
+      removeFromFavorites(mediaId);
+    } else {
+      addToFavorites(mediaId);
+    }
+  }, [favorites, isFavorite, addToFavorites, removeFromFavorites]);
 
   return {
     favorites,

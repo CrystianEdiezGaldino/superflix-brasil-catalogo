@@ -5,17 +5,36 @@ import { Card, CardContent } from "@/components/ui/card";
 import MediaCard from "@/components/MediaCard";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useEffect } from "react";
+import { MediaItem } from "@/types/movie";
 
 const FavoritesTab = () => {
   const navigate = useNavigate();
   const { favorites, isLoading, refetchFavorites } = useFavorites();
 
   useEffect(() => {
-    // Only call refetchFavorites if it exists
     if (refetchFavorites) {
       refetchFavorites();
     }
   }, [refetchFavorites]);
+
+  // Converter favoritos (que são IDs) em objetos MediaItem
+  const favoriteItems: MediaItem[] = favorites.map(id => ({
+    id,
+    title: `Item ${id}`,
+    name: `Item ${id}`,
+    overview: "",
+    poster_path: "",
+    backdrop_path: "",
+    media_type: "movie" as const,
+    vote_average: 0,
+    vote_count: 0,
+    release_date: "", // Necessário para Movie
+    first_air_date: "", // Necessário para Series
+    genres: [],
+    networks: [],
+    episode_run_time: [],
+    original_language: ""
+  }));
 
   if (isLoading) {
     return (
@@ -43,8 +62,8 @@ const FavoritesTab = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {favorites.map((media) => (
-              <div key={`${media.media_type}-${media.id}`}>
+            {favoriteItems.map((media) => (
+              <div key={`movie-${media.id}`}>
                 <MediaCard media={media} />
               </div>
             ))}

@@ -51,9 +51,9 @@ const Home = () => {
     }
   };
 
-  // Update this function to load more content based on section id
-  const handleLoadMore = (sectionId: string) => {
-    console.log(`Loading more content for section: ${sectionId}`);
+  // Update handleLoadMore to make it compatible with expected signature
+  const handleLoadMore = () => {
+    console.log(`Loading more content`);
     loadMoreMovies();
   };
 
