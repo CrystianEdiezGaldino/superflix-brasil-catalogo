@@ -2,7 +2,6 @@
 import { MediaItem } from "@/types/movie";
 
 export const popularSeries: MediaItem[] = [
-
   { 
     id: 2, 
     name: "Dois Homens e Meio", 
@@ -12,6 +11,10 @@ export const popularSeries: MediaItem[] = [
     first_air_date: "2003-09-22",
     media_type: "tv",
     vote_average: 7.8,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "en"
   },
   { 
@@ -23,10 +26,12 @@ export const popularSeries: MediaItem[] = [
     first_air_date: "2007-09-24",
     media_type: "tv",
     vote_average: 8.1,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "en"
   },
-
-
   { 
     id: 6, 
     name: "Friends", 
@@ -36,9 +41,12 @@ export const popularSeries: MediaItem[] = [
     first_air_date: "1994-09-22",
     media_type: "tv",
     vote_average: 8.4,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "en"
   },
-  
   { 
     id: 10, 
     name: "Supernatural", 
@@ -48,6 +56,10 @@ export const popularSeries: MediaItem[] = [
     first_air_date: "2005-09-13",
     media_type: "tv",
     vote_average: 8.3,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "en"
   }
 ];

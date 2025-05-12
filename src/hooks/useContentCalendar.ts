@@ -2,7 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { MediaItem, Series } from "@/types/movie";
 
-// Extending MediaItem to include the specific properties needed for calendar items
+// Extending MediaItem directly to ensure compatibility
 export interface ContentCalendarItem extends MediaItem {
   release_date: string;
   episode_number?: number;
@@ -22,27 +22,35 @@ const fetchContentCalendar = async (): Promise<ContentCalendarItem[]> => {
     
     const data = await response.json();
     
-    // Ensure all required fields are present for MediaItem compatibility
-    return data.map((item: any) => ({
-      id: item.id || 0,
-      title: item.title || '',
-      name: item.name || '',
-      overview: item.overview || '',
-      poster_path: item.poster_path || '',
-      backdrop_path: item.backdrop_path || '',
-      media_type: item.media_type || 'tv',
-      release_date: item.release_date || '',
-      first_air_date: item.first_air_date || '',
-      vote_average: item.vote_average || 0,
-      vote_count: item.vote_count || 0,
-      genres: item.genres || [],
-      networks: item.networks || [],
-      episode_run_time: item.episode_run_time || [],
-      original_language: item.original_language || '',
-      episode_number: item.episode_number,
-      season_number: item.season_number,
-      is_new: item.is_new || false
-    }));
+    // Process and ensure all items conform to MediaItem + ContentCalendarItem properties
+    return data.map((item: any) => {
+      const mediaType = item.media_type || 'tv';
+      
+      // Base properties required for all MediaItem types
+      const baseItem = {
+        id: item.id || 0,
+        title: item.title || '',
+        name: item.name || '',
+        overview: item.overview || '',
+        poster_path: item.poster_path || '',
+        backdrop_path: item.backdrop_path || '',
+        media_type: mediaType,
+        release_date: item.release_date || '',
+        first_air_date: item.first_air_date || '',
+        vote_average: item.vote_average || 0,
+        vote_count: item.vote_count || 0,
+        genres: item.genres || [],
+        networks: item.networks || [],
+        episode_run_time: item.episode_run_time || [],
+        original_language: item.original_language || '',
+        // ContentCalendarItem specific fields
+        episode_number: item.episode_number,
+        season_number: item.season_number,
+        is_new: item.is_new || false
+      };
+      
+      return baseItem as ContentCalendarItem;
+    });
   } catch (error) {
     console.error("Error fetching content calendar:", error);
     // Return empty array with proper typing

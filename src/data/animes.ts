@@ -106,7 +106,7 @@ export const popularAnimes: MediaItem[] = [
     networks: [],
     episode_run_time: [],
     original_language: "ja"
-  },
+  }
 ];
 
 // Função para filtrar conteúdo sem imagens

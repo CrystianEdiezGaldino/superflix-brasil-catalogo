@@ -1,3 +1,4 @@
+
 import { useFavorites } from '@/hooks/useFavorites';
 import { Heart } from 'lucide-react';
 
@@ -6,11 +7,19 @@ interface MediaActionsProps {
 }
 
 export const MediaActions = ({ mediaId }: MediaActionsProps) => {
-  const { isFavorite, toggleFavorite } = useFavorites();
+  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+  
+  const handleToggleFavorite = () => {
+    if (isFavorite(mediaId)) {
+      removeFromFavorites(mediaId);
+    } else {
+      addToFavorites(mediaId);
+    }
+  };
 
   return (
     <button
-      onClick={() => toggleFavorite(mediaId)}
+      onClick={handleToggleFavorite}
       className="p-2 rounded-full hover:bg-white/10 transition-colors"
       aria-label={isFavorite(mediaId) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
     >
@@ -19,4 +28,4 @@ export const MediaActions = ({ mediaId }: MediaActionsProps) => {
       />
     </button>
   );
-}; 
+};

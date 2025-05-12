@@ -14,7 +14,7 @@ interface FavoriteButtonProps {
 
 const FavoriteButton = ({ mediaId, mediaType, className = "" }: FavoriteButtonProps) => {
   const { user } = useAuth();
-  const { isFavorite, toggleFavorite, isLoading } = useFavorites();
+  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
   const [isFav, setIsFav] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
@@ -40,9 +40,16 @@ const FavoriteButton = ({ mediaId, mediaType, className = "" }: FavoriteButtonPr
     
     try {
       setIsProcessing(true);
-      await toggleFavorite(mediaId, mediaType);
+      
+      if (isFav) {
+        removeFromFavorites(mediaId);
+        toast.success("Removido dos favoritos");
+      } else {
+        addToFavorites(mediaId);
+        toast.success("Adicionado aos favoritos");
+      }
+      
       setIsFav(!isFav);
-      toast.success(isFav ? "Removido dos favoritos" : "Adicionado aos favoritos");
     } catch (error) {
       console.error("Erro ao gerenciar favoritos:", error);
       toast.error("Erro ao atualizar favoritos");
@@ -57,7 +64,7 @@ const FavoriteButton = ({ mediaId, mediaType, className = "" }: FavoriteButtonPr
       onClick={handleToggleFavorite}
       variant="ghost"
       size="sm"
-      disabled={isLoading || isProcessing}
+      disabled={isProcessing}
     >
       <Heart 
         size={16} 

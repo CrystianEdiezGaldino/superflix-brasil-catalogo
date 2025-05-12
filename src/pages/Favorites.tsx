@@ -6,11 +6,30 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import MediaSection from "@/components/MediaSection";
+import { MediaItem } from "@/types/movie";
 
 const Favorites = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { favorites, isLoading, refetchFavorites } = useFavorites();
+  
+  // Create a placeholder array of MediaItems from favorite IDs
+  const favoriteItems: MediaItem[] = favorites.map(id => ({
+    id,
+    title: `Item ${id}`,
+    name: `Item ${id}`,
+    overview: "",
+    poster_path: "",
+    backdrop_path: "",
+    media_type: "movie",
+    vote_average: 0,
+    vote_count: 0,
+    first_air_date: "",
+    genres: [],
+    networks: [],
+    episode_run_time: [],
+    original_language: ""
+  }));
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -62,7 +81,7 @@ const Favorites = () => {
         ) : (
           <MediaSection 
             title="Favoritos"
-            medias={favorites}
+            medias={favoriteItems}
           />
         )}
       </div>
