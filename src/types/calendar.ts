@@ -1,8 +1,8 @@
 
 import { MediaItem } from "./movie";
 
+// Making ContentCalendarItem a proper extension of MediaItem to fix type errors
 export interface ContentCalendarItem extends MediaItem {
-  // This is just extending MediaItem with potentially calendar-specific fields
-  // Such as flags for new content
+  // Additional calendar-specific fields
   is_new?: boolean;
 }

@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { MediaItem } from "@/types/movie";
 import { ContentCalendarItem } from "@/types/calendar";
 import { format, addDays, subDays, isSameDay, parseISO, isAfter, isBefore } from "date-fns";
 
