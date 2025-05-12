@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ContentCalendarItem } from "@/hooks/useContentCalendar";
-import { isMovie, isSeries, MediaItem } from "@/types/movie";
+import { isMovie, isSeries } from "@/types/movie";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 
@@ -80,7 +80,7 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
           >
             <img
               src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
-              alt={isMovie(media as MediaItem) ? media.title : isSeries(media as MediaItem) ? media.name : ''}
+              alt={isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = "/placeholder.svg";
@@ -89,7 +89,7 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <div className="absolute bottom-0 left-0 right-0 p-2">
                 <h3 className="text-sm font-medium text-white truncate">
-                  {isMovie(media as MediaItem) ? media.title : isSeries(media as MediaItem) ? media.name : ''}
+                  {isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
                 </h3>
                 <p className="text-xs text-gray-300">
                   {new Date(media.release_date).toLocaleDateString()}

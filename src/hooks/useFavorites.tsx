@@ -46,7 +46,15 @@ export const useFavorites = () => {
         title: fav.title || '',
         name: fav.name || '',
         poster_path: fav.poster_path || '',
-        backdrop_path: fav.backdrop_path || ''
+        backdrop_path: fav.backdrop_path || '',
+        vote_average: 0,
+        vote_count: 0,
+        overview: '',
+        genres: [],
+        networks: [],
+        episode_run_time: [],
+        first_air_date: '',
+        original_language: ''
       })) as MediaItem[];
       
       setFavorites(mediaItems);

@@ -10,7 +10,7 @@ import MediaSection from "@/components/MediaSection";
 const Favorites = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { favorites, isLoading } = useFavorites();
+  const { favorites, isLoading, refetchFavorites } = useFavorites();
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -19,6 +19,13 @@ const Favorites = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
+
+  // Refresh favorites when component mounts
+  useEffect(() => {
+    if (refetchFavorites) {
+      refetchFavorites();
+    }
+  }, [refetchFavorites]);
 
   if (authLoading || isLoading) {
     return (

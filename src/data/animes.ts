@@ -11,6 +11,10 @@ export const popularAnimes: MediaItem[] = [
     first_air_date: "2002-10-03",
     media_type: "tv",
     vote_average: 8.4,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "ja"
   },
   {
@@ -22,6 +26,10 @@ export const popularAnimes: MediaItem[] = [
     first_air_date: "1999-10-20",
     media_type: "tv",
     vote_average: 8.7,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "ja"
   },
   {
@@ -33,6 +41,10 @@ export const popularAnimes: MediaItem[] = [
     first_air_date: "1986-02-26",
     media_type: "tv",
     vote_average: 8.3,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "ja"
   },
   {
@@ -44,6 +56,10 @@ export const popularAnimes: MediaItem[] = [
     first_air_date: "2013-04-07",
     media_type: "tv",
     vote_average: 8.7,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "ja"
   },
   {
@@ -55,9 +71,12 @@ export const popularAnimes: MediaItem[] = [
     first_air_date: "2019-04-06",
     media_type: "tv",
     vote_average: 8.6,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "ja"
   },
-
   {
     id: 17,
     name: "Solo Leveling",
@@ -67,9 +86,12 @@ export const popularAnimes: MediaItem[] = [
     first_air_date: "2024-01-06",
     media_type: "tv",
     vote_average: 8.6,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "ja"
   },
- 
   {
     id: 19,
     name: "Fullmetal Alchemist: Brotherhood",
@@ -79,9 +101,12 @@ export const popularAnimes: MediaItem[] = [
     first_air_date: "2009-04-05",
     media_type: "tv",
     vote_average: 8.7,
+    vote_count: 0,
+    genres: [],
+    networks: [],
+    episode_run_time: [],
     original_language: "ja"
   },
-  
 ];
 
 // Função para filtrar conteúdo sem imagens

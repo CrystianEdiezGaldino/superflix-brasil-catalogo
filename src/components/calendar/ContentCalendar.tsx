@@ -1,15 +1,15 @@
 
 import { useState } from "react";
-import { format, addDays, subDays } from "date-fns";
+import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { Calendar, CalendarDays } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useContentCalendar } from "@/hooks/useContentCalendar";
+import { useContentCalendar, ContentCalendarItem } from "@/hooks/useContentCalendar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MediaItem, isMovie, isSeries } from "@/types/movie";
+import { isMovie, isSeries } from "@/types/movie";
 
 interface ContentCalendarProps {
   compact?: boolean;
@@ -21,7 +21,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
   const { calendarItems, upcomingContent, recentContent, todayReleases, isLoading } = useContentCalendar();
   
   // Handle media click to navigate to the correct detail page
-  const handleMediaClick = (media: MediaItem) => {
+  const handleMediaClick = (media: ContentCalendarItem) => {
     if (!media.id) return;
     
     if (media.media_type === 'tv') {
@@ -47,7 +47,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
   };
   
   // Create a calendar item card component
-  const CalendarItemCard = ({ item }: { item: MediaItem & { release_date: string, is_new?: boolean } }) => (
+  const CalendarItemCard = ({ item }: { item: ContentCalendarItem }) => (
     <Card 
       className="overflow-hidden cursor-pointer transition-all hover:scale-105 hover:shadow-lg"
       onClick={() => handleMediaClick(item)}
@@ -108,7 +108,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
           <Button 
             variant="outline" 
             className="text-primary border-primary hover:bg-primary/10"
-            onClick={() => setActiveTab("recent")}
+            onClick={() => navigate("/calendario")}
           >
             Ver todos os lançamentos
           </Button>
@@ -147,7 +147,7 @@ const ContentCalendar = ({ compact = false }: ContentCalendarProps) => {
           ) : todayReleases.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
               {todayReleases.map((item) => (
-                <CalendarItemCard key={`${item.id}-${item.media_type}-${item.release_date}`} item={{...item, is_new: true}} />
+                <CalendarItemCard key={`${item.id}-${item.media_type}-${item.release_date}`} item={item} />
               ))}
             </div>
           ) : (

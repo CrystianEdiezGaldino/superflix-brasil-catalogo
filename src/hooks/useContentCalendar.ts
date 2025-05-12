@@ -1,6 +1,6 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, Series } from "@/types/movie";
 
 // Extending MediaItem to include the specific properties needed for calendar items
 export interface ContentCalendarItem extends MediaItem {
@@ -8,15 +8,6 @@ export interface ContentCalendarItem extends MediaItem {
   episode_number?: number;
   season_number?: number;
   is_new?: boolean;
-  
-  // Adding fields required for MediaItem
-  first_air_date?: string;
-  vote_average?: number;
-  vote_count?: number;
-  genres?: Array<{ id: number; name: string }>;
-  networks?: Array<{ id: number; name: string; logo_path: string }>;
-  episode_run_time?: number[];
-  name?: string;
 }
 
 // Function to fetch from the content calendar endpoint
@@ -33,14 +24,24 @@ const fetchContentCalendar = async (): Promise<ContentCalendarItem[]> => {
     
     // Ensure all required fields are present for MediaItem compatibility
     return data.map((item: any) => ({
-      ...item,
+      id: item.id || 0,
+      title: item.title || '',
+      name: item.name || '',
+      overview: item.overview || '',
+      poster_path: item.poster_path || '',
+      backdrop_path: item.backdrop_path || '',
       media_type: item.media_type || 'tv',
-      name: item.name || item.title || 'Unknown Title',
+      release_date: item.release_date || '',
+      first_air_date: item.first_air_date || '',
       vote_average: item.vote_average || 0,
       vote_count: item.vote_count || 0,
       genres: item.genres || [],
       networks: item.networks || [],
       episode_run_time: item.episode_run_time || [],
+      original_language: item.original_language || '',
+      episode_number: item.episode_number,
+      season_number: item.season_number,
+      is_new: item.is_new || false
     }));
   } catch (error) {
     console.error("Error fetching content calendar:", error);
