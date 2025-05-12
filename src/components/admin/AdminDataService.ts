@@ -4,7 +4,7 @@ import { AdminStats, UserWithSubscription } from "@/types/admin";
 
 export async function fetchAdminData() {
   try {
-    // Get user roles to identify admins - this works with regular permissions
+    // Get user roles to identify admins
     const { data: userRolesData, error: userRolesError } = await supabase
       .from('user_roles')
       .select('*');
@@ -14,7 +14,7 @@ export async function fetchAdminData() {
       throw userRolesError;
     }
     
-    // Get all profiles instead of using auth.admin.listUsers
+    // Get all profiles
     const { data: profilesData, error: profilesError } = await supabase
       .from('profiles')
       .select('*');
@@ -44,7 +44,7 @@ export async function fetchAdminData() {
       throw tempAccessesError;
     }
     
-    // Get auth users - we'll now use the check-subscription edge function to get auth data
+    // Get auth users
     const { data: authData, error: authError } = await supabase.functions.invoke('check-subscription');
     
     if (authError) {
@@ -72,7 +72,7 @@ export async function fetchAdminData() {
     
     // Combine user data with subscription and admin data
     const userData = authData?.user ? [authData.user] : [];
-    const combinedUsers: UserWithSubscription[] = userData.map((user: any) => {
+    const combinedUsers = userData.map((user: any) => {
       const subscription = subscriptionsData?.find((sub: any) => sub.user_id === user.id);
       const tempAccess = tempAccessesData?.find(
         (access: any) => access.user_id === user.id && new Date(access.expires_at) > new Date()
@@ -80,24 +80,34 @@ export async function fetchAdminData() {
       const isAdmin = adminsMap.has(user.id);
       const profile = profilesMap.get(user.id);
       
-      // Convert subscription data to match UserWithSubscription type
+      // Format subscription data to match required types
       const formattedSubscription = subscription ? {
-        ...subscription,
+        id: subscription.id,
+        user_id: subscription.user_id,
+        status: subscription.status as "active" | "inactive",
+        plan_type: subscription.plan_type,
         start_date: subscription.current_period_start || null,
-        end_date: subscription.current_period_end || null
+        end_date: subscription.current_period_end || null,
+        created_at: subscription.created_at,
+        updated_at: subscription.updated_at,
+        stripe_customer_id: subscription.stripe_customer_id,
+        stripe_subscription_id: subscription.stripe_subscription_id,
+        trial_end: subscription.trial_end,
+        current_period_start: subscription.current_period_start,
+        current_period_end: subscription.current_period_end
       } : null;
       
       return {
         id: user.id,
         email: user.email || '',
-        name: user.email || '', // Using email as name if not available
+        name: user.email || '',
         last_sign_in_at: user.last_sign_in_at,
         created_at: user.created_at || profile?.created_at,
         updated_at: user.updated_at || profile?.updated_at || user.created_at || new Date().toISOString(),
         subscription: formattedSubscription,
         temp_access: tempAccess,
         is_admin: isAdmin
-      };
+      } as UserWithSubscription;
     });
     
     // Get all users from the database

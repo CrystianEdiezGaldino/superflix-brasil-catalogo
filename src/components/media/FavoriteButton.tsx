@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 
 interface FavoriteButtonProps {
   mediaId: number;
@@ -15,28 +14,19 @@ interface FavoriteButtonProps {
 
 const FavoriteButton = ({ mediaId, mediaType, className = "" }: FavoriteButtonProps) => {
   const { user } = useAuth();
-  const { addToFavorites, removeFromFavorites, isFavorite, isLoading } = useFavorites();
+  const { isFavorite, toggleFavorite, isLoading } = useFavorites();
   const [isFav, setIsFav] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   
   useEffect(() => {
     if (user) {
-      // Verificar se já é favorito
-      const checkFavorite = async () => {
-        try {
-          const result = await isFavorite(mediaId, mediaType);
-          setIsFav(result);
-        } catch (error) {
-          console.error("Error checking favorite status:", error);
-        }
-      };
-      
-      checkFavorite();
+      // Check if it's already a favorite
+      setIsFav(isFavorite(mediaId));
     }
-  }, [user, mediaId, mediaType, isFavorite]);
+  }, [user, mediaId, isFavorite]);
   
-  const toggleFavorite = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Impede que o link pai seja ativado
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent parent link activation
     
     if (!user) {
       toast.info("Faça login para adicionar aos favoritos", {
@@ -50,16 +40,9 @@ const FavoriteButton = ({ mediaId, mediaType, className = "" }: FavoriteButtonPr
     
     try {
       setIsProcessing(true);
-      
-      if (isFav) {
-        await removeFromFavorites(mediaId, mediaType);
-        setIsFav(false);
-        toast.success("Removido dos favoritos");
-      } else {
-        await addToFavorites(mediaId, mediaType);
-        setIsFav(true);
-        toast.success("Adicionado aos favoritos");
-      }
+      await toggleFavorite(mediaId, mediaType);
+      setIsFav(!isFav);
+      toast.success(isFav ? "Removido dos favoritos" : "Adicionado aos favoritos");
     } catch (error) {
       console.error("Erro ao gerenciar favoritos:", error);
       toast.error("Erro ao atualizar favoritos");
@@ -71,7 +54,7 @@ const FavoriteButton = ({ mediaId, mediaType, className = "" }: FavoriteButtonPr
   return (
     <Button 
       className={`absolute top-2 right-2 bg-black/50 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-netflix-red ${className}`}
-      onClick={toggleFavorite}
+      onClick={handleToggleFavorite}
       variant="ghost"
       size="sm"
       disabled={isLoading || isProcessing}

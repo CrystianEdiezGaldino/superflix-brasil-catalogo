@@ -1,9 +1,8 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
-import { useQuery } from "@tanstack/react-query";
-import { fetchMovieDetails, fetchSeriesDetails } from "@/services/tmdbApi";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import MediaSection from "@/components/MediaSection";
@@ -11,7 +10,7 @@ import MediaSection from "@/components/MediaSection";
 const Favorites = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { favorites } = useFavorites();
+  const { favorites, isLoading } = useFavorites();
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -20,32 +19,6 @@ const Favorites = () => {
       navigate("/auth");
     }
   }, [user, authLoading, navigate]);
-
-  // Fetch details for each favorite
-  const { data: favoriteDetails, isLoading } = useQuery({
-    queryKey: ["favorites", favorites],
-    queryFn: async () => {
-      const details = await Promise.all(
-        favorites.map(async (id) => {
-          try {
-            // Try to fetch as movie first
-            const movie = await fetchMovieDetails(id.toString());
-            if (movie) return movie;
-            
-            // If not found as movie, try as series
-            const series = await fetchSeriesDetails(id.toString());
-            return series;
-          } catch (error) {
-            console.error(`Error fetching details for ID ${id}:`, error);
-            return null;
-          }
-        })
-      );
-      
-      return details.filter(Boolean);
-    },
-    enabled: favorites.length > 0 && !!user,
-  });
 
   if (authLoading || isLoading) {
     return (
@@ -82,7 +55,7 @@ const Favorites = () => {
         ) : (
           <MediaSection 
             title="Favoritos"
-            medias={favoriteDetails || []}
+            medias={favorites}
           />
         )}
       </div>

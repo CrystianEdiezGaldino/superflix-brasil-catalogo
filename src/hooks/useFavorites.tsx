@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useCallback } from "react";
 import { MediaItem } from "@/types/movie";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,41 +8,14 @@ import { useQuery } from "@tanstack/react-query";
 
 export const useFavorites = () => {
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useState<MediaItem[]>([]);
   
-  useEffect(() => {
-    const storedFavorites = localStorage.getItem('favorites');
-    if (storedFavorites) {
-      setFavorites(JSON.parse(storedFavorites));
-    }
-  }, []);
-
-  // Function to add to favorites
-  const addToFavorites = (mediaId: number) => {
-    setFavorites(prev => {
-      const newFavorites = [...prev, mediaId];
-      localStorage.setItem('favorites', JSON.stringify(newFavorites));
-      return newFavorites;
-    });
-  };
-  
-  // Function to remove from favorites
-  const removeFromFavorites = (mediaId: number) => {
-    setFavorites(prev => {
-      const newFavorites = prev.filter(id => id !== mediaId);
-      localStorage.setItem('favorites', JSON.stringify(newFavorites));
-      return newFavorites;
-    });
-  };
-  
-  // Check if specific item is in favorites
-  const isFavorite = (mediaId: number) => {
-    return favorites.includes(mediaId);
-  };
-  
-  // Get all user favorites with reactQuery for better caching
-  const { data: favoritesData, refetch: refetchFavorites, isLoading: isLoadingFavorites } = useQuery({
+  // Use React Query to fetch favorites
+  const { 
+    data: favoritesData, 
+    refetch: refetchFavorites, 
+    isLoading 
+  } = useQuery({
     queryKey: ["favorites", user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -54,8 +28,7 @@ export const useFavorites = () => {
         
         if (error) throw error;
         
-        // Convert to MediaItem format
-        return (data || []).map(fav => fav.media_id) as number[];
+        return data || [];
       } catch (error) {
         console.error("Erro ao buscar favoritos:", error);
         return [];
@@ -63,38 +36,84 @@ export const useFavorites = () => {
     },
     enabled: !!user
   });
-
-  const toggleFavorite = (mediaId: number) => {
-    if (isFavorite(mediaId)) {
-      removeFromFavorites(mediaId);
-    } else {
-      addToFavorites(mediaId);
-    }
-  };
-
-  // Helper function to get media details
-  const getMediaDetails = async (mediaId: number, mediaType: string) => {
-    try {
-      // Fetch from TMDB API via our backend service
-      const apiUrl = `https://api.themoviedb.org/3/${mediaType}/${mediaId}?api_key=3e12a7e85d7a29a86a227c7a9743f556&language=pt-BR`;
-      const response = await fetch(apiUrl);
-      const data = await response.json();
+  
+  useEffect(() => {
+    if (favoritesData) {
+      // Convert to MediaItem format if needed
+      const mediaItems = favoritesData.map(fav => ({
+        id: fav.media_id,
+        media_type: fav.media_type,
+        title: fav.title || '',
+        name: fav.name || '',
+        poster_path: fav.poster_path || '',
+        backdrop_path: fav.backdrop_path || ''
+      })) as MediaItem[];
       
-      return {
-        poster_path: data.poster_path,
-        title: data.title,
-        name: data.name
-      };
+      setFavorites(mediaItems);
+    }
+  }, [favoritesData]);
+
+  // Function to add to favorites
+  const addToFavorites = async (mediaId: number, mediaType: string) => {
+    if (!user) {
+      toast.error("Faça login para adicionar aos favoritos");
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('favorites')
+        .insert({
+          user_id: user.id,
+          media_id: mediaId,
+          media_type: mediaType,
+          created_at: new Date().toISOString()
+        });
+      
+      if (error) throw error;
+      
+      // Update local state
+      refetchFavorites();
     } catch (error) {
-      console.error("Error fetching media details:", error);
-      return { poster_path: null, title: null, name: null };
+      console.error("Error adding to favorites:", error);
+      toast.error("Erro ao adicionar aos favoritos");
     }
   };
   
-  // Simplified version for easy access
-  const getFavorites = async (): Promise<number[]> => {
-    await refetchFavorites();
-    return favoritesData || [];
+  // Function to remove from favorites
+  const removeFromFavorites = async (mediaId: number, mediaType: string) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('media_id', mediaId)
+        .eq('media_type', mediaType);
+      
+      if (error) throw error;
+      
+      // Update local state
+      refetchFavorites();
+    } catch (error) {
+      console.error("Error removing from favorites:", error);
+      toast.error("Erro ao remover dos favoritos");
+    }
+  };
+  
+  // Check if specific item is in favorites
+  const isFavorite = useCallback((mediaId: number) => {
+    return favorites.some(item => item.id === mediaId);
+  }, [favorites]);
+  
+  // Toggle favorite status
+  const toggleFavorite = async (mediaId: number, mediaType: string) => {
+    if (isFavorite(mediaId)) {
+      await removeFromFavorites(mediaId, mediaType);
+    } else {
+      await addToFavorites(mediaId, mediaType);
+    }
   };
   
   return {
@@ -103,8 +122,7 @@ export const useFavorites = () => {
     removeFromFavorites,
     isFavorite,
     toggleFavorite,
-    getFavorites,
-    isLoading: isLoading || isLoadingFavorites,
+    isLoading,
     refetchFavorites
   };
 };

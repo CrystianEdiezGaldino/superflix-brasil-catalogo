@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import MediaCard from "@/components/MediaCard";
-import { MediaItem } from "@/types/movie";
 import { useFavorites } from "@/hooks/useFavorites";
 import { useEffect } from "react";
 
@@ -12,7 +11,10 @@ const FavoritesTab = () => {
   const { favorites, isLoading, refetchFavorites } = useFavorites();
 
   useEffect(() => {
-    refetchFavorites();
+    // Only call refetchFavorites if it exists
+    if (refetchFavorites) {
+      refetchFavorites();
+    }
   }, [refetchFavorites]);
 
   if (isLoading) {

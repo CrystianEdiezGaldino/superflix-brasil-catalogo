@@ -1,3 +1,4 @@
+
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -32,4 +33,4 @@ const MediaActions = ({ onPlayClick, onFavoriteClick, isFavorite, hasAccess }: M
   );
 };
 
-export default MediaActions; 
+export default MediaActions;
