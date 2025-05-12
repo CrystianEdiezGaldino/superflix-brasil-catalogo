@@ -2,7 +2,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAnimeDetails } from "@/services/tmdbApi";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -10,11 +9,12 @@ import { useFavorites } from "@/hooks/useFavorites";
 import Navbar from "@/components/Navbar";
 import AnimeHeader from "@/components/anime/AnimeHeader";
 import AnimeContent from "@/components/anime/AnimeContent";
-import MediaActions from "@/components/shared/MediaActions";
+import AnimePlayer from "@/components/anime/AnimePlayer";
+import AnimeActions from "@/components/anime/AnimeActions";
 import AnimeLoadingState from "@/components/anime/AnimeLoadingState";
-import AnimeVideoPlayer from "@/components/anime/AnimeVideoPlayer";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
+import { useAnimeDetails } from "@/hooks/anime/useAnimeDetails";
 
 const AnimeDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +34,9 @@ const AnimeDetails = () => {
   } = useSubscription();
   const { isFavorite, toggleFavorite } = useFavorites();
 
+  // Use the anime details hook
+  const { anime, isLoading, error } = useAnimeDetails();
+
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
   // Redirect to auth if not logged in
@@ -44,31 +47,16 @@ const AnimeDetails = () => {
     }
   }, [user, authLoading, navigate]);
 
-  const { data: anime, isLoading, error } = useQuery({
-    queryKey: ["anime", id],
-    queryFn: () => fetchAnimeDetails(id as string),
-    enabled: !!id && !!user,
-  });
-
-  // Verificar se o conteúdo está disponível
+  // Verify if content is available
   useEffect(() => {
     if (anime && !anime.imdb_id && !anime.external_ids?.imdb_id) {
       setIsContentAvailable(false);
+    } else {
+      setIsContentAvailable(true);
     }
   }, [anime]);
 
-  // Scroll to player when it becomes visible
-  useEffect(() => {
-    if (showPlayer) {
-      const playerElement = document.getElementById('video-player');
-      if (playerElement) {
-        setTimeout(() => {
-          playerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }
-    }
-  }, [showPlayer]);
-
+  // Scroll to top when ID changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
@@ -82,7 +70,6 @@ const AnimeDetails = () => {
   // Toggle favorite
   const handleToggleFavorite = () => {
     if (!anime) return;
-    
     toggleFavorite(anime.id);
   };
 
@@ -119,9 +106,7 @@ const AnimeDetails = () => {
       <Navbar onSearch={() => {}} />
       
       {isLoading || authLoading || subscriptionLoading ? (
-        <div className="pt-24 px-4 flex justify-center">
-          <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
-        </div>
+        <AnimeLoadingState />
       ) : error || !anime ? (
         <div className="pt-24 px-4 text-center text-white">
           <h2 className="text-2xl font-bold">Erro ao carregar anime</h2>
@@ -139,34 +124,19 @@ const AnimeDetails = () => {
             <AdblockSuggestion />
           </div>
 
-          <div className="relative z-10 mt-6 px-6 md:px-10 mb-8">
-            <button
-              onClick={handleWatchClick}
-              className={`${hasAccess ? "bg-netflix-red" : "bg-gray-700"} hover:bg-red-700 text-white font-medium py-2 px-4 md:py-3 md:px-6 rounded-md flex items-center gap-2`}
-              disabled={!hasAccess}
-            >
-              {showPlayer ? "Ocultar Player" : "Assistir Agora"}
-            </button>
-          </div>
+          <AnimeActions 
+            showPlayer={showPlayer} 
+            hasAccess={hasAccess} 
+            togglePlayer={handleWatchClick} 
+          />
 
-          {/* Player de vídeo usando componente dedicado */}
-          {showPlayer && (anime.imdb_id || anime.external_ids?.imdb_id) && (
-            <div className="px-6 md:px-10 mb-10" id="video-player">
-              <div className="bg-black/30 p-4 rounded-lg">
-                <h3 className="text-lg font-medium mb-3">
-                  Episódio {selectedEpisode} - Temporada {selectedSeason}
-                </h3>
-                <div className="aspect-video w-full">
-                  <iframe 
-                    src={`https://superflixapi.nexus/tv/${anime.external_ids?.imdb_id || anime.imdb_id || ''}/${selectedSeason}/${selectedEpisode}`} 
-                    className="w-full h-full border-0"
-                    title={`${anime.name} - S${selectedSeason}E${selectedEpisode}`}
-                    allowFullScreen
-                  ></iframe>
-                </div>
-              </div>
-            </div>
-          )}
+          <AnimePlayer 
+            showPlayer={showPlayer}
+            anime={anime}
+            selectedSeason={selectedSeason}
+            selectedEpisode={selectedEpisode}
+            hasAccess={hasAccess}
+          />
 
           {!isContentAvailable && (
             <div className="px-6 md:px-10 mb-10">

@@ -3,16 +3,24 @@ import { useState, useEffect } from "react";
 import { ContentCalendarItem } from "@/types/calendar";
 import { format, addDays, subDays, isSameDay, parseISO, isAfter, isBefore } from "date-fns";
 
-// Mock data function for the content calendar
+// Refactored hook for content calendar using more robust patterns
 export const useContentCalendar = () => {
   const [calendarItems, setCalendarItems] = useState<ContentCalendarItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    // In a real implementation, we would fetch from an API
+    // Fetch calendar data
     const fetchCalendar = async () => {
       try {
-        // Mock data - in a real app, this would be fetched from an API
+        setIsLoading(true);
+        // In a real implementation, this would be an API call
+        // For now, we're using mock data
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Mock data for calendar items
         const mockCalendarItems: ContentCalendarItem[] = [
           {
             id: 1,
@@ -105,9 +113,11 @@ export const useContentCalendar = () => {
         ];
 
         setCalendarItems(mockCalendarItems);
-        setIsLoading(false);
+        setError(null);
       } catch (error) {
         console.error("Erro ao carregar dados do calendário:", error);
+        setError(error instanceof Error ? error : new Error('Unknown error'));
+      } finally {
         setIsLoading(false);
       }
     };
@@ -115,13 +125,15 @@ export const useContentCalendar = () => {
     fetchCalendar();
   }, []);
 
-  // Filter for today's releases
+  // Filter functions for different content types
+  
+  // Today's releases
   const todayReleases = calendarItems.filter(item => {
     const releaseDate = item.release_date || item.first_air_date;
     return releaseDate && isSameDay(parseISO(releaseDate), new Date());
   });
 
-  // Filter for recent content (last 45 days)
+  // Recent content (last 45 days)
   const recentContent = calendarItems.filter(item => {
     const releaseDate = item.release_date || item.first_air_date;
     if (!releaseDate) return false;
@@ -133,7 +145,7 @@ export const useContentCalendar = () => {
     return isAfter(parsedDate, fortyFiveDaysAgo) && isBefore(parsedDate, today);
   });
 
-  // Filter for upcoming content (next 20 days)
+  // Upcoming content (next 20 days)
   const upcomingContent = calendarItems.filter(item => {
     const releaseDate = item.release_date || item.first_air_date;
     if (!releaseDate) return false;
@@ -150,6 +162,7 @@ export const useContentCalendar = () => {
     todayReleases,
     recentContent,
     upcomingContent,
-    isLoading
+    isLoading,
+    error
   };
 };
