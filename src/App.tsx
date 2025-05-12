@@ -25,6 +25,7 @@ import Subscribe from "./pages/Subscribe";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import Admin from "./pages/Admin";
 import Kids from "./pages/Kids";
+import TermsOfService from "./pages/TermsOfService";
 
 const App = () => {
   const [queryClient] = useState(() => new QueryClient());
@@ -54,6 +55,7 @@ const App = () => {
                 <Route path="/subscribe" element={<Subscribe />} />
                 <Route path="/subscription-success" element={<SubscriptionSuccess />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/termos-de-servico" element={<TermsOfService />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

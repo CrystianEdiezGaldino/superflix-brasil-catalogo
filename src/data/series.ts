@@ -13,10 +13,10 @@ export const popularSeries: MediaItem[] = [
     release_date: "2003-09-22",
     media_type: "tv",
     vote_average: 7.8,
-    vote_count: 0,
-    genres: [],
-    networks: [],
-    episode_run_time: [],
+    vote_count: 1500,
+    genres: [{id: 35, name: "Comédia"}],
+    networks: [{id: 2, name: "CBS"}],
+    episode_run_time: [22],
     original_language: "en"
   },
   { 
@@ -30,10 +30,10 @@ export const popularSeries: MediaItem[] = [
     release_date: "2007-09-24",
     media_type: "tv",
     vote_average: 8.1,
-    vote_count: 0,
-    genres: [],
-    networks: [],
-    episode_run_time: [],
+    vote_count: 2000,
+    genres: [{id: 35, name: "Comédia"}],
+    networks: [{id: 2, name: "CBS"}],
+    episode_run_time: [22],
     original_language: "en"
   },
   { 
@@ -47,10 +47,10 @@ export const popularSeries: MediaItem[] = [
     release_date: "1994-09-22",
     media_type: "tv",
     vote_average: 8.4,
-    vote_count: 0,
-    genres: [],
-    networks: [],
-    episode_run_time: [],
+    vote_count: 3000,
+    genres: [{id: 35, name: "Comédia"}, {id: 18, name: "Drama"}],
+    networks: [{id: 6, name: "NBC"}],
+    episode_run_time: [22],
     original_language: "en"
   },
   { 
@@ -64,10 +64,10 @@ export const popularSeries: MediaItem[] = [
     release_date: "2005-09-13",
     media_type: "tv",
     vote_average: 8.3,
-    vote_count: 0,
-    genres: [],
-    networks: [],
-    episode_run_time: [],
+    vote_count: 2500,
+    genres: [{id: 10765, name: "Sci-Fi & Fantasy"}, {id: 18, name: "Drama"}, {id: 9648, name: "Mistério"}],
+    networks: [{id: 5, name: "The CW"}],
+    episode_run_time: [42],
     original_language: "en"
   }
 ];

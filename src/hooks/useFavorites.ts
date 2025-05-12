@@ -57,6 +57,15 @@ export const useFavorites = () => {
     return favorites.includes(mediaId);
   }, [favorites]);
 
+  // Toggle favorite status
+  const toggleFavorite = useCallback((mediaId: number) => {
+    if (isFavorite(mediaId)) {
+      removeFromFavorites(mediaId);
+    } else {
+      addToFavorites(mediaId);
+    }
+  }, [isFavorite]);
+
   // Mock function for refetchFavorites
   const refetchFavorites = useCallback(() => {
     setIsLoading(true);
@@ -67,15 +76,6 @@ export const useFavorites = () => {
     }
     setIsLoading(false);
   }, [user]);
-
-  // Toggle favorite status - implementação explícita para compatibilidade
-  const toggleFavorite = useCallback((mediaId: number) => {
-    if (isFavorite(mediaId)) {
-      removeFromFavorites(mediaId);
-    } else {
-      addToFavorites(mediaId);
-    }
-  }, [favorites, isFavorite, addToFavorites, removeFromFavorites]);
 
   return {
     favorites,

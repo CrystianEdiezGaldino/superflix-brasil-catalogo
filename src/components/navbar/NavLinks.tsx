@@ -1,5 +1,5 @@
 
-import { Film, Tv, Baby, Heart } from "lucide-react";
+import { Film, Tv, Baby, Heart, FileText } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import NavLink from "./NavLink";
 
@@ -59,6 +59,11 @@ const NavLinks = ({ isAuthenticated }: NavLinksProps) => {
             Meus Favoritos
           </NavLink>
         )}
+        
+        <NavLink to="/termos-de-servico">
+          <FileText className="mr-1.5 h-4 w-4" />
+          Termos
+        </NavLink>
       </ul>
     </nav>
   );

@@ -2,7 +2,6 @@
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import ContentCalendar from "@/components/calendar/ContentCalendar";
-import { MediaItem } from "@/types/movie";
 import { useState } from "react";
 
 const Calendar = () => {

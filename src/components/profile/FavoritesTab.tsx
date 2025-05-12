@@ -17,19 +17,19 @@ const FavoritesTab = () => {
     }
   }, [refetchFavorites]);
 
-  // Converter favoritos (que são IDs) em objetos MediaItem
+  // Criar objetos MediaItem a partir dos IDs dos favoritos
   const favoriteItems: MediaItem[] = favorites.map(id => ({
     id,
     title: `Item ${id}`,
     name: `Item ${id}`,
     overview: "",
-    poster_path: "",
-    backdrop_path: "",
-    media_type: "movie" as const,
+    poster_path: "/placeholder.jpg",
+    backdrop_path: "/placeholder-backdrop.jpg",
+    media_type: "movie",
     vote_average: 0,
     vote_count: 0,
-    release_date: "", // Necessário para Movie
-    first_air_date: "", // Necessário para Series
+    release_date: "",
+    first_air_date: "",
     genres: [],
     networks: [],
     episode_run_time: [],

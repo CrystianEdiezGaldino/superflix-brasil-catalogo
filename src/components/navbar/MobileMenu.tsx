@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Menu, X, Heart } from "lucide-react";
+import { Menu, X, Heart, FileText } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -75,6 +75,21 @@ const MobileMenu = ({ isAuthenticated, navigationLinks }: MobileMenuProps) => {
                   </Link>
                 </li>
               )}
+              
+              <li>
+                <Link
+                  to="/termos-de-servico"
+                  className={`flex items-center py-2 transition duration-300 ${
+                    isRouteActive('/termos-de-servico')
+                      ? "text-netflix-red font-medium"
+                      : "text-white hover:text-netflix-red"
+                  }`}
+                  onClick={() => setOpen(false)}
+                >
+                  <FileText className="mr-1 h-4 w-4" />
+                  <span className="ml-2">Termos de Serviço</span>
+                </Link>
+              </li>
             </ul>
           </div>
         </SheetContent>
