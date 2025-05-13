@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TvChannel } from '@/types/tvChannel';
-import { tv as tvIcon } from 'lucide-react';
+import { Tv } from 'lucide-react';
 
 interface ChannelCardProps {
   channel: TvChannel;
@@ -29,12 +29,12 @@ const ChannelCard = ({ channel }: ChannelCardProps) => {
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <tvIcon className="h-10 w-10 text-white" />
+            <Tv className="h-10 w-10 text-white" />
           </div>
         )}
         
         <div className="fallback-icon hidden flex items-center justify-center h-full absolute inset-0">
-          <tvIcon className="h-10 w-10 text-white" />
+          <Tv className="h-10 w-10 text-white" />
         </div>
         
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
