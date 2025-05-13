@@ -1,17 +1,26 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import Navbar from "@/components/Navbar";
-import { Helmet } from "react-helmet";
-import TvChannelsList from '@/components/tv/TvChannelsList';
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import { tvChannels, TVChannel } from '@/data/tvChannels';
+import TvChannelCard from '@/components/tv/TvChannelCard';
+import TvChannelModal from '@/components/tv/TvChannelModal';
 
 const TvChannels = () => {
   const { user } = useAuth();
   const { isSubscribed } = useSubscription();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedChannel, setSelectedChannel] = useState<TVChannel | null>(null);
+
+  const filteredChannels = tvChannels.filter(channel =>
+    channel.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (!user) {
     return (
@@ -56,9 +65,35 @@ const TvChannels = () => {
       </Helmet>
       <Navbar onSearch={() => {}} />
       <div className="container pt-24 pb-10 px-4">
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-8">Canais de TV Ao Vivo</h1>
-        <TvChannelsList />
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-white">Canais de TV Ao Vivo</h1>
+          <div className="relative w-64">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Procurar canal..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 bg-black/50 border-gray-700 text-white"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {filteredChannels.map((channel) => (
+            <TvChannelCard
+              key={channel.id}
+              channel={channel}
+              onSelect={setSelectedChannel}
+            />
+          ))}
+        </div>
       </div>
+
+      <TvChannelModal
+        channel={selectedChannel}
+        isOpen={!!selectedChannel}
+        onClose={() => setSelectedChannel(null)}
+      />
     </div>
   );
 };

@@ -1,10 +1,9 @@
-
 import React from "react";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import Index from "./pages/Index";
@@ -36,29 +35,27 @@ const App = () => {
         <SubscriptionProvider>
           <TooltipProvider>
             <Toaster />
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/filmes" element={<Movies />} />
-                <Route path="/series" element={<Series />} />
-                <Route path="/filme/:id" element={<MovieDetails />} />
-                <Route path="/serie/:id" element={<SeriesDetails />} />
-                <Route path="/animes" element={<Animes />} />
-                <Route path="/anime/:id" element={<AnimeDetails />} />
-                <Route path="/doramas" element={<Doramas />} />
-                <Route path="/dorama/:id" element={<DoramaDetails />} />
-                <Route path="/kids" element={<Kids />} />
-                <Route path="/tv-channels" element={<TvChannels />} />
-                <Route path="/favoritos" element={<Favorites />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/subscribe" element={<Subscribe />} />
-                <Route path="/subscription-success" element={<SubscriptionSuccess />} />
-                <Route path="/admin" element={<Admin />} />
-                <Route path="/termos-de-servico" element={<TermsOfService />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/filmes" element={<Movies />} />
+              <Route path="/series" element={<Series />} />
+              <Route path="/filme/:id" element={<MovieDetails />} />
+              <Route path="/serie/:id" element={<SeriesDetails />} />
+              <Route path="/animes" element={<Animes />} />
+              <Route path="/anime/:id" element={<AnimeDetails />} />
+              <Route path="/doramas" element={<Doramas />} />
+              <Route path="/dorama/:id" element={<DoramaDetails />} />
+              <Route path="/kids" element={<Kids />} />
+              <Route path="/tv-channels" element={<TvChannels />} />
+              <Route path="/favoritos" element={<Favorites />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/subscribe" element={<Subscribe />} />
+              <Route path="/subscription-success" element={<SubscriptionSuccess />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/termos-de-servico" element={<TermsOfService />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
           </TooltipProvider>
         </SubscriptionProvider>
       </AuthProvider>
