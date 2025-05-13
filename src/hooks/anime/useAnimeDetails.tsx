@@ -1,8 +1,27 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
 import { useFavorites } from "@/hooks/useFavorites";
+import { buildApiUrl, fetchFromApi } from "@/services/tmdb/utils";
+
+interface TMDBTVResponse {
+  id: number;
+  name: string;
+  overview: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  vote_average: number;
+  vote_count: number;
+  first_air_date: string;
+  genres: Array<{ id: number; name: string }>;
+  networks: Array<{ id: number; name: string; logo_path: string | null }>;
+  episode_run_time: number[];
+  original_language: string;
+  external_ids: {
+    imdb_id: string | null;
+    [key: string]: string | null;
+  };
+}
 
 export const useAnimeDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,35 +38,36 @@ export const useAnimeDetails = () => {
       setError(null);
       
       try {
-        // Simulating API call with timeout
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Fetch anime details from TMDB API
+        const url = buildApiUrl(`/tv/${id}`);
+        const data = await fetchFromApi<TMDBTVResponse>(url);
         
-        // Mock data for anime details
-        const mockAnime: MediaItem = {
-          id: parseInt(id),
-          title: `Anime ${id}`,
-          name: `Anime ${id}`,
-          overview: "Este é um anime de exemplo com uma história épica que envolve aventura, amizade e superação. Acompanhe os personagens em sua jornada através de um mundo fantástico cheio de desafios e descobertas.",
-          poster_path: "/placeholder-anime.jpg",
-          backdrop_path: "/placeholder-anime-backdrop.jpg",
+        if (!data) {
+          throw new Error('Anime não encontrado');
+        }
+
+        // Transform the data to match MediaItem type
+        const animeData: MediaItem = {
+          id: data.id,
+          title: data.name,
+          name: data.name,
+          overview: data.overview,
+          poster_path: data.poster_path,
+          backdrop_path: data.backdrop_path,
           media_type: "tv",
-          vote_average: 8.7,
-          vote_count: 1200,
+          vote_average: data.vote_average,
+          vote_count: data.vote_count,
           release_date: "",
-          first_air_date: "2023-01-15",
-          genres: [
-            { id: 16, name: "Animação" },
-            { id: 10759, name: "Ação & Aventura" },
-            { id: 10765, name: "Sci-Fi & Fantasia" }
-          ],
-          networks: [
-            { id: 1, name: "Crunchyroll", logo_path: "/logo.jpg" }
-          ],
-          episode_run_time: [24],
-          original_language: "ja"
+          first_air_date: data.first_air_date,
+          genres: data.genres || [],
+          networks: data.networks || [],
+          episode_run_time: data.episode_run_time || [24],
+          original_language: data.original_language || "ja",
+          imdb_id: data.external_ids?.imdb_id,
+          external_ids: data.external_ids
         };
         
-        setAnime(mockAnime);
+        setAnime(animeData);
       } catch (err) {
         console.error("Erro ao buscar detalhes do anime:", err);
         setError("Não foi possível carregar os detalhes do anime. Por favor, tente novamente mais tarde.");

@@ -21,7 +21,7 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
   }>({});
 
   // Construir a URL do player
-  let playerUrl = `https://superflixapi.nexus/${type}/${imdbId}`;
+  let playerUrl = `https://api.superflix.com.br/${type}/${imdbId}`;
   
   // Adicionar temporada e episódio se for série
   if (type === "serie" && season !== undefined) {

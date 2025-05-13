@@ -1,37 +1,54 @@
-
-import { AdminStats, PromoCode, TempAccess, User } from "@/types/admin";
+import { AdminStats, PromoCode, TempAccess, UserWithSubscription } from "@/types/admin";
 
 // Simular dados para o painel administrativo
-const mockUsers: User[] = [
+const mockUsers: UserWithSubscription[] = [
   {
     id: "1",
     email: "usuario1@exemplo.com",
     name: "Usuário 1",
-    role: "user",
-    status: "active",
-    createdAt: "2025-02-15T10:30:00Z",
-    hasSubscription: true,
-    subscriptionEnd: "2025-06-15T10:30:00Z"
+    created_at: "2025-02-15T10:30:00Z",
+    updated_at: "2025-02-15T10:30:00Z",
+    is_admin: false,
+    subscription: {
+      id: "sub_1",
+      user_id: "1",
+      plan_type: "premium",
+      status: "active",
+      current_period_start: "2025-02-15T10:30:00Z",
+      current_period_end: "2025-06-15T10:30:00Z",
+      start_date: "2025-02-15T10:30:00Z",
+      end_date: "2025-06-15T10:30:00Z",
+      created_at: "2025-02-15T10:30:00Z",
+      updated_at: "2025-02-15T10:30:00Z"
+    }
   },
   {
     id: "2",
     email: "usuario2@exemplo.com",
     name: "Usuário 2",
-    role: "user",
-    status: "active",
-    createdAt: "2025-03-10T14:45:00Z",
-    hasSubscription: false,
-    subscriptionEnd: null
+    created_at: "2025-03-10T14:45:00Z",
+    updated_at: "2025-03-10T14:45:00Z",
+    is_admin: false
   },
   {
     id: "3",
     email: "admin@exemplo.com",
     name: "Administrador",
-    role: "admin",
-    status: "active",
-    createdAt: "2025-01-01T00:00:00Z",
-    hasSubscription: true,
-    subscriptionEnd: null // Acesso permanente
+    created_at: "2025-01-01T00:00:00Z",
+    updated_at: "2025-01-01T00:00:00Z",
+    is_admin: true,
+    subscription: {
+      id: "sub_3",
+      user_id: "3",
+      plan_type: "admin",
+      status: "active",
+      current_period_start: "2025-01-01T00:00:00Z",
+      current_period_end: null,
+      start_date: "2025-01-01T00:00:00Z",
+      end_date: "2099-12-31T23:59:59Z",
+      created_at: "2025-01-01T00:00:00Z",
+      updated_at: "2025-01-01T00:00:00Z"
+    }
   }
 ];
 
@@ -40,46 +57,53 @@ const mockPromoCodes: PromoCode[] = [
     id: "1",
     code: "WELCOME25",
     discount: 25,
-    validUntil: "2025-07-01T23:59:59Z",
-    maxUses: 100,
-    usedCount: 45,
-    status: "active"
+    type: "percentage",
+    expires_at: "2025-07-01T23:59:59Z",
+    usage_limit: 100,
+    usage_count: 45,
+    is_active: true,
+    created_by: "3",
+    created_at: "2025-01-01T00:00:00Z"
   },
   {
     id: "2",
     code: "SUMMER50",
     discount: 50,
-    validUntil: "2025-08-31T23:59:59Z",
-    maxUses: 50,
-    usedCount: 10,
-    status: "active"
+    type: "percentage",
+    expires_at: "2025-08-31T23:59:59Z",
+    usage_limit: 50,
+    usage_count: 10,
+    is_active: true,
+    created_by: "3",
+    created_at: "2025-01-01T00:00:00Z"
   }
 ];
 
 const mockTempAccesses: TempAccess[] = [
   {
     id: "1",
-    userId: "4",
-    userEmail: "temp1@exemplo.com",
-    grantedBy: "3",
-    grantedAt: "2025-04-01T10:00:00Z",
-    expiresAt: "2025-04-08T10:00:00Z",
-    status: "active"
+    user_id: "4",
+    granted_by: "3",
+    start_date: "2025-04-01T10:00:00Z",
+    end_date: "2025-04-08T10:00:00Z",
+    is_active: true,
+    created_at: "2025-04-01T10:00:00Z",
+    expires_at: "2025-04-08T10:00:00Z"
   },
   {
     id: "2",
-    userId: "5",
-    userEmail: "temp2@exemplo.com",
-    grantedBy: "3",
-    grantedAt: "2025-04-02T14:30:00Z",
-    expiresAt: "2025-04-09T14:30:00Z",
-    status: "expired"
+    user_id: "5",
+    granted_by: "3",
+    start_date: "2025-04-02T14:30:00Z",
+    end_date: "2025-04-09T14:30:00Z",
+    is_active: false,
+    created_at: "2025-04-02T14:30:00Z",
+    expires_at: "2025-04-09T14:30:00Z"
   }
 ];
 
 // Funções para obter os dados simulados
-export const getUsers = async (): Promise<User[]> => {
-  // Simulando delay de rede
+export const getUsers = async (): Promise<UserWithSubscription[]> => {
   await new Promise(resolve => setTimeout(resolve, 800));
   return [...mockUsers];
 };
@@ -99,24 +123,25 @@ export const getAdminStats = async (): Promise<AdminStats> => {
   
   return {
     totalUsers: mockUsers.length,
-    activeSubscriptions: mockUsers.filter(user => user.hasSubscription).length,
-    tempAccesses: mockTempAccesses.filter(access => access.status === "active").length,
+    activeSubscriptions: mockUsers.filter(user => user.subscription?.status === "active").length,
+    tempAccesses: mockTempAccesses.filter(access => access.is_active).length,
     promoCodes: mockPromoCodes.length,
-    adminUsers: mockUsers.filter(user => user.role === "admin").length,
+    adminUsers: mockUsers.filter(user => user.is_admin).length,
     monthlyRevenue: 2500.00,
     yearlyRevenue: 15000.00
   };
 };
 
 // Função para criar um novo código promocional
-export const createPromoCode = async (promoCode: Omit<PromoCode, "id" | "usedCount" | "status">): Promise<PromoCode> => {
+export const createPromoCode = async (promoCode: Omit<PromoCode, "id" | "usage_count" | "created_at" | "is_active">): Promise<PromoCode> => {
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   const newPromoCode: PromoCode = {
     id: `${mockPromoCodes.length + 1}`,
     ...promoCode,
-    usedCount: 0,
-    status: "active"
+    usage_count: 0,
+    created_at: new Date().toISOString(),
+    is_active: true
   };
   
   mockPromoCodes.push(newPromoCode);
@@ -124,14 +149,14 @@ export const createPromoCode = async (promoCode: Omit<PromoCode, "id" | "usedCou
 };
 
 // Função para conceder acesso temporário
-export const grantTempAccess = async (tempAccess: Omit<TempAccess, "id" | "grantedAt" | "status">): Promise<TempAccess> => {
+export const grantTempAccess = async (tempAccess: Omit<TempAccess, "id" | "created_at" | "is_active">): Promise<TempAccess> => {
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   const newTempAccess: TempAccess = {
     id: `${mockTempAccesses.length + 1}`,
     ...tempAccess,
-    grantedAt: new Date().toISOString(),
-    status: "active"
+    created_at: new Date().toISOString(),
+    is_active: true
   };
   
   mockTempAccesses.push(newTempAccess);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +14,7 @@ import AnimeLoadingState from "@/components/anime/AnimeLoadingState";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
 import { useAnimeDetails } from "@/hooks/anime/useAnimeDetails";
+import { Series } from "@/types/movie";
 
 const AnimeDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -83,81 +83,85 @@ const AnimeDetails = () => {
     }
   };
 
-  const seasons = anime?.number_of_seasons ? Array.from({ length: anime.number_of_seasons }, (_, i) => i + 1) : [1];
+  // Ensure anime is treated as a Series
+  const animeSeries = anime as Series;
+  const seasons = animeSeries?.number_of_seasons ? Array.from({ length: animeSeries.number_of_seasons }, (_, i) => i + 1) : [1];
   const seasonData = {
     id: 1,
     name: "Temporada 1",
     overview: "Primeira temporada do anime",
-    poster_path: anime?.poster_path || "",
+    poster_path: animeSeries?.poster_path || "",
     season_number: 1,
     episodes: Array.from({ length: 12 }, (_, i) => ({
       id: i + 1,
       name: `Episódio ${i + 1}`,
       overview: `Descrição do episódio ${i + 1}`,
-      still_path: anime?.backdrop_path || "",
+      still_path: animeSeries?.backdrop_path || "",
       episode_number: i + 1,
       season_number: 1,
       vote_average: 8.0
     }))
   };
 
+  if (isLoading || authLoading || subscriptionLoading) {
+    return <AnimeLoadingState />;
+  }
+
+  if (error || !anime) {
+    return (
+      <div className="pt-24 px-4 text-center text-white">
+        <h2 className="text-2xl font-bold">Erro ao carregar anime</h2>
+        <p className="mt-2 text-gray-400">Não foi possível carregar os detalhes deste anime.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-netflix-background">
       <Navbar onSearch={() => {}} />
       
-      {isLoading || authLoading || subscriptionLoading ? (
-        <AnimeLoadingState />
-      ) : error || !anime ? (
-        <div className="pt-24 px-4 text-center text-white">
-          <h2 className="text-2xl font-bold">Erro ao carregar anime</h2>
-          <p className="mt-2 text-gray-400">Não foi possível carregar os detalhes deste anime.</p>
+      <AnimeHeader 
+        anime={animeSeries}
+        isFavorite={isFavorite(animeSeries.id)}
+        toggleFavorite={handleToggleFavorite}
+      />
+
+      <div className="px-6 md:px-10">
+        <AdblockSuggestion />
+      </div>
+
+      <AnimeActions 
+        showPlayer={showPlayer} 
+        hasAccess={hasAccess} 
+        togglePlayer={handleWatchClick} 
+      />
+
+      <AnimePlayer 
+        showPlayer={showPlayer}
+        anime={animeSeries}
+        selectedSeason={selectedSeason}
+        selectedEpisode={selectedEpisode}
+        hasAccess={hasAccess}
+      />
+
+      {!isContentAvailable && (
+        <div className="px-6 md:px-10 mb-10">
+          <ContentNotAvailable onAddToFavorites={handleToggleFavorite} />
         </div>
-      ) : (
-        <>
-          <AnimeHeader 
-            anime={anime}
-            isFavorite={isFavorite(anime.id)}
-            toggleFavorite={handleToggleFavorite}
-          />
-
-          <div className="px-6 md:px-10">
-            <AdblockSuggestion />
-          </div>
-
-          <AnimeActions 
-            showPlayer={showPlayer} 
-            hasAccess={hasAccess} 
-            togglePlayer={handleWatchClick} 
-          />
-
-          <AnimePlayer 
-            showPlayer={showPlayer}
-            anime={anime}
-            selectedSeason={selectedSeason}
-            selectedEpisode={selectedEpisode}
-            hasAccess={hasAccess}
-          />
-
-          {!isContentAvailable && (
-            <div className="px-6 md:px-10 mb-10">
-              <ContentNotAvailable onAddToFavorites={handleToggleFavorite} />
-            </div>
-          )}
-
-          <AnimeContent 
-            anime={anime}
-            seasonData={seasonData}
-            selectedSeason={selectedSeason}
-            selectedEpisode={selectedEpisode}
-            seasons={seasons}
-            setSelectedSeason={setSelectedSeason}
-            handleEpisodeSelect={handleEpisodeSelect}
-            isLoadingSeason={false}
-            subscriptionLoading={subscriptionLoading}
-            hasAccess={hasAccess}
-          />
-        </>
       )}
+
+      <AnimeContent 
+        anime={animeSeries}
+        seasonData={seasonData}
+        selectedSeason={selectedSeason}
+        selectedEpisode={selectedEpisode}
+        seasons={seasons}
+        setSelectedSeason={setSelectedSeason}
+        handleEpisodeSelect={handleEpisodeSelect}
+        isLoadingSeason={false}
+        subscriptionLoading={subscriptionLoading}
+        hasAccess={hasAccess}
+      />
     </div>
   );
 };
