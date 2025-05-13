@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Menu, X, Heart, FileText } from "lucide-react";
+import { Menu, X, Heart, FileText, Monitor } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +24,12 @@ const MobileMenu = ({ isAuthenticated, navigationLinks }: MobileMenuProps) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
+  // Add TV Channels to mobile menu
+  const enhancedLinks = [
+    ...navigationLinks,
+    { path: "/tv-channels", label: "Canais de TV", icon: <Monitor className="mr-1 h-4 w-4" /> }
+  ];
+
   return (
     <div className="md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
@@ -42,7 +48,7 @@ const MobileMenu = ({ isAuthenticated, navigationLinks }: MobileMenuProps) => {
           </SheetHeader>
           <div className="py-4">
             <ul className="flex flex-col space-y-4 px-4">
-              {navigationLinks.map((link) => (
+              {enhancedLinks.map((link) => (
                 <li key={link.path}>
                   <Link
                     to={link.path}

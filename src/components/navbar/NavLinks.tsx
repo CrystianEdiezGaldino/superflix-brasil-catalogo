@@ -1,5 +1,5 @@
 
-import { Film, Tv, Baby, Heart, FileText, Calendar } from "lucide-react";
+import { Film, Tv, Baby, Heart, FileText, Monitor } from "lucide-react";
 import { useLocation } from "react-router-dom";
 import NavLink from "./NavLink";
 
@@ -48,9 +48,9 @@ const NavLinks = ({ isAuthenticated }: NavLinksProps) => {
           Doramas
         </NavLink>
 
-        <NavLink to="/calendario">
-          <Calendar className="mr-1.5 h-4 w-4" />
-          Calendário
+        <NavLink to="/tv-channels">
+          <Monitor className="mr-1.5 h-4 w-4" />
+          Canais de TV
         </NavLink>
         
         <NavLink to="/kids">

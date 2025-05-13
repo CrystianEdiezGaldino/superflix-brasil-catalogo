@@ -25,6 +25,7 @@ import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import Admin from "./pages/Admin";
 import Kids from "./pages/Kids";
 import TermsOfService from "./pages/TermsOfService";
+import TvChannels from "./pages/TvChannels";
 
 const App = () => {
   const [queryClient] = useState(() => new QueryClient());
@@ -47,6 +48,7 @@ const App = () => {
                 <Route path="/doramas" element={<Doramas />} />
                 <Route path="/dorama/:id" element={<DoramaDetails />} />
                 <Route path="/kids" element={<Kids />} />
+                <Route path="/tv-channels" element={<TvChannels />} />
                 <Route path="/favoritos" element={<Favorites />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/profile" element={<Profile />} />
