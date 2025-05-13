@@ -1,4 +1,9 @@
+
 import { AdminStats, PromoCode, TempAccess, UserWithSubscription } from "@/types/admin";
+import { fetchAdminData as fetchAdminDataFromService } from "@/components/admin/AdminDataService";
+
+// Export the fetchAdminData function from the AdminDataService
+export { fetchAdminDataFromService as fetchAdminData };
 
 // Simular dados para o painel administrativo
 const mockUsers: UserWithSubscription[] = [

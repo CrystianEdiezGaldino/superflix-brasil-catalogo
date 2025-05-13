@@ -45,6 +45,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AdminStats, UserWithSubscription, Subscription, TempAccess, PromoCode } from "@/types/admin";
 import { supabase } from "@/integrations/supabase/client";
 import { getUsers, getPromoCodes, getTempAccesses, getAdminStats, createPromoCode, grantTempAccess } from "@/services/adminService";
+import { fetchAdminData } from "@/components/admin/AdminDataService";
 
 const Admin = () => {
   const navigate = useNavigate();

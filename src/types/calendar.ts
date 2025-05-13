@@ -1,7 +1,7 @@
 
 import { MediaItem, Movie, Series } from "./movie";
 
-// Define ContentCalendarItem interface properly extending MediaItem
+// Define ContentCalendarItem interface as an extension of MediaItem
 export interface ContentCalendarItem extends MediaItem {
   is_new?: boolean;
 }
