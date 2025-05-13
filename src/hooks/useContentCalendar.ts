@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { ContentCalendarItem } from "@/types/calendar";
 import { format, addDays, subDays, isSameDay, parseISO, isAfter, isBefore } from "date-fns";
+import { MediaItem } from "@/types/movie";
 
 // Refactored hook for content calendar using more robust patterns
 export const useContentCalendar = () => {
@@ -21,7 +22,7 @@ export const useContentCalendar = () => {
         await new Promise(resolve => setTimeout(resolve, 800));
         
         // Mock data for calendar items
-        const mockCalendarItems: ContentCalendarItem[] = [
+        const mockCalendarItems: MediaItem[] = [
           {
             id: 1,
             title: "Filme Recente 1",
@@ -34,7 +35,6 @@ export const useContentCalendar = () => {
             media_type: "movie",
             release_date: "2025-04-15",
             genres: [],
-            is_new: true
           },
           {
             id: 2,
@@ -77,7 +77,6 @@ export const useContentCalendar = () => {
             first_air_date: "2025-03-10", // Passado
             genres: [],
             original_language: "ja",
-            is_new: true
           },
           {
             id: 5,
@@ -93,11 +92,16 @@ export const useContentCalendar = () => {
             first_air_date: format(new Date(), "yyyy-MM-dd"),
             genres: [],
             original_language: "ja",
-            is_new: true
           }
         ];
 
-        setCalendarItems(mockCalendarItems);
+        // Convert MediaItem to ContentCalendarItem with is_new flag
+        const castedItems: ContentCalendarItem[] = mockCalendarItems.map((item, index) => ({
+          ...item,
+          is_new: index % 2 === 0 // Just for demonstration, alternating items are marked as new
+        }));
+
+        setCalendarItems(castedItems);
         setError(null);
       } catch (error) {
         console.error("Erro ao carregar dados do calendário:", error);

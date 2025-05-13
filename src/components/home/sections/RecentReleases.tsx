@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ContentCalendarItem } from "@/types/calendar";
-import { isMovie, isSeries } from "@/types/movie";
+import { isMovie, isSeries, MediaItem } from "@/types/movie";
 import { Button } from "@/components/ui/button";
 import { ChevronDown } from "lucide-react";
 
@@ -33,8 +33,8 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
   }
 
   // Function to handle media click and navigation
-  const handleMediaClick = (media: ContentCalendarItem) => {
-    if (!media.id) return;
+  const handleMediaClick = (media: MediaItem) => {
+    if (!media || !media.id) return;
     
     if (media.media_type === 'tv') {
       if (media.original_language === 'ko') {
@@ -77,7 +77,7 @@ const RecentReleases = ({ releases, isLoading }: RecentReleasesProps) => {
         {displayedReleases.map((media) => (
           <div 
             key={`${media.id}-${media.media_type}`} 
-            onClick={() => handleMediaClick(media)}
+            onClick={() => handleMediaClick(media as MediaItem)}
             className="relative aspect-[2/3] rounded-lg overflow-hidden group cursor-pointer"
           >
             <img

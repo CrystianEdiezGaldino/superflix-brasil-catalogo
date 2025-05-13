@@ -4,7 +4,6 @@ import Banner from "@/components/Banner";
 import TrialNotification from "./TrialNotification";
 import SubscriptionUpsell from "./SubscriptionUpsell";
 import AdminIndicator from "./AdminIndicator";
-import ContentCalendar from "../calendar/ContentCalendar";
 import RecentReleases from "./sections/RecentReleases";
 import { useContentCalendar } from "@/hooks/useContentCalendar";
 
@@ -48,15 +47,6 @@ const HomeHeader = ({
         <div className="mb-8 px-4 md:px-8 mt-6">
           <div className="bg-gradient-to-r from-black/60 to-transparent p-4 md:p-6 rounded-xl">
             <RecentReleases releases={recentContent} isLoading={isLoading} />
-          </div>
-        </div>
-      )}
-      
-      {/* Calendar Section */}
-      {hasAccess && (
-        <div className="mb-8 px-4 md:px-8">
-          <div className="bg-gray-900/50 backdrop-blur-sm p-4 md:p-6 rounded-xl border border-white/5">
-            <ContentCalendar compact />
           </div>
         </div>
       )}

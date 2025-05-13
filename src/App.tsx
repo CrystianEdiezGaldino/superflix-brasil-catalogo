@@ -13,7 +13,6 @@ import Series from "./pages/Series";
 import Animes from "./pages/Animes";
 import Favorites from "@/pages/Favorites";
 import Doramas from "./pages/Doramas";
-import Calendar from "./pages/Calendar";
 import DoramaDetails from "./pages/DoramaDetails";
 import MovieDetails from "./pages/MovieDetails";
 import SeriesDetails from "./pages/SeriesDetails";
@@ -47,7 +46,6 @@ const App = () => {
                 <Route path="/anime/:id" element={<AnimeDetails />} />
                 <Route path="/doramas" element={<Doramas />} />
                 <Route path="/dorama/:id" element={<DoramaDetails />} />
-                <Route path="/calendario" element={<Calendar />} />
                 <Route path="/kids" element={<Kids />} />
                 <Route path="/favoritos" element={<Favorites />} />
                 <Route path="/auth" element={<Auth />} />
