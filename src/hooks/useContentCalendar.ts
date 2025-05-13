@@ -33,11 +33,7 @@ export const useContentCalendar = () => {
             vote_count: 230,
             media_type: "movie",
             release_date: "2025-04-15",
-            first_air_date: "",
             genres: [],
-            networks: [{id: 1, name: "Netflix", logo_path: "/logo.jpg"}],
-            episode_run_time: [],
-            original_language: "en",
             is_new: true
           },
           {
@@ -50,11 +46,8 @@ export const useContentCalendar = () => {
             vote_average: 7.8,
             vote_count: 180,
             media_type: "tv",
-            release_date: "",
             first_air_date: "2025-05-01",
             genres: [],
-            networks: [{id: 2, name: "HBO", logo_path: "/logo.jpg"}],
-            episode_run_time: [],
             original_language: "en"
           },
           {
@@ -67,11 +60,8 @@ export const useContentCalendar = () => {
             vote_average: 8.5,
             vote_count: 320,
             media_type: "tv",
-            release_date: "",
             first_air_date: "2025-05-20", // Futuro
             genres: [],
-            networks: [{id: 3, name: "Viki", logo_path: "/logo.jpg"}],
-            episode_run_time: [],
             original_language: "ko"
           },
           {
@@ -84,11 +74,8 @@ export const useContentCalendar = () => {
             vote_average: 9.0,
             vote_count: 450,
             media_type: "tv",
-            release_date: "",
             first_air_date: "2025-03-10", // Passado
             genres: [],
-            networks: [{id: 4, name: "Crunchyroll", logo_path: "/logo.jpg"}],
-            episode_run_time: [],
             original_language: "ja",
             is_new: true
           },
@@ -105,8 +92,6 @@ export const useContentCalendar = () => {
             release_date: format(new Date(), "yyyy-MM-dd"),
             first_air_date: format(new Date(), "yyyy-MM-dd"),
             genres: [],
-            networks: [{id: 4, name: "Crunchyroll", logo_path: "/logo.jpg"}],
-            episode_run_time: [],
             original_language: "ja",
             is_new: true
           }

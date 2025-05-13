@@ -67,6 +67,7 @@ const Index = () => {
         navigate(`/dorama/${media.id}`);
       } else if (media.original_language === 'ja') {
         navigate(`/anime/${media.id}`);
+        console.log(`Navigating to anime with ID: ${media.id}`);
       } else {
         navigate(`/serie/${media.id}`);
       }

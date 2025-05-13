@@ -1,6 +1,6 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -35,7 +35,7 @@ const AnimeDetails = () => {
   const { isFavorite, toggleFavorite } = useFavorites();
 
   // Use the anime details hook
-  const { anime, isLoading, error } = useAnimeDetails();
+  const { anime, isLoading, error, isAnimeFavorite, toggleAnimeFavorite } = useAnimeDetails();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
@@ -67,12 +67,6 @@ const AnimeDetails = () => {
     setShowPlayer(true);
   };
 
-  // Toggle favorite
-  const handleToggleFavorite = () => {
-    if (!anime) return;
-    toggleFavorite(anime.id);
-  };
-
   // Show subscription modal if trying to watch without access
   const handleWatchClick = () => {
     if (!hasAccess) {
@@ -83,9 +77,15 @@ const AnimeDetails = () => {
     }
   };
 
-  // Ensure anime is treated as a Series
+  // Convert anime to Series type for components that expect it
   const animeSeries = anime as Series;
-  const seasons = animeSeries?.number_of_seasons ? Array.from({ length: animeSeries.number_of_seasons }, (_, i) => i + 1) : [1];
+  
+  // Create seasons array based on anime data
+  const seasons = animeSeries?.number_of_seasons 
+    ? Array.from({ length: animeSeries.number_of_seasons }, (_, i) => i + 1) 
+    : [1];
+  
+  // Mock season data if needed
   const seasonData = {
     id: 1,
     name: "Temporada 1",
@@ -122,8 +122,8 @@ const AnimeDetails = () => {
       
       <AnimeHeader 
         anime={animeSeries}
-        isFavorite={isFavorite(animeSeries.id)}
-        toggleFavorite={handleToggleFavorite}
+        isFavorite={isAnimeFavorite}
+        toggleFavorite={toggleAnimeFavorite}
       />
 
       <div className="px-6 md:px-10">
@@ -146,7 +146,7 @@ const AnimeDetails = () => {
 
       {!isContentAvailable && (
         <div className="px-6 md:px-10 mb-10">
-          <ContentNotAvailable onAddToFavorites={handleToggleFavorite} />
+          <ContentNotAvailable onAddToFavorites={toggleAnimeFavorite} />
         </div>
       )}
 

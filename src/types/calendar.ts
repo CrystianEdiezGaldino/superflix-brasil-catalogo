@@ -1,14 +1,8 @@
+
 import { MediaItem, Movie, Series } from "./movie";
 
-// Making ContentCalendarItem a proper extension of MediaItem to fix type errors
+// Define ContentCalendarItem interface properly extending MediaItem
 export interface ContentCalendarItem extends MediaItem {
-  id: number;
-  media_type: 'movie' | 'tv';
-  poster_path: string;
-  backdrop_path: string;
-  release_date?: string;
-  first_air_date?: string;
-  original_language?: string;
   is_new?: boolean;
 }
 
