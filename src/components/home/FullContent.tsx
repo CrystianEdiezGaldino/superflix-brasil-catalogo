@@ -5,8 +5,6 @@ import MoviesSections from "./sections/MoviesSections";
 import SeriesSections from "./sections/SeriesSections";
 import AnimeSections from "./sections/AnimeSections";
 import DoramaSections from "./sections/DoramaSections";
-import RecentReleases from "./sections/RecentReleases";
-import { useContentCalendar } from "@/hooks/useContentCalendar";
 
 interface FullContentProps {
   movies: MediaItem[];
@@ -99,19 +97,8 @@ const FullContent = ({
   isLoading,
   hasMore
 }: FullContentProps) => {
-  // Get recent releases from content calendar
-  const { recentContent, isLoading: isLoadingCalendar } = useContentCalendar();
-  
   return (
     <div className="space-y-8">
-      {/* Recent Releases Section */}
-      <div className="mb-8">
-        <RecentReleases 
-          releases={recentContent} 
-          isLoading={isLoadingCalendar} 
-        />
-      </div>
-      
       <RecommendationsSection
         recommendations={recommendations}
         isLoading={isLoading}
