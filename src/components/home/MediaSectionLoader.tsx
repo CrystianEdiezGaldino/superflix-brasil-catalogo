@@ -21,10 +21,10 @@ const MediaSectionLoader = ({
   hasMore,
   onMediaClick
 }: MediaSectionLoaderProps) => {
-  // Filtrar apenas conteúdos com imagem
+  // Filter only content with images
   const filteredMedias = medias.filter(media => media.poster_path || media.backdrop_path);
 
-  // Não renderizar se não houver conteúdo
+  // Don't render if there's no content
   if (!filteredMedias.length) {
     return null;
   }

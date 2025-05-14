@@ -1,6 +1,6 @@
 
 import { Plus } from 'lucide-react';
-import { MediaItem, isMovie, isSeries } from '@/types/movie';
+import { MediaItem, getMediaTitle } from '@/types/movie';
 import {
   Carousel,
   CarouselContent,
@@ -33,7 +33,10 @@ const MediaSection = ({
   const shouldShowLoadMore = showLoadMore && onLoadMore;
   
   // Function to handle click on "Load More" button
-  const handleLoadMore = () => {
+  const handleLoadMore = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (onLoadMore) {
       console.log(`Loading more items for section: ${sectionId}`);
       onLoadMore();
@@ -66,7 +69,7 @@ const MediaSection = ({
       >
         <CarouselContent className="-ml-4">
           {medias.map((media) => (
-            <CarouselItem key={`${media.id}-${media.media_type}`} className="pl-4 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
+            <CarouselItem key={`${media.id}-${media.media_type || 'unknown'}`} className="pl-4 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
               <div 
                 onClick={() => handleClick(media)}
                 className="relative overflow-hidden rounded-lg cursor-pointer transition-all duration-300 hover:scale-105"
@@ -74,17 +77,17 @@ const MediaSection = ({
                 <AspectRatio ratio={2/3}>
                   <img
                     src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
-                    alt={isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
+                    alt={getMediaTitle(media)}
                     className="object-cover w-full h-full"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = "/placeholder.svg";
                     }}
                   />
                 </AspectRatio>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300">
                   <div className="absolute bottom-0 left-0 right-0 p-2">
                     <h3 className="text-sm font-medium text-white truncate">
-                      {isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
+                      {getMediaTitle(media)}
                     </h3>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { MediaItem, isSeries, getMediaTitle } from "@/types/movie";
+import { MediaItem, getMediaTitle, isSeries } from "@/types/movie";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
@@ -44,6 +44,8 @@ const AnimeCarousel = ({ animes, onAnimeClick }: AnimeCarouselProps) => {
 
   const currentAnime = animes[currentIndex];
   const title = getMediaTitle(currentAnime);
+  
+  // Safely get release date using type guards
   const releaseYear = isSeries(currentAnime) 
     ? currentAnime.first_air_date?.split('-')[0] 
     : currentAnime.release_date?.split('-')[0];

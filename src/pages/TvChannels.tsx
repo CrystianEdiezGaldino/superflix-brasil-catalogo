@@ -9,11 +9,12 @@ import TvChannelModal from "@/components/tv/TvChannelModal";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { toast } from "sonner";
 
 const TvChannels = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { isSubscribed, isAdmin } = useSubscription();
+  const { user, loading: authLoading } = useAuth();
+  const { isSubscribed, isAdmin, isLoading: subscriptionLoading } = useSubscription();
   
   const [selectedChannel, setSelectedChannel] = useState<TvChannel | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,8 +22,11 @@ const TvChannels = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("Todas");
   
   useEffect(() => {
-    if (!user) {
+    // Only redirect if we're not loading and definitely have no user
+    if (!authLoading && user === null) {
+      toast.error("Você precisa estar logado para acessar esta página");
       navigate("/auth");
+      return;
     }
 
     // Simulate loading for better UX
@@ -31,7 +35,7 @@ const TvChannels = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
@@ -47,6 +51,23 @@ const TvChannels = () => {
   };
 
   const hasAccess = isSubscribed || isAdmin;
+
+  // Show loading state while checking auth/subscription status
+  if (authLoading || subscriptionLoading) {
+    return (
+      <div className="min-h-screen bg-netflix-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-netflix-red border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white text-lg">Carregando canais...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Don't render content until we have user data
+  if (!user) {
+    return null; // This prevents flickering before redirect happens
+  }
 
   return (
     <div className="min-h-screen bg-netflix-background text-white">

@@ -10,7 +10,7 @@ interface TvChannelModalProps {
   channel: TvChannel | null;
   isOpen: boolean;
   onClose: () => void;
-  hasAccess?: boolean; // Add hasAccess prop
+  hasAccess: boolean; 
 }
 
 const TvChannelModal = ({ channel, isOpen, onClose, hasAccess = true }: TvChannelModalProps) => {

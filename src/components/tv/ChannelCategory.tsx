@@ -4,7 +4,7 @@ import ChannelCard from './ChannelCard';
 import { TvChannel } from '@/types/tvChannel';
 
 interface ChannelCategoryProps {
-  title: string; // Changed from categoryName to title
+  title: string;
   channels: TvChannel[];
   onSelectChannel: (channel: TvChannel) => void;
   selectedChannel: TvChannel | null;

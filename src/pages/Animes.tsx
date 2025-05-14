@@ -37,7 +37,7 @@ const AnimesPage = () => {
     
     // Navigate to anime detail page
     navigate(`/anime/${media.id}`);
-    console.log(`Navigating to anime with ID: ${media.id}`);
+    console.log(`Navigating to anime with ID: ${media.id}, title: ${getMediaTitle(media)}`);
   };
 
   return (
