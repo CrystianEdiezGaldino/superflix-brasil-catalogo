@@ -40,9 +40,19 @@ const AnimesPage = () => {
       return;
     }
     
-    // Navigate to anime detail page
+    // Navigate to anime detail page using the same ID format as series
+    // Isso garante que usaremos a API de séries para os animes
     navigate(`/anime/${media.id}`);
     console.log(`Navigating to anime with ID: ${media.id}, title: ${getMediaTitle(media)}`);
+  };
+
+  // Create wrapper functions to convert string to number for the filters
+  const handleYearFilterChange = (year: string) => {
+    setYearFilter(year === "all" ? 0 : parseInt(year));
+  };
+
+  const handleRatingFilterChange = (rating: string) => {
+    setRatingFilter(rating === "all" ? 0 : parseFloat(rating));
   };
 
   return (
@@ -60,12 +70,12 @@ const AnimesPage = () => {
       isFiltering={isFiltering}
       isSearching={isSearching}
       page={page}
-      yearFilter={yearFilter}
-      ratingFilter={ratingFilter}
+      yearFilter={yearFilter.toString()}
+      ratingFilter={ratingFilter.toString()}
       searchQuery={searchQuery}
       onSearch={handleSearch}
-      onYearFilterChange={setYearFilter}
-      onRatingFilterChange={setRatingFilter}
+      onYearFilterChange={handleYearFilterChange}
+      onRatingFilterChange={handleRatingFilterChange}
       onLoadMore={loadMoreAnimes}
       onResetFilters={resetFilters}
       onMediaClick={handleMediaClick}

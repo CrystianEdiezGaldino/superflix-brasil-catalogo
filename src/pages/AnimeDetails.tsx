@@ -15,6 +15,7 @@ import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
 import { useAnimeDetails } from "@/hooks/anime/useAnimeDetails";
 import { Series } from "@/types/movie";
+import SuperFlixPlayer from "@/components/series/SuperFlixPlayer";
 
 const AnimeDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +24,7 @@ const AnimeDetails = () => {
   const [isContentAvailable, setIsContentAvailable] = useState(true);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const [isLoadingSeason, setIsLoadingSeason] = useState(false);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -35,7 +37,15 @@ const AnimeDetails = () => {
   const { isFavorite, toggleFavorite } = useFavorites();
 
   // Use the anime details hook
-  const { anime, isLoading, error, isAnimeFavorite, toggleAnimeFavorite } = useAnimeDetails();
+  const { 
+    anime, 
+    seasonData, 
+    isLoading, 
+    error, 
+    isAnimeFavorite, 
+    toggleAnimeFavorite,
+    fetchSeasonData 
+  } = useAnimeDetails();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
@@ -61,6 +71,19 @@ const AnimeDetails = () => {
     window.scrollTo(0, 0);
   }, [id]);
 
+  // Handle season change
+  const handleSeasonChange = async (seasonNumber: number) => {
+    setIsLoadingSeason(true);
+    setSelectedSeason(seasonNumber);
+    setSelectedEpisode(1);
+    
+    if (anime && anime.id) {
+      await fetchSeasonData(anime.id, seasonNumber);
+    }
+    
+    setIsLoadingSeason(false);
+  };
+
   // Handle episode selection
   const handleEpisodeSelect = (episode: number) => {
     setSelectedEpisode(episode);
@@ -84,24 +107,6 @@ const AnimeDetails = () => {
   const seasons = animeSeries?.number_of_seasons 
     ? Array.from({ length: animeSeries.number_of_seasons }, (_, i) => i + 1) 
     : [1];
-  
-  // Mock season data if needed
-  const seasonData = {
-    id: 1,
-    name: "Temporada 1",
-    overview: "Primeira temporada do anime",
-    poster_path: animeSeries?.poster_path || "",
-    season_number: 1,
-    episodes: Array.from({ length: 12 }, (_, i) => ({
-      id: i + 1,
-      name: `Episódio ${i + 1}`,
-      overview: `Descrição do episódio ${i + 1}`,
-      still_path: animeSeries?.backdrop_path || "",
-      episode_number: i + 1,
-      season_number: 1,
-      vote_average: 8.0
-    }))
-  };
 
   if (isLoading || authLoading || subscriptionLoading) {
     return <AnimeLoadingState />;
@@ -136,13 +141,21 @@ const AnimeDetails = () => {
         togglePlayer={handleWatchClick} 
       />
 
-      <AnimePlayer 
-        showPlayer={showPlayer}
-        anime={animeSeries}
-        selectedSeason={selectedSeason}
-        selectedEpisode={selectedEpisode}
-        hasAccess={hasAccess}
-      />
+      {showPlayer && animeSeries && (animeSeries.imdb_id || animeSeries.external_ids?.imdb_id) && (
+        <div id="video-player" className="px-6 md:px-10 mb-10">
+          <SuperFlixPlayer
+            type="serie"
+            imdb={(animeSeries.imdb_id || animeSeries.external_ids?.imdb_id || '')}
+            season={selectedSeason.toString()}
+            episode={selectedEpisode.toString()}
+            options={{
+              transparent: true,
+              noLink: true,
+              noEpList: true
+            }}
+          />
+        </div>
+      )}
 
       {!isContentAvailable && (
         <div className="px-6 md:px-10 mb-10">
@@ -152,13 +165,13 @@ const AnimeDetails = () => {
 
       <AnimeContent 
         anime={animeSeries}
-        seasonData={seasonData}
+        seasonData={seasonData || undefined}
         selectedSeason={selectedSeason}
         selectedEpisode={selectedEpisode}
         seasons={seasons}
-        setSelectedSeason={setSelectedSeason}
+        setSelectedSeason={handleSeasonChange}
         handleEpisodeSelect={handleEpisodeSelect}
-        isLoadingSeason={false}
+        isLoadingSeason={isLoadingSeason}
         subscriptionLoading={subscriptionLoading}
         hasAccess={hasAccess}
       />

@@ -1,6 +1,8 @@
 import AnimeVideoPlayer from "./AnimeVideoPlayer";
 import { Series } from "@/types/movie";
 import { useEffect } from "react";
+import SuperFlixPlayer from "../series/SuperFlixPlayer";
+
 
 interface AnimePlayerProps {
   showPlayer: boolean;
@@ -17,7 +19,8 @@ const AnimePlayer = ({
   selectedEpisode,
   hasAccess
 }: AnimePlayerProps) => {
-  const imdbId = anime.imdb_id || anime.external_ids?.imdb_id;
+  // Verificar se temos um ID IMDB válido
+  const imdbId = anime.external_ids?.imdb_id || anime.imdb_id;
   
   // Scroll to player when it becomes visible
   useEffect(() => {
@@ -31,11 +34,28 @@ const AnimePlayer = ({
     }
   }, [showPlayer]);
   
+  // Se não tiver player, ID IMDB ou acesso, não mostrar nada
   if (!showPlayer || !imdbId) return null;
+  
+  // Se não tiver acesso, mostrar mensagem de acesso restrito
+  if (!hasAccess) {
+    return (
+      <div id="video-player" className="px-6 md:px-10 mb-10">
+        <AnimeVideoPlayer
+          showPlayer={true}
+          imdbId={imdbId}
+          selectedSeason={selectedSeason}
+          selectedEpisode={selectedEpisode}
+          hasAccess={false}
+        />
+      </div>
+    );
+  }
   
   return (
     <div id="video-player" className="px-6 md:px-10 mb-10">
-      <AnimeVideoPlayer 
+      {/* Usando VideoPlayer para garantir compatibilidade */}
+      <AnimeVideoPlayer
         showPlayer={true}
         imdbId={imdbId}
         selectedSeason={selectedSeason}

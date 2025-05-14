@@ -16,7 +16,7 @@ export const useFavorites = () => {
   }, [favorites]);
 
   // Check if a media ID is in favorites
-  const isFavorite = (id: number): boolean => {
+  const isFavorite = (p0: string, id: string, id: number): boolean => {
     if (!id) return false;
     return favorites.includes(id);
   };
