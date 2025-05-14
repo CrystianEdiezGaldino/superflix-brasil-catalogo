@@ -2,7 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAnimes } from "@/hooks/anime/useAnimes";
 import MediaView from "@/components/media/MediaView";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, getMediaTitle } from "@/types/movie";
 import AnimeCarousel from "@/components/anime/AnimeCarousel";
 
 const AnimesPage = () => {
@@ -86,10 +86,10 @@ const AnimesPage = () => {
               >
                 <img 
                   src={`https://image.tmdb.org/t/p/w342${anime.poster_path}`} 
-                  alt={anime.name} 
+                  alt={getMediaTitle(anime)} 
                   className="rounded-md shadow-lg w-full h-auto"
                 />
-                <h3 className="text-sm font-medium text-white mt-2 truncate">{anime.name}</h3>
+                <h3 className="text-sm font-medium text-white mt-2 truncate">{getMediaTitle(anime)}</h3>
               </div>
             ))}
           </div>

@@ -1,3 +1,4 @@
+
 export interface Movie {
   id: number;
   title: string;
@@ -13,6 +14,7 @@ export interface Movie {
   external_ids?: {
     imdb_id?: string;
   };
+  name?: string; // Add name as optional property for compatibility
 }
 
 export interface Series {
@@ -66,12 +68,22 @@ export interface Episode {
 
 export type MediaItem = Movie | Series;
 
-// Type guard para verificar se é um Movie
+// Type guard to verify if it's a Movie
 export function isMovie(media: MediaItem): media is Movie {
   return media.media_type === 'movie';
 }
 
-// Type guard para verificar se é uma Series
+// Type guard to verify if it's a Series
 export function isSeries(media: MediaItem): media is Series {
   return media.media_type === 'tv';
+}
+
+// Helper function to get the title or name from a MediaItem
+export function getMediaTitle(media: MediaItem): string {
+  return isMovie(media) ? media.title : media.name;
+}
+
+// Helper function to get the release date or first air date from a MediaItem
+export function getMediaReleaseDate(media: MediaItem): string | undefined {
+  return isMovie(media) ? media.release_date : media.first_air_date;
 }

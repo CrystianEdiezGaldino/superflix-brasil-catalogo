@@ -7,12 +7,14 @@ import { toast } from "sonner";
 
 interface FavoriteButtonProps {
   mediaId: number;
+  mediaType?: string; // Make mediaType optional with string type
   size?: "sm" | "md" | "lg";
   showText?: boolean;
 }
 
 const FavoriteButton = ({
   mediaId,
+  mediaType = "movie", // Default to "movie" if not provided
   size = "md",
   showText = false,
 }: FavoriteButtonProps) => {

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useFavorites } from "@/hooks/useFavorites";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, getMediaTitle } from "@/types/movie";
 import { fetchMediaById } from "@/services/tmdbApi";
 import { useQuery } from "@tanstack/react-query";
 
@@ -60,14 +60,14 @@ const FavoritesTab = () => {
         <div key={item.id} className="relative group">
           <img
             src={`https://image.tmdb.org/t/p/w342${item.poster_path}`}
-            alt={item.title || item.name}
+            alt={getMediaTitle(item)}
             className="rounded-md w-full transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
               (e.target as HTMLImageElement).src = "/placeholder.svg";
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-            <h3 className="text-white font-medium">{item.title || item.name}</h3>
+            <h3 className="text-white font-medium">{getMediaTitle(item)}</h3>
             <p className="text-sm text-gray-300">
               {item.media_type === "movie" ? "Filme" : "Série"}
             </p>

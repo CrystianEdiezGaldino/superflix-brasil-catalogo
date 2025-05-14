@@ -1,6 +1,6 @@
 
 import { TvChannel } from "@/types/tvChannel";
-import { TvChannelCard } from "./TvChannelCard";
+import ChannelCard from "./ChannelCard";
 import ChannelCategory from "./ChannelCategory";
 import { channelCategories } from "@/data/tvChannels";
 
@@ -35,12 +35,10 @@ const TvChannelsList = ({
           ))
         ) : (
           channels.map(channel => (
-            <TvChannelCard
+            <ChannelCard
               key={channel.id}
               channel={channel}
-              onClick={() => onSelectChannel(channel)}
-              isSelected={selectedChannel?.id === channel.id}
-              hasAccess={hasAccess}
+              onSelect={() => onSelectChannel(channel)}
             />
           ))
         )}

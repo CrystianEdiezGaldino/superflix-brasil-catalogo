@@ -10,9 +10,10 @@ interface TvChannelModalProps {
   channel: TvChannel | null;
   isOpen: boolean;
   onClose: () => void;
+  hasAccess?: boolean; // Add hasAccess prop
 }
 
-const TvChannelModal = ({ channel, isOpen, onClose }: TvChannelModalProps) => {
+const TvChannelModal = ({ channel, isOpen, onClose, hasAccess = true }: TvChannelModalProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -27,16 +28,41 @@ const TvChannelModal = ({ channel, isOpen, onClose }: TvChannelModalProps) => {
     setHasError(true);
   };
 
-  // Formatando o nome do canal para usar como slug na URL do embed
-  const slugify = (text: string) => {
-    return text
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w\-]+/g, '')
-      .replace(/\-\-+/g, '-')
-      .replace(/^-+/, '')
-      .replace(/-+$/, '');
-  };
+  // Show restricted access message if no access
+  if (!hasAccess) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl bg-netflix-background border-netflix-red">
+          <DialogTitle className="text-2xl font-bold text-white">
+            {channel.name}
+          </DialogTitle>
+          <DialogDescription className="text-gray-400">
+            Conteúdo exclusivo para assinantes
+          </DialogDescription>
+          
+          <div className="flex justify-end">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:text-netflix-red"
+              onClick={onClose}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+          </div>
+          
+          <div className="w-full p-8 text-center">
+            <AlertCircle className="h-12 w-12 text-netflix-red mb-4 mx-auto" />
+            <h3 className="text-xl font-bold mb-2 text-white">Acesso Restrito</h3>
+            <p className="mb-6 text-gray-300">Este canal está disponível apenas para assinantes.</p>
+            <Button className="bg-netflix-red hover:bg-red-700">
+              Assinar Agora
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

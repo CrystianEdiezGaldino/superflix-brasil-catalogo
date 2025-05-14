@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, getMediaTitle } from "@/types/movie";
 import { fetchMediaById } from "@/services/tmdbApi";
 import Navbar from "@/components/Navbar";
 
@@ -81,14 +81,14 @@ const FavoritesPage = () => {
               >
                 <img
                   src={`https://image.tmdb.org/t/p/w342${item.poster_path}`}
-                  alt={item.title || item.name}
+                  alt={getMediaTitle(item)}
                   className="rounded-md w-full h-auto aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = "/placeholder.svg";
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-                  <h3 className="text-white font-medium truncate">{item.title || item.name}</h3>
+                  <h3 className="text-white font-medium truncate">{getMediaTitle(item)}</h3>
                   <p className="text-sm text-gray-300">
                     {item.media_type === "movie" ? "Filme" : item.original_language === "ja" ? "Anime" : item.original_language === "ko" ? "Dorama" : "Série"}
                   </p>

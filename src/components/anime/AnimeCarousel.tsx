@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, isSeries, getMediaTitle } from "@/types/movie";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
@@ -43,6 +43,10 @@ const AnimeCarousel = ({ animes, onAnimeClick }: AnimeCarouselProps) => {
   if (!animes.length) return null;
 
   const currentAnime = animes[currentIndex];
+  const title = getMediaTitle(currentAnime);
+  const releaseYear = isSeries(currentAnime) 
+    ? currentAnime.first_air_date?.split('-')[0] 
+    : currentAnime.release_date?.split('-')[0];
 
   return (
     <div className="relative mb-8 overflow-hidden rounded-xl">
@@ -53,9 +57,9 @@ const AnimeCarousel = ({ animes, onAnimeClick }: AnimeCarouselProps) => {
         }}
       >
         <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">{currentAnime.name}</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">{title}</h2>
           <div className="flex items-center gap-4 text-white/80 text-sm mb-4">
-            <span>{currentAnime.first_air_date?.split('-')[0] || 'N/A'}</span>
+            <span>{releaseYear || 'N/A'}</span>
             <span>⭐ {currentAnime.vote_average?.toFixed(1) || 'N/A'}</span>
           </div>
           <p className="text-white/90 mb-6 line-clamp-3 md:line-clamp-4 max-w-2xl">

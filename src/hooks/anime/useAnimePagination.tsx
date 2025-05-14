@@ -3,7 +3,7 @@ import { useState } from "react";
 import { MediaItem } from "@/types/movie";
 
 interface UseAnimePaginationProps {
-  setAnimes: (animes: MediaItem[]) => void;
+  setAnimes: (animes: MediaItem[] | ((prevAnimes: MediaItem[]) => MediaItem[])) => void;
   allAnimeIds?: number[];
   fetchAnimeByIds?: (ids: number[], limit: number) => Promise<MediaItem[]>;
 }
@@ -44,7 +44,7 @@ export const useAnimePagination = ({
       }
 
       if (newAnimes.length > 0) {
-        setAnimes(prevAnimes => [...prevAnimes, ...newAnimes]);
+        setAnimes((prevAnimes: MediaItem[]) => [...prevAnimes, ...newAnimes]);
         setPage(nextPage);
       } else {
         setHasMore(false);
