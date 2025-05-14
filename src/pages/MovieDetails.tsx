@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -29,7 +30,7 @@ const MovieDetails = () => {
     hasTrialAccess,
     isLoading: subscriptionLoading 
   } = useSubscription();
-  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+  const { isFavorite, addToFavorites, removeFromFavorites, toggleFavorite } = useFavorites();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
@@ -71,7 +72,7 @@ const MovieDetails = () => {
   }, [id]);
 
   // Toggle favorite
-  const toggleFavorite = () => {
+  const handleToggleFavorite = () => {
     if (!movie) return;
     
     if (isFavorite(movie.id)) {
@@ -112,7 +113,7 @@ const MovieDetails = () => {
 
           <MediaActions 
             onPlayClick={handleWatchClick}
-            onFavoriteClick={toggleFavorite}
+            onFavoriteClick={handleToggleFavorite}
             isFavorite={isFavorite(movie.id)}
             hasAccess={hasAccess}
           />
@@ -130,7 +131,7 @@ const MovieDetails = () => {
 
           {!isContentAvailable && (
             <div className="px-6 md:px-10 mb-10">
-              <ContentNotAvailable onAddToFavorites={toggleFavorite} />
+              <ContentNotAvailable onAddToFavorites={handleToggleFavorite} />
             </div>
           )}
 

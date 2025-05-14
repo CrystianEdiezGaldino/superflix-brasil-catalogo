@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -29,7 +30,7 @@ const FilmeDetails = () => {
     hasTrialAccess,
     isLoading: subscriptionLoading 
   } = useSubscription();
-  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+  const { isFavorite, addToFavorites, removeFromFavorites, toggleFavorite } = useFavorites();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
@@ -73,18 +74,20 @@ const FilmeDetails = () => {
     }
   };
 
-  const toggleFavorite = () => {
+  const handleToggleFavorite = () => {
     if (!user) {
       toast.error("É necessário fazer login para adicionar aos favoritos");
       return;
     }
     
-    if (isFavorite(filme?.id)) {
-      removeFromFavorites(filme?.id);
-      toast.success("Removido dos favoritos");
-    } else {
-      addToFavorites(filme?.id);
-      toast.success("Adicionado aos favoritos");
+    if (filme) {
+      if (isFavorite(filme.id)) {
+        removeFromFavorites(filme.id);
+        toast.success("Removido dos favoritos");
+      } else {
+        addToFavorites(filme.id);
+        toast.success("Adicionado aos favoritos");
+      }
     }
   };
 
@@ -153,4 +156,4 @@ const FilmeDetails = () => {
   );
 };
 
-export default FilmeDetails; 
+export default FilmeDetails;

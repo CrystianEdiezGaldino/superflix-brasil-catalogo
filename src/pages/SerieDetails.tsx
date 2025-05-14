@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -31,7 +32,7 @@ const SerieDetails = () => {
     hasTrialAccess,
     isLoading: subscriptionLoading 
   } = useSubscription();
-  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+  const { isFavorite, addToFavorites, removeFromFavorites, toggleFavorite } = useFavorites();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
@@ -75,18 +76,20 @@ const SerieDetails = () => {
     }
   };
 
-  const toggleFavorite = () => {
+  const handleToggleFavorite = () => {
     if (!user) {
       toast.error("É necessário fazer login para adicionar aos favoritos");
       return;
     }
     
-    if (isFavorite(serie?.id)) {
-      removeFromFavorites(serie?.id);
-      toast.success("Removido dos favoritos");
-    } else {
-      addToFavorites(serie?.id);
-      toast.success("Adicionado aos favoritos");
+    if (serie) {
+      if (isFavorite(serie.id)) {
+        removeFromFavorites(serie.id);
+        toast.success("Removido dos favoritos");
+      } else {
+        addToFavorites(serie.id);
+        toast.success("Adicionado aos favoritos");
+      }
     }
   };
 
@@ -120,7 +123,7 @@ const SerieDetails = () => {
           <SeriesHeader 
             series={serie} 
             isFavorite={isFavorite(serie.id)} 
-            toggleFavorite={toggleFavorite} 
+            toggleFavorite={handleToggleFavorite} 
           />
 
           <div className="px-6 md:px-10">
@@ -168,4 +171,4 @@ const SerieDetails = () => {
   );
 };
 
-export default SerieDetails; 
+export default SerieDetails;

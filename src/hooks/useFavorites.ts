@@ -1,124 +1,62 @@
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
-
-export type MediaType = 'movie' | 'series' | 'anime' | 'dorama' | 'tv';
 
 export const useFavorites = () => {
-  const { user } = useAuth();
-  const [favorites, setFavorites] = useState<Record<MediaType, string[]>>({
-    movie: [],
-    series: [],
-    anime: [],
-    dorama: [],
-    tv: []
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  // Load favorites from localStorage
+  const loadFavorites = (): number[] => {
+    const storedFavorites = localStorage.getItem('favorites');
+    return storedFavorites ? JSON.parse(storedFavorites) : [];
+  };
 
-  // Load favorites from localStorage when the user changes
+  const [favorites, setFavorites] = useState<number[]>(loadFavorites);
+
+  // Save favorites to localStorage whenever they change
   useEffect(() => {
-    if (user) {
-      const storedFavorites = localStorage.getItem(`favorites_${user.id}`);
-      if (storedFavorites) {
-        setFavorites(JSON.parse(storedFavorites));
-      }
-    }
-  }, [user]);
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
 
-  // Save favorites to localStorage
-  const saveFavorites = (newFavorites: Record<MediaType, string[]>) => {
-    if (user) {
-      localStorage.setItem(`favorites_${user.id}`, JSON.stringify(newFavorites));
+  // Check if a media ID is in favorites
+  const isFavorite = (id: number): boolean => {
+    if (!id) return false;
+    return favorites.includes(id);
+  };
+
+  // Add a media ID to favorites
+  const addToFavorites = (id: number): void => {
+    if (!id) return;
+    if (!isFavorite(id)) {
+      setFavorites((prev) => [...prev, id]);
     }
   };
 
-  // Add to favorites
-  const addToFavorites = (id: string, type: MediaType) => {
-    if (!user) {
-      toast.error('É necessário fazer login para adicionar aos favoritos');
-      return;
-    }
-
-    setFavorites(prev => {
-      const newFavorites = { ...prev };
-      if (!newFavorites[type]) {
-        newFavorites[type] = [];
-      }
-
-      const index = newFavorites[type].indexOf(id);
-      if (index === -1) {
-        newFavorites[type].push(id);
-      }
-
-      saveFavorites(newFavorites);
-      toast.success('Adicionado aos favoritos');
-      return newFavorites;
-    });
-  };
-
-  // Remove from favorites
-  const removeFromFavorites = (id: string, type: MediaType) => {
-    if (!user) {
-      toast.error('É necessário fazer login para remover dos favoritos');
-      return;
-    }
-
-    setFavorites(prev => {
-      const newFavorites = { ...prev };
-      const index = newFavorites[type].indexOf(id);
-      if (index !== -1) {
-        newFavorites[type].splice(index, 1);
-      }
-
-      saveFavorites(newFavorites);
-      toast.success('Removido dos favoritos');
-      return newFavorites;
-    });
-  };
-
-  // Check if it's in favorites
-  const isFavorite = (id: string, type: MediaType) => {
-    return favorites[type]?.includes(id) || false;
+  // Remove a media ID from favorites
+  const removeFromFavorites = (id: number): void => {
+    if (!id) return;
+    setFavorites((prev) => prev.filter((itemId) => itemId !== id));
   };
 
   // Toggle favorite status
-  const toggleFavorite = (id: string, type: MediaType) => {
-    if (!user) return;
-
-    if (isFavorite(id, type)) {
-      removeFromFavorites(id, type);
+  const toggleFavorite = (id: number): void => {
+    if (isFavorite(id)) {
+      removeFromFavorites(id);
     } else {
-      addToFavorites(id, type);
+      addToFavorites(id);
     }
   };
 
-  // Function to get all favorites as a flat array
-  const getAllFavorites = () => {
-    return Object.values(favorites).flat();
-  };
-
-  // Mock function for refetchFavorites
-  const refetchFavorites = () => {
-    setIsLoading(true);
-    // In a real implementation with an API, this would fetch the latest favorites
-    if (user) {
-      const storedFavorites = localStorage.getItem(`favorites_${user.id}`);
-      if (storedFavorites) {
-        setFavorites(JSON.parse(storedFavorites));
-      }
-    }
-    setIsLoading(false);
+  // Get all favorites
+  const getAllFavorites = (): number[] => {
+    return favorites;
   };
 
   return {
     favorites,
-    getAllFavorites,
+    isFavorite,
     addToFavorites,
     removeFromFavorites,
-    isFavorite,
     toggleFavorite,
-    isLoading,
-    refetchFavorites
+    getAllFavorites
   };
 };
+
+export default useFavorites;
