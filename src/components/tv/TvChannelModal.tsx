@@ -1,11 +1,13 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { TVChannel } from '@/data/tvChannels';
+import { TvChannel } from '@/types/tvChannel';
 import { X, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
 
 interface TvChannelModalProps {
-  channel: TVChannel | null;
+  channel: TvChannel | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -23,6 +25,17 @@ const TvChannelModal = ({ channel, isOpen, onClose }: TvChannelModalProps) => {
   const handleIframeError = () => {
     setIsLoading(false);
     setHasError(true);
+  };
+
+  // Formatando o nome do canal para usar como slug na URL do embed
+  const slugify = (text: string) => {
+    return text
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
   };
 
   return (
@@ -71,21 +84,23 @@ const TvChannelModal = ({ channel, isOpen, onClose }: TvChannelModalProps) => {
             </div>
           )}
           
-          <iframe
-            src={`https://embedtv-0.icu/embed/${channel.slug}`}
-            className="w-full h-full border-0"
-            allowFullScreen
-            title={`Assistir ${channel.name} ao vivo`}
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-            onLoad={handleIframeLoad}
-            onError={handleIframeError}
-          />
+          <AspectRatio ratio={16/9} className="bg-black">
+            <iframe
+              src={channel.embedUrl}
+              className="w-full h-full border-0"
+              allowFullScreen
+              title={`Assistir ${channel.name} ao vivo`}
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              onLoad={handleIframeLoad}
+              onError={handleIframeError}
+            />
+          </AspectRatio>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default TvChannelModal; 
+export default TvChannelModal;

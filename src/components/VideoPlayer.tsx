@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
@@ -20,8 +21,8 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
     paused?: boolean;
   }>({});
 
-  // Construir a URL do player
-  let playerUrl = `https://api.superflix.com.br/${type}/${imdbId}`;
+  // Construir a URL do player usando a API correta
+  let playerUrl = `https://superflixapi.fyi/${type}/${imdbId}`;
   
   // Adicionar temporada e episódio se for série
   if (type === "serie" && season !== undefined) {
@@ -31,9 +32,6 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
       playerUrl += `/${episode}`;
     }
   }
-  
-  // Adicionar parâmetros para otimizar a visualização
-  playerUrl += "#noBackground";
 
   // This effect handles page visibility changes and prevents iframe reload
   useEffect(() => {

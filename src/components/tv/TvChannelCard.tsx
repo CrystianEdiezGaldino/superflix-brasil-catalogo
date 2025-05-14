@@ -1,42 +1,48 @@
+
 import React from 'react';
-import { TVChannel } from '@/data/tvChannels';
-import { Heart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useFavorites } from '@/hooks/useFavorites';
+import { TvChannel } from '@/types/tvChannel';
+import { Card } from '@/components/ui/card';
+import { AspectRatio } from '@/components/ui/aspect-ratio';
+import { Play, Tv } from 'lucide-react';
 
 interface TvChannelCardProps {
-  channel: TVChannel;
-  onSelect: (channel: TVChannel) => void;
+  channel: TvChannel;
+  onSelect: (channel: TvChannel) => void;
 }
 
 const TvChannelCard = ({ channel, onSelect }: TvChannelCardProps) => {
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const isChannelFavorite = isFavorite(channel.id, 'tv');
-
   return (
-    <div 
-      className="relative group cursor-pointer bg-netflix-background rounded-lg overflow-hidden transition-transform duration-300 hover:scale-105"
+    <Card 
+      className="group overflow-hidden bg-gray-800/50 border-gray-700 hover:border-netflix-red transition-all cursor-pointer"
       onClick={() => onSelect(channel)}
     >
-      <div className="aspect-video bg-black/50 flex items-center justify-center">
-        <h3 className="text-white text-lg font-semibold">{channel.name}</h3>
+      <div className="relative">
+        <AspectRatio ratio={16/9} className="bg-gray-900 flex items-center justify-center">
+          {channel.logo ? (
+            <img 
+              src={channel.logo} 
+              alt={channel.name} 
+              className="object-contain h-16 w-full p-2"
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center p-4">
+              <Tv size={32} className="text-gray-400 mb-2" />
+              <span className="text-sm font-medium text-center text-white">{channel.name}</span>
+            </div>
+          )}
+        </AspectRatio>
+        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
+          <div className="rounded-full bg-netflix-red p-3">
+            <Play size={22} fill="white" className="text-white ml-1" />
+          </div>
+        </div>
       </div>
-      
-      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white hover:text-netflix-red"
-          onClick={(e) => {
-            e.stopPropagation();
-            toggleFavorite(channel.id, 'tv');
-          }}
-        >
-          <Heart className={`h-6 w-6 ${isChannelFavorite ? 'fill-netflix-red text-netflix-red' : ''}`} />
-        </Button>
+      <div className="p-2 text-center">
+        <h3 className="font-medium text-sm text-white truncate">{channel.name}</h3>
+        <p className="text-xs text-gray-400">{channel.category}</p>
       </div>
-    </div>
+    </Card>
   );
 };
 
-export default TvChannelCard; 
+export default TvChannelCard;

@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 
 interface SuperFlixPlayerProps {
@@ -30,7 +31,7 @@ const SuperFlixPlayer = ({ type, imdb, season = '1', episode = '1', options = {}
           .filter(([_, value]) => value)
           .map(([key]) => `#${key}`)
           .join('')}";
-        frame.innerHTML = '<iframe src="https://superflixapi.nexus/'+type+'/'+imdb+'/'+season+'/'+episode+options+'" style="width:100%;height:600px;border:none;"></iframe>';
+        frame.innerHTML = '<iframe src="https://superflixapi.fyi/'+type+'/'+imdb+'/'+season+'/'+episode+options+'" style="width:100%;height:600px;border:none;"></iframe>';
       }
     `;
     document.body.appendChild(script);
@@ -42,4 +43,4 @@ const SuperFlixPlayer = ({ type, imdb, season = '1', episode = '1', options = {}
   return <div id="SuperFlixAPIContainerVideo" />;
 };
 
-export default SuperFlixPlayer; 
+export default SuperFlixPlayer;
