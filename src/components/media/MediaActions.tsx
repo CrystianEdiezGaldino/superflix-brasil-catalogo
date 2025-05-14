@@ -4,27 +4,27 @@ import { Heart } from 'lucide-react';
 
 interface MediaActionsProps {
   mediaId: number;
+  mediaType?: string;
 }
 
-export const MediaActions = ({ mediaId }: MediaActionsProps) => {
-  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+export const MediaActions = ({ mediaId, mediaType = 'movie' }: MediaActionsProps) => {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  
+  // Convert the mediaId to string for our favorites system
+  const strMediaId = String(mediaId);
   
   const handleToggleFavorite = () => {
-    if (isFavorite(mediaId)) {
-      removeFromFavorites(mediaId);
-    } else {
-      addToFavorites(mediaId);
-    }
+    toggleFavorite(strMediaId, mediaType as any);
   };
 
   return (
     <button
       onClick={handleToggleFavorite}
       className="p-2 rounded-full hover:bg-white/10 transition-colors"
-      aria-label={isFavorite(mediaId) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+      aria-label={isFavorite(strMediaId, mediaType as any) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
     >
       <Heart
-        className={`w-6 h-6 ${isFavorite(mediaId) ? 'fill-red-500 text-red-500' : 'text-white'}`}
+        className={`w-6 h-6 ${isFavorite(strMediaId, mediaType as any) ? 'fill-red-500 text-red-500' : 'text-white'}`}
       />
     </button>
   );

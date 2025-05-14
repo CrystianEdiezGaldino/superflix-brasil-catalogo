@@ -11,11 +11,14 @@ import { MediaItem } from "@/types/movie";
 const Favorites = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { favorites, isLoading, refetchFavorites } = useFavorites();
+  const { getAllFavorites, isLoading, refetchFavorites } = useFavorites();
   
-  // Create a placeholder array of MediaItems from favorite IDs
-  const favoriteItems: MediaItem[] = favorites.map(id => ({
-    id,
+  // Get all favorites
+  const allFavorites = getAllFavorites?.() || [];
+  
+  // Create MediaItem objects from the favorites
+  const favoriteItems: MediaItem[] = allFavorites.map(id => ({
+    id: Number(id),
     title: `Item ${id}`,
     name: `Item ${id}`,
     overview: "",
@@ -73,7 +76,7 @@ const Favorites = () => {
           Meus Favoritos
         </h1>
 
-        {favorites.length === 0 ? (
+        {allFavorites.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-400 text-lg">
               Você ainda não adicionou nenhum título aos favoritos.

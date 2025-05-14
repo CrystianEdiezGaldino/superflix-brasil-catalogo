@@ -1,140 +1,189 @@
-import { TvChannel } from '@/types/tvChannel';
 
-export interface TVChannel {
-  id: string;
-  name: string;
-  slug: string;
-  category: 'sports' | 'entertainment' | 'news' | 'kids' | 'movies' | 'documentary' | 'music' | 'adult';
-  logo?: string;
-}
+import { TvChannel } from "@/types/tvChannel";
 
-export const tvChannels: TVChannel[] = [
-  { id: 'ae', name: 'AE', slug: 'ae', category: 'entertainment' },
-  { id: 'axn', name: 'AXN', slug: 'axn', category: 'entertainment' },
-  { id: 'adult-swim', name: 'Adult Swim', slug: 'adult-swim', category: 'entertainment' },
-  { id: 'animal-planet', name: 'Animal Planet', slug: 'animal-planet', category: 'documentary' },
-  { id: 'aparecida', name: 'Aparecida', slug: 'aparecida', category: 'entertainment' },
-  { id: 'band', name: 'Band', slug: 'band', category: 'entertainment' },
-  { id: 'band-news', name: 'Band News', slug: 'band-news', category: 'news' },
-  { id: 'band-sports', name: 'Band Sports', slug: 'band-sports', category: 'sports' },
-  { id: 'cancao-nova', name: 'Canção Nova', slug: 'cancao-nova', category: 'entertainment' },
-  { id: 'cartoon-network', name: 'Cartoon Network', slug: 'cartoon-network', category: 'kids' },
-  { id: 'cartoonito', name: 'Cartoonito', slug: 'cartoonito', category: 'kids' },
-  { id: 'cazetv-1', name: 'CazeTV 1', slug: 'cazetv-1', category: 'entertainment' },
-  { id: 'cazetv-2', name: 'CazeTV 2', slug: 'cazetv-2', category: 'entertainment' },
-  { id: 'cazetv-3', name: 'CazeTV 3', slug: 'cazetv-3', category: 'entertainment' },
-  { id: 'cinemax', name: 'Cinemax', slug: 'cinemax', category: 'movies' },
-  { id: 'combate', name: 'Combate', slug: 'combate', category: 'sports' },
-  { id: 'comedy-central', name: 'Comedy Central', slug: 'comedy-central', category: 'entertainment' },
-  { id: 'cultura', name: 'Cultura', slug: 'cultura', category: 'entertainment' },
-  { id: 'discovery-channel', name: 'Discovery Channel', slug: 'discovery-channel', category: 'documentary' },
-  { id: 'discovery-id', name: 'Discovery ID', slug: 'discovery-id', category: 'documentary' },
-  { id: 'discovery-hh', name: 'Discovery H&H', slug: 'discovery-hh', category: 'documentary' },
-  { id: 'discovery-kids', name: 'Discovery Kids', slug: 'discovery-kids', category: 'kids' },
-  { id: 'discovery-science', name: 'Discovery Science', slug: 'discovery-science', category: 'documentary' },
-  { id: 'discovery-theater', name: 'Discovery Theater', slug: 'discovery-theater', category: 'documentary' },
-  { id: 'discovery-turbo', name: 'Discovery Turbo', slug: 'discovery-turbo', category: 'documentary' },
-  { id: 'discovery-world', name: 'Discovery World', slug: 'discovery-world', category: 'documentary' },
-  { id: 'disney-plus-1', name: 'Disney Plus 1', slug: 'disney-plus-1', category: 'entertainment' },
-  { id: 'disney-plus-2', name: 'Disney Plus 2', slug: 'disney-plus-2', category: 'entertainment' },
-  { id: 'disney-plus-3', name: 'Disney Plus 3', slug: 'disney-plus-3', category: 'entertainment' },
-  { id: 'espn', name: 'Espn', slug: 'espn', category: 'sports' },
-  { id: 'espn-2', name: 'Espn 2', slug: 'espn-2', category: 'sports' },
-  { id: 'espn-3', name: 'Espn 3', slug: 'espn-3', category: 'sports' },
-  { id: 'espn-4', name: 'Espn 4', slug: 'espn-4', category: 'sports' },
-  { id: 'espn-5', name: 'Espn 5', slug: 'espn-5', category: 'sports' },
-  { id: 'espn-6', name: 'Espn 6', slug: 'espn-6', category: 'sports' },
-  { id: 'nba-league-pass-1', name: 'NBA League Pass 1', slug: 'nba-league-pass-1', category: 'sports' },
-  { id: 'nba-league-pass-2', name: 'NBA League Pass 2', slug: 'nba-league-pass-2', category: 'sports' },
-  { id: '24h-todo-mundo-odeia-o-cris', name: '24H Todo Mundo Odeia o Cris', slug: '24h-todo-mundo-odeia-o-cris', category: 'entertainment' },
-  { id: '24h-os-simpsons', name: '24H Os Simpsons', slug: '24h-os-simpsons', category: 'entertainment' },
-  { id: '24h-dragon-ball-z', name: '24H Dragon Ball Z', slug: '24h-dragon-ball-z', category: 'entertainment' },
-  { id: 'fx', name: 'FX', slug: 'fx', category: 'entertainment' },
-  { id: 'fish-tv', name: 'Fish TV', slug: 'fish-tv', category: 'documentary' },
-  { id: 'food-network', name: 'Food Network', slug: 'food-network', category: 'entertainment' },
-  { id: 'gnt', name: 'GNT', slug: 'gnt', category: 'entertainment' },
-  { id: 'globo-news', name: 'Globo News', slug: 'globo-news', category: 'news' },
-  { id: 'globo-rj', name: 'Globo RJ', slug: 'globo-rj', category: 'entertainment' },
-  { id: 'globo-sp', name: 'Globo SP', slug: 'globo-sp', category: 'entertainment' },
-  { id: 'gloob', name: 'Gloob', slug: 'gloob', category: 'kids' },
-  { id: 'cnn-brasil', name: 'CNN Brasil', slug: 'cnn-brasil', category: 'news' },
-  { id: 'hbo', name: 'HBO', slug: 'hbo', category: 'movies' },
-  { id: 'hbo-2', name: 'HBO 2', slug: 'hbo-2', category: 'movies' },
-  { id: 'hbo-family', name: 'HBO Family', slug: 'hbo-family', category: 'movies' },
-  { id: 'hbo-mundi', name: 'HBO Mundi', slug: 'hbo-mundi', category: 'movies' },
-  { id: 'hbo-pop', name: 'HBO POP', slug: 'hbo-pop', category: 'movies' },
-  { id: 'hbo-plus', name: 'HBO Plus', slug: 'hbo-plus', category: 'movies' },
-  { id: 'hbo-xtreme', name: 'HBO Xtreme', slug: 'hbo-xtreme', category: 'movies' },
-  { id: 'hgtv', name: 'HGTV', slug: 'hgtv', category: 'entertainment' },
-  { id: 'history', name: 'History', slug: 'history', category: 'documentary' },
-  { id: 'history-2', name: 'History 2', slug: 'history-2', category: 'documentary' },
-  { id: 'mtv', name: 'MTV', slug: 'mtv', category: 'music' },
-  { id: 'master-chef', name: 'Master chef', slug: 'master-chef', category: 'entertainment' },
-  { id: 'goat-1', name: 'Goat - 1', slug: 'goat-1', category: 'entertainment' },
-  { id: 'goat-2', name: 'Goat - 2', slug: 'goat-2', category: 'entertainment' },
-  { id: 'goat-3', name: 'Goat - 3', slug: 'goat-3', category: 'entertainment' },
-  { id: 'max-1', name: 'Max - 1', slug: 'max-1', category: 'entertainment' },
-  { id: 'max-2', name: 'Max - 2', slug: 'max-2', category: 'entertainment' },
-  { id: 'max-3', name: 'Max - 3', slug: 'max-3', category: 'entertainment' },
-  { id: 'max-4', name: 'Max - 4', slug: 'max-4', category: 'entertainment' },
-  { id: 'max-5', name: 'Max - 5', slug: 'max-5', category: 'entertainment' },
-  { id: 'max-6', name: 'Max - 6', slug: 'max-6', category: 'entertainment' },
-  { id: 'megapix', name: 'Megapix', slug: 'megapix', category: 'movies' },
-  { id: 'multishow', name: 'Multishow', slug: 'multishow', category: 'music' },
-  { id: 'nick-junior', name: 'Nick Junior', slug: 'nick-junior', category: 'kids' },
-  { id: 'nickelodeon', name: 'Nickelodeon', slug: 'nickelodeon', category: 'kids' },
-  { id: 'nosso-futebol-1', name: 'Nosso Futebol 1', slug: 'nosso-futebol-1', category: 'sports' },
-  { id: 'nosso-futebol-2', name: 'Nosso Futebol 2', slug: 'nosso-futebol-2', category: 'sports' },
-  { id: 'nosso-futebol-3', name: 'Nosso Futebol 3', slug: 'nosso-futebol-3', category: 'sports' },
-  { id: 'paramount', name: 'Paramount', slug: 'paramount', category: 'entertainment' },
-  { id: 'paramount-plus', name: 'Paramount Plus', slug: 'paramount-plus', category: 'entertainment' },
-  { id: 'paramount-plus-2', name: 'Paramount Plus 2', slug: 'paramount-plus-2', category: 'entertainment' },
-  { id: 'play-boy', name: 'Play Boy', slug: 'play-boy', category: 'adult' },
-  { id: 'premiere-1', name: 'Premiere 1', slug: 'premiere-1', category: 'sports' },
-  { id: 'premiere-2', name: 'Premiere 2', slug: 'premiere-2', category: 'sports' },
-  { id: 'premiere-3', name: 'Premiere 3', slug: 'premiere-3', category: 'sports' },
-  { id: 'premiere-4', name: 'Premiere 4', slug: 'premiere-4', category: 'sports' },
-  { id: 'premiere-5', name: 'Premiere 5', slug: 'premiere-5', category: 'sports' },
-  { id: 'premiere-6', name: 'Premiere 6', slug: 'premiere-6', category: 'sports' },
-  { id: 'premiere-7', name: 'Premiere 7', slug: 'premiere-7', category: 'sports' },
-  { id: 'premiere-8', name: 'Premiere 8', slug: 'premiere-8', category: 'sports' },
-  { id: 'prime-video', name: 'Prime Video', slug: 'prime-video', category: 'entertainment' },
-  { id: 'prime-video-2', name: 'Prime Video 2', slug: 'prime-video-2', category: 'entertainment' },
-  { id: 'record', name: 'Record', slug: 'record', category: 'entertainment' },
-  { id: 'sbt-central', name: 'SBT Central', slug: 'sbt-central', category: 'entertainment' },
-  { id: 'sexy-hot', name: 'Sexy Hot', slug: 'sexy-hot', category: 'adult' },
-  { id: 'sony-channel', name: 'Sony Channel', slug: 'sony-channel', category: 'entertainment' },
-  { id: 'space', name: 'Space', slug: 'space', category: 'entertainment' },
-  { id: 'sportv', name: 'Sportv', slug: 'sportv', category: 'sports' },
-  { id: 'sportv-2', name: 'Sportv 2', slug: 'sportv-2', category: 'sports' },
-  { id: 'sportv-3', name: 'Sportv 3', slug: 'sportv-3', category: 'sports' },
-  { id: 'sportv-4', name: 'Sportv 4', slug: 'sportv-4', category: 'sports' },
-  { id: 'star-channel', name: 'Star Channel', slug: 'star-channel', category: 'entertainment' },
-  { id: 'studio-universal', name: 'Studio Universal', slug: 'studio-universal', category: 'movies' },
-  { id: 'tcm', name: 'TCM', slug: 'tcm', category: 'movies' },
-  { id: 'tlc', name: 'TLC', slug: 'tlc', category: 'entertainment' },
-  { id: 'tnt', name: 'TNT', slug: 'tnt', category: 'entertainment' },
-  { id: 'tnt-novelas', name: 'TNT Novelas', slug: 'tnt-novelas', category: 'entertainment' },
-  { id: 'tnt-series', name: 'TNT Series', slug: 'tnt-series', category: 'entertainment' },
-  { id: 'telecine-action', name: 'Telecine Action', slug: 'telecine-action', category: 'movies' },
-  { id: 'telecine-cult', name: 'Telecine Cult', slug: 'telecine-cult', category: 'movies' },
-  { id: 'telecine-fun', name: 'Telecine Fun', slug: 'telecine-fun', category: 'movies' },
-  { id: 'telecine-pipoca', name: 'Telecine Pipoca', slug: 'telecine-pipoca', category: 'movies' },
-  { id: 'telecine-premium', name: 'Telecine Premium', slug: 'telecine-premium', category: 'movies' },
-  { id: 'telecine-touch', name: 'Telecine Touch', slug: 'telecine-touch', category: 'movies' },
-  { id: 'ufc-fight-pass', name: 'UFC Fight Pass', slug: 'ufc-fight-pass', category: 'sports' },
-  { id: 'universal', name: 'Universal', slug: 'universal', category: 'entertainment' },
-  { id: 'viva', name: 'VIVA', slug: 'viva', category: 'entertainment' },
-  { id: 'warnerchannel', name: 'Warnerchannel', slug: 'warnerchannel', category: 'entertainment' },
-  { id: 'off', name: 'OFF', slug: 'off', category: 'entertainment' },
-  { id: 'pt-sportv-1', name: 'PT - Sportv 1', slug: 'pt-sportv-1', category: 'sports' },
-  { id: 'pt-sportv-2', name: 'PT - Sportv 2', slug: 'pt-sportv-2', category: 'sports' },
-  { id: 'pt-sportv-3', name: 'PT - Sportv 3', slug: 'pt-sportv-3', category: 'sports' },
-  { id: 'pt-sportv-4', name: 'PT - Sportv 4', slug: 'pt-sportv-4', category: 'sports' },
-  { id: 'pt-sportv-5', name: 'PT - Sportv 5', slug: 'pt-sportv-5', category: 'sports' },
-  { id: 'pt-eleven-1', name: 'PT - Eleven 1', slug: 'pt-eleven-1', category: 'sports' },
-  { id: 'pt-eleven-3', name: 'PT - Eleven 3', slug: 'pt-eleven-3', category: 'sports' },
-  { id: 'pt-eleven-4', name: 'PT - Eleven 4', slug: 'pt-eleven-4', category: 'sports' },
-  { id: 'pt-eleven-5', name: 'PT - Eleven 5', slug: 'pt-eleven-5', category: 'sports' },
-  { id: 'pt-eleven-6', name: 'PT - Eleven 6', slug: 'pt-eleven-6', category: 'sports' }
+// Define channel categories
+export const channelCategories = [
+  {
+    id: "entertainment",
+    name: "Entretenimento",
+    channels: [
+      {
+        id: "globo",
+        name: "Globo",
+        logo: "https://logodownload.org/wp-content/uploads/2013/12/rede-globo-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCJ1JhlOxfKI_r8XQCrJgUZw",
+        category: "entertainment"
+      },
+      {
+        id: "record",
+        name: "Record TV",
+        logo: "https://logodownload.org/wp-content/uploads/2013/12/record-tv-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCJ2KjOQrYCgL3ffjrQxnK7A",
+        category: "entertainment"
+      },
+      {
+        id: "sbt",
+        name: "SBT",
+        logo: "https://logodownload.org/wp-content/uploads/2013/12/sbt-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCvaP_dY2zGFBtm42QalBKeQ",
+        category: "entertainment"
+      },
+      {
+        id: "band",
+        name: "Band",
+        logo: "https://logodownload.org/wp-content/uploads/2017/11/band-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCoa-D_VfMkFrCYoB2mKl5Xw",
+        category: "entertainment"
+      },
+      {
+        id: "redetv",
+        name: "RedeTV",
+        logo: "https://logodownload.org/wp-content/uploads/2017/11/redetv-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCB-JdxN_ni1q50z0eg6iVlg",
+        category: "entertainment"
+      }
+    ]
+  },
+  {
+    id: "news",
+    name: "Notícias",
+    channels: [
+      {
+        id: "globonews",
+        name: "GloboNews",
+        logo: "https://logodownload.org/wp-content/uploads/2017/11/globo-news-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCJEMj9NDbSItoQ8yBF5rjbg",
+        category: "news"
+      },
+      {
+        id: "cnnbrasil",
+        name: "CNN Brasil",
+        logo: "https://logodownload.org/wp-content/uploads/2020/01/cnn-brasil-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCvdwhh_fDyWccR42-rReZLw",
+        category: "news"
+      },
+      {
+        id: "recordnews",
+        name: "Record News",
+        logo: "https://logodownload.org/wp-content/uploads/2017/11/record-news-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCuiLR4p6wQ3xLEm15pEn1Xw",
+        category: "news"
+      },
+      {
+        id: "jovempan",
+        name: "Jovem Pan News",
+        logo: "https://logodownload.org/wp-content/uploads/2017/11/jovem-pan-logo-8.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCP391YRAjSOdM_bwievgaZA",
+        category: "news"
+      }
+    ]
+  },
+  {
+    id: "sports",
+    name: "Esportes",
+    channels: [
+      {
+        id: "sportv",
+        name: "SporTV",
+        logo: "https://logodownload.org/wp-content/uploads/2017/11/sportv-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCLRvhUr_WmpLfLRWwQC6L6g",
+        category: "sports"
+      },
+      {
+        id: "espn",
+        name: "ESPN Brasil",
+        logo: "https://logodownload.org/wp-content/uploads/2015/05/espn-logo-4.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UC35GJ0AzEbQlxrKp5EQdgxA",
+        category: "sports"
+      },
+      {
+        id: "foxsports",
+        name: "Fox Sports",
+        logo: "https://logodownload.org/wp-content/uploads/2018/10/fox-sports-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCCS1c1Sw9P_j2MGx0CMcYJw",
+        category: "sports"
+      }
+    ]
+  },
+  {
+    id: "movies",
+    name: "Filmes",
+    channels: [
+      {
+        id: "telecine",
+        name: "Telecine",
+        logo: "https://logodownload.org/wp-content/uploads/2020/10/telecine-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCgxkVh4ND2wQ0lWbVj5ppjA",
+        category: "movies"
+      },
+      {
+        id: "hbo",
+        name: "HBO",
+        logo: "https://logodownload.org/wp-content/uploads/2020/10/hbo-logo-3.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCJ1JhlOxfKI_r8XQCrJgUZw",
+        category: "movies"
+      }
+    ]
+  },
+  {
+    id: "kids",
+    name: "Infantil",
+    channels: [
+      {
+        id: "cartoonnetwork",
+        name: "Cartoon Network",
+        logo: "https://logodownload.org/wp-content/uploads/2018/07/cartoon-network-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCaFSAaeI3O7jh0fOqfD2qgw",
+        category: "kids"
+      },
+      {
+        id: "disney",
+        name: "Disney Channel",
+        logo: "https://logodownload.org/wp-content/uploads/2017/11/disney-channel-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCC5H3iT9uFVOEXdX2g7Lgyw",
+        category: "kids"
+      },
+      {
+        id: "nickelodeon",
+        name: "Nickelodeon",
+        logo: "https://logodownload.org/wp-content/uploads/2018/11/nickelodeon-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UC2J7DGjtd0dMylnP8m3VJ9w",
+        category: "kids"
+      },
+      {
+        id: "discoverykids",
+        name: "Discovery Kids",
+        logo: "https://logodownload.org/wp-content/uploads/2018/04/discovery-kids-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCUFIp-6wIcZxKTcWR7vmxkA",
+        category: "kids"
+      }
+    ]
+  },
+  {
+    id: "documentaries",
+    name: "Documentários",
+    channels: [
+      {
+        id: "natgeo",
+        name: "National Geographic",
+        logo: "https://logodownload.org/wp-content/uploads/2017/04/national-geographic-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCGTVL0R-rC0jJshz8QYrFxQ",
+        category: "documentaries"
+      },
+      {
+        id: "discoverychannel",
+        name: "Discovery Channel",
+        logo: "https://logodownload.org/wp-content/uploads/2017/04/discovery-channel-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCC0bZ-kLCtitj7cK7rctHJw",
+        category: "documentaries"
+      },
+      {
+        id: "historychannel",
+        name: "History Channel",
+        logo: "https://logodownload.org/wp-content/uploads/2020/01/history-channel-logo.png",
+        embedUrl: "https://www.youtube.com/embed/live_stream?channel=UCYfdidRxbB8Qhf0Nx7ioOYw",
+        category: "documentaries"
+      }
+    ]
+  }
 ];

@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
-type MediaType = 'movie' | 'series' | 'anime' | 'dorama' | 'tv';
+export type MediaType = 'movie' | 'series' | 'anime' | 'dorama' | 'tv';
 
 export const useFavorites = () => {
   const { user } = useAuth();
@@ -15,7 +16,7 @@ export const useFavorites = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
 
-  // Carregar favoritos do localStorage quando o usuário mudar
+  // Load favorites from localStorage when the user changes
   useEffect(() => {
     if (user) {
       const storedFavorites = localStorage.getItem(`favorites_${user.id}`);
@@ -25,14 +26,14 @@ export const useFavorites = () => {
     }
   }, [user]);
 
-  // Salvar favoritos no localStorage
+  // Save favorites to localStorage
   const saveFavorites = (newFavorites: Record<MediaType, string[]>) => {
     if (user) {
       localStorage.setItem(`favorites_${user.id}`, JSON.stringify(newFavorites));
     }
   };
 
-  // Adicionar aos favoritos
+  // Add to favorites
   const addToFavorites = (id: string, type: MediaType) => {
     if (!user) {
       toast.error('É necessário fazer login para adicionar aos favoritos');
@@ -56,7 +57,7 @@ export const useFavorites = () => {
     });
   };
 
-  // Remover dos favoritos
+  // Remove from favorites
   const removeFromFavorites = (id: string, type: MediaType) => {
     if (!user) {
       toast.error('É necessário fazer login para remover dos favoritos');
@@ -76,7 +77,7 @@ export const useFavorites = () => {
     });
   };
 
-  // Verificar se está nos favoritos
+  // Check if it's in favorites
   const isFavorite = (id: string, type: MediaType) => {
     return favorites[type]?.includes(id) || false;
   };
@@ -90,6 +91,11 @@ export const useFavorites = () => {
     } else {
       addToFavorites(id, type);
     }
+  };
+
+  // Function to get all favorites as a flat array
+  const getAllFavorites = () => {
+    return Object.values(favorites).flat();
   };
 
   // Mock function for refetchFavorites
@@ -107,9 +113,12 @@ export const useFavorites = () => {
 
   return {
     favorites,
+    getAllFavorites,
+    addToFavorites,
+    removeFromFavorites,
     isFavorite,
     toggleFavorite,
     isLoading,
     refetchFavorites
   };
-}; 
+};

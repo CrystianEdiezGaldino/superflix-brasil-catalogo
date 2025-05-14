@@ -14,16 +14,19 @@ interface FavoriteButtonProps {
 
 const FavoriteButton = ({ mediaId, mediaType, className = "" }: FavoriteButtonProps) => {
   const { user } = useAuth();
-  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+  const { isFavorite, toggleFavorite } = useFavorites();
   const [isFav, setIsFav] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Convert the mediaId to string for our favorites system
+  const strMediaId = String(mediaId);
   
   useEffect(() => {
     if (user) {
       // Check if it's already a favorite
-      setIsFav(isFavorite(mediaId));
+      setIsFav(isFavorite(strMediaId, mediaType as any));
     }
-  }, [user, mediaId, isFavorite]);
+  }, [user, strMediaId, mediaType, isFavorite]);
   
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent parent link activation
@@ -40,12 +43,11 @@ const FavoriteButton = ({ mediaId, mediaType, className = "" }: FavoriteButtonPr
     
     try {
       setIsProcessing(true);
+      toggleFavorite(strMediaId, mediaType as any);
       
       if (isFav) {
-        removeFromFavorites(mediaId);
         toast.success("Removido dos favoritos");
       } else {
-        addToFavorites(mediaId);
         toast.success("Adicionado aos favoritos");
       }
       

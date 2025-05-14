@@ -9,7 +9,7 @@ import { MediaItem } from "@/types/movie";
 
 const FavoritesTab = () => {
   const navigate = useNavigate();
-  const { favorites, isLoading, refetchFavorites } = useFavorites();
+  const { getAllFavorites, isLoading, refetchFavorites } = useFavorites();
 
   useEffect(() => {
     if (refetchFavorites) {
@@ -17,9 +17,12 @@ const FavoritesTab = () => {
     }
   }, [refetchFavorites]);
 
-  // Criar objetos MediaItem a partir dos IDs dos favoritos
-  const favoriteItems: MediaItem[] = favorites.map(id => ({
-    id,
+  // Get all favorites
+  const allFavorites = getAllFavorites?.() || [];
+
+  // Create MediaItem objects from the favorites
+  const favoriteItems: MediaItem[] = allFavorites.map(id => ({
+    id: Number(id),
     title: `Item ${id}`,
     name: `Item ${id}`,
     overview: "",
@@ -49,7 +52,7 @@ const FavoritesTab = () => {
   return (
     <Card className="bg-gray-900 text-white border-gray-700">
       <CardContent className="pt-6">
-        {!favorites || favorites.length === 0 ? (
+        {!allFavorites || allFavorites.length === 0 ? (
           <div className="text-center py-10">
             <p className="text-gray-400">Você ainda não adicionou nenhum favorito</p>
             <Button 
