@@ -1,75 +1,91 @@
 
-import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import ChannelCategory from './ChannelCategory';
-import { channelCategories } from '@/data/tvChannels';
+import { TvChannel } from "@/types/tvChannel";
+import { TvChannelCard } from "./TvChannelCard";
+import ChannelCategory from "./ChannelCategory";
+import { channelCategories } from "@/data/tvChannels";
 
-const TvChannelsList = () => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('all');
+interface TvChannelsListProps {
+  channels: TvChannel[];
+  selectedChannel: TvChannel | null;
+  onSelectChannel: (channel: TvChannel) => void;
+  isLoading: boolean;
+  hasAccess: boolean;
+  selectedCategory: string;
+}
 
-  // Filter channels based on search query
-  const filterChannels = (category: any) => {
-    if (!searchQuery) return category.channels;
-    
-    return category.channels.filter((channel: any) =>
-      channel.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="relative">
-        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
-        <Input
-          type="text"
-          placeholder="Buscar canais..."
-          className="pl-9 bg-black/20 border-gray-700 text-white"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
-
-      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="overflow-x-auto pb-2">
-          <TabsList className="bg-black/20 border border-gray-800">
-            <TabsTrigger value="all">Todos</TabsTrigger>
-            {channelCategories.map((category) => (
-              <TabsTrigger key={category.id} value={category.id}>
-                {category.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
-
-        <TabsContent value="all" className="pt-4">
-          <div className="space-y-8">
-            {channelCategories.map(category => {
-              const filteredChannels = filterChannels(category);
-              if (filteredChannels.length === 0) return null;
-              
-              return (
-                <ChannelCategory 
-                  key={category.id}
-                  categoryName={category.name}
-                  channels={filteredChannels}
-                />
-              );
-            })}
-          </div>
-        </TabsContent>
-
-        {channelCategories.map(category => (
-          <TabsContent key={category.id} value={category.id} className="pt-4">
-            <ChannelCategory 
-              categoryName={category.name}
-              channels={filterChannels(category)}
+const TvChannelsList = ({
+  channels,
+  selectedChannel,
+  onSelectChannel,
+  isLoading,
+  hasAccess,
+  selectedCategory
+}: TvChannelsListProps) => {
+  // If we're filtering by a specific category, just show those channels in a grid
+  if (selectedCategory !== "Todas") {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {isLoading ? (
+          Array(10).fill(0).map((_, index) => (
+            <div key={index} className="animate-pulse">
+              <div className="bg-gray-800 h-32 rounded-lg mb-2"></div>
+              <div className="h-4 bg-gray-800 rounded w-3/4 mb-1"></div>
+              <div className="h-3 bg-gray-800 rounded w-1/2"></div>
+            </div>
+          ))
+        ) : (
+          channels.map(channel => (
+            <TvChannelCard
+              key={channel.id}
+              channel={channel}
+              onClick={() => onSelectChannel(channel)}
+              isSelected={selectedChannel?.id === channel.id}
+              hasAccess={hasAccess}
             />
-          </TabsContent>
-        ))}
-      </Tabs>
+          ))
+        )}
+      </div>
+    );
+  }
+
+  // For "All" category, organize by category sections
+  return (
+    <div className="space-y-10">
+      {isLoading ? (
+        Array(3).fill(0).map((_, index) => (
+          <div key={index} className="animate-pulse">
+            <div className="h-6 bg-gray-800 rounded w-48 mb-4"></div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {Array(5).fill(0).map((_, idx) => (
+                <div key={idx}>
+                  <div className="bg-gray-800 h-32 rounded-lg mb-2"></div>
+                  <div className="h-4 bg-gray-800 rounded w-3/4 mb-1"></div>
+                  <div className="h-3 bg-gray-800 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      ) : (
+        channelCategories.map(category => {
+          const categoryChannels = channels.filter(
+            channel => channel.category === category
+          );
+          
+          if (categoryChannels.length === 0) return null;
+          
+          return (
+            <ChannelCategory
+              key={category}
+              title={category}
+              channels={categoryChannels}
+              onSelectChannel={onSelectChannel}
+              selectedChannel={selectedChannel}
+              hasAccess={hasAccess}
+            />
+          );
+        })
+      )}
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { useAnimeLoader } from "./useAnimeLoader";
 import { useAnimePagination } from "./useAnimePagination";
 import { useAnimeSearch } from "./useAnimeSearch";
 import { useAnimeFilters } from "./useAnimeFilters";
+import { animeIdsList, fetchAnimeByIds } from "@/services/tmdb/anime";
 
 export const useAnimes = () => {
   const [animes, setAnimes] = useState<MediaItem[]>([]);
@@ -16,11 +17,15 @@ export const useAnimes = () => {
     trendingAnimes,
     recentAnimes,
     specificAnimes,
+    seasonalAnimes,
+    animeSections,
     isLoadingInitial,
     isLoadingTopRated,
     isLoadingTrending,
     isLoadingRecent,
-    isLoadingSpecific 
+    isLoadingSpecific,
+    isLoadingSeasons,
+    isLoadingSections
   } = useAnimeLoader();
   
   // Configure pagination
@@ -30,7 +35,11 @@ export const useAnimes = () => {
     isLoadingMore, 
     loadMoreAnimes, 
     resetPagination 
-  } = useAnimePagination({ setAnimes });
+  } = useAnimePagination({ 
+    setAnimes,
+    allAnimeIds: animeIdsList,
+    fetchAnimeByIds
+  });
   
   // Configure search
   const { 
@@ -70,6 +79,8 @@ export const useAnimes = () => {
     trendingAnimes,
     recentAnimes,
     specificAnimes,
+    seasonalAnimes,
+    animeSections,
     searchQuery,
     yearFilter,
     ratingFilter,
@@ -80,6 +91,8 @@ export const useAnimes = () => {
     isLoadingTrending,
     isLoadingRecent,
     isLoadingSpecific,
+    isLoadingSeasons,
+    isLoadingSections,
     isLoadingMore,
     isSearching,
     isFiltering,

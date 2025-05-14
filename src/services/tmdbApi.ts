@@ -8,7 +8,36 @@ export * from './tmdb/anime';
 export * from './tmdb/videos';
 export * from './tmdb/utils';
 
+import { API_KEY, BASE_URL, DEFAULT_LANGUAGE } from './tmdb/config';
 import { MediaItem } from "@/types/movie";
+
+// Fetch media item by ID - detects whether it's a movie or TV series
+export const fetchMediaById = async (id: number): Promise<MediaItem | null> => {
+  try {
+    // Try fetching as a movie first
+    const movieUrl = `${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}`;
+    let response = await fetch(movieUrl);
+    
+    if (response.ok) {
+      const data = await response.json();
+      return { ...data, media_type: 'movie' };
+    }
+    
+    // If not a movie, try as a TV series
+    const tvUrl = `${BASE_URL}/tv/${id}?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}`;
+    response = await fetch(tvUrl);
+    
+    if (response.ok) {
+      const data = await response.json();
+      return { ...data, media_type: 'tv' };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Error fetching media by ID:', error);
+    return null;
+  }
+};
 
 // Fetch popular American series (sitcoms, dramas, etc.)
 export const fetchPopularAmericanSeries = async (page: number = 1, limit: number = 60): Promise<MediaItem[]> => {
@@ -20,7 +49,7 @@ export const fetchPopularAmericanSeries = async (page: number = 1, limit: number
     for (let i = 0; i < pages; i++) {
       const currentPage = page + i;
       const response = await fetch(
-        `https://api.themoviedb.org/3/discover/tv?api_key=3e12a7e85d7a29a86a227c7a9743f556&language=pt-BR&sort_by=popularity.desc&with_origin_country=US&with_original_language=en&page=${currentPage}`
+        `${BASE_URL}/discover/tv?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}&sort_by=popularity.desc&with_origin_country=US&with_original_language=en&page=${currentPage}`
       );
       const data = await response.json();
       allSeries = [...allSeries, ...data.results];
@@ -53,7 +82,7 @@ export const fetchRecentAnime = async (page: number = 1, limit: number = 60): Pr
     for (let i = 0; i < pages; i++) {
       const currentPage = page + i;
       const response = await fetch(
-        `https://api.themoviedb.org/3/discover/tv?api_key=3e12a7e85d7a29a86a227c7a9743f556&language=pt-BR&sort_by=popularity.desc&with_keywords=210024|222243&first_air_date_year=${currentYear}&page=${currentPage}`
+        `${BASE_URL}/discover/tv?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}&sort_by=popularity.desc&with_keywords=210024|222243&first_air_date_year=${currentYear}&page=${currentPage}`
       );
       const data = await response.json();
       allAnimes = [...allAnimes, ...data.results];

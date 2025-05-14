@@ -13,51 +13,17 @@ export const POSTER_SIZES = {
   large: "w500",
   original: "original"
 };
+
 export const BACKDROP_SIZES = {
   small: "w300",
   medium: "w780",
   large: "w1280",
   original: "original"
 };
-export const PROFILE_SIZES = {
-  small: "w45",
-  medium: "w185",
-  large: "h632",
-  original: "original"
-};
 
-// Helper function for image URLs
-export const getImageUrl = (path: string | null, size: string = "original"): string => {
-  if (!path) return "/placeholder.svg";
-  return `${IMAGE_BASE_URL}${size}${path}`;
-};
-
-// Superflix API Configuration - Use this for video players
-export const SUPERFLIX_API_BASE = "https://superflixapi.fyi";
-
-// API endpoints
-export const ENDPOINTS = {
-  trending: "/trending/all/week",
-  popularMovies: "/movie/popular",
-  topRatedMovies: "/movie/top_rated",
-  upcomingMovies: "/movie/upcoming",
-  movieDetails: "/movie/",
-  popularSeries: "/tv/popular",
-  topRatedSeries: "/tv/top_rated",
-  seriesDetails: "/tv/",
-  search: "/search/multi",
-};
-
-export default {
-  API_KEY,
-  BASE_URL,
-  DEFAULT_LANGUAGE,
-  DEFAULT_REGION,
-  IMAGE_BASE_URL,
-  POSTER_SIZES,
-  BACKDROP_SIZES,
-  PROFILE_SIZES,
-  getImageUrl,
-  ENDPOINTS,
-  SUPERFLIX_API_BASE
+// Default parameters
+export const DEFAULT_PARAMS = {
+  language: DEFAULT_LANGUAGE,
+  region: DEFAULT_REGION,
+  include_adult: false,
 };

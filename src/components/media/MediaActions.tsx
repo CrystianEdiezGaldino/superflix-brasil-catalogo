@@ -1,31 +1,51 @@
 
-import { useFavorites } from '@/hooks/useFavorites';
-import { Heart } from 'lucide-react';
+import { useState } from "react";
+import { MediaItem } from "@/types/movie";
+import { Button } from "@/components/ui/button";
+import { Heart, Play, Plus } from "lucide-react";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface MediaActionsProps {
-  mediaId: number;
-  mediaType?: string;
+  media: MediaItem;
+  onWatch?: () => void;
 }
 
-export const MediaActions = ({ mediaId, mediaType = 'movie' }: MediaActionsProps) => {
+const MediaActions = ({ media, onWatch }: MediaActionsProps) => {
+  const [isHovered, setIsHovered] = useState(false);
   const { isFavorite, toggleFavorite } = useFavorites();
-  
-  // Convert the mediaId to string for our favorites system
-  const strMediaId = String(mediaId);
-  
-  const handleToggleFavorite = () => {
-    toggleFavorite(strMediaId, mediaType as any);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleFavorite(media.id);
   };
 
+  const isMediaFavorite = isFavorite(media.id);
+
   return (
-    <button
-      onClick={handleToggleFavorite}
-      className="p-2 rounded-full hover:bg-white/10 transition-colors"
-      aria-label={isFavorite(strMediaId, mediaType as any) ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-    >
-      <Heart
-        className={`w-6 h-6 ${isFavorite(strMediaId, mediaType as any) ? 'fill-red-500 text-red-500' : 'text-white'}`}
-      />
-    </button>
+    <div className="flex items-center gap-2">
+      <Button 
+        variant="default" 
+        size="sm" 
+        className="bg-netflix-red hover:bg-red-700 flex items-center gap-1"
+        onClick={onWatch}
+      >
+        <Play size={16} />
+        <span>Assistir</span>
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        className="border-gray-600 text-white hover:bg-gray-800"
+        onClick={handleFavoriteClick}
+        title={isMediaFavorite ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+      >
+        <Heart 
+          size={16} 
+          className={isMediaFavorite ? "fill-netflix-red text-netflix-red" : ""}
+        />
+      </Button>
+    </div>
   );
 };
+
+export default MediaActions;

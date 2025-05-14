@@ -6,14 +6,17 @@ import {
   fetchTopRatedAnime, 
   fetchTrendingAnime,
   fetchRecentAnime,
-  fetchSpecificAnimeRecommendations
-} from "@/services/tmdbApi";
+  fetchSpecificAnimeRecommendations,
+  fetchSeasonalAnime,
+  fetchAnimeSections,
+  animeIdsList
+} from "@/services/tmdb/anime";
 
 export const useAnimeLoader = () => {
   // Fetch initial anime content
   const { data: initialAnimes, isLoading: isLoadingInitial } = useQuery({
     queryKey: ["popularAnimes", 1],
-    queryFn: () => fetchAnime(1, 24),
+    queryFn: () => fetchAnime(1, 30),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -45,16 +48,40 @@ export const useAnimeLoader = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  // Fetch seasonal anime
+  const { data: seasonalAnimes, isLoading: isLoadingSeasons } = useQuery({
+    queryKey: ["seasonalAnimes"],
+    queryFn: () => fetchSeasonalAnime(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  // Fetch curated anime sections
+  const { data: animeSections, isLoading: isLoadingSections } = useQuery({
+    queryKey: ["animeSections"],
+    queryFn: () => fetchAnimeSections(),
+    staleTime: 1000 * 60 * 5,
+  });
+
   return {
     initialAnimes: initialAnimes || [],
     topRatedAnimes: topRatedAnimes || [],
     trendingAnimes: trendingAnimes || [],
     recentAnimes: recentAnimes || [],
     specificAnimes: specificAnimes || [],
+    seasonalAnimes: seasonalAnimes || [],
+    animeSections: animeSections || {
+      featuredAnime: [],
+      popularAnime: [],
+      newReleases: [],
+      classicAnime: [],
+      actionAnime: []
+    },
     isLoadingInitial,
     isLoadingTopRated,
     isLoadingTrending,
     isLoadingRecent,
-    isLoadingSpecific
+    isLoadingSpecific,
+    isLoadingSeasons,
+    isLoadingSections
   };
 };

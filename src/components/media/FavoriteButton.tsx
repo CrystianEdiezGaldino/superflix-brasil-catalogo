@@ -2,76 +2,87 @@
 import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
 import { useFavorites } from "@/hooks/useFavorites";
 import { toast } from "sonner";
 
 interface FavoriteButtonProps {
   mediaId: number;
-  mediaType: string;
-  className?: string;
+  size?: "sm" | "md" | "lg";
+  showText?: boolean;
 }
 
-const FavoriteButton = ({ mediaId, mediaType, className = "" }: FavoriteButtonProps) => {
-  const { user } = useAuth();
+const FavoriteButton = ({
+  mediaId,
+  size = "md",
+  showText = false,
+}: FavoriteButtonProps) => {
   const { isFavorite, toggleFavorite } = useFavorites();
-  const [isFav, setIsFav] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  
-  // Convert the mediaId to string for our favorites system
-  const strMediaId = String(mediaId);
-  
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+
   useEffect(() => {
-    if (user) {
-      // Check if it's already a favorite
-      setIsFav(isFavorite(strMediaId, mediaType as any));
+    if (mediaId) {
+      setIsFavorited(isFavorite(mediaId));
     }
-  }, [user, strMediaId, mediaType, isFavorite]);
-  
-  const handleToggleFavorite = async (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent parent link activation
-    
-    if (!user) {
-      toast.info("Faça login para adicionar aos favoritos", {
-        action: {
-          label: "Login",
-          onClick: () => window.location.href = "/auth"
-        }
-      });
-      return;
-    }
-    
+  }, [mediaId, isFavorite]);
+
+  const handleToggleFavorite = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!mediaId) return;
+
+    setIsLoading(true);
     try {
-      setIsProcessing(true);
-      toggleFavorite(strMediaId, mediaType as any);
+      toggleFavorite(mediaId);
       
-      if (isFav) {
-        toast.success("Removido dos favoritos");
-      } else {
-        toast.success("Adicionado aos favoritos");
-      }
+      const newStatus = !isFavorited;
+      setIsFavorited(newStatus);
       
-      setIsFav(!isFav);
+      toast.success(
+        newStatus
+          ? "Adicionado aos seus favoritos"
+          : "Removido dos seus favoritos"
+      );
     } catch (error) {
-      console.error("Erro ao gerenciar favoritos:", error);
       toast.error("Erro ao atualizar favoritos");
+      console.error(error);
     } finally {
-      setIsProcessing(false);
+      setIsLoading(false);
     }
   };
-  
+
+  const sizeClasses = {
+    sm: "h-8 w-8",
+    md: "h-10 w-10",
+    lg: "h-12 w-12",
+  };
+
+  const iconSizes = {
+    sm: 16,
+    md: 18,
+    lg: 20,
+  };
+
   return (
-    <Button 
-      className={`absolute top-2 right-2 bg-black/50 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-netflix-red ${className}`}
+    <Button
+      variant="outline"
+      size="icon"
+      disabled={isLoading}
       onClick={handleToggleFavorite}
-      variant="ghost"
-      size="sm"
-      disabled={isProcessing}
+      className={`rounded-full border border-white/20 bg-black/50 hover:bg-black/70 ${
+        sizeClasses[size]
+      } ${isFavorited ? "border-red-500" : ""}`}
     >
-      <Heart 
-        size={16} 
-        className={`text-white ${isFav ? 'fill-red-500' : ''}`} 
+      <Heart
+        size={iconSizes[size]}
+        className={isFavorited ? "fill-netflix-red text-netflix-red" : "text-white"}
       />
+      {showText && (
+        <span className={`ml-2 ${isFavorited ? "text-red-500" : "text-white"}`}>
+          {isFavorited ? "Favorito" : "Favoritar"}
+        </span>
+      )}
     </Button>
   );
 };
