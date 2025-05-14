@@ -5,7 +5,6 @@ import { useAnimeLoader } from "./useAnimeLoader";
 import { useAnimePagination } from "./useAnimePagination";
 import { useAnimeSearch } from "./useAnimeSearch";
 import { useAnimeFilters } from "./useAnimeFilters";
-import { animeIdsList, fetchAnimeByIds } from "@/services/tmdb/anime";
 
 export const useAnimes = () => {
   const [animes, setAnimes] = useState<MediaItem[]>([]);
@@ -16,14 +15,14 @@ export const useAnimes = () => {
     topRatedAnimes, 
     trendingAnimes,
     recentAnimes,
-    specificAnimes,
     seasonalAnimes,
     animeSections,
+    fetchAnimeBatch,
+    totalAnimes,
     isLoadingInitial,
     isLoadingTopRated,
     isLoadingTrending,
     isLoadingRecent,
-    isLoadingSpecific,
     isLoadingSeasons,
     isLoadingSections
   } = useAnimeLoader();
@@ -37,8 +36,8 @@ export const useAnimes = () => {
     resetPagination 
   } = useAnimePagination({ 
     setAnimes,
-    allAnimeIds: animeIdsList,
-    fetchAnimeByIds
+    fetchAnimeBatch,
+    totalAnimes
   });
   
   // Configure search
@@ -73,13 +72,20 @@ export const useAnimes = () => {
     }
   }, [initialAnimes, isSearching, isFiltering]);
 
+  // Function to handle loading more items for a specific section
+  const handleLoadMoreForSection = async (sectionId: string) => {
+    // This would be implemented to load more items for a specific section
+    console.log(`Loading more items for section: ${sectionId}`);
+    // The implementation depends on how you want to handle pagination for each section
+  };
+
   return {
     animes,
     topRatedAnimes,
     trendingAnimes,
     recentAnimes,
-    specificAnimes,
     seasonalAnimes,
+    specificAnimes: animeSections.popularAnime,
     animeSections,
     searchQuery,
     yearFilter,
@@ -90,7 +96,6 @@ export const useAnimes = () => {
     isLoadingTopRated,
     isLoadingTrending,
     isLoadingRecent,
-    isLoadingSpecific,
     isLoadingSeasons,
     isLoadingSections,
     isLoadingMore,
@@ -98,6 +103,7 @@ export const useAnimes = () => {
     isFiltering,
     handleSearch,
     loadMoreAnimes: () => loadMoreAnimes(isSearching, isFiltering),
+    loadMoreForSection: handleLoadMoreForSection,
     setYearFilter,
     setRatingFilter,
     resetFilters

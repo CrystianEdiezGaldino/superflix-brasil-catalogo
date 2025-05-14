@@ -3,14 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { MediaItem } from "@/types/movie";
 import { 
   fetchAnime, 
-  fetchTopRatedAnime, 
+  fetchTopRatedAnime,
   fetchTrendingAnime,
   fetchRecentAnime,
-  fetchSpecificAnimeRecommendations,
   fetchSeasonalAnime,
   fetchAnimeSections,
-  animeIdsList
+  fetchAnimeBatch
 } from "@/services/tmdb/anime";
+import { animeIdsList } from "@/data/animeIds";
 
 export const useAnimeLoader = () => {
   // Fetch initial anime content
@@ -23,35 +23,28 @@ export const useAnimeLoader = () => {
   // Fetch top rated anime
   const { data: topRatedAnimes, isLoading: isLoadingTopRated } = useQuery({
     queryKey: ["topRatedAnimes"],
-    queryFn: () => fetchTopRatedAnime(),
+    queryFn: () => fetchTopRatedAnime(20),
     staleTime: 1000 * 60 * 5,
   });
 
   // Fetch trending anime
   const { data: trendingAnimes, isLoading: isLoadingTrending } = useQuery({
     queryKey: ["trendingAnimes"],
-    queryFn: () => fetchTrendingAnime(),
+    queryFn: () => fetchTrendingAnime(20),
     staleTime: 1000 * 60 * 5,
   });
 
   // Fetch recent anime
   const { data: recentAnimes, isLoading: isLoadingRecent } = useQuery({
     queryKey: ["recentAnimes"],
-    queryFn: () => fetchRecentAnime(),
-    staleTime: 1000 * 60 * 5,
-  });
-
-  // Fetch specific anime recommendations
-  const { data: specificAnimes, isLoading: isLoadingSpecific } = useQuery({
-    queryKey: ["specificAnimes"],
-    queryFn: () => fetchSpecificAnimeRecommendations(),
+    queryFn: () => fetchRecentAnime(20),
     staleTime: 1000 * 60 * 5,
   });
 
   // Fetch seasonal anime
   const { data: seasonalAnimes, isLoading: isLoadingSeasons } = useQuery({
     queryKey: ["seasonalAnimes"],
-    queryFn: () => fetchSeasonalAnime(),
+    queryFn: () => fetchSeasonalAnime(20),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -62,12 +55,16 @@ export const useAnimeLoader = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  // Function to fetch a specific batch of anime
+  const fetchAnimeBatchById = async (batchIndex: number) => {
+    return fetchAnimeBatch(batchIndex, 20);
+  };
+
   return {
     initialAnimes: initialAnimes || [],
     topRatedAnimes: topRatedAnimes || [],
     trendingAnimes: trendingAnimes || [],
     recentAnimes: recentAnimes || [],
-    specificAnimes: specificAnimes || [],
     seasonalAnimes: seasonalAnimes || [],
     animeSections: animeSections || {
       featuredAnime: [],
@@ -76,11 +73,12 @@ export const useAnimeLoader = () => {
       classicAnime: [],
       actionAnime: []
     },
+    fetchAnimeBatch: fetchAnimeBatchById,
+    totalAnimes: animeIdsList.length,
     isLoadingInitial,
     isLoadingTopRated,
     isLoadingTrending,
     isLoadingRecent,
-    isLoadingSpecific,
     isLoadingSeasons,
     isLoadingSections
   };

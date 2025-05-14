@@ -4,6 +4,8 @@ import { useAnimes } from "@/hooks/anime/useAnimes";
 import MediaView from "@/components/media/MediaView";
 import { MediaItem, getMediaTitle } from "@/types/movie";
 import AnimeCarousel from "@/components/anime/AnimeCarousel";
+import { toast } from "sonner";
+import MediaSection from "@/components/MediaSection";
 
 const AnimesPage = () => {
   const navigate = useNavigate();
@@ -12,7 +14,6 @@ const AnimesPage = () => {
     topRatedAnimes,
     trendingAnimes,
     recentAnimes,
-    specificAnimes,
     seasonalAnimes,
     animeSections,
     searchQuery,
@@ -26,6 +27,7 @@ const AnimesPage = () => {
     page,
     handleSearch,
     loadMoreAnimes,
+    loadMoreForSection,
     setYearFilter,
     setRatingFilter,
     resetFilters
@@ -33,7 +35,10 @@ const AnimesPage = () => {
 
   // Handle media click to navigate to the detail page
   const handleMediaClick = (media: MediaItem) => {
-    if (!media || !media.id) return;
+    if (!media || !media.id) {
+      toast.error("Não foi possível abrir este anime");
+      return;
+    }
     
     // Navigate to anime detail page
     navigate(`/anime/${media.id}`);
@@ -48,7 +53,7 @@ const AnimesPage = () => {
       topRatedItems={topRatedAnimes}
       trendingItems={trendingAnimes}
       recentItems={recentAnimes}
-      popularItems={specificAnimes}
+      popularItems={animeSections?.popularAnime}
       isLoading={isLoadingInitial}
       isLoadingMore={isLoadingMore}
       hasMore={hasMore}
@@ -73,27 +78,57 @@ const AnimesPage = () => {
         />
       )}
 
-      {/* Seasonal Anime Section */}
-      {!isSearching && !isFiltering && seasonalAnimes?.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-2xl font-bold text-white mb-4">Temporada Atual</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-4">
-            {seasonalAnimes.slice(0, 14).map(anime => (
-              <div 
-                key={anime.id} 
-                className="cursor-pointer transform transition-transform hover:scale-105"
-                onClick={() => handleMediaClick(anime)}
-              >
-                <img 
-                  src={`https://image.tmdb.org/t/p/w342${anime.poster_path}`} 
-                  alt={getMediaTitle(anime)} 
-                  className="rounded-md shadow-lg w-full h-auto"
-                />
-                <h3 className="text-sm font-medium text-white mt-2 truncate">{getMediaTitle(anime)}</h3>
-              </div>
-            ))}
-          </div>
-        </section>
+      {/* Additional Anime Sections */}
+      {!isSearching && !isFiltering && (
+        <>
+          {/* New Releases Section */}
+          {animeSections?.newReleases?.length > 0 && (
+            <MediaSection
+              title="Lançamentos de Animes"
+              medias={animeSections.newReleases}
+              sectionId="newReleases"
+              showLoadMore={true}
+              onLoadMore={() => loadMoreForSection("newReleases")}
+              onMediaClick={handleMediaClick}
+            />
+          )}
+          
+          {/* Classic Anime Section */}
+          {animeSections?.classicAnime?.length > 0 && (
+            <MediaSection
+              title="Animes Clássicos"
+              medias={animeSections.classicAnime}
+              sectionId="classicAnime"
+              showLoadMore={true}
+              onLoadMore={() => loadMoreForSection("classicAnime")}
+              onMediaClick={handleMediaClick}
+            />
+          )}
+          
+          {/* Action Anime Section */}
+          {animeSections?.actionAnime?.length > 0 && (
+            <MediaSection
+              title="Animes de Ação"
+              medias={animeSections.actionAnime}
+              sectionId="actionAnime"
+              showLoadMore={true}
+              onLoadMore={() => loadMoreForSection("actionAnime")}
+              onMediaClick={handleMediaClick}
+            />
+          )}
+          
+          {/* Seasonal Anime Section */}
+          {seasonalAnimes?.length > 0 && (
+            <MediaSection
+              title="Temporada Atual"
+              medias={seasonalAnimes}
+              sectionId="seasonalAnime"
+              showLoadMore={true}
+              onLoadMore={() => loadMoreForSection("seasonalAnime")}
+              onMediaClick={handleMediaClick}
+            />
+          )}
+        </>
       )}
     </MediaView>
   );
