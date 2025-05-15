@@ -140,7 +140,7 @@ const AnimeDetails = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      <Navbar onSearch={() => {}} />
+   
       
       <AnimeLoadingState 
         isLoading={authLoading || subscriptionLoading || isLoading}

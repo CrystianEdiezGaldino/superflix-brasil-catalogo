@@ -42,10 +42,14 @@ import {
 import Navbar from "@/components/Navbar";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { AdminStats, UserWithSubscription, Subscription, TempAccess, PromoCode } from "@/types/admin";
+import { AdminStats, UserWithSubscription, TempAccess, PromoCode } from "@/types/admin";
 import { supabase } from "@/integrations/supabase/client";
-import { getUsers, getPromoCodes, getTempAccesses, getAdminStats, createPromoCode, grantTempAccess } from "@/services/adminService";
-import { fetchAdminData } from "@/components/admin/AdminDataService";
+
+import { AdminOverview } from "@/components/admin/AdminOverview";
+import { UsersTable } from "@/components/admin/UsersTable";
+import { PromoCodesTable } from "@/components/admin/PromoCodesTable";
+import { TempAccessTable } from "@/components/admin/TempAccessTable";
+import { Spinner } from "@/components/ui/spinner";
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -67,10 +71,10 @@ const Admin = () => {
   // Estados para formulários
   const [newPromoCode, setNewPromoCode] = useState({
     code: "",
-    discount: "",
+    discount: 0,
     type: "percentage" as "percentage" | "fixed",
     expires_at: "",
-    usage_limit: ""
+    usage_limit: 1
   });
 
   const [userEdit, setUserEdit] = useState({
@@ -82,21 +86,77 @@ const Admin = () => {
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [users, promoCodes, tempAccesses, stats] = await Promise.all([
-        getUsers(),
-        getPromoCodes(),
-        getTempAccesses(),
-        getAdminStats()
-      ]);
-      
+      // Carregar usuários
+      const { data: usersData, error: usersError } = await supabase
+        .from("profiles")
+        .select(`
+          id,
+          email,
+          name,
+          created_at,
+          is_admin,
+          subscription:subscriptions(*)
+        `);
+
+      if (usersError) throw usersError;
+
+      // Carregar códigos promocionais
+      const { data: promoCodesData, error: promoCodesError } = await supabase
+        .from("promo_codes")
+        .select("*");
+
+      if (promoCodesError) throw promoCodesError;
+
+      // Carregar acessos temporários
+      const { data: tempAccessData, error: tempAccessError } = await supabase
+        .from("temp_access")
+        .select("*");
+
+      if (tempAccessError) throw tempAccessError;
+
+      // Calcular estatísticas
+      const typedUsers = usersData as unknown as UserWithSubscription[];
+      const typedPromoCodes = promoCodesData as unknown as PromoCode[];
+      const typedTempAccess = tempAccessData as unknown as TempAccess[];
+
+      const activeSubscriptions = typedUsers.filter(
+        (user) => user.subscription?.status === "active"
+      ).length;
+
+      const adminUsers = typedUsers.filter((user) => user.is_admin).length;
+
+      const monthlyRevenue = typedUsers
+        .filter(
+          (user) =>
+            user.subscription?.status === "active" &&
+            user.subscription?.plan_type === "monthly"
+        )
+        .reduce((acc) => acc + 19.90, 0);
+
+      const yearlyRevenue = typedUsers
+        .filter(
+          (user) =>
+            user.subscription?.status === "active" &&
+            user.subscription?.plan_type === "yearly"
+        )
+        .reduce((acc) => acc + 199.90, 0);
+
       setAdminData({
-        users,
-        promoCodes,
-        tempAccesses,
-        stats
+        users: typedUsers,
+        promoCodes: typedPromoCodes,
+        tempAccesses: typedTempAccess,
+        stats: {
+          totalUsers: typedUsers.length,
+          activeSubscriptions,
+          tempAccess: typedTempAccess.length,
+          promoCodes: typedPromoCodes.length,
+          adminUsers,
+          monthlyRevenue,
+          yearlyRevenue
+        }
       });
     } catch (error) {
-      console.error("Error loading admin data:", error);
+      console.error("Erro ao carregar dados:", error);
       toast.error("Erro ao carregar dados administrativos");
     } finally {
       setIsLoading(false);
@@ -124,14 +184,19 @@ const Admin = () => {
   // Funções CRUD
   const handleCreatePromoCode = async () => {
     try {
-      await createPromoCode({
-        code: newPromoCode.code,
-        discount: parseFloat(newPromoCode.discount),
-        type: newPromoCode.type,
-        expires_at: newPromoCode.expires_at,
-        usage_limit: parseInt(newPromoCode.usage_limit),
-        created_by: user?.id || "3"
-      });
+      const { error } = await supabase
+        .from('promo_codes')
+        .insert({
+          code: newPromoCode.code,
+          discount: newPromoCode.discount,
+          type: newPromoCode.type,
+          expires_at: newPromoCode.expires_at,
+          usage_limit: newPromoCode.usage_limit,
+          usage_count: 0,
+          is_active: true
+        });
+
+      if (error) throw error;
 
       toast.success("Código promocional criado com sucesso!");
       setShowPromoDialog(false);
@@ -164,35 +229,43 @@ const Admin = () => {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Tem certeza que deseja remover este usuário?")) return;
-
+  const handleGrantTempAccess = async (userId: string) => {
     try {
+      const startDate = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 30); // 30 dias de acesso
+
       const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId);
+        .from('temp_access')
+        .insert({
+          user_id: userId,
+          granted_by: user?.id,
+          start_date: startDate.toISOString(),
+          end_date: endDate.toISOString(),
+          expires_at: endDate.toISOString(),
+          is_active: true
+        });
 
       if (error) throw error;
 
-      toast.success("Usuário removido com sucesso!");
+      toast.success("Acesso temporário concedido com sucesso!");
       loadData();
     } catch (error) {
-      toast.error("Erro ao remover usuário");
+      toast.error("Erro ao conceder acesso temporário");
     }
   };
 
   if (isAuthLoading || isSubscriptionLoading || (isLoading && !adminData)) {
     return (
       <div className="min-h-screen bg-netflix-background flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
+        <Spinner size="lg" />
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      <Navbar onSearch={() => {}} />
+      <Navbar />
       
       <div className="container mx-auto pt-24 px-4 pb-16">
         <div className="flex justify-between items-center mb-8">
@@ -230,57 +303,7 @@ const Admin = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="bg-netflix-dark border-netflix-red">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-white">
-                    Total de Usuários
-                  </CardTitle>
-                  <Users className="h-4 w-4 text-netflix-red" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">{adminData?.stats.totalUsers}</div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-netflix-dark border-netflix-red">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-white">
-                    Assinaturas Ativas
-                  </CardTitle>
-                  <CreditCard className="h-4 w-4 text-netflix-red" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">{adminData?.stats.activeSubscriptions}</div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-netflix-dark border-netflix-red">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-white">
-                    Acessos Temporários
-                  </CardTitle>
-                  <Clock className="h-4 w-4 text-netflix-red" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">{adminData?.stats.tempAccesses}</div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-netflix-dark border-netflix-red">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-white">
-                    Receita Mensal
-                  </CardTitle>
-                  <DollarSign className="h-4 w-4 text-netflix-red" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-white">
-                    R$ {adminData?.stats.monthlyRevenue.toFixed(2)}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+            <AdminOverview stats={adminData?.stats} />
           </TabsContent>
 
           <TabsContent value="users">
@@ -315,48 +338,53 @@ const Admin = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {adminData?.users.map((user) => (
-                      <TableRow key={user.id} className="bg-netflix-dark">
-                        <TableCell className="text-white">{user.name}</TableCell>
-                        <TableCell className="text-white">{user.email}</TableCell>
-                        <TableCell>
-                          <Badge variant={user.is_admin ? "destructive" : "default"}>
-                            {user.is_admin ? "Admin" : "Usuário"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.subscription?.status === "active" ? "default" : "destructive"}>
-                            {user.subscription?.status === "active" ? "Ativa" : "Inativa"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setUserEdit({
-                                  plan_type: user.subscription?.plan_type || "",
-                                  current_period_end: user.subscription?.current_period_end || "",
-                                  status: user.subscription?.status || "inactive"
-                                });
-                                setShowUserDialog(true);
-                              }}
-                            >
-                              <Edit className="h-4 w-4 text-netflix-red" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteUser(user.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-netflix-red" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {adminData?.users
+                      .filter(user => 
+                        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        user.name?.toLowerCase().includes(searchQuery.toLowerCase())
+                      )
+                      .map((user) => (
+                        <TableRow key={user.id} className="bg-netflix-dark">
+                          <TableCell className="text-white">{user.name}</TableCell>
+                          <TableCell className="text-white">{user.email}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.is_admin ? "destructive" : "default"}>
+                              {user.is_admin ? "Admin" : "Usuário"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={user.subscription?.status === "active" ? "default" : "destructive"}>
+                              {user.subscription?.status === "active" ? "Ativa" : "Inativa"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setUserEdit({
+                                    plan_type: user.subscription?.plan_type || "",
+                                    current_period_end: user.subscription?.current_period_end || "",
+                                    status: user.subscription?.status as "active" | "inactive" || "active"
+                                  });
+                                  setShowUserDialog(true);
+                                }}
+                              >
+                                Editar
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleGrantTempAccess(user.id)}
+                              >
+                                Acesso 30 dias
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
                   </TableBody>
                 </Table>
               </div>
@@ -373,7 +401,7 @@ const Admin = () => {
                       <TableHead className="text-white">Desconto</TableHead>
                       <TableHead className="text-white">Tipo</TableHead>
                       <TableHead className="text-white">Expiração</TableHead>
-                      <TableHead className="text-white">Usos</TableHead>
+                      <TableHead className="text-white">Uso</TableHead>
                       <TableHead className="text-white">Status</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -418,8 +446,12 @@ const Admin = () => {
                   <TableBody>
                     {adminData?.tempAccesses.map((access) => (
                       <TableRow key={access.id} className="bg-netflix-dark">
-                        <TableCell className="text-white">{access.user_id}</TableCell>
-                        <TableCell className="text-white">{access.granted_by}</TableCell>
+                        <TableCell className="text-white">
+                          {adminData.users.find(u => u.id === access.user_id)?.email}
+                        </TableCell>
+                        <TableCell className="text-white">
+                          {adminData.users.find(u => u.id === access.granted_by)?.email}
+                        </TableCell>
                         <TableCell className="text-white">
                           {new Date(access.start_date).toLocaleDateString()}
                         </TableCell>
@@ -441,78 +473,11 @@ const Admin = () => {
         </Tabs>
       </div>
 
-      {/* Dialog para criar código promocional */}
-      <Dialog open={showPromoDialog} onOpenChange={setShowPromoDialog}>
-        <DialogContent className="bg-netflix-dark border-netflix-red">
-          <DialogHeader>
-            <DialogTitle className="text-white">Criar Código Promocional</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-white">Código</label>
-              <Input
-                value={newPromoCode.code}
-                onChange={(e) => setNewPromoCode({ ...newPromoCode, code: e.target.value })}
-                className="bg-netflix-dark border-netflix-red text-white"
-              />
-            </div>
-            <div>
-              <label className="text-white">Desconto (%)</label>
-              <Input
-                type="number"
-                value={newPromoCode.discount}
-                onChange={(e) => setNewPromoCode({ ...newPromoCode, discount: e.target.value })}
-                className="bg-netflix-dark border-netflix-red text-white"
-              />
-            </div>
-            <div>
-              <label className="text-white">Tipo</label>
-              <Select
-                value={newPromoCode.type}
-                onValueChange={(value) => setNewPromoCode({ ...newPromoCode, type: value as "percentage" | "fixed" })}
-              >
-                <SelectTrigger className="bg-netflix-dark border-netflix-red text-white">
-                  <SelectValue placeholder="Selecione o tipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="percentage">Porcentagem</SelectItem>
-                  <SelectItem value="fixed">Valor Fixo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-white">Data de Expiração</label>
-              <Input
-                type="date"
-                value={newPromoCode.expires_at}
-                onChange={(e) => setNewPromoCode({ ...newPromoCode, expires_at: e.target.value })}
-                className="bg-netflix-dark border-netflix-red text-white"
-              />
-            </div>
-            <div>
-              <label className="text-white">Limite de Usos</label>
-              <Input
-                type="number"
-                value={newPromoCode.usage_limit}
-                onChange={(e) => setNewPromoCode({ ...newPromoCode, usage_limit: e.target.value })}
-                className="bg-netflix-dark border-netflix-red text-white"
-              />
-            </div>
-            <Button
-              onClick={handleCreatePromoCode}
-              className="w-full bg-netflix-red hover:bg-netflix-red/90"
-            >
-              Criar Código
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Dialog para editar usuário */}
       <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
-        <DialogContent className="bg-netflix-dark border-netflix-red">
+        <DialogContent className="bg-netflix-dark text-white">
           <DialogHeader>
-            <DialogTitle className="text-white">Editar Usuário</DialogTitle>
+            <DialogTitle>Editar Usuário</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -525,17 +490,16 @@ const Admin = () => {
                   <SelectValue placeholder="Selecione o plano" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="basic">Básico</SelectItem>
-                  <SelectItem value="premium">Premium</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="monthly">Mensal</SelectItem>
+                  <SelectItem value="yearly">Anual</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <label className="text-white">Data de Término</label>
+              <label className="text-white">Data de Expiração</label>
               <Input
                 type="date"
-                value={userEdit.current_period_end}
+                value={userEdit.current_period_end.split('T')[0]}
                 onChange={(e) => setUserEdit({ ...userEdit, current_period_end: e.target.value })}
                 className="bg-netflix-dark border-netflix-red text-white"
               />
@@ -560,6 +524,58 @@ const Admin = () => {
               className="w-full bg-netflix-red hover:bg-netflix-red/90"
             >
               Atualizar Usuário
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para criar código promocional */}
+      <Dialog open={showPromoDialog} onOpenChange={setShowPromoDialog}>
+        <DialogContent className="bg-netflix-dark text-white">
+          <DialogHeader>
+            <DialogTitle>Criar Código Promocional</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-white">Código</label>
+              <Input
+                value={newPromoCode.code}
+                onChange={(e) => setNewPromoCode({ ...newPromoCode, code: e.target.value })}
+                className="bg-netflix-dark border-netflix-red text-white"
+              />
+            </div>
+            <div>
+              <label className="text-white">Desconto (%)</label>
+              <Input
+                type="number"
+                value={newPromoCode.discount}
+                onChange={(e) => setNewPromoCode({ ...newPromoCode, discount: Number(e.target.value) })}
+                className="bg-netflix-dark border-netflix-red text-white"
+              />
+            </div>
+            <div>
+              <label className="text-white">Data de Expiração</label>
+              <Input
+                type="date"
+                value={newPromoCode.expires_at.split('T')[0]}
+                onChange={(e) => setNewPromoCode({ ...newPromoCode, expires_at: e.target.value })}
+                className="bg-netflix-dark border-netflix-red text-white"
+              />
+            </div>
+            <div>
+              <label className="text-white">Limite de Uso</label>
+              <Input
+                type="number"
+                value={newPromoCode.usage_limit}
+                onChange={(e) => setNewPromoCode({ ...newPromoCode, usage_limit: Number(e.target.value) })}
+                className="bg-netflix-dark border-netflix-red text-white"
+              />
+            </div>
+            <Button
+              onClick={handleCreatePromoCode}
+              className="w-full bg-netflix-red hover:bg-netflix-red/90"
+            >
+              Criar Código
             </Button>
           </div>
         </DialogContent>

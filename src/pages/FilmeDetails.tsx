@@ -120,7 +120,7 @@ const FilmeDetails = () => {
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <Navbar onSearch={() => {}} />
+    
       
       <MovieLoadingState 
         isLoading={authLoading || subscriptionLoading || isLoading}
