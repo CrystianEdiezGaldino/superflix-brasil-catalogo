@@ -1,43 +1,34 @@
 
-import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 
 export const useAccessControl = () => {
-  // Safely attempt to use the auth context
+  // Try/catch prevents circular dependencies
   let user = null;
   let authLoading = true;
-
+  
   try {
-    // This will throw if not within AuthProvider
-    const authContext = useAuth();
-    user = authContext.user;
-    authLoading = authContext.loading;
+    // Avoid directly importing useAuth to prevent circular dependencies
+    // We'll still handle authentication gracefully
+    const AuthContext = require("@/contexts/AuthContext");
+    if (AuthContext && typeof AuthContext.useAuth === 'function') {
+      const auth = AuthContext.useAuth();
+      user = auth.user;
+      authLoading = auth.loading;
+    }
   } catch (error) {
-    console.warn("Auth context unavailable, using default values");
-    // We already set default values above, so no need to do anything here
+    console.warn("Auth context unavailable in useAccessControl, using default values");
   }
   
   const [hasAccess, setHasAccess] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   
   // Default subscription values
-  const isSubscribed = false;
   const isAdmin = false;
   const hasTempAccess = false;
   const hasTrialAccess = false;
   
-  // Try to get subscription data
-  let subscriptionData = { 
-    isSubscribed, 
-    isAdmin, 
-    hasTempAccess, 
-    hasTrialAccess, 
-    isLoading: true 
-  };
-  
   useEffect(() => {
     // Set subscription loading to false after a short delay
-    // In a real app, this would be when actual subscription data is loaded
     const timer = setTimeout(() => {
       setSubscriptionLoading(false);
       
@@ -48,7 +39,7 @@ export const useAccessControl = () => {
         // For authenticated users, they have at least basic access
         setHasAccess(true);
       }
-    }, 500);
+    }, 300);
     
     return () => clearTimeout(timer);
   }, [user]);
