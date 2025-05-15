@@ -5,7 +5,7 @@ export const popularAnimes: MediaItem[] = [
   {
     id: 11,
     name: "Naruto",
-    title: "Naruto",
+    title: "Naruto", // This is now valid with our type update
     overview: "Jovem ninja busca reconhecimento e sonha em se tornar Hokage.",
     poster_path: "/9ptbVZpKNy5NY9D4zq4KGiYWRQY.jpg",
     backdrop_path: "/9ptbVZpKNy5NY9D4zq4KGiYWRQY.jpg",
@@ -15,14 +15,17 @@ export const popularAnimes: MediaItem[] = [
     vote_average: 8.4,
     vote_count: 0,
     genres: [],
-    networks: [],
-    episode_run_time: [],
-    original_language: "ja"
+    number_of_seasons: 1,
+    number_of_episodes: 1,
+    status: "Ended",
+    seasons: [],
+    original_language: "ja",
+    original_name: "Naruto"
   },
   {
     id: 12,
     name: "One Piece",
-    title: "One Piece",
+    title: "One Piece", // This is now valid with our type update
     overview: "Piratas em busca do tesouro One Piece.",
     poster_path: "/fcXdJlbSdUEeMSJFsXKsznGwwok.jpg",
     backdrop_path: "/fcXdJlbSdUEeMSJFsXKsznGwwok.jpg",
@@ -32,14 +35,17 @@ export const popularAnimes: MediaItem[] = [
     vote_average: 8.7,
     vote_count: 0,
     genres: [],
-    networks: [],
-    episode_run_time: [],
-    original_language: "ja"
+    number_of_seasons: 1,
+    number_of_episodes: 1,
+    status: "Returning Series",
+    seasons: [],
+    original_language: "ja",
+    original_name: "One Piece"
   },
   {
     id: 13,
     name: "Dragon Ball",
-    title: "Dragon Ball",
+    title: "Dragon Ball", // This is now valid with our type update
     overview: "Goku e seus amigos defendem a Terra.",
     poster_path: "/f2zhRLqwRLrKhEMeIM7Z5buJFo3.jpg",
     backdrop_path: "/f2zhRLqwRLrKhEMeIM7Z5buJFo3.jpg",
@@ -49,14 +55,17 @@ export const popularAnimes: MediaItem[] = [
     vote_average: 8.3,
     vote_count: 0,
     genres: [],
-    networks: [],
-    episode_run_time: [],
-    original_language: "ja"
+    number_of_seasons: 1,
+    number_of_episodes: 1,
+    status: "Ended",
+    seasons: [],
+    original_language: "ja",
+    original_name: "Dragon Ball"
   },
   {
     id: 14,
     name: "Attack on Titan",
-    title: "Attack on Titan",
+    title: "Attack on Titan", // This is now valid with our type update
     overview: "Humanidade luta contra titãs gigantes.",
     poster_path: "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
     backdrop_path: "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
@@ -66,14 +75,17 @@ export const popularAnimes: MediaItem[] = [
     vote_average: 8.7,
     vote_count: 0,
     genres: [],
-    networks: [],
-    episode_run_time: [],
-    original_language: "ja"
+    number_of_seasons: 1,
+    number_of_episodes: 1,
+    status: "Ended",
+    seasons: [],
+    original_language: "ja",
+    original_name: "進撃の巨人"
   },
   {
     id: 15,
     name: "Demon Slayer",
-    title: "Demon Slayer",
+    title: "Demon Slayer", // This is now valid with our type update
     overview: "Jovem caça demônios para vingar sua família.",
     poster_path: "/wrCVHdkBlBWdJUZPvnJWcBRuhSY.jpg",
     backdrop_path: "/wrCVHdkBlBWdJUZPvnJWcBRuhSY.jpg",
@@ -83,14 +95,17 @@ export const popularAnimes: MediaItem[] = [
     vote_average: 8.6,
     vote_count: 0,
     genres: [],
-    networks: [],
-    episode_run_time: [],
-    original_language: "ja"
+    number_of_seasons: 1,
+    number_of_episodes: 1,
+    status: "Returning Series",
+    seasons: [],
+    original_language: "ja",
+    original_name: "鬼滅の刃"
   },
   {
     id: 17,
     name: "Solo Leveling",
-    title: "Solo Leveling",
+    title: "Solo Leveling", // This is now valid with our type update
     overview: "Caçador fraco ganha poderes únicos.",
     poster_path: "/eCD7WS9h4lCT8N4Xavc9u8R1IGk.jpg",
     backdrop_path: "/eCD7WS9h4lCT8N4Xavc9u8R1IGk.jpg",
@@ -100,14 +115,17 @@ export const popularAnimes: MediaItem[] = [
     vote_average: 8.6,
     vote_count: 0,
     genres: [],
-    networks: [],
-    episode_run_time: [],
-    original_language: "ja"
+    number_of_seasons: 1,
+    number_of_episodes: 1,
+    status: "Returning Series",
+    seasons: [],
+    original_language: "ja",
+    original_name: "나 혼자만 레벨업"
   },
   {
     id: 19,
     name: "Fullmetal Alchemist: Brotherhood",
-    title: "Fullmetal Alchemist: Brotherhood",
+    title: "Fullmetal Alchemist: Brotherhood", // This is now valid with our type update
     overview: "Irmãos buscam a Pedra Filosofal.",
     poster_path: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
     backdrop_path: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
@@ -117,9 +135,12 @@ export const popularAnimes: MediaItem[] = [
     vote_average: 8.7,
     vote_count: 0,
     genres: [],
-    networks: [],
-    episode_run_time: [],
-    original_language: "ja"
+    number_of_seasons: 1,
+    number_of_episodes: 1,
+    status: "Ended",
+    seasons: [],
+    original_language: "ja",
+    original_name: "鋼の錬金術師 FULLMETAL ALCHEMIST"
   }
 ];
 

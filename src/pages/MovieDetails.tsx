@@ -50,7 +50,7 @@ const MovieDetails = () => {
 
   // Verificar se o conteúdo está disponível
   useEffect(() => {
-    if (movie && !movie.imdb_id && !movie.external_ids?.imdb_id) {
+    if (movie && !movie.external_ids?.imdb_id && !movie.imdb_id) {
       setIsContentAvailable(false);
     }
   }, [movie]);
@@ -119,7 +119,7 @@ const MovieDetails = () => {
           />
 
           {/* Player de vídeo usando componente dedicado */}
-          {showPlayer && (movie.imdb_id || movie.external_ids?.imdb_id) && (
+          {showPlayer && ((movie.imdb_id || movie.external_ids?.imdb_id)) && (
             <div className="px-6 md:px-10 mb-10">
               <MovieVideoPlayer 
                 showPlayer={true}

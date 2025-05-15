@@ -19,7 +19,8 @@ export const useAnimeDetails = () => {
   
   // Convert id to number for isFavorite function
   const numericId = id ? parseInt(id) : 0;
-  const isAnimeFavorite = numericId ? isFavorite("anime", numericId.toString(), "") : false;
+  // Using single argument version of isFavorite
+  const isAnimeFavorite = numericId ? isFavorite(numericId) : false;
   
   const toggleAnimeFavorite = () => {
     if (id && anime) {
@@ -44,7 +45,7 @@ export const useAnimeDetails = () => {
       try {
         // Buscar detalhes do anime usando a API do TMDB
         const response = await fetch(
-          `${TMDB_API_URL}/tv/${id}?api_key=${TMDB_API_KEY}&language=pt-BR&append_to_response=external_ids,videos,credits,similar,recommendations`
+          `${TMDB_API_URL}/tv/${id}?api_key=${TMDB_API_KEY}&language=pt-BR&append_to_response=external_ids,videos,credits,recommendations`
         );
         
         if (!response.ok) {
@@ -68,14 +69,16 @@ export const useAnimeDetails = () => {
           await fetchSeasonData(data.id, 1);
         } else {
           // Se não tiver temporadas, criar uma temporada padrão
-          setSeasonData({
+          const defaultSeason: Season = {
             id: data.id,
             name: "Temporada 1",
             season_number: 1,
             episodes: [],
             poster_path: data.poster_path,
-            overview: data.overview
-          });
+            overview: data.overview,
+            air_date: data.first_air_date || "" // Adding required air_date property
+          };
+          setSeasonData(defaultSeason);
         }
         
         setIsLoading(false);
@@ -139,7 +142,8 @@ export const useAnimeDetails = () => {
           season_number: seasonNumber,
           episodes: [],
           poster_path: anime.poster_path || "",
-          overview: anime.overview || ""
+          overview: anime.overview || "",
+          air_date: anime.first_air_date || "" // Adding required air_date property
         };
         
         setSeasonData(defaultSeason);

@@ -1,3 +1,4 @@
+
 export interface Genre {
   id: number;
   name: string;
@@ -33,6 +34,7 @@ export interface Movie {
   runtime: number;
   status: string;
   media_type: 'movie';
+  imdb_id?: string; // Added imdb_id as optional property
   external_ids?: {
     imdb_id: string;
   };
@@ -62,6 +64,9 @@ export interface Series {
   number_of_episodes: number;
   status: string;
   media_type: 'tv';
+  title?: string; // Added title as optional property
+  imdb_id?: string; // Added imdb_id as optional property
+  release_date?: string; // Added release_date as optional property
   external_ids?: {
     imdb_id: string;
   };
@@ -81,7 +86,7 @@ export interface Season {
   overview: string;
   poster_path: string;
   season_number: number;
-  air_date: string;
+  air_date: string; // This is required based on the errors
   episodes: Episode[];
 }
 

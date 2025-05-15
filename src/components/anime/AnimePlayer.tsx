@@ -1,8 +1,8 @@
+
 import AnimeVideoPlayer from "./AnimeVideoPlayer";
 import { Series } from "@/types/movie";
 import { useEffect } from "react";
 import SuperFlixPlayer from "../series/SuperFlixPlayer";
-
 
 interface AnimePlayerProps {
   showPlayer: boolean;
@@ -19,7 +19,7 @@ const AnimePlayer = ({
   selectedEpisode,
   hasAccess
 }: AnimePlayerProps) => {
-  // Verificar se temos um ID IMDB válido
+  // Verificar se temos um ID IMDB válido utilizando external_ids ou imdb_id diretamente
   const imdbId = anime.external_ids?.imdb_id || anime.imdb_id;
   
   // Scroll to player when it becomes visible
