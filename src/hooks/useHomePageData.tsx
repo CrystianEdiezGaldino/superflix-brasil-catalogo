@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useMediaData } from "./useMediaData";
@@ -22,17 +22,23 @@ export const useHomePageData = () => {
     checkSubscription
   } = useSubscription();
   
-  // Handle auth redirects
-  useAuthRedirect(user, authLoading);
+  // Remove the auth redirect to prevent the loop
+  // useAuthRedirect(user, authLoading);
   
   // Use the access control hook to get the hasAccess flag
   const { hasAccess } = useAccessControl();
 
   // Force a subscription check on mount to ensure we have the latest data
   useEffect(() => {
-    if (user) {
+    let isUnmounted = false;
+    
+    if (user && !isUnmounted) {
       checkSubscription();
     }
+    
+    return () => {
+      isUnmounted = true;
+    };
   }, [user, checkSubscription]);
   
   // Get popular series and recent animes
@@ -71,6 +77,9 @@ export const useHomePageData = () => {
     topRatedAnimeData,
     doramasData
   );
+
+  // Create a memoized search handler to prevent recreation on each render
+  const handleSearch = useCallback(originalHandleSearch, [originalHandleSearch]);
 
   // Debug log to help track subscription state
   console.log("Home page data:", { 
@@ -114,6 +123,6 @@ export const useHomePageData = () => {
     recentAnimes,
     isLoading,
     hasError,
-    handleSearch: originalHandleSearch,
+    handleSearch,
   };
 };

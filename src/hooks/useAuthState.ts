@@ -15,9 +15,13 @@ export const useAuthState = () => {
   const [sessionChecked, setSessionChecked] = useState(false);
 
   useEffect(() => {
+    let isActive = true; // For cleanup/preventing state updates after unmount
+
     // Set up auth state listener first - IMPORTANT: this sets up the listener before anything else
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
+        if (!isActive) return; // Don't update state if component unmounted
+        
         console.log("Auth state changed:", event);
         
         // Skip redundant updates and UI refreshes when just returning from tab switch
@@ -50,6 +54,8 @@ export const useAuthState = () => {
 
     // Get initial session state - do this after setting up the listener
     supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
+      if (!isActive) return; // Don't update state if component unmounted
+      
       if (error) {
         console.error("Error getting session:", error);
         setLoading(false);
@@ -63,8 +69,11 @@ export const useAuthState = () => {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
-  }, [session?.access_token, user?.id, visibilityChanged]);
+    return () => {
+      isActive = false; // Mark as inactive
+      subscription.unsubscribe();
+    };
+  }, []);  // Remove dependencies to prevent loop
 
   // Handle tab visibility changes
   useEffect(() => {

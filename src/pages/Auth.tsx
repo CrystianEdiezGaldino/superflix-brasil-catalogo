@@ -56,9 +56,13 @@ const Auth = () => {
   useEffect(() => {
     let intervalId: number | undefined;
     
-    if (user && !redirecting) {
+    // Only redirect if user is logged in and not already redirecting
+    if (user && !redirecting && !loading) {
       console.log("User authenticated, starting redirection process to:", redirectTo);
       setRedirecting(true);
+      
+      // Clear any redirect flags from session storage
+      sessionStorage.removeItem('auth_redirect_shown');
       
       // Animate progress bar before redirecting
       intervalId = window.setInterval(() => {
@@ -66,7 +70,10 @@ const Auth = () => {
           const newProgress = prev + 5;
           if (newProgress >= 100) {
             console.log("Progress complete, navigating to:", redirectTo);
-            navigate(redirectTo, { replace: true });
+            // Use setTimeout to ensure the progress completes visually before redirect
+            setTimeout(() => {
+              navigate(redirectTo, { replace: true });
+            }, 50);
             return 100;
           }
           return newProgress;
@@ -80,7 +87,7 @@ const Auth = () => {
         clearInterval(intervalId);
       }
     };
-  }, [user, redirecting, navigate, redirectTo]);
+  }, [user, redirecting, navigate, redirectTo, loading]);
   
   // Display loading during authentication check
   if (loading) {
@@ -92,7 +99,19 @@ const Auth = () => {
     );
   }
   
-  // Skip progress animation and redirect immediately if on another page
+  // If redirecting, show progress indicator
+  if (redirecting) {
+    return (
+      <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
+        <p className="text-white mb-4">Redirecionando...</p>
+        <div className="w-64">
+          <Progress value={progress} className="h-1 bg-gray-700" indicatorClassName="bg-netflix-red" />
+        </div>
+      </div>
+    );
+  }
+  
+  // Skip progress animation and redirect immediately if user is logged in
   if (user) {
     return <Navigate to={redirectTo} replace />;
   }

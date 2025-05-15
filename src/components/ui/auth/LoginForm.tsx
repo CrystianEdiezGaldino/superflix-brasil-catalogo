@@ -4,7 +4,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";  // Use only sonner toast
@@ -34,6 +34,10 @@ interface LoginFormProps {
 const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get redirect path from location state, or default to home
+  const redirectPath = location.state?.from?.pathname || "/";
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -48,9 +52,15 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
     try {
       console.log("Attempting login with:", data.email);
       await signIn(data.email, data.password);
-      console.log("Login successful, navigating to home");
-      // For direct forms, we'll force a navigation to home
-      navigate("/", { replace: true });
+      console.log("Login successful, navigating to:", redirectPath);
+      
+      // Clear any redirect flags
+      sessionStorage.removeItem('auth_redirect_shown');
+      
+      // Delay navigation slightly to allow auth state to update
+      setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 100);
     } catch (error: any) {
       console.error("Authentication error:", error);
       if (error.message?.includes("Invalid login")) {

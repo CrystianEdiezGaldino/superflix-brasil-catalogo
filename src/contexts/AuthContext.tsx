@@ -1,5 +1,5 @@
 
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, ReactNode, useMemo } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { useAuthState } from "@/hooks/useAuthState";
 import { signUpUser, signInUser, signOutUser } from "@/utils/authUtils";
@@ -18,27 +18,32 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { user, session, loading } = useAuthState();
   
-  const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
-    await signUpUser(email, password, metadata);
-  };
-  
-  const signIn = async (email: string, password: string) => {
-    return await signInUser(email, password);
-  };
-  
-  const signOut = async () => {
-    await signOutUser();
-  };
-  
-  return (
-    <AuthContext.Provider value={{
+  // Memoize auth functions to prevent unnecessary re-renders
+  const authValues = useMemo(() => {
+    const signUp = async (email: string, password: string, metadata?: { [key: string]: any }) => {
+      await signUpUser(email, password, metadata);
+    };
+    
+    const signIn = async (email: string, password: string) => {
+      return await signInUser(email, password);
+    };
+    
+    const signOut = async () => {
+      await signOutUser();
+    };
+    
+    return {
       session,
       user,
       signUp,
       signIn,
       signOut,
       loading
-    }}>
+    };
+  }, [session, user, loading]);
+  
+  return (
+    <AuthContext.Provider value={authValues}>
       {children}
     </AuthContext.Provider>
   );

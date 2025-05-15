@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import { MediaItem } from "@/types/movie";
 import LoadingState from "@/components/home/LoadingState";
@@ -13,6 +13,7 @@ import MainContent from "@/components/home/MainContent";
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { 
     user,
     isAdmin,
@@ -46,20 +47,30 @@ const Index = () => {
     handleLoadMoreSection
   } = useContentSections();
   
-  // Clear search when user clicks on navigation links
+  // Store if initial load is complete to prevent flicker
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+
+  // Set initial load complete after first render cycle
   useEffect(() => {
-    const handleNavigation = () => {
-      handleSearch("");
-    };
-    
+    if (!isLoading) {
+      setInitialLoadComplete(true);
+    }
+  }, [isLoading]);
+  
+  // Clear search when user clicks on navigation links - with useCallback to prevent recreation
+  const handleNavigation = useCallback(() => {
+    handleSearch("");
+  }, [handleSearch]);
+  
+  useEffect(() => {
     window.addEventListener("popstate", handleNavigation);
     return () => {
       window.removeEventListener("popstate", handleNavigation);
     };
-  }, [handleSearch]);
+  }, [handleNavigation]);
   
   // Handle media click to navigate to detail page
-  const handleMediaClick = (media: MediaItem) => {
+  const handleMediaClick = useCallback((media: MediaItem) => {
     if (!media || !media.id) return;
     
     if (media.media_type === 'tv') {
@@ -74,14 +85,16 @@ const Index = () => {
     } else {
       navigate(`/filme/${media.id}`);
     }
-  };
+  }, [navigate]);
   
-  // Guard for loading state
-  if (isLoading) {
+  // Don't show loading during transition from logged out to logged in
+  // Only show loading state on initial page load
+  if (isLoading && !initialLoadComplete) {
     return <LoadingState />;
   }
   
-  // Show unauthenticated state if user is not logged in
+  // Don't force authentication for home page - show unauthenticated preview instead
+  // This prevents the auth loop when redirecting
   if (!user) {
     return <UnauthenticatedState />;
   }
