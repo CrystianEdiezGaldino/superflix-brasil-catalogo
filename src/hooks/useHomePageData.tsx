@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -74,7 +73,8 @@ export const useHomePageData = () => {
     seriesData,
     animeData,
     topRatedAnimeData,
-    doramasData
+    doramasData,
+    recommendations
   );
 
   // Create a memoized search handler to prevent recreation on each render

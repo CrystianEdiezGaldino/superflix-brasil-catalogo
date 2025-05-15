@@ -22,6 +22,12 @@ interface MediaViewProps {
   isFiltering: boolean;
   isSearching: boolean;
   page: number;
+  yearFilter?: string;
+  ratingFilter?: string;
+  searchQuery?: string;
+  onSearch?: (query: string) => void;
+  onYearFilterChange?: (year: string) => void;
+  onRatingFilterChange?: (rating: string) => void;
   onLoadMore: () => void;
   onResetFilters: () => void;
   onMediaClick?: (media: MediaItem) => void;
@@ -42,6 +48,12 @@ const MediaView = ({
   isFiltering,
   isSearching,
   page,
+  yearFilter,
+  ratingFilter,
+  searchQuery,
+  onSearch,
+  onYearFilterChange,
+  onRatingFilterChange,
   onLoadMore,
   onResetFilters,
   onMediaClick,

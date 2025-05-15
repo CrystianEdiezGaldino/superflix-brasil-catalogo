@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MediaItem } from "@/types/movie";
 
@@ -9,13 +8,21 @@ export const useFeaturedMedia = (
   seriesData: MediaItem[],
   animeData: MediaItem[],
   topRatedAnimeData: MediaItem[],
-  doramasData: MediaItem[]
+  doramasData: MediaItem[],
+  recommendations?: MediaItem[]
 ) => {
   const [featuredMedia, setFeaturedMedia] = useState<MediaItem | undefined>(undefined);
 
   // Select a random item for the banner
   useEffect(() => {
     if (!user) return;
+    
+    // Se houver recomendações, priorize-as
+    if (hasAccess && recommendations && recommendations.length > 0) {
+      const randomIndex = Math.floor(Math.random() * recommendations.length);
+      setFeaturedMedia(recommendations[randomIndex]);
+      return;
+    }
     
     // If user has access to premium content, include all media
     if (hasAccess) {
@@ -47,11 +54,12 @@ export const useFeaturedMedia = (
   }, [
     user,
     hasAccess,
-    movieData, 
-    seriesData, 
-    animeData, 
-    topRatedAnimeData, 
-    doramasData
+    JSON.stringify(movieData),
+    JSON.stringify(seriesData),
+    JSON.stringify(animeData),
+    JSON.stringify(topRatedAnimeData),
+    JSON.stringify(doramasData),
+    JSON.stringify(recommendations)
   ]);
 
   return { featuredMedia };

@@ -4,6 +4,7 @@ export interface UserWithSubscription {
   name: string | null;
   created_at: string;
   is_admin: boolean;
+  last_sign_in_at?: string | null;
   subscription?: {
     id: string;
     user_id: string;
