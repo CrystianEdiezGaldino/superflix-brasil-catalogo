@@ -105,7 +105,7 @@ const Auth = () => {
       <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
         <p className="text-white mb-4">Redirecionando...</p>
         <div className="w-64">
-          <Progress value={progress} className="h-1 bg-gray-700" indicatorClassName="bg-netflix-red" />
+          <Progress value={progress} className="h-1 bg-gray-700" />
         </div>
       </div>
     );
