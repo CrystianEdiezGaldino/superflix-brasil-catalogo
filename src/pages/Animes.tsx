@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useAnimes } from "@/hooks/anime/useAnimes";
 import MediaView from "@/components/media/MediaView";
@@ -70,8 +69,8 @@ const AnimesPage = () => {
       isFiltering={isFiltering}
       isSearching={isSearching}
       page={page}
-      yearFilter={yearFilter.toString()}
-      ratingFilter={ratingFilter.toString()}
+      yearFilter={yearFilter?.toString() || "all"}
+      ratingFilter={ratingFilter?.toString() || "all"}
       searchQuery={searchQuery}
       onSearch={handleSearch}
       onYearFilterChange={handleYearFilterChange}

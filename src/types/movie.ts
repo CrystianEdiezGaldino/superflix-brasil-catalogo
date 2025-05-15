@@ -1,4 +1,3 @@
-
 export interface Movie {
   id: number;
   title: string;
@@ -45,6 +44,17 @@ export interface Series {
     logo_path: string;
   }>;
   episode_run_time: number[];
+  credits?: {
+    cast: Array<{
+      id: number;
+      name: string;
+      character: string;
+      profile_path: string;
+    }>;
+  };
+  recommendations?: {
+    results: Array<Series>;
+  };
 }
 
 export interface Season {

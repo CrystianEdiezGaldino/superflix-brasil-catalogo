@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -15,6 +14,8 @@ import SeriesLoadingState from "@/components/series/SeriesLoadingState";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
 import SuperFlixPlayer from "@/components/series/SuperFlixPlayer";
+import SeriesCast from "@/components/series/SeriesCast";
+import SeriesRecommendations from "@/components/series/SeriesRecommendations";
 import { Series } from "@/types/movie";
 
 const DoramaDetails = () => {
@@ -165,6 +166,9 @@ const DoramaDetails = () => {
             isLoadingSeason={false}
             subscriptionLoading={subscriptionLoading}
           />
+
+          <SeriesCast series={dorama} />
+          <SeriesRecommendations series={dorama} />
         </>
       )}
     </div>

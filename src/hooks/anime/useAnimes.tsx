@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { MediaItem } from "@/types/movie";
 import { TMDB_API_URL, TMDB_API_KEY } from "@/config/tmdb";
@@ -20,8 +19,8 @@ export const useAnimes = () => {
   const [animeSections, setAnimeSections] = useState<AnimeSections | null>(null);
   
   const [searchQuery, setSearchQuery] = useState("");
-  const [yearFilter, setYearFilter] = useState<number | null>(null);
-  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
+  const [yearFilter, setYearFilter] = useState<number>(0);
+  const [ratingFilter, setRatingFilter] = useState<number>(0);
   
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -394,8 +393,8 @@ export const useAnimes = () => {
 
   // Função para resetar filtros
   const resetFilters = () => {
-    setYearFilter(null);
-    setRatingFilter(null);
+    setYearFilter(0);
+    setRatingFilter(0);
     setSearchQuery("");
     setIsFiltering(false);
     setIsSearching(false);
