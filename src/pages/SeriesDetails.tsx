@@ -8,7 +8,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import SeriesHeader from "@/components/series/SeriesHeader";
 import SeriesContent from "@/components/series/SeriesContent";
 import SeriesActions from "@/components/series/SeriesActions";
-import SeriesLoadingState from "@/components/series/SeriesLoadingState";
+import SeriesLoadingState from "@/components/loading/SeriesLoadingState";
 import SeriesVideoPlayer from "@/components/series/SeriesVideoPlayer";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
@@ -57,7 +57,7 @@ const SeriesDetails = () => {
 
   // Verificar se o conteúdo está disponível
   useEffect(() => {
-    if (series && !series.imdb_id && !series.external_ids?.imdb_id) {
+    if (series && !series.external_ids?.imdb_id) {
       setIsContentAvailable(false);
     }
   }, [series]);
@@ -138,15 +138,17 @@ const SeriesDetails = () => {
           <SeriesActions 
             showPlayer={showPlayer} 
             hasAccess={hasAccess} 
-            togglePlayer={handleWatchClick} 
+            togglePlayer={handleWatchClick}
+            isFavorite={isFavorite}
+            onToggleFavorite={toggleFavorite}
           />
 
           {/* Player de vídeo usando componente dedicado */}
-          {showPlayer && (series.imdb_id || series.external_ids?.imdb_id) && (
+          {showPlayer && series.external_ids?.imdb_id && (
             <div className="px-6 md:px-10 mb-10">
               <SeriesVideoPlayer 
                 showPlayer={true}
-                imdbId={series.imdb_id || series.external_ids?.imdb_id || ''}
+                imdbId={series.external_ids.imdb_id}
                 hasAccess={hasAccess}
                 selectedSeason={selectedSeason}
                 selectedEpisode={selectedEpisode}

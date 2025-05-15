@@ -1,12 +1,12 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-interface AnimeLoadingStateProps {
+interface SeriesLoadingStateProps {
   isLoading: boolean;
   hasUser: boolean;
   hasError: boolean;
 }
 
-const AnimeLoadingState = ({ isLoading, hasUser, hasError }: AnimeLoadingStateProps) => {
+const SeriesLoadingState = ({ isLoading, hasUser, hasError }: SeriesLoadingStateProps) => {
   if (!isLoading) return null;
 
   return (
@@ -34,4 +34,4 @@ const AnimeLoadingState = ({ isLoading, hasUser, hasError }: AnimeLoadingStatePr
   );
 };
 
-export default AnimeLoadingState;
+export default SeriesLoadingState; 
