@@ -1,57 +1,55 @@
 
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useState, useEffect } from "react";
 
 export const useAccessControl = () => {
-  // Try/catch prevents circular dependencies
-  let user = null;
-  let authLoading = true;
-  
-  try {
-    // Avoid directly importing useAuth to prevent circular dependencies
-    // We'll still handle authentication gracefully
-    const AuthContext = require("@/contexts/AuthContext");
-    if (AuthContext && typeof AuthContext.useAuth === 'function') {
-      const auth = AuthContext.useAuth();
-      user = auth.user;
-      authLoading = auth.loading;
-    }
-  } catch (error) {
-    console.warn("Auth context unavailable in useAccessControl, using default values");
-  }
-  
+  const { user, loading: authLoading } = useAuth();
   const [hasAccess, setHasAccess] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   
-  // Default subscription values
-  const isAdmin = false;
-  const hasTempAccess = false;
-  const hasTrialAccess = false;
+  // Use the subscription context if available, otherwise fall back to a default value
+  let subscriptionData = { isSubscribed: false, isAdmin: false, hasTempAccess: false, hasTrialAccess: false, isLoading: true };
   
-  useEffect(() => {
-    // Set subscription loading to false after a short delay
-    const timer = setTimeout(() => {
-      setSubscriptionLoading(false);
-      
-      // For non-authenticated users, provide limited access
-      if (!user) {
-        setHasAccess(false);
-      } else {
-        // For authenticated users, they have at least basic access
-        setHasAccess(true);
-      }
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [user]);
+  try {
+    // This will throw if not within SubscriptionProvider
+    const subscription = useSubscription();
+    subscriptionData = subscription;
+  } catch (error) {
+    console.warn("useSubscription unavailable, using default values");
+    // We already set default values above, so no need to do anything here
+  }
+  
+  const { 
+    isSubscribed, 
+    isAdmin, 
+    hasTempAccess, 
+    hasTrialAccess, 
+    isLoading: subLoading 
+  } = subscriptionData;
 
+  useEffect(() => {
+    // Update loading state
+    setSubscriptionLoading(subLoading);
+    
+    // Calculate access - Make sure to include "trialing" status as valid access
+    const userHasAccess = Boolean(isSubscribed || isAdmin || hasTempAccess || hasTrialAccess);
+    console.log("Access control status:", { 
+      isSubscribed, 
+      isAdmin, 
+      hasTempAccess, 
+      hasTrialAccess,
+      userHasAccess 
+    });
+    
+    setHasAccess(userHasAccess);
+  }, [isSubscribed, isAdmin, hasTempAccess, hasTrialAccess, subLoading]);
+  
   return {
     user,
     authLoading,
     subscriptionLoading,
     hasAccess,
-    isAdmin,
-    hasTempAccess,
-    hasTrialAccess,
     isLoading: authLoading || subscriptionLoading
   };
 };

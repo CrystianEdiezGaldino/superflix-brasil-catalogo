@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { toast } from "@/hooks/use-toast"; // Mudando para usar o toast correto
+import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
 
@@ -12,7 +12,7 @@ export const useAuthRedirect = (user: User | null, authLoading: boolean) => {
   useEffect(() => {
     // Don't redirect if we're already on the auth page or still loading
     const isAuthPage = location.pathname === "/auth";
-    if (authLoading) {
+    if (authLoading || isAuthPage) {
       return;
     }
 
@@ -21,20 +21,15 @@ export const useAuthRedirect = (user: User | null, authLoading: boolean) => {
       // Prevent multiple toasts
       const shouldShowToast = !sessionStorage.getItem('auth_redirect_shown');
       if (shouldShowToast) {
-        toast({
-          title: "Atenção",
-          description: "É necessário fazer login para acessar o conteúdo",
-          variant: "destructive"
-        });
+        toast.error("É necessário fazer login para acessar o conteúdo");
         sessionStorage.setItem('auth_redirect_shown', 'true');
       }
       
       // Save current location for after login
-      navigate("/auth", { state: { from: location }, replace: true });
+      navigate("/auth", { state: { from: location } });
     } else if (user && isAuthPage) {
       // If user is logged in and on auth page, redirect to home
-      const redirectTo = location.state?.from?.pathname || "/";
-      navigate(redirectTo, { replace: true });
+      navigate("/", { replace: true });
     } else if (user) {
       // Clear the redirect flag when user is logged in
       sessionStorage.removeItem('auth_redirect_shown');

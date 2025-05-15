@@ -1,31 +1,45 @@
 
 import { useEffect, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useMediaData } from "./useMediaData";
 import { useMediaSearch } from "./useMediaSearch";
 import { useRecommendations } from "./useRecommendations";
 import { useFeaturedMedia } from "./useFeaturedMedia";
 import { useAccessControl } from "./useAccessControl";
 import { usePopularContent } from "./usePopularContent";
+import { useAuthRedirect } from "./useAuthRedirect";
 
 export const useHomePageData = () => {
-  // Get authentication and subscription status from access control
+  const { user, loading: authLoading } = useAuth();
   const { 
-    user, 
-    hasAccess, 
-    authLoading, 
-    subscriptionLoading 
-  } = useAccessControl();
+    isSubscribed, 
+    isAdmin, 
+    hasTempAccess,
+    hasTrialAccess,
+    isLoading: subscriptionLoading, 
+    trialEnd,
+    checkSubscription
+  } = useSubscription();
   
+  // Remove the auth redirect to prevent the loop
+  // useAuthRedirect(user, authLoading);
+  
+  // Use the access control hook to get the hasAccess flag
+  const { hasAccess } = useAccessControl();
+
   // Force a subscription check on mount to ensure we have the latest data
   useEffect(() => {
     let isUnmounted = false;
     
-    // The subscription check now happens in useAccessControl
+    if (user && !isUnmounted) {
+      checkSubscription();
+    }
     
     return () => {
       isUnmounted = true;
     };
-  }, [user]);
+  }, [user, checkSubscription]);
   
   // Get popular series and recent animes
   const { 
@@ -54,12 +68,9 @@ export const useHomePageData = () => {
     hasError
   } = useMediaData();
   
-  // Pass null if user is not available to prevent errors
-  const safeUser = user || null;
-  
   const { featuredMedia } = useFeaturedMedia(
     hasAccess,
-    safeUser,
+    user,
     moviesData,
     seriesData,
     animeData,
@@ -73,9 +84,10 @@ export const useHomePageData = () => {
   // Debug log to help track subscription state
   console.log("Home page data:", { 
     hasUser: !!user, 
-    isAdmin: false, // We'll get this from useAccessControl
-    hasTrialAccess: false, // We'll get this from useAccessControl
-    hasTempAccess: false, // We'll get this from useAccessControl
+    isSubscribed, 
+    isAdmin, 
+    hasTrialAccess, 
+    hasTempAccess, 
     hasAccess,
     mediaDataLoaded: {
       movies: !!moviesData?.length,
@@ -89,11 +101,11 @@ export const useHomePageData = () => {
                     isLoadingPopularSeries || isLoadingRecentAnimes;
   
   return {
-    user: safeUser,
-    isAdmin: false, // We'll get this from useAccessControl later
+    user,
+    isAdmin,
     hasAccess,
-    hasTrialAccess: false, // We'll get this from useAccessControl later  
-    trialEnd: null, // We'll get this from useAccessControl later
+    hasTrialAccess,
+    trialEnd,
     featuredMedia,
     recommendations,
     moviesData,

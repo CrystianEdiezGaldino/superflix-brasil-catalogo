@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast"; // Mudar para usar o hook correto
+import { toast } from "sonner";  // Use only sonner toast
 import {
   Form,
   FormControl,
@@ -57,28 +57,18 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
       // Clear any redirect flags
       sessionStorage.removeItem('auth_redirect_shown');
       
-      // Usar replace para evitar adição ao histórico e prevenir refreshes desnecessários
-      navigate(redirectPath, { replace: true });
+      // Delay navigation slightly to allow auth state to update
+      setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 100);
     } catch (error: any) {
       console.error("Authentication error:", error);
       if (error.message?.includes("Invalid login")) {
-        toast({
-          title: "Erro",
-          description: "Email ou senha incorretos",
-          variant: "destructive"
-        });
+        toast.error("Email ou senha incorretos");
       } else if (error.message?.includes("Email not confirmed")) {
-        toast({
-          title: "Erro",
-          description: "Por favor, confirme seu email antes de fazer login",
-          variant: "destructive"
-        });
+        toast.error("Por favor, confirme seu email antes de fazer login");
       } else {
-        toast({
-          title: "Erro",
-          description: error.message || "Erro ao fazer login",
-          variant: "destructive"
-        });
+        toast.error(error.message || "Erro ao fazer login");
       }
       setIsLoading(false);
     }
