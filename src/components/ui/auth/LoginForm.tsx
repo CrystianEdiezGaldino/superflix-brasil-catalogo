@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";  // Use only sonner toast
+import { toast } from "@/hooks/use-toast";  // Updated import
 import {
   Form,
   FormControl,
@@ -64,11 +64,23 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
     } catch (error: any) {
       console.error("Authentication error:", error);
       if (error.message?.includes("Invalid login")) {
-        toast.error("Email ou senha incorretos");
+        toast({
+          variant: "destructive",
+          title: "Erro de autenticação",
+          description: "Email ou senha incorretos"
+        });
       } else if (error.message?.includes("Email not confirmed")) {
-        toast.error("Por favor, confirme seu email antes de fazer login");
+        toast({
+          variant: "destructive",
+          title: "Erro de autenticação",
+          description: "Por favor, confirme seu email antes de fazer login"
+        });
       } else {
-        toast.error(error.message || "Erro ao fazer login");
+        toast({
+          variant: "destructive",
+          title: "Erro de autenticação",
+          description: error.message || "Erro ao fazer login"
+        });
       }
       setIsLoading(false);
     }

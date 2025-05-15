@@ -1,8 +1,8 @@
 
 import { useEffect } from "react";
-import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
+import { toast } from "@/hooks/use-toast"; // Updated import
 
 export const useAuthRedirect = (user: User | null, authLoading: boolean) => {
   const navigate = useNavigate();
@@ -21,12 +21,16 @@ export const useAuthRedirect = (user: User | null, authLoading: boolean) => {
       // Prevent multiple toasts
       const shouldShowToast = !sessionStorage.getItem('auth_redirect_shown');
       if (shouldShowToast) {
-        toast.error("É necessário fazer login para acessar o conteúdo");
+        toast({
+          variant: "destructive",
+          title: "Autenticação necessária",
+          description: "É necessário fazer login para acessar o conteúdo"
+        });
         sessionStorage.setItem('auth_redirect_shown', 'true');
       }
       
       // Save current location for after login
-      navigate("/auth", { state: { from: location } });
+      navigate("/auth", { state: { from: location }, replace: true });
     } else if (user && isAuthPage) {
       // If user is logged in and on auth page, redirect to home
       navigate("/", { replace: true });

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavorites } from "@/hooks/useFavorites";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast"; // Updated import
 
 interface FavoriteButtonProps {
   mediaId: number;
@@ -41,13 +41,18 @@ const FavoriteButton = ({
       const newStatus = !isFavorited;
       setIsFavorited(newStatus);
       
-      toast.success(
-        newStatus
+      toast({
+        title: newStatus ? "Favorito adicionado" : "Favorito removido",
+        description: newStatus
           ? "Adicionado aos seus favoritos"
           : "Removido dos seus favoritos"
-      );
+      });
     } catch (error) {
-      toast.error("Erro ao atualizar favoritos");
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao atualizar favoritos"
+      });
       console.error(error);
     } finally {
       setIsLoading(false);

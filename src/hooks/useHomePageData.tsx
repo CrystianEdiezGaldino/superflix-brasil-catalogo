@@ -8,7 +8,9 @@ import { useRecommendations } from "./useRecommendations";
 import { useFeaturedMedia } from "./useFeaturedMedia";
 import { useAccessControl } from "./useAccessControl";
 import { usePopularContent } from "./usePopularContent";
-import { useAuthRedirect } from "./useAuthRedirect";
+
+// Remove the import to prevent circular dependency
+// import { useAuthRedirect } from "./useAuthRedirect";
 
 export const useHomePageData = () => {
   const { user, loading: authLoading } = useAuth();
@@ -21,9 +23,6 @@ export const useHomePageData = () => {
     trialEnd,
     checkSubscription
   } = useSubscription();
-  
-  // Remove the auth redirect to prevent the loop
-  // useAuthRedirect(user, authLoading);
   
   // Use the access control hook to get the hasAccess flag
   const { hasAccess } = useAccessControl();

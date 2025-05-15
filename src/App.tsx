@@ -1,6 +1,7 @@
 
 import React, { useState } from "react";
-import { Toaster } from "sonner";
+import { Toaster as SonnerToaster } from "sonner";
+import { Toaster } from "@/components/ui/toaster"; // Add this import
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route } from "react-router-dom";
@@ -34,7 +35,8 @@ const App = () => {
       <AuthProvider>
         <SubscriptionProvider>
           <TooltipProvider>
-            <Toaster />
+            <SonnerToaster />
+            <Toaster /> {/* Add shadcn Toaster */}
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/filmes" element={<Movies />} />

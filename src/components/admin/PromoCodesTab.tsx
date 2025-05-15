@@ -1,6 +1,4 @@
-
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { PlusCircle, Edit, Trash2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "@/hooks/use-toast";
 
 interface PromoCode {
   id: string;
@@ -50,7 +49,11 @@ const PromoCodesTab = () => {
       setPromoCodes(data || []);
     } catch (error) {
       console.error("Erro ao carregar códigos promocionais:", error);
-      toast.error("Erro ao carregar códigos promocionais");
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao carregar códigos promocionais"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -122,12 +125,20 @@ const PromoCodesTab = () => {
   const handleSaveCode = async () => {
     // Validações
     if (!formData.code.trim()) {
-      toast.error("O código promocional é obrigatório");
+      toast({
+        variant: "destructive",
+        title: "Erro de validação",
+        description: "O código promocional é obrigatório"
+      });
       return;
     }
     
     if (!formData.expires_at) {
-      toast.error("A data de expiração é obrigatória");
+      toast({
+        variant: "destructive",
+        title: "Erro de validação",
+        description: "A data de expiração é obrigatória"
+      });
       return;
     }
     
@@ -163,7 +174,10 @@ const PromoCodesTab = () => {
       
       if (error) throw error;
       
-      toast.success(editingCode ? "Código atualizado com sucesso" : "Código criado com sucesso");
+      toast({
+        title: "Sucesso",
+        description: editingCode ? "Código atualizado com sucesso" : "Código criado com sucesso"
+      });
       setIsDialogOpen(false);
       loadPromoCodes();
     } catch (error: any) {
@@ -171,9 +185,17 @@ const PromoCodesTab = () => {
       
       // Verificar erro de duplicação
       if (error.code === "23505") {
-        toast.error("Este código já existe. Por favor, use outro código.");
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Este código já existe. Por favor, use outro código."
+        });
       } else {
-        toast.error("Erro ao salvar código promocional");
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Erro ao salvar código promocional"
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -194,19 +216,33 @@ const PromoCodesTab = () => {
         
       if (error) throw error;
       
-      toast.success("Código excluído com sucesso");
+      toast({
+        title: "Sucesso",
+        description: "Código excluído com sucesso"
+      });
       loadPromoCodes();
     } catch (error) {
       console.error("Erro ao excluir código promocional:", error);
-      toast.error("Erro ao excluir código promocional");
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao excluir código promocional"
+      });
     }
   };
   
   // Copiar código para a área de transferência
   const copyToClipboard = (code: string) => {
     navigator.clipboard.writeText(code)
-      .then(() => toast.success("Código copiado para a área de transferência"))
-      .catch(() => toast.error("Erro ao copiar código"));
+      .then(() => toast({
+        title: "Copiado",
+        description: "Código copiado para a área de transferência"
+      }))
+      .catch(() => toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao copiar código"
+      }));
   };
   
   const formatDate = (dateString: string) => {
