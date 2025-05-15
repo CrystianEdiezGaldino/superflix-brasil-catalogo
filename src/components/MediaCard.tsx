@@ -1,13 +1,15 @@
 import { Link } from "react-router-dom";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, getMediaTitle } from "@/types/movie";
 import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface MediaCardProps {
   media: MediaItem;
+  onClick: () => void;
 }
 
-const MediaCard = ({ media }: MediaCardProps) => {
+const MediaCard = ({ media, onClick }: MediaCardProps) => {
   // Determine link path based on media type
   const linkPath = media.media_type === 'movie'
     ? `/filme/${media.id}`

@@ -1,62 +1,173 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchMovieDetails } from "@/services/tmdb/movies";
-import MediaView from "@/components/media/MediaView";
+import { 
+  fetchMoviesByCategory,
+  fetchTrendingMovies,
+  fetchTopRatedMovies,
+  fetchPopularMovies,
+  fetchRecentMovies
+} from "@/services/tmdb/movies";
 import { MediaItem } from "@/types/movie";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+import MediaSection from "@/components/MediaSection";
+import Navbar from "@/components/Navbar";
+
+const CATEGORIES = {
+  "": "Todos os Filmes",
+  "lancamentos": "Lançamentos",
+  "acao": "Ação",
+  "comedia": "Comédia",
+  "drama": "Drama",
+  "terror": "Terror",
+  "romance": "Romance",
+  "aventura": "Aventura",
+  "animacao": "Animação",
+  "documentario": "Documentário",
+  "ficcao": "Ficção Científica",
+  "fantasia": "Fantasia",
+  "suspense": "Suspense",
+  "biografia": "Biografia",
+  "historia": "História"
+} as const;
 
 const Filmes = () => {
   const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [yearFilter, setYearFilter] = useState("");
-  const [ratingFilter, setRatingFilter] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [page, setPage] = useState(1);
 
-  const { data: movies = [], isLoading } = useQuery({
-    queryKey: ["movies"],
+  // Busca filmes em destaque
+  const { data: trendingMovies = [], isLoading: isLoadingTrending } = useQuery({
+    queryKey: ["movies", "trending"],
+    queryFn: () => fetchTrendingMovies(),
+    enabled: !selectedCategory,
+  });
+
+  // Busca filmes mais bem avaliados
+  const { data: topRatedMovies = [], isLoading: isLoadingTopRated } = useQuery({
+    queryKey: ["movies", "topRated"],
+    queryFn: () => fetchTopRatedMovies(),
+    enabled: !selectedCategory,
+  });
+
+  // Busca filmes populares
+  const { data: popularMovies = [], isLoading: isLoadingPopular } = useQuery({
+    queryKey: ["movies", "popular"],
+    queryFn: () => fetchPopularMovies(),
+    enabled: !selectedCategory,
+  });
+
+  // Busca filmes recentes
+  const { data: recentMovies = [], isLoading: isLoadingRecent } = useQuery({
+    queryKey: ["movies", "recent"],
+    queryFn: () => fetchRecentMovies(),
+    enabled: !selectedCategory,
+  });
+
+  // Busca filmes por categoria
+  const { data: categoryMovies = [], isLoading: isLoadingCategory } = useQuery({
+    queryKey: ["movies", "category", selectedCategory, page],
     queryFn: async () => {
-      const ids = [299534, 299536, 299537]; // IDs dos filmes
-      return Promise.all(
-        ids.map(id => fetchMovieDetails(id.toString()))
-      );
+      if (!selectedCategory) return [];
+      return fetchMoviesByCategory(selectedCategory, page);
     },
+    enabled: !!selectedCategory,
   });
 
   const handleMediaClick = (media: MediaItem) => {
     navigate(`/filme/${media.id}`);
   };
 
-  const filteredMovies = movies.filter((movie) => {
-    const matchesSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesYear = !yearFilter || movie.release_date?.startsWith(yearFilter);
-    const matchesRating = !ratingFilter || movie.vote_average >= parseFloat(ratingFilter);
-    return matchesSearch && matchesYear && matchesRating;
-  });
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    setPage(1);
+    toast.success(`Mostrando ${CATEGORIES[category as keyof typeof CATEGORIES]}`);
+  };
+
+  const isLoading = isLoadingCategory || 
+    isLoadingTrending || isLoadingTopRated || isLoadingPopular || isLoadingRecent;
 
   return (
-    <MediaView
-      title="Filmes"
-      type="movie"
-      mediaItems={filteredMovies}
-      isLoading={isLoading}
-      isLoadingMore={false}
-      hasMore={false}
-      isFiltering={!!yearFilter || !!ratingFilter}
-      isSearching={!!searchQuery}
-      page={1}
-      yearFilter={yearFilter}
-      ratingFilter={ratingFilter}
-      searchQuery={searchQuery}
-      onSearch={setSearchQuery}
-      onYearFilterChange={setYearFilter}
-      onRatingFilterChange={setRatingFilter}
-      onLoadMore={() => {}}
-      onResetFilters={() => {
-        setYearFilter("");
-        setRatingFilter("");
-        setSearchQuery("");
-      }}
-      onMediaClick={handleMediaClick}
-    />
+    <div className="min-h-screen bg-netflix-background">
+      <Navbar />
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+          <h1 className="text-2xl md:text-3xl font-bold text-white">Filmes</h1>
+          
+          <Select value={selectedCategory} onValueChange={handleCategoryChange}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Selecione uma categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(CATEGORIES).map(([value, label]) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Seções de conteúdo */}
+        {!selectedCategory && (
+          <>
+            {/* Seção de tendências */}
+            {trendingMovies.length > 0 && (
+              <MediaSection 
+                title="Tendências em Filmes"
+                medias={trendingMovies}
+                onMediaClick={handleMediaClick}
+              />
+            )}
+            
+            {/* Seção dos mais bem avaliados */}
+            {topRatedMovies.length > 0 && (
+              <MediaSection 
+                title="Filmes Mais Bem Avaliados"
+                medias={topRatedMovies}
+                onMediaClick={handleMediaClick}
+              />
+            )}
+            
+            {/* Seção dos mais populares */}
+            {popularMovies.length > 0 && (
+              <MediaSection 
+                title="Filmes Populares"
+                medias={popularMovies}
+                onMediaClick={handleMediaClick}
+              />
+            )}
+            
+            {/* Seção de conteúdo recente */}
+            {recentMovies.length > 0 && (
+              <MediaSection 
+                title="Filmes Recentes"
+                medias={recentMovies}
+                onMediaClick={handleMediaClick}
+              />
+            )}
+          </>
+        )}
+
+        {/* Seção de categoria selecionada */}
+        {selectedCategory && categoryMovies.length > 0 && (
+          <MediaSection 
+            title={CATEGORIES[selectedCategory as keyof typeof CATEGORIES]}
+            medias={categoryMovies}
+            onMediaClick={handleMediaClick}
+          />
+        )}
+
+        {/* Mensagem de carregamento */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-netflix-red"></div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

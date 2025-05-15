@@ -1,4 +1,3 @@
-
 import React from "react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -23,12 +22,6 @@ interface MediaViewProps {
   isFiltering: boolean;
   isSearching: boolean;
   page: number;
-  yearFilter: string;
-  ratingFilter: string;
-  searchQuery: string;
-  onSearch: (query: string) => void;
-  onYearFilterChange: (year: string) => void;
-  onRatingFilterChange: (rating: string) => void;
   onLoadMore: () => void;
   onResetFilters: () => void;
   onMediaClick?: (media: MediaItem) => void;
@@ -49,12 +42,6 @@ const MediaView = ({
   isFiltering,
   isSearching,
   page,
-  yearFilter,
-  ratingFilter,
-  searchQuery,
-  onSearch,
-  onYearFilterChange,
-  onRatingFilterChange,
   onLoadMore,
   onResetFilters,
   onMediaClick,
@@ -74,71 +61,55 @@ const MediaView = ({
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      <Navbar onSearch={(query) => onSearch(query)} />
+      <Navbar />
       
-      <div className="pt-24 pb-10 px-4 md:px-8">
+      <div className="container mx-auto px-4 py-8">
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">{title}</h1>
-        
-        {/* Filtros para busca e filtragem */}
-        <MediaFilters 
-          searchQuery={searchQuery}
-          yearFilter={yearFilter}
-          ratingFilter={ratingFilter}
-          isSearching={isSearching}
-          onSearch={onSearch}
-          onYearFilterChange={onYearFilterChange}
-          onRatingFilterChange={onRatingFilterChange}
-        />
         
         {/* Conteúdo de destaque (renderizado condicionalmente) */}
         {!isSearching && !isFiltering && children}
         
-        {/* Seção de tendências */}
-        {!isSearching && !isFiltering && trendingItems && trendingItems.length > 0 && (
-          <MediaSection 
-            title={`Tendências em ${getContentTypeTitle(type)}`}
-            medias={trendingItems}
-            onMediaClick={onMediaClick}
-          />
-        )}
-        
-        {/* Seção dos mais bem avaliados */}
-        {!isSearching && !isFiltering && topRatedItems && topRatedItems.length > 0 && (
-          <MediaSection 
-            title={`${getContentTypeTitle(type)} Mais Bem Avaliados`}
-            medias={topRatedItems}
-            onMediaClick={onMediaClick}
-          />
-        )}
-        
-        {/* Seção dos mais populares */}
-        {!isSearching && !isFiltering && popularItems && popularItems.length > 0 && (
-          <MediaSection 
-            title={`${getContentTypeTitle(type)} Populares`}
-            medias={popularItems}
-            onMediaClick={onMediaClick}
-          />
-        )}
-        
-        {/* Seção de conteúdo recente */}
-        {!isSearching && !isFiltering && recentItems && recentItems.length > 0 && (
-          <MediaSection 
-            title={`${getContentTypeTitle(type)} Recentes`}
-            medias={recentItems}
-            onMediaClick={onMediaClick}
-          />
-        )}
+        {/* Seções de conteúdo - ocultadas durante a busca */}
+        <div className={isSearching ? "hidden" : ""}>
+          {/* Seção de tendências */}
+          {!isFiltering && trendingItems && trendingItems.length > 0 && (
+            <MediaSection 
+              title={`Tendências em ${getContentTypeTitle(type)}`}
+              medias={trendingItems}
+              onMediaClick={onMediaClick}
+            />
+          )}
+          
+          {/* Seção dos mais bem avaliados */}
+          {!isFiltering && topRatedItems && topRatedItems.length > 0 && (
+            <MediaSection 
+              title={`${getContentTypeTitle(type)} Mais Bem Avaliados`}
+              medias={topRatedItems}
+              onMediaClick={onMediaClick}
+            />
+          )}
+          
+          {/* Seção dos mais populares */}
+          {!isFiltering && popularItems && popularItems.length > 0 && (
+            <MediaSection 
+              title={`${getContentTypeTitle(type)} Populares`}
+              medias={popularItems}
+              onMediaClick={onMediaClick}
+            />
+          )}
+          
+          {/* Seção de conteúdo recente */}
+          {!isFiltering && recentItems && recentItems.length > 0 && (
+            <MediaSection 
+              title={`${getContentTypeTitle(type)} Recentes`}
+              medias={recentItems}
+              onMediaClick={onMediaClick}
+            />
+          )}
+        </div>
         
         {/* Grade de conteúdo completa */}
         <section className="mt-8">
-          <h2 className="text-xl md:text-2xl font-semibold text-white mb-4">
-            {isSearching 
-              ? `Resultados para "${searchQuery}"` 
-              : isFiltering 
-                ? "Conteúdo Filtrado" 
-                : `Todo Conteúdo ${getContentTypeTitle(type)}`}
-          </h2>
-          
           <MediaGrid 
             mediaItems={mediaItems}
             isLoading={isLoading}
@@ -156,4 +127,4 @@ const MediaView = ({
   );
 };
 
-export default MediaView;
+export default MediaView; 

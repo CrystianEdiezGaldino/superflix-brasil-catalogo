@@ -1,4 +1,3 @@
-
 import { Plus } from 'lucide-react';
 import { MediaItem, getMediaTitle } from '@/types/movie';
 import {
@@ -9,6 +8,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { AspectRatio } from '@/components/ui/aspect-ratio';
+import MediaCard from "./MediaCard";
 
 type MediaSectionProps = {
   title: string;
@@ -60,65 +60,36 @@ const MediaSection = ({
         <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
       </div>
 
-      <Carousel
-        opts={{ 
-          align: "start",
-          loop: false,
-        }}
-        className="w-full"
-      >
-        <CarouselContent className="-ml-4">
-          {medias.map((media) => (
-            <CarouselItem key={`${media.id}-${media.media_type || 'unknown'}`} className="pl-4 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
-              <div 
-                onClick={() => handleClick(media)}
-                className="relative overflow-hidden rounded-lg cursor-pointer transition-all duration-300 hover:scale-105"
-              >
-                <AspectRatio ratio={2/3}>
-                  <img
-                    src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
-                    alt={getMediaTitle(media)}
-                    className="object-cover w-full h-full"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/placeholder.svg";
-                    }}
-                  />
-                </AspectRatio>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300">
-                  <div className="absolute bottom-0 left-0 right-0 p-2">
-                    <h3 className="text-sm font-medium text-white truncate">
-                      {getMediaTitle(media)}
-                    </h3>
-                  </div>
-                </div>
-              </div>
-            </CarouselItem>
-          ))}
-          
-          {/* Load more button */}
-          {shouldShowLoadMore && (
-            <CarouselItem className="pl-4 md:basis-1/4 lg:basis-1/5 xl:basis-1/6">
-              <div 
-                onClick={handleLoadMore}
-                className="relative overflow-hidden rounded-lg h-full bg-gray-800 hover:bg-gray-700 transition-colors duration-300 flex items-center justify-center cursor-pointer"
-                style={{ aspectRatio: '2/3' }}
-                data-section-id={sectionId}
-              >
-                <div className="flex flex-col items-center space-y-2">
-                  {isLoading ? (
-                    <div className="w-8 h-8 border-4 border-t-white border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <Plus className="w-8 h-8 text-white" />
-                  )}
-                  <span className="text-sm text-white">{isLoading ? "Carregando..." : "Ver mais"}</span>
-                </div>
-              </div>
-            </CarouselItem>
-          )}
-        </CarouselContent>
-        <CarouselPrevious className="hidden md:flex absolute -left-12 bg-gray-800/80 hover:bg-gray-700 text-white border-none" />
-        <CarouselNext className="hidden md:flex absolute -right-12 bg-gray-800/80 hover:bg-gray-700 text-white border-none" />
-      </Carousel>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        {medias.map((media) => (
+          <MediaCard
+            key={media.id}
+            media={media}
+            onClick={() => handleClick(media)}
+          />
+        ))}
+      </div>
+
+      {/* Load more button */}
+      {shouldShowLoadMore && (
+        <div className="flex items-center justify-center mt-4">
+          <div 
+            onClick={handleLoadMore}
+            className="relative overflow-hidden rounded-lg h-full bg-gray-800 hover:bg-gray-700 transition-colors duration-300 flex items-center justify-center cursor-pointer"
+            style={{ aspectRatio: '2/3' }}
+            data-section-id={sectionId}
+          >
+            <div className="flex flex-col items-center space-y-2">
+              {isLoading ? (
+                <div className="w-8 h-8 border-4 border-t-white border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Plus className="w-8 h-8 text-white" />
+              )}
+              <span className="text-sm text-white">{isLoading ? "Carregando..." : "Ver mais"}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

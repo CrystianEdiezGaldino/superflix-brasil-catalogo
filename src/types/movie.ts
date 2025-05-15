@@ -1,4 +1,3 @@
-
 export interface Genre {
   id: number;
   name: string;
@@ -19,22 +18,26 @@ export interface Crew {
   profile_path: string;
 }
 
-export interface Movie {
+export interface BaseMedia {
   id: number;
-  title: string;
-  original_title: string;
   overview: string;
   poster_path: string;
   backdrop_path: string;
-  release_date: string;
   vote_average: number;
+  genres: Genre[];
+  genre_ids: number[];
+}
+
+export interface Movie extends BaseMedia {
+  title: string;
+  release_date: string;
+  media_type: "movie";
+  original_title: string;
   vote_count: number;
   popularity: number;
-  genres: Genre[];
   runtime: number;
   status: string;
-  media_type: 'movie';
-  imdb_id?: string; // Added imdb_id as optional property
+  imdb_id?: string;
   external_ids?: {
     imdb_id: string;
   };
@@ -47,26 +50,18 @@ export interface Movie {
   };
 }
 
-export interface Series {
-  id: number;
+export interface Series extends BaseMedia {
   name: string;
+  first_air_date: string;
+  media_type: "tv";
   original_name: string;
   original_language: string;
-  overview: string;
-  poster_path: string;
-  backdrop_path: string;
-  first_air_date: string;
-  vote_average: number;
-  vote_count: number;
-  popularity: number;
-  genres: Genre[];
   number_of_seasons: number;
   number_of_episodes: number;
   status: string;
-  media_type: 'tv';
-  title?: string; // Added title as optional property
-  imdb_id?: string; // Added imdb_id as optional property
-  release_date?: string; // Added release_date as optional property
+  title?: string;
+  imdb_id?: string;
+  release_date?: string;
   external_ids?: {
     imdb_id: string;
   };
@@ -86,7 +81,7 @@ export interface Season {
   overview: string;
   poster_path: string;
   season_number: number;
-  air_date: string; // This is required based on the errors
+  air_date: string;
   episodes: Episode[];
 }
 
@@ -105,21 +100,21 @@ export interface Episode {
 export type MediaItem = Movie | Series;
 
 // Type guard to verify if it's a Movie
-export function isMovie(media: MediaItem): media is Movie {
-  return media.media_type === 'movie';
+export function isMovie(item: MediaItem): item is Movie {
+  return item.media_type === "movie";
 }
 
 // Type guard to verify if it's a Series
-export function isSeries(media: MediaItem): media is Series {
-  return media.media_type === 'tv';
+export function isSeries(item: MediaItem): item is Series {
+  return item.media_type === "tv";
 }
 
-// Helper function to get the title or name from a MediaItem
-export function getMediaTitle(media: MediaItem): string {
-  return isMovie(media) ? media.title : media.name;
+// Helper function to get the title of a media item
+export function getMediaTitle(item: MediaItem): string {
+  return isMovie(item) ? item.title : item.name;
 }
 
-// Helper function to get the release date or first air date from a MediaItem
-export function getMediaReleaseDate(media: MediaItem): string | undefined {
-  return isMovie(media) ? media.release_date : media.first_air_date;
+// Helper function to get the release date of a media item
+export function getMediaReleaseDate(item: MediaItem): string {
+  return isMovie(item) ? item.release_date : item.first_air_date;
 }
