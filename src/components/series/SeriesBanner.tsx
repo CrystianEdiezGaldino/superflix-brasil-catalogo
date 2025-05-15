@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { ArrowLeft, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,26 +25,26 @@ const SeriesBanner = ({ series, isFavorite = false, onToggleFavorite }: SeriesBa
         <div className="absolute inset-0 bg-gradient-to-t from-netflix-background via-netflix-background/70 to-transparent"></div>
       </div>
       
-      <div className="absolute top-6 left-6 z-10 flex gap-4">
-        <Link to="/">
-          <Button variant="ghost" size="icon" className="rounded-full bg-black/50 hover:bg-black/70">
-            <ArrowLeft className="text-white" />
-          </Button>
-        </Link>
-        
-        {onToggleFavorite && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className={`rounded-full ${isFavorite ? 'bg-netflix-red' : 'bg-black/50 hover:bg-black/70'}`}
-            onClick={onToggleFavorite}
-          >
-            <Heart className={`${isFavorite ? 'text-white fill-current' : 'text-white'}`} />
-          </Button>
-        )}
-      </div>
-      
       <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+        <div className="flex items-center justify-between mb-4">
+          <Link to="/">
+            <Button variant="ghost" size="icon" className="rounded-full bg-black/50 hover:bg-black/70">
+              <ArrowLeft className="text-white" />
+            </Button>
+          </Link>
+          
+          {onToggleFavorite && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={`rounded-full ${isFavorite ? 'bg-netflix-red' : 'bg-black/50 hover:bg-black/70'}`}
+              onClick={onToggleFavorite}
+            >
+              <Heart className={`${isFavorite ? 'text-white fill-current' : 'text-white'}`} />
+            </Button>
+          )}
+        </div>
+
         <h1 className="text-3xl md:text-4xl font-bold mb-2">{series.name}</h1>
         {series.first_air_date && (
           <div className="flex items-center gap-2 text-sm text-gray-300">

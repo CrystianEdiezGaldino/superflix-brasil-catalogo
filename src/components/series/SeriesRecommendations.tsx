@@ -1,46 +1,59 @@
-import { Link } from "react-router-dom";
-import { Series } from "@/types/movie";
+import { useQuery } from '@tanstack/react-query';
+import { fetchSeriesRecommendations } from '@/services/tmdb/series';
+import { Series } from '@/types/movie';
+import MediaGrid from '@/components/media/MediaGrid';
+import { useNavigate } from 'react-router-dom';
 
 interface SeriesRecommendationsProps {
-  series: Series;
+  seriesId: string;
 }
 
-const SeriesRecommendations = ({ series }: SeriesRecommendationsProps) => {
-  if (!series.recommendations?.results || series.recommendations.results.length === 0) {
+const SeriesRecommendations = ({ seriesId }: SeriesRecommendationsProps) => {
+  const navigate = useNavigate();
+
+  const { data: recommendations, isLoading } = useQuery({
+    queryKey: ['series-recommendations', seriesId],
+    queryFn: () => fetchSeriesRecommendations(seriesId),
+    staleTime: 1000 * 60 * 60, // 1 hora
+    gcTime: 1000 * 60 * 60 * 24, // 24 horas
+    enabled: !!seriesId, // Só executa se tiver um ID válido
+    retry: 1, // Tenta apenas uma vez em caso de erro
+    refetchOnWindowFocus: false, // Não recarrega quando a janela ganha foco
+    refetchOnMount: false, // Não recarrega quando o componente é montado
+    refetchOnReconnect: false, // Não recarrega quando reconecta
+  });
+
+  const handleMediaClick = (media: Series) => {
+    navigate(`/dorama/${media.id}`);
+  };
+
+  if (isLoading || !recommendations?.results) {
+    return null;
+  }
+
+  // Garante que recommendations.results é um array antes de filtrar
+  const validRecommendations = Array.isArray(recommendations.results) 
+    ? recommendations.results.filter((item): item is Series => item !== null)
+    : [];
+
+  if (validRecommendations.length === 0) {
     return null;
   }
 
   return (
-    <div className="px-6 md:px-10 mb-8">
-      <h2 className="text-xl font-semibold text-white mb-4">Recomendações</h2>
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {series.recommendations.results.slice(0, 6).map((recommendation) => (
-          <Link
-            key={recommendation.id}
-            to={`/dorama/${recommendation.id}`}
-            className="group"
-          >
-            <div className="relative aspect-[2/3] rounded-lg overflow-hidden">
-              {recommendation.poster_path ? (
-                <img
-                  src={`https://image.tmdb.org/t/p/w342${recommendation.poster_path}`}
-                  alt={recommendation.name}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-              ) : (
-                <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-                  <span className="text-gray-400">No image</span>
-                </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="absolute bottom-0 left-0 right-0 p-2">
-                  <h3 className="text-sm font-medium text-white truncate">{recommendation.name}</h3>
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold text-white">Recomendações</h2>
+      <MediaGrid
+        mediaItems={validRecommendations}
+        onMediaClick={handleMediaClick}
+        isLoading={isLoading}
+        isLoadingMore={false}
+        hasMore={false}
+        isSearching={false}
+        isFiltering={false}
+        onLoadMore={() => {}}
+        onResetFilters={() => {}}
+      />
     </div>
   );
 };

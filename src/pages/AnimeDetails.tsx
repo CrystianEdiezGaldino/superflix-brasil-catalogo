@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +7,6 @@ import { useFavorites } from "@/hooks/useFavorites";
 import Navbar from "@/components/Navbar";
 import AnimeHeader from "@/components/anime/AnimeHeader";
 import AnimeContent from "@/components/anime/AnimeContent";
-import AnimePlayer from "@/components/anime/AnimePlayer";
 import AnimeActions from "@/components/anime/AnimeActions";
 import AnimeLoadingState from "@/components/anime/AnimeLoadingState";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
@@ -16,6 +14,7 @@ import AdblockSuggestion from "@/components/AdblockSuggestion";
 import { useAnimeDetails } from "@/hooks/anime/useAnimeDetails";
 import { Series } from "@/types/movie";
 import SuperFlixPlayer from "@/components/series/SuperFlixPlayer";
+import AnimeRecommendations from "@/components/anime/AnimeRecommendations";
 
 const AnimeDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,7 +23,6 @@ const AnimeDetails = () => {
   const [isContentAvailable, setIsContentAvailable] = useState(true);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
-  const [isLoadingSeason, setIsLoadingSeason] = useState(false);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -49,6 +47,13 @@ const AnimeDetails = () => {
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
+  // Memoize player options to prevent unnecessary re-renders
+  const playerOptions = useMemo(() => ({
+    transparent: true,
+    noLink: true,
+    noEpList: true
+  }), []);
+
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
@@ -59,29 +64,21 @@ const AnimeDetails = () => {
 
   // Verify if content is available
   useEffect(() => {
-    if (anime && !anime.imdb_id && !anime.external_ids?.imdb_id) {
+    if (anime && !anime.external_ids?.imdb_id) {
       setIsContentAvailable(false);
     } else {
       setIsContentAvailable(true);
     }
   }, [anime]);
 
-  // Scroll to top when ID changes
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
-
   // Handle season change
   const handleSeasonChange = async (seasonNumber: number) => {
-    setIsLoadingSeason(true);
     setSelectedSeason(seasonNumber);
     setSelectedEpisode(1);
     
     if (anime && anime.id) {
       await fetchSeasonData(anime.id, seasonNumber);
     }
-    
-    setIsLoadingSeason(false);
   };
 
   // Handle episode selection
@@ -138,21 +135,20 @@ const AnimeDetails = () => {
       <AnimeActions 
         showPlayer={showPlayer} 
         hasAccess={hasAccess} 
-        togglePlayer={handleWatchClick} 
+        togglePlayer={handleWatchClick}
+        isFavorite={isAnimeFavorite}
+        onToggleFavorite={toggleAnimeFavorite}
       />
 
-      {showPlayer && animeSeries && (animeSeries.imdb_id || animeSeries.external_ids?.imdb_id) && (
+      {showPlayer && animeSeries && animeSeries.external_ids?.imdb_id && (
         <div id="video-player" className="px-6 md:px-10 mb-10">
           <SuperFlixPlayer
+            key={`player-${animeSeries.id}-${selectedSeason}-${selectedEpisode}`}
             type="serie"
-            imdb={(animeSeries.imdb_id || animeSeries.external_ids?.imdb_id || '')}
+            imdb={animeSeries.external_ids.imdb_id}
             season={selectedSeason.toString()}
             episode={selectedEpisode.toString()}
-            options={{
-              transparent: true,
-              noLink: true,
-              noEpList: true
-            }}
+            options={playerOptions}
           />
         </div>
       )}
@@ -171,10 +167,12 @@ const AnimeDetails = () => {
         seasons={seasons}
         setSelectedSeason={handleSeasonChange}
         handleEpisodeSelect={handleEpisodeSelect}
-        isLoadingSeason={isLoadingSeason}
+        isLoadingSeason={false}
         subscriptionLoading={subscriptionLoading}
         hasAccess={hasAccess}
       />
+
+      <AnimeRecommendations anime={animeSeries} />
     </div>
   );
 };

@@ -1,60 +1,78 @@
+export interface Genre {
+  id: number;
+  name: string;
+}
+
+export interface Cast {
+  id: number;
+  name: string;
+  character: string;
+  profile_path: string;
+}
+
+export interface Crew {
+  id: number;
+  name: string;
+  job: string;
+  department: string;
+  profile_path: string;
+}
+
 export interface Movie {
   id: number;
   title: string;
+  original_title: string;
   overview: string;
   poster_path: string;
   backdrop_path: string;
   release_date: string;
   vote_average: number;
   vote_count: number;
+  popularity: number;
+  genres: Genre[];
+  runtime: number;
+  status: string;
   media_type: 'movie';
-  imdb_id?: string;
-  original_language?: string;
   external_ids?: {
-    imdb_id?: string;
+    imdb_id: string;
   };
-  name?: string; // Add name as optional property for compatibility
+  credits?: {
+    cast: Cast[];
+    crew: Crew[];
+  };
+  recommendations?: {
+    results: Movie[];
+  };
 }
 
 export interface Series {
   id: number;
   name: string;
-  title?: string;
+  original_name: string;
+  original_language: string;
   overview: string;
   poster_path: string;
   backdrop_path: string;
   first_air_date: string;
-  release_date?: string;
   vote_average: number;
   vote_count: number;
+  popularity: number;
+  genres: Genre[];
+  number_of_seasons: number;
+  number_of_episodes: number;
+  status: string;
   media_type: 'tv';
-  imdb_id?: string;
   external_ids?: {
-    imdb_id?: string;
+    imdb_id: string;
   };
-  number_of_seasons?: number;
-  original_language: string;
-  genres: Array<{
-    id: number;
-    name: string;
-  }>;
-  networks: Array<{
-    id: number;
-    name: string;
-    logo_path: string;
-  }>;
-  episode_run_time: number[];
   credits?: {
-    cast: Array<{
-      id: number;
-      name: string;
-      character: string;
-      profile_path: string;
-    }>;
+    cast: Cast[];
+    crew: Crew[];
   };
   recommendations?: {
-    results: Array<Series>;
+    results: Series[];
   };
+  seasons: Season[];
 }
 
 export interface Season {
@@ -63,6 +81,7 @@ export interface Season {
   overview: string;
   poster_path: string;
   season_number: number;
+  air_date: string;
   episodes: Episode[];
 }
 
@@ -72,8 +91,10 @@ export interface Episode {
   overview: string;
   still_path: string;
   episode_number: number;
-  season_number: number;
+  air_date: string;
   vote_average: number;
+  vote_count: number;
+  season_number: number;
 }
 
 export type MediaItem = Movie | Series;

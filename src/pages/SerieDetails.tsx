@@ -1,8 +1,7 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchSeriesDetails } from "@/services/tmdb/series";
+import { fetchSeriesDetails, fetchSeasonDetails } from "@/services/tmdb/series";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -15,6 +14,8 @@ import SeriesLoadingState from "@/components/series/SeriesLoadingState";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
 import SuperFlixPlayer from "@/components/series/SuperFlixPlayer";
+import SeriesCast from "@/components/series/SeriesCast";
+import SeriesRecommendations from "@/components/series/SeriesRecommendations";
 import { Series } from "@/types/movie";
 
 const SerieDetails = () => {
@@ -23,6 +24,7 @@ const SerieDetails = () => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const [isContentAvailable, setIsContentAvailable] = useState(true);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -32,9 +34,16 @@ const SerieDetails = () => {
     hasTrialAccess,
     isLoading: subscriptionLoading 
   } = useSubscription();
-  const { isFavorite, addToFavorites, removeFromFavorites, toggleFavorite } = useFavorites();
+  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
+
+  // Memoize player options to prevent unnecessary re-renders
+  const playerOptions = useMemo(() => ({
+    transparent: true,
+    noLink: true,
+    noEpList: true
+  }), []);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -47,8 +56,34 @@ const SerieDetails = () => {
   const { data: serie, isLoading, error } = useQuery({
     queryKey: ["serie", id],
     queryFn: () => fetchSeriesDetails(id as string, 'pt-BR'),
-    enabled: !!id
+    enabled: !!id,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
+
+  // Fetch season data
+  const { data: seasonData, isLoading: isSeasonLoading } = useQuery({
+    queryKey: ["serie-season", id, selectedSeason],
+    queryFn: () => fetchSeasonDetails(id as string, selectedSeason),
+    enabled: !!id && !!serie,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+
+  // Verify if content is available
+  useEffect(() => {
+    if (serie && !serie.external_ids?.imdb_id) {
+      setIsContentAvailable(false);
+    } else {
+      setIsContentAvailable(true);
+    }
+  }, [serie]);
 
   // Scroll to player when it becomes visible
   useEffect(() => {
@@ -62,9 +97,11 @@ const SerieDetails = () => {
     }
   }, [showPlayer]);
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [id]);
+  // Handle season change
+  const handleSeasonChange = (seasonNumber: number) => {
+    setSelectedSeason(seasonNumber);
+    setSelectedEpisode(1);
+  };
 
   // Show subscription modal if trying to watch without access
   const handleWatchClick = () => {
@@ -94,22 +131,16 @@ const SerieDetails = () => {
   };
 
   if (isLoading || !serie) {
-    return (
-      <div className="min-h-screen bg-gray-900">
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="h-96 bg-gray-800 rounded-lg mb-8"></div>
-            <div className="h-8 bg-gray-800 rounded w-1/3 mb-4"></div>
-            <div className="h-4 bg-gray-800 rounded w-2/3 mb-2"></div>
-            <div className="h-4 bg-gray-800 rounded w-1/2"></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <SeriesLoadingState isLoading={true} hasUser={!!user} hasError={false} />;
   }
 
+  // Create seasons array based on serie data
+  const seasons = serie.number_of_seasons 
+    ? Array.from({ length: serie.number_of_seasons }, (_, i) => i + 1) 
+    : [1];
+
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen bg-netflix-background">
       <Navbar onSearch={() => {}} />
       
       <SeriesLoadingState 
@@ -126,45 +157,60 @@ const SerieDetails = () => {
             toggleFavorite={handleToggleFavorite} 
           />
 
-          <div className="px-6 md:px-10">
+          <div className="px-4 sm:px-6 md:px-10">
             <AdblockSuggestion />
           </div>
 
-          <SeriesActions 
-            showPlayer={showPlayer} 
-            hasAccess={hasAccess} 
-            togglePlayer={handleWatchClick} 
-          />
+          <div className="px-4 sm:px-6 md:px-10 mb-6">
+            <SeriesActions 
+              showPlayer={showPlayer} 
+              hasAccess={hasAccess} 
+              togglePlayer={handleWatchClick}
+              isFavorite={isFavorite(serie.id)}
+              onToggleFavorite={handleToggleFavorite}
+            />
+          </div>
 
-          {/* Player de vídeo do SuperFlix */}
           {showPlayer && (
-            <div className="px-6 md:px-10 mb-10">
-              <SuperFlixPlayer
-                type="serie"
-                imdb={serie.id.toString()}
-                season={selectedSeason.toString()}
-                episode={selectedEpisode.toString()}
-                options={{
-                  transparent: true,
-                  noLink: true,
-                  noEpList: true
-                }}
-              />
+            <div className="px-4 sm:px-6 md:px-10 mb-10">
+              <div className="max-w-7xl mx-auto">
+                <div className="aspect-video w-full bg-black rounded-lg overflow-hidden">
+                  <SuperFlixPlayer
+                    key={`player-${serie.id}-${selectedSeason}-${selectedEpisode}`}
+                    type="serie"
+                    imdb={serie.external_ids?.imdb_id || serie.id.toString()}
+                    season={selectedSeason.toString()}
+                    episode={selectedEpisode.toString()}
+                    options={playerOptions}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!isContentAvailable && (
+            <div className="px-4 sm:px-6 md:px-10 mb-10">
+              <div className="max-w-7xl mx-auto">
+                <ContentNotAvailable onAddToFavorites={handleToggleFavorite} />
+              </div>
             </div>
           )}
 
           <SeriesContent 
             series={serie} 
             hasAccess={hasAccess}
-            seasonData={undefined}
+            seasonData={seasonData}
             selectedSeason={selectedSeason}
             selectedEpisode={selectedEpisode}
-            seasons={[1]}
-            setSelectedSeason={setSelectedSeason}
+            seasons={seasons}
+            setSelectedSeason={handleSeasonChange}
             handleEpisodeSelect={setSelectedEpisode}
-            isLoadingSeason={false}
+            isLoadingSeason={isSeasonLoading}
             subscriptionLoading={subscriptionLoading}
           />
+
+          <SeriesCast series={serie} />
+          <SeriesRecommendations seriesId={serie.id.toString()} />
         </>
       )}
     </div>

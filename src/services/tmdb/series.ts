@@ -1,6 +1,9 @@
 import { Series, Season } from "@/types/movie";
 import { buildApiUrl, fetchFromApi, addMediaTypeToResults, limitResults } from "./utils";
 
+const TMDB_API_URL = 'https://api.themoviedb.org/3';
+const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+
 // Fetch popular TV series
 export const fetchPopularSeries = async (page = 1, itemsPerPage = 20) => {
   try {
@@ -61,7 +64,7 @@ export const fetchRecentSeries = async (limit = 12) => {
 // Fetch TV series details
 export const fetchSeriesDetails = async (id: string | number, language: string = 'pt-BR'): Promise<Series> => {
   try {
-    const url = buildApiUrl(`/tv/${id}`, `&language=${language}&append_to_response=external_ids`);
+    const url = buildApiUrl(`/tv/${id}`, `&language=${language}&append_to_response=external_ids,credits,recommendations`);
     return await fetchFromApi<Series>(url);
   } catch (error) {
     console.error("Error fetching series details:", error);
@@ -82,3 +85,16 @@ export const fetchSeriesSeasonDetails = async (id: string, seasonNumber: number)
 
 // Alias for fetchSeriesSeasonDetails
 export const fetchSeasonDetails = fetchSeriesSeasonDetails;
+
+export const fetchSeriesRecommendations = async (seriesId: string) => {
+  try {
+    const url = buildApiUrl(`/tv/${seriesId}/recommendations`, '&language=pt-BR');
+    const data = await fetchFromApi<{results?: any[]}>(url);
+    return {
+      results: addMediaTypeToResults(data.results || [], "tv")
+    };
+  } catch (error) {
+    console.error("Error fetching series recommendations:", error);
+    return { results: [] };
+  }
+};
