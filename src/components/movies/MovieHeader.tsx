@@ -11,7 +11,7 @@ const MovieHeader = ({ movie }: MovieHeaderProps) => {
   const releaseYear = new Date(movie.release_date).getFullYear();
   
   return (
-    <div className="relative h-[50vh] md:h-[70vh]">
+    <div className="relative h-[40vh] sm:h-[50vh] md:h-[70vh]">
       <div className="absolute inset-0">
         {movie.backdrop_path ? (
           <img
@@ -25,7 +25,7 @@ const MovieHeader = ({ movie }: MovieHeaderProps) => {
         <div className="absolute inset-0 bg-gradient-to-t from-netflix-background via-netflix-background/70 to-transparent"></div>
       </div>
       
-      <div className="absolute top-12 left-6 z-10">
+      <div className="absolute top-4 sm:top-8 left-4 sm:left-6 z-10">
         <Link to="/">
           <Button variant="ghost" size="icon" className="rounded-full bg-black/50 hover:bg-black/70">
             <ArrowLeft className="text-white" />
@@ -33,8 +33,8 @@ const MovieHeader = ({ movie }: MovieHeaderProps) => {
         </Link>
       </div>
       
-      <div className="absolute bottom-0 left-0 w-full p-6">
-        <h1 className="text-4xl font-bold text-white mb-2">{movie.title}</h1>
+      <div className="absolute bottom-0 left-0 w-full p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-2">{movie.title}</h1>
         <div className="flex items-center gap-2 text-sm text-gray-300">
           <span>{releaseYear}</span>
           <span className="px-2 py-1 bg-netflix-red rounded text-xs text-white">

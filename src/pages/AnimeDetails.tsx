@@ -84,7 +84,7 @@ const AnimeDetails = () => {
     }
   }, [anime]);
 
-  // Scroll to player when it becomes visible
+  // Scroll to player when it becomes visible or when episode changes
   useEffect(() => {
     if (showPlayer) {
       const playerElement = document.getElementById('SuperFlixAPIContainerVideo');
@@ -94,7 +94,7 @@ const AnimeDetails = () => {
         }, 100);
       }
     }
-  }, [showPlayer]);
+  }, [showPlayer, selectedEpisode]);
 
   // Handle season change
   const handleSeasonChange = async (seasonNumber: number) => {
@@ -160,7 +160,7 @@ const AnimeDetails = () => {
             <AdblockSuggestion />
           </div>
 
-          <div className="px-4 sm:px-6 md:px-10 mb-6">
+          <div className="px-4 sm:px-6 md:px-10 mb-4 sm:mb-6">
             <AnimeActions 
               showPlayer={showPlayer} 
               hasAccess={hasAccess} 
@@ -171,16 +171,20 @@ const AnimeDetails = () => {
           </div>
 
           {showPlayer && (
-            <div className="px-4 sm:px-6 md:px-10 mb-10">
+            <div className="px-4 sm:px-6 md:px-10 mb-6 sm:mb-10">
               <div className="max-w-7xl mx-auto">
-                <div className="aspect-video w-full bg-black rounded-lg overflow-hidden">
+                <div className="aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl">
                   <SuperFlixPlayer
                     key={`player-${anime.id}-${selectedSeason}-${selectedEpisode}`}
                     type="serie"
                     imdb={anime.id.toString()}
-                    season={selectedSeason.toString()}
-                    episode={selectedEpisode.toString()}
-                    options={playerOptions}
+                    season={selectedSeason}
+                    episode={selectedEpisode}
+                    options={{
+                      transparent: true,
+                      noLink: true,
+                      noEpList: true
+                    }}
                   />
                 </div>
               </div>
@@ -188,27 +192,31 @@ const AnimeDetails = () => {
           )}
 
           {!isContentAvailable && (
-            <div className="px-4 sm:px-6 md:px-10 mb-10">
+            <div className="px-4 sm:px-6 md:px-10 mb-6 sm:mb-10">
               <div className="max-w-7xl mx-auto">
                 <ContentNotAvailable onAddToFavorites={handleToggleFavorite} />
               </div>
             </div>
           )}
 
-          <AnimeContent 
-            anime={anime} 
-            hasAccess={hasAccess}
-            seasonData={seasonData}
-            selectedSeason={selectedSeason}
-            selectedEpisode={selectedEpisode}
-            seasons={seasons}
-            setSelectedSeason={handleSeasonChange}
-            handleEpisodeSelect={setSelectedEpisode}
-            isLoadingSeason={isSeasonLoading}
-            subscriptionLoading={subscriptionLoading}
-          />
+          <div className="px-4 sm:px-6 md:px-10 mb-6 sm:mb-10">
+            <AnimeContent 
+              anime={anime} 
+              hasAccess={hasAccess}
+              seasonData={seasonData}
+              selectedSeason={selectedSeason}
+              selectedEpisode={selectedEpisode}
+              seasons={seasons}
+              setSelectedSeason={handleSeasonChange}
+              handleEpisodeSelect={setSelectedEpisode}
+              isLoadingSeason={isSeasonLoading}
+              subscriptionLoading={subscriptionLoading}
+            />
+          </div>
 
-          <AnimeRecommendations anime={anime} />
+          <div className="px-4 sm:px-6 md:px-10 mb-6 sm:mb-10">
+            <AnimeRecommendations anime={anime} />
+          </div>
         </>
       )}
     </div>

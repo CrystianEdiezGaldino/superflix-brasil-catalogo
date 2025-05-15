@@ -1,4 +1,3 @@
-
 import { Episode } from "@/types/movie";
 import { Play } from "lucide-react";
 
@@ -18,9 +17,9 @@ const EpisodeCard = ({ episode, isSelected, onSelect }: EpisodeCardProps) => {
       }`}
       onClick={() => onSelect(episode.episode_number)}
     >
-      <div className="flex items-start space-x-4">
+      <div className="flex flex-col sm:flex-row sm:items-start gap-4">
         {episode.still_path ? (
-          <div className="relative w-32 h-20 flex-shrink-0">
+          <div className="relative w-full sm:w-32 aspect-video sm:h-20 flex-shrink-0">
             <img 
               src={`https://image.tmdb.org/t/p/w300${episode.still_path}`}
               alt={episode.name}
@@ -31,7 +30,7 @@ const EpisodeCard = ({ episode, isSelected, onSelect }: EpisodeCardProps) => {
             </div>
           </div>
         ) : (
-          <div className="w-32 h-20 flex-shrink-0 bg-gray-800 rounded-md flex items-center justify-center">
+          <div className="w-full sm:w-32 aspect-video sm:h-20 flex-shrink-0 bg-gray-800 rounded-md flex items-center justify-center">
             <Play className="w-8 h-8 text-white" />
           </div>
         )}

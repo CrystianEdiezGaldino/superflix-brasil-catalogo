@@ -1,4 +1,3 @@
-
 import { useRef } from "react";
 import VideoPlayer from "@/components/VideoPlayer";
 import { Link } from "react-router-dom";
@@ -10,40 +9,32 @@ interface MovieVideoPlayerProps {
   hasAccess: boolean;
 }
 
-const MovieVideoPlayer = ({ 
-  showPlayer, 
-  imdbId,
-  hasAccess
-}: MovieVideoPlayerProps) => {
-  const playerKeyRef = useRef<string>(`${imdbId}`);
-  
-  if (!showPlayer || !imdbId) return null;
-  
-  // Restricted access message
+const MovieVideoPlayer = ({ showPlayer, imdbId, hasAccess }: MovieVideoPlayerProps) => {
+  const playerRef = useRef<HTMLDivElement>(null);
+
   if (!hasAccess) {
     return (
-      <div className="w-full aspect-video flex items-center justify-center bg-gray-900 rounded-lg border-2 border-gray-800">
-        <div className="text-center p-8">
-          <h3 className="text-xl text-netflix-red font-semibold mb-2">Acesso Restrito</h3>
-          <p className="text-white mb-4">Você precisa de uma assinatura ativa para assistir este conteúdo.</p>
+      <div className="w-full aspect-video bg-black rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white mb-4">Você precisa ter uma assinatura para assistir este filme</p>
           <Link to="/subscribe">
             <Button className="bg-netflix-red hover:bg-red-700">
-              Ver Planos
+              Assinar Agora
             </Button>
           </Link>
         </div>
       </div>
     );
   }
-  
-  // Use a stable reference instead of state to prevent unnecessary rerenders
+
   return (
-    <div id="video-player" className="w-full">
-      <VideoPlayer 
-        key={playerKeyRef.current}
-        type="filme" 
-        imdbId={imdbId} 
-      />
+    <div className="w-full bg-black rounded-lg overflow-hidden">
+      <div ref={playerRef} className="w-full aspect-video">
+        <VideoPlayer
+          type="filme"
+          imdbId={imdbId}
+        />
+      </div>
     </div>
   );
 };

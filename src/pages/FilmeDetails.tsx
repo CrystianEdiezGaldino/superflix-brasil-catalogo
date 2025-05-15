@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMovieDetails } from "@/services/tmdb/movies";
+import { fetchRecommendations } from "@/services/tmdb/search";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -15,6 +15,7 @@ import MovieLoadingState from "@/components/movies/MovieLoadingState";
 import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
 import SuperFlixPlayer from "@/components/series/SuperFlixPlayer";
+import MediaGrid from "@/components/media/MediaGrid";
 import { Movie } from "@/types/movie";
 
 const FilmeDetails = () => {
@@ -45,6 +46,13 @@ const FilmeDetails = () => {
   const { data: filme, isLoading, error } = useQuery({
     queryKey: ["filme", id],
     queryFn: () => fetchMovieDetails(id as string),
+    enabled: !!id
+  });
+
+  // Buscar recomendações
+  const { data: recommendations = [] } = useQuery({
+    queryKey: ["filme-recommendations", id],
+    queryFn: () => fetchRecommendations(id as string, "movie"),
     enabled: !!id
   });
 
@@ -91,6 +99,10 @@ const FilmeDetails = () => {
     }
   };
 
+  const handleMediaClick = (media: Movie) => {
+    navigate(`/filme/${media.id}`);
+  };
+
   if (isLoading || !filme) {
     return (
       <div className="min-h-screen bg-gray-900">
@@ -134,15 +146,19 @@ const FilmeDetails = () => {
 
           {/* Player de vídeo do SuperFlix */}
           {showPlayer && (
-            <div className="px-6 md:px-10 mb-10">
-              <SuperFlixPlayer
-                type="filme"
-                imdb={filme.id.toString()}
-                options={{
-                  transparent: true,
-                  noLink: true
-                }}
-              />
+            <div className="px-4 sm:px-6 md:px-10 mb-10">
+              <div className="max-w-7xl mx-auto">
+                <div className="aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl">
+                  <SuperFlixPlayer
+                    type="filme"
+                    imdb={filme.id.toString()}
+                    options={{
+                      transparent: true,
+                      noLink: true
+                    }}
+                  />
+                </div>
+              </div>
             </div>
           )}
 
@@ -150,6 +166,51 @@ const FilmeDetails = () => {
             movie={filme} 
             hasAccess={hasAccess}
           />
+
+          {/* Seção de Recomendações */}
+          {recommendations.length > 0 && (
+            <div className="px-4 sm:px-6 md:px-10 mt-8 sm:mt-10 mb-8 sm:mb-10">
+              <div className="max-w-7xl mx-auto">
+                <h2 className="text-xl sm:text-2xl font-semibold text-white mb-4 sm:mb-6">Recomendados para Você</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+                  {recommendations.slice(0, 5).map((movie) => (
+                    <div 
+                      key={movie.id}
+                      onClick={() => handleMediaClick(movie)}
+                      className="cursor-pointer group"
+                    >
+                      <div className="relative aspect-[2/3] rounded-lg overflow-hidden">
+                        {movie.poster_path ? (
+                          <img
+                            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                            alt={movie.title}
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-800 rounded-lg flex items-center justify-center">
+                            <span className="text-gray-400 text-sm">Sem poster</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                          <div className="absolute bottom-0 left-0 right-0 p-2">
+                            <h3 className="text-white text-sm font-medium truncate">{movie.title}</h3>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-xs text-gray-300">
+                                {new Date(movie.release_date).getFullYear()}
+                              </span>
+                              <span className="text-xs px-1.5 py-0.5 bg-netflix-red rounded text-white">
+                                {Math.round(movie.vote_average * 10)}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

@@ -1,46 +1,57 @@
-
 import { useEffect } from 'react';
 
-interface SuperFlixPlayerProps {
-  type: 'serie' | 'filme';
-  imdb: string;
-  season?: string;
-  episode?: string;
-  options?: {
-    noEpList?: boolean;
-    color?: string;
-    noLink?: boolean;
-    transparent?: boolean;
-    noBackground?: boolean;
-  };
+interface SuperFlixPlayerOptions {
+  transparent?: boolean;
+  noLink?: boolean;
+  noEpList?: boolean;
+  color?: string;
+  noBackground?: boolean;
 }
 
-const SuperFlixPlayer = ({ type, imdb, season = '1', episode = '1', options = {} }: SuperFlixPlayerProps) => {
+interface SuperFlixPlayerProps {
+  type: 'filme' | 'serie';
+  imdb: string;
+  season?: number;
+  episode?: number;
+  options?: SuperFlixPlayerOptions;
+}
+
+const SuperFlixPlayer = ({ type, imdb, season, episode, options = {} }: SuperFlixPlayerProps) => {
   useEffect(() => {
     const script = document.createElement('script');
-    script.innerHTML = `
-      var type = "${type}";
-      var imdb = "${imdb}";
-      var season = "${season}";
-      var episode = "${episode}";
-      SuperFlixAPIPluginJS(type, imdb, season, episode);
-      function SuperFlixAPIPluginJS(type, imdb, season, episode){
-        if (type == "filme") { season=""; episode=""; }
-        var frame = document.getElementById('SuperFlixAPIContainerVideo');
-        var options = "${Object.entries(options)
-          .filter(([_, value]) => value)
-          .map(([key]) => `#${key}`)
-          .join('')}";
-        frame.innerHTML = '<iframe src="https://superflixapi.fyi/'+type+'/'+imdb+'/'+season+'/'+episode+options+'" style="width:100%;height:600px;border:none;"></iframe>';
-      }
-    `;
+    script.src = 'https://superflixapi.fyi/player.js';
+    script.async = true;
+    //teste
     document.body.appendChild(script);
+
     return () => {
       document.body.removeChild(script);
     };
-  }, [type, imdb, season, episode, options]);
+  }, []);
 
-  return <div id="SuperFlixAPIContainerVideo" />;
+  const optionsString = Object.entries(options)
+    .filter(([_, value]) => value)
+    .map(([key]) => `#${key}`)
+    .join('');
+
+  const baseUrl = 'https://superflixapi.fyi';
+  const seasonStr = type === 'serie' ? `/${season}` : '';
+  const episodeStr = type === 'serie' ? `/${episode}` : '';
+  
+  const playerUrl = `${baseUrl}/${type}/${imdb}${seasonStr}${episodeStr}${optionsString}`;
+
+  return (
+    <div id="SuperFlixAPIContainerVideo" className="w-full bg-black rounded-lg overflow-hidden">
+      <div className="w-full aspect-video">
+        <iframe
+          src={playerUrl}
+          className="w-full h-full"
+          allowFullScreen
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        />
+      </div>
+    </div>
+  );
 };
 
 export default SuperFlixPlayer;
