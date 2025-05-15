@@ -19,7 +19,7 @@ export const useSeriesFilters = ({
 
   // Aplicar filtros
   const applyFilters = useCallback((seriesList: MediaItem[]) => {
-    if (!seriesList) return [];
+    if (!seriesList || !Array.isArray(seriesList)) return [];
     
     let filteredSeries = [...seriesList];
 
@@ -48,7 +48,7 @@ export const useSeriesFilters = ({
 
   // Aplicar filtros quando mudarem
   useEffect(() => {
-    if (!initialSeries || isSearching) return;
+    if (!initialSeries || !Array.isArray(initialSeries) || isSearching) return;
     
     setIsFiltering(true);
     const filtered = applyFilters(initialSeries);
@@ -60,7 +60,7 @@ export const useSeriesFilters = ({
   const resetFilters = () => {
     setYearFilter("all");
     setRatingFilter("all");
-    if (initialSeries) setSeriesList(initialSeries);
+    if (initialSeries && Array.isArray(initialSeries)) setSeriesList(initialSeries);
   };
 
   return {

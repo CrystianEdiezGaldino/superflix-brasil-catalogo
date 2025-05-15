@@ -5,7 +5,7 @@ export const popularAnimes: MediaItem[] = [
   {
     id: 11,
     name: "Naruto",
-    title: "Naruto", // This is now valid with our type update
+    title: "Naruto",
     overview: "Jovem ninja busca reconhecimento e sonha em se tornar Hokage.",
     poster_path: "/9ptbVZpKNy5NY9D4zq4KGiYWRQY.jpg",
     backdrop_path: "/9ptbVZpKNy5NY9D4zq4KGiYWRQY.jpg",
@@ -20,12 +20,13 @@ export const popularAnimes: MediaItem[] = [
     status: "Ended",
     seasons: [],
     original_language: "ja",
-    original_name: "Naruto"
+    original_name: "Naruto",
+    popularity: 100.5
   },
   {
     id: 12,
     name: "One Piece",
-    title: "One Piece", // This is now valid with our type update
+    title: "One Piece",
     overview: "Piratas em busca do tesouro One Piece.",
     poster_path: "/fcXdJlbSdUEeMSJFsXKsznGwwok.jpg",
     backdrop_path: "/fcXdJlbSdUEeMSJFsXKsznGwwok.jpg",
@@ -40,12 +41,13 @@ export const popularAnimes: MediaItem[] = [
     status: "Returning Series",
     seasons: [],
     original_language: "ja",
-    original_name: "One Piece"
+    original_name: "One Piece",
+    popularity: 120.8
   },
   {
     id: 13,
     name: "Dragon Ball",
-    title: "Dragon Ball", // This is now valid with our type update
+    title: "Dragon Ball",
     overview: "Goku e seus amigos defendem a Terra.",
     poster_path: "/f2zhRLqwRLrKhEMeIM7Z5buJFo3.jpg",
     backdrop_path: "/f2zhRLqwRLrKhEMeIM7Z5buJFo3.jpg",
@@ -60,12 +62,13 @@ export const popularAnimes: MediaItem[] = [
     status: "Ended",
     seasons: [],
     original_language: "ja",
-    original_name: "Dragon Ball"
+    original_name: "Dragon Ball",
+    popularity: 95.3
   },
   {
     id: 14,
     name: "Attack on Titan",
-    title: "Attack on Titan", // This is now valid with our type update
+    title: "Attack on Titan",
     overview: "Humanidade luta contra titãs gigantes.",
     poster_path: "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
     backdrop_path: "/hTP1DtLGFamjfu8WqjnuQdP1n4i.jpg",
@@ -80,12 +83,13 @@ export const popularAnimes: MediaItem[] = [
     status: "Ended",
     seasons: [],
     original_language: "ja",
-    original_name: "進撃の巨人"
+    original_name: "進撃の巨人",
+    popularity: 110.7
   },
   {
     id: 15,
     name: "Demon Slayer",
-    title: "Demon Slayer", // This is now valid with our type update
+    title: "Demon Slayer",
     overview: "Jovem caça demônios para vingar sua família.",
     poster_path: "/wrCVHdkBlBWdJUZPvnJWcBRuhSY.jpg",
     backdrop_path: "/wrCVHdkBlBWdJUZPvnJWcBRuhSY.jpg",
@@ -100,12 +104,13 @@ export const popularAnimes: MediaItem[] = [
     status: "Returning Series",
     seasons: [],
     original_language: "ja",
-    original_name: "鬼滅の刃"
+    original_name: "鬼滅の刃",
+    popularity: 130.2
   },
   {
     id: 17,
     name: "Solo Leveling",
-    title: "Solo Leveling", // This is now valid with our type update
+    title: "Solo Leveling",
     overview: "Caçador fraco ganha poderes únicos.",
     poster_path: "/eCD7WS9h4lCT8N4Xavc9u8R1IGk.jpg",
     backdrop_path: "/eCD7WS9h4lCT8N4Xavc9u8R1IGk.jpg",
@@ -120,12 +125,13 @@ export const popularAnimes: MediaItem[] = [
     status: "Returning Series",
     seasons: [],
     original_language: "ja",
-    original_name: "나 혼자만 레벨업"
+    original_name: "나 혼자만 레벨업",
+    popularity: 125.9
   },
   {
     id: 19,
     name: "Fullmetal Alchemist: Brotherhood",
-    title: "Fullmetal Alchemist: Brotherhood", // This is now valid with our type update
+    title: "Fullmetal Alchemist: Brotherhood",
     overview: "Irmãos buscam a Pedra Filosofal.",
     poster_path: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
     backdrop_path: "/5ZFUEOULaVml7pQuXxhpR2SmVUw.jpg",
@@ -140,7 +146,8 @@ export const popularAnimes: MediaItem[] = [
     status: "Ended",
     seasons: [],
     original_language: "ja",
-    original_name: "鋼の錬金術師 FULLMETAL ALCHEMIST"
+    original_name: "鋼の錬金術師 FULLMETAL ALCHEMIST",
+    popularity: 98.6
   }
 ];
 

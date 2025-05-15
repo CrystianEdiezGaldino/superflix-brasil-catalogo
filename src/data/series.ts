@@ -5,7 +5,7 @@ export const popularSeries: MediaItem[] = [
   { 
     id: 2, 
     name: "Dois Homens e Meio", 
-    title: "Dois Homens e Meio", // Now valid with our type update
+    title: "Dois Homens e Meio",
     overview: "Comédia sobre dois irmãos vivendo juntos.",
     poster_path: "/dPCv0RaOj2pRxZcUDOoqXFe7Pqn.jpg", 
     backdrop_path: "/dPCv0RaOj2pRxZcUDOoqXFe7Pqn.jpg",
@@ -20,12 +20,13 @@ export const popularSeries: MediaItem[] = [
     status: "Ended", 
     seasons: [],
     original_language: "en",
-    original_name: "Two and a Half Men"
+    original_name: "Two and a Half Men",
+    popularity: 85.4
   },
   { 
     id: 3, 
     name: "The Big Bang Theory", 
-    title: "The Big Bang Theory", // Now valid with our type update
+    title: "The Big Bang Theory",
     overview: "Uma série sobre físicos nerds e sua vizinha.",
     poster_path: "/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg", 
     backdrop_path: "/ooBGRQBdbGzBxAVfExiO8r7kloA.jpg",
@@ -40,12 +41,13 @@ export const popularSeries: MediaItem[] = [
     status: "Ended",
     seasons: [],
     original_language: "en",
-    original_name: "The Big Bang Theory"
+    original_name: "The Big Bang Theory",
+    popularity: 92.7
   },
   { 
     id: 6, 
     name: "Friends", 
-    title: "Friends", // Now valid with our type update
+    title: "Friends",
     overview: "Seis amigos, uma cafeteria e muita diversão.",
     poster_path: "/f496cm9enuEsZkSPzCwnTESEK5s.jpg", 
     backdrop_path: "/f496cm9enuEsZkSPzCwnTESEK5s.jpg",
@@ -60,12 +62,13 @@ export const popularSeries: MediaItem[] = [
     status: "Ended",
     seasons: [],
     original_language: "en",
-    original_name: "Friends"
+    original_name: "Friends",
+    popularity: 98.9
   },
   { 
     id: 10, 
     name: "Supernatural", 
-    title: "Supernatural", // Now valid with our type update
+    title: "Supernatural",
     overview: "Dois irmãos caçam criaturas sobrenaturais.",
     poster_path: "/KoYWXbnYuS3b0GyQPkbuexlVK9.jpg", 
     backdrop_path: "/KoYWXbnYuS3b0GyQPkbuexlVK9.jpg",
@@ -80,7 +83,8 @@ export const popularSeries: MediaItem[] = [
     status: "Ended",
     seasons: [],
     original_language: "en",
-    original_name: "Supernatural"
+    original_name: "Supernatural",
+    popularity: 87.6
   }
 ];
 
