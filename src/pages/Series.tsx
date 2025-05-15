@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import MediaView from '@/components/media/MediaView';
 import type { Series } from '@/types/movie';
@@ -33,10 +34,11 @@ const Series = () => {
       } else {
         // Adiciona apenas as novas séries que ainda não estão na lista
         setAllSeries(prev => {
+          const currentSeries = prev || [];
           const newSeries = data.series.filter(
-            newSerie => !prev.some(existing => existing.id === newSerie.id)
+            newSerie => !currentSeries.some(existing => existing.id === newSerie.id)
           );
-          return [...prev, ...newSeries];
+          return [...currentSeries, ...newSeries];
         });
       }
       setIsLoadingMore(false);
@@ -44,7 +46,9 @@ const Series = () => {
   }, [data, page]);
 
   const handleMediaClick = (media: Series) => {
-    navigate(`/serie/${media.id}`);
+    if (media && media.id) {
+      navigate(`/serie/${media.id}`);
+    }
   };
 
   const handleLoadMore = () => {
@@ -80,7 +84,7 @@ const Series = () => {
       <MediaView
         title="Séries"
         type="tv"
-        mediaItems={allSeries}
+        mediaItems={allSeries || []}
         isLoading={false}
         isLoadingMore={isLoadingMore}
         hasMore={hasMore}

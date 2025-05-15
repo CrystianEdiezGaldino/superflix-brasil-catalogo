@@ -1,3 +1,4 @@
+
 import { Series } from '@/types/movie';
 import { fetchSeriesDetails } from './tmdb/series';
 
@@ -33,7 +34,7 @@ export const getSeries = async (page: number = 1): Promise<SeriesResponse> => {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const text = await response.text();
-      const seriesIds = text.split('\n').filter(id => id.trim());
+      const seriesIds = text.split('\n').filter(id => id && id.trim());
 
       // Busca detalhes das séries em lotes para evitar sobrecarga
       const batchSize = 10;
@@ -46,13 +47,13 @@ export const getSeries = async (page: number = 1): Promise<SeriesResponse> => {
       }
 
       // Filtra apenas séries que não são doramas (não são coreanas)
-      allSeries = allSeries.filter(series => series.original_language !== 'ko');
+      allSeries = allSeries.filter(series => series && series.original_language !== 'ko');
 
       // Ordena por rating e coloca a série prioritária no início
       allSeries.sort((a, b) => {
-        if (a.id.toString() === PRIORITY_SERIES_ID) return -1;
-        if (b.id.toString() === PRIORITY_SERIES_ID) return 1;
-        return (b.vote_average || 0) - (a.vote_average || 0);
+        if (a && a.id && a.id.toString() === PRIORITY_SERIES_ID) return -1;
+        if (b && b.id && b.id.toString() === PRIORITY_SERIES_ID) return 1;
+        return ((b && b.vote_average) || 0) - ((a && a.vote_average) || 0);
       });
 
       // Salva no cache
@@ -80,4 +81,4 @@ export const getSeries = async (page: number = 1): Promise<SeriesResponse> => {
     console.error('Erro ao carregar séries:', error);
     return { series: [], total: 0 };
   }
-}; 
+};

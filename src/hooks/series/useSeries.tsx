@@ -57,16 +57,16 @@ export const useSeries = () => {
   
   // Definir séries iniciais quando carregadas
   useEffect(() => {
-    if (initialSeries.length > 0 && !isSearching && !isFiltering) {
+    if (initialSeries && initialSeries.length > 0 && !isSearching && !isFiltering) {
       setSeries(initialSeries);
     }
   }, [initialSeries, isSearching, isFiltering]);
 
   return {
-    series,
-    trendingSeries,
-    topRatedSeries,
-    recentSeries,
+    series: series || [],
+    trendingSeries: trendingSeries || [],
+    topRatedSeries: topRatedSeries || [],
+    recentSeries: recentSeries || [],
     searchQuery,
     yearFilter,
     ratingFilter,
