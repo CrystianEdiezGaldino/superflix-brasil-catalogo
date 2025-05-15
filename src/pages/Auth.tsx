@@ -14,6 +14,7 @@ import AuthLegalSection from "@/components/auth/AuthLegalSection";
 import AuthPreviewSection from "@/components/auth/AuthPreviewSection";
 import { MediaItem } from "@/types/movie";
 import { Progress } from "@/components/ui/progress";
+import { motion } from "framer-motion";
 
 const Auth = () => {
   const { user, loading } = useAuth();
@@ -103,10 +104,16 @@ const Auth = () => {
   if (redirecting) {
     return (
       <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
-        <p className="text-white mb-4">Redirecionando...</p>
-        <div className="w-64">
-          <Progress value={progress} className="h-1 bg-gray-700" />
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center"
+        >
+          <p className="text-white mb-4">Redirecionando...</p>
+          <div className="w-64">
+            <Progress value={progress} className="h-1 bg-gray-700" />
+          </div>
+        </motion.div>
       </div>
     );
   }

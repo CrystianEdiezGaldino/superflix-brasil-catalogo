@@ -49,13 +49,24 @@ const Index = () => {
   
   // Store if initial load is complete to prevent flicker
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  // Add timeout to prevent infinite loading
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  // Set loading timeout after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoadingTimeout(true);
+    }, 5000);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Set initial load complete after first render cycle
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading || loadingTimeout) {
       setInitialLoadComplete(true);
     }
-  }, [isLoading]);
+  }, [isLoading, loadingTimeout]);
   
   // Clear search when user clicks on navigation links - with useCallback to prevent recreation
   const handleNavigation = useCallback(() => {
@@ -88,8 +99,8 @@ const Index = () => {
   }, [navigate]);
   
   // Don't show loading during transition from logged out to logged in
-  // Only show loading state on initial page load
-  if (isLoading && !initialLoadComplete) {
+  // Only show loading state on initial page load and if not timed out
+  if (isLoading && !initialLoadComplete && !loadingTimeout) {
     return <LoadingState />;
   }
   

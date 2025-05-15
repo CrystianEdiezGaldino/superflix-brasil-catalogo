@@ -3,6 +3,7 @@ import { useState } from "react";
 import LoginForm from "./LoginForm";
 import SignupForm from "./SignupForm";
 import AuthFormToggle from "./AuthFormToggle";
+import { motion } from "framer-motion";
 
 const AuthForm = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -10,7 +11,12 @@ const AuthForm = () => {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-black/60 p-8 rounded-lg border border-gray-700 shadow-lg backdrop-blur-sm">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-black/70 p-8 rounded-lg border border-gray-700 shadow-xl backdrop-blur-lg"
+      >
         {isSignUp ? (
           <SignupForm 
             isLoading={isLoading} 
@@ -29,7 +35,7 @@ const AuthForm = () => {
           setIsSignUp={setIsSignUp} 
           isLoading={isLoading}
         />
-      </div>
+      </motion.div>
     </div>
   );
 };
