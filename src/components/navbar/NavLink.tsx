@@ -22,13 +22,20 @@ const NavLink = ({ to, children, checkActive }: NavLinkProps) => {
     <li>
       <Link
         to={to}
-        className={`flex items-center transition duration-300 border-b-2 ${
-          isRouteActive(to)
-            ? "text-white font-medium border-netflix-red"
-            : "text-white/80 hover:text-white border-transparent hover:border-white/30"
-        } py-1`}
+        className={`relative flex items-center text-sm lg:text-base transition duration-300 py-1.5 px-1 
+          ${isRouteActive(to)
+            ? "text-white font-medium"
+            : "text-white/70 hover:text-white"
+          }`}
       >
         {children}
+        <span 
+          className={`absolute bottom-0 left-0 w-full h-0.5 transform origin-left transition-transform duration-300 
+            ${isRouteActive(to) 
+              ? "scale-x-100 bg-netflix-red" 
+              : "scale-x-0 bg-white/40 group-hover:scale-x-100"
+            }`}
+        />
       </Link>
     </li>
   );

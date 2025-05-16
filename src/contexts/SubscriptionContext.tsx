@@ -67,15 +67,13 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       }
 
       // Verificar assinatura ativa (status pode ser 'active' OU 'trialing')
-      const { data: subscription, error: subscriptionError } = await supabase
+      const { data: subscription } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
         .in('status', ['active', 'trialing'])
         .single();
-
-      if (subscriptionError && subscriptionError.code !== 'PGRST116') throw subscriptionError;
-
+      
       if (subscription) {
         setIsSubscribed(true);
         setSubscriptionTier(subscription.plan_type);
@@ -94,15 +92,13 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         setHasTempAccess(false);
       } else {
         // Se não tem assinatura ativa ou em trial, verifica acesso temporário
-        const { data: tempAccess, error: tempAccessError } = await supabase
+        const { data: tempAccess } = await supabase
           .from('temp_access')
           .select('*')
           .eq('user_id', user.id)
           .eq('is_active', true)
           .gt('expires_at', new Date().toISOString())
           .single();
-
-        if (tempAccessError && tempAccessError.code !== 'PGRST116') throw tempAccessError;
 
         if (tempAccess) {
           setIsSubscribed(true);

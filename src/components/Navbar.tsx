@@ -15,7 +15,7 @@ interface NavbarProps {
   onSearch?: (query: string) => Promise<void> | void;
 }
 
-const Navbar = ({ onSearch }: NavbarProps) => {
+const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
   const { user } = useAuth();
   const { isAdmin } = useSubscription();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -23,7 +23,7 @@ const Navbar = ({ onSearch }: NavbarProps) => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollThreshold = 50;
+      const scrollThreshold = 20;
       setIsScrolled(window.scrollY > scrollThreshold);
     };
 
@@ -38,11 +38,13 @@ const Navbar = ({ onSearch }: NavbarProps) => {
   return (
     <nav
       className={cn(
-        "fixed top-0 left-0 w-full z-50 transition-colors duration-300",
-        isScrolled ? "bg-netflix-nav-scrolled" : "bg-netflix-nav-transparent"
+        "fixed top-0 left-0 w-full z-50 transition-all duration-300",
+        isScrolled 
+          ? "bg-black/85 backdrop-blur-md shadow-md py-2" 
+          : "bg-gradient-to-b from-black/90 to-transparent py-3"
       )}
     >
-      <div className="container max-w-screen-xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div className="container max-w-screen-xl mx-auto px-4 md:px-6 flex items-center justify-between">
         {/* Logo and Navigation Links */}
         <div className="flex items-center">
           <NavLogo />
@@ -52,15 +54,18 @@ const Navbar = ({ onSearch }: NavbarProps) => {
         </div>
 
         {/* Search Bar and User Actions */}
-        <div className="flex items-center">
-          <div className="mr-4 w-64 hidden lg:block">
+        <div className="flex items-center space-x-4">
+          <div className="mr-2 w-auto hidden sm:block">
             <SearchBar onSearch={onSearch} />
           </div>
 
           {user ? (
             <UserAction isAuthenticated={!!user} />
           ) : (
-            <Link to="/auth" className="text-white hover:text-gray-300">
+            <Link 
+              to="/auth" 
+              className="text-white hover:text-gray-300 text-sm font-medium py-1.5 px-4 border border-transparent hover:border-white/30 rounded-md transition-colors"
+            >
               Entrar
             </Link>
           )}
@@ -68,7 +73,7 @@ const Navbar = ({ onSearch }: NavbarProps) => {
           {/* Mobile Menu Button */}
           <button
             onClick={toggleMobileMenu}
-            className="md:hidden text-white focus:outline-none ml-4"
+            className="md:hidden text-white focus:outline-none hover:text-netflix-red transition-colors"
             aria-label="Open mobile menu"
           >
             <Menu className="h-6 w-6" />

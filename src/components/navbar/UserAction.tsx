@@ -28,33 +28,33 @@ const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="flex items-center space-x-2 cursor-pointer focus:outline-none">
-          <Avatar className="h-8 w-8 border-2 border-netflix-red">
-            <AvatarFallback className="bg-netflix-red text-white text-xs">
+        <button className="flex items-center space-x-2 cursor-pointer focus:outline-none group">
+          <Avatar className="h-8 w-8 border-2 border-netflix-red transition-all duration-200 group-hover:border-white group-hover:scale-105">
+            <AvatarFallback className="bg-netflix-red text-white text-xs font-medium">
               {user.email?.substring(0, 2).toUpperCase() || "US"}
             </AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 bg-netflix-card text-white border-netflix-gray" align="end">
-        <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+      <DropdownMenuContent className="w-56 bg-black/90 backdrop-blur-md text-white border-netflix-gray/30 shadow-xl" align="end">
+        <DropdownMenuLabel className="text-gray-300">Minha Conta</DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-netflix-gray/30" />
         
         <Link to="/profile">
-          <DropdownMenuItem className="cursor-pointer hover:bg-netflix-hover text-gray-200">
+          <DropdownMenuItem className="cursor-pointer hover:bg-netflix-red/10 text-gray-200 transition-colors">
             Perfil
           </DropdownMenuItem>
         </Link>
         
         <Link to="/favoritos">
-          <DropdownMenuItem className="cursor-pointer hover:bg-netflix-hover text-gray-200">
+          <DropdownMenuItem className="cursor-pointer hover:bg-netflix-red/10 text-gray-200 transition-colors">
             Favoritos
           </DropdownMenuItem>
         </Link>
         
         {!isSubscribed && (
           <Link to="/subscribe">
-            <DropdownMenuItem className="cursor-pointer hover:bg-netflix-hover text-netflix-red">
+            <DropdownMenuItem className="cursor-pointer hover:bg-netflix-red/10 text-netflix-red transition-colors font-medium">
               Ativar Assinatura
             </DropdownMenuItem>
           </Link>
@@ -62,7 +62,7 @@ const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
         
         {isAdmin && (
           <Link to="/admin">
-            <DropdownMenuItem className="cursor-pointer hover:bg-netflix-hover text-yellow-500">
+            <DropdownMenuItem className="cursor-pointer hover:bg-netflix-red/10 text-yellow-500 transition-colors">
               Administração
             </DropdownMenuItem>
           </Link>
@@ -70,7 +70,7 @@ const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
         
         <DropdownMenuSeparator className="bg-netflix-gray/30" />
         <DropdownMenuItem 
-          className="cursor-pointer hover:bg-netflix-hover text-gray-200"
+          className="cursor-pointer hover:bg-netflix-red/10 text-gray-200 transition-colors"
           onClick={() => signOut()}
         >
           Sair
