@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import MediaSectionLoader from "../MediaSectionLoader";
 
@@ -101,12 +100,13 @@ const MainSeriesCategories = ({
       {popularSeries.length > 0 && (
         <MediaSectionLoader 
           title="Séries Populares" 
-          medias={popularSeries}
-          sectionId="popularSeries"
+          medias={series}
+          sectionId="series"
           onLoadMore={onLoadMore}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
       
@@ -118,6 +118,7 @@ const MainSeriesCategories = ({
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
+        mediaType="tv"
       />
     </>
   );
@@ -154,6 +155,7 @@ const StreamingPlatformsSeries = ({
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
       
@@ -166,6 +168,7 @@ const StreamingPlatformsSeries = ({
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
       
@@ -178,6 +181,7 @@ const StreamingPlatformsSeries = ({
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
       
@@ -190,6 +194,7 @@ const StreamingPlatformsSeries = ({
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
     </>

@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react';
 import { MediaItem, getMediaTitle } from '@/types/movie';
+import { useNavigate } from 'react-router-dom';
 import {
   Carousel,
   CarouselContent,
@@ -18,6 +19,7 @@ type MediaSectionProps = {
   isLoading?: boolean;
   onMediaClick?: (media: MediaItem) => void;
   sectionId?: string;
+  mediaType?: 'movie' | 'tv' | 'anime' | 'dorama' | 'tv-channel';
 };
 
 const MediaSection = ({ 
@@ -27,8 +29,11 @@ const MediaSection = ({
   onLoadMore, 
   isLoading = false,
   onMediaClick,
-  sectionId = 'default'
+  sectionId = 'default',
+  mediaType
 }: MediaSectionProps) => {
+  const navigate = useNavigate();
+  
   // Only show load more for sections with showLoadMore flag
   const shouldShowLoadMore = showLoadMore && onLoadMore;
   
@@ -37,7 +42,26 @@ const MediaSection = ({
     e.preventDefault();
     e.stopPropagation();
     
-    if (onLoadMore) {
+    if (mediaType) {
+      // Navegar para a rota correspondente ao tipo de mídia
+      switch (mediaType) {
+        case 'movie':
+          navigate('/filmes');
+          break;
+        case 'tv':
+          navigate('/series');
+          break;
+        case 'anime':
+          navigate('/animes');
+          break;
+        case 'dorama':
+          navigate('/doramas');
+          break;
+        case 'tv-channel':
+          navigate('/tv-channels');
+          break;
+      }
+    } else if (onLoadMore) {
       console.log(`Loading more items for section: ${sectionId}`);
       onLoadMore();
     }
@@ -72,22 +96,24 @@ const MediaSection = ({
 
       {/* Load more button */}
       {shouldShowLoadMore && (
-        <div className="flex items-center justify-center mt-4">
-          <div 
+        <div className="flex items-center justify-center mt-6">
+          <button 
             onClick={handleLoadMore}
-            className="relative overflow-hidden rounded-lg h-full bg-gray-800 hover:bg-gray-700 transition-colors duration-300 flex items-center justify-center cursor-pointer"
-            style={{ aspectRatio: '2/3' }}
+            className="group relative overflow-hidden rounded-lg bg-netflix-red hover:bg-red-700 transition-all duration-300 flex items-center justify-center cursor-pointer px-6 py-3 min-w-[200px]"
             data-section-id={sectionId}
           >
-            <div className="flex flex-col items-center space-y-2">
+            <div className="flex items-center space-x-2">
               {isLoading ? (
-                <div className="w-8 h-8 border-4 border-t-white border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
-                <Plus className="w-8 h-8 text-white" />
+                <Plus className="w-5 h-5 text-white group-hover:scale-110 transition-transform duration-300" />
               )}
-              <span className="text-sm text-white">{isLoading ? "Carregando..." : "Ver mais"}</span>
+              <span className="text-sm font-medium text-white">
+                {isLoading ? "Carregando..." : "Ver mais"}
+              </span>
             </div>
-          </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          </button>
         </div>
       )}
     </div>

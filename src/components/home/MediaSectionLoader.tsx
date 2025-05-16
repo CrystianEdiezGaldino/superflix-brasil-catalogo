@@ -1,28 +1,29 @@
-
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
 
 interface MediaSectionLoaderProps {
   title: string;
-  medias: MediaItem[];
+  medias?: MediaItem[];
   sectionId: string;
   onLoadMore: (sectionId: string) => void;
   isLoading: boolean;
   hasMore: boolean;
   onMediaClick?: (media: MediaItem) => void;
+  mediaType?: 'movie' | 'tv' | 'anime' | 'dorama' | 'tv-channel';
 }
 
 const MediaSectionLoader = ({ 
   title, 
-  medias, 
+  medias = [], 
   sectionId, 
   onLoadMore,
   isLoading,
   hasMore,
-  onMediaClick
+  onMediaClick,
+  mediaType
 }: MediaSectionLoaderProps) => {
   // Filter only content with images
-  const filteredMedias = medias.filter(media => media.poster_path || media.backdrop_path);
+  const filteredMedias = (medias || []).filter(media => media?.poster_path || media?.backdrop_path);
 
   // Don't render if there's no content
   if (!filteredMedias.length) {
@@ -31,8 +32,10 @@ const MediaSectionLoader = ({
 
   // Function to handle loading more for this specific section
   const handleSectionLoadMore = () => {
-    console.log(`Loading more for section: ${sectionId}`);
-    onLoadMore(sectionId);
+    if (!mediaType) {
+      console.log(`Loading more for section: ${sectionId}`);
+      onLoadMore(sectionId);
+    }
   };
 
   return (
@@ -44,6 +47,7 @@ const MediaSectionLoader = ({
       isLoading={isLoading}
       onMediaClick={onMediaClick}
       sectionId={sectionId}
+      mediaType={mediaType}
     />
   );
 };

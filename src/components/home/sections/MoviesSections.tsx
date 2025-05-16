@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import MediaSectionLoader from "../MediaSectionLoader";
 
@@ -126,6 +125,7 @@ const PopularMovies = ({
       isLoading={isLoading}
       hasMore={hasMore}
       onMediaClick={onMediaClick}
+      mediaType="movie"
     />
   );
 };
@@ -174,6 +174,7 @@ const GenreBasedMovies = ({
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
+        mediaType="movie"
       />
       
       <MediaSectionLoader 
@@ -184,6 +185,7 @@ const GenreBasedMovies = ({
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
+        mediaType="movie"
       />
       
       <MediaSectionLoader 
@@ -194,6 +196,7 @@ const GenreBasedMovies = ({
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
+        mediaType="movie"
       />
       
       <MediaSectionLoader 

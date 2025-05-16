@@ -1,4 +1,3 @@
-
 import { MediaItem, isSeries } from "@/types/movie";
 import MediaSectionLoader from "../MediaSectionLoader";
 
@@ -11,6 +10,7 @@ interface DoramaSectionsProps {
   onLoadMore?: (sectionId: string) => void;
   isLoading?: boolean;
   hasMore?: boolean;
+  romanceDoramas: MediaItem[];
 }
 
 const DoramaSections = ({
@@ -21,7 +21,8 @@ const DoramaSections = ({
   onMediaClick,
   onLoadMore,
   isLoading = false,
-  hasMore = false
+  hasMore = false,
+  romanceDoramas
 }: DoramaSectionsProps) => {
   return (
     <div className="space-y-8">
@@ -45,17 +46,27 @@ const DoramaSections = ({
         onMediaClick={onMediaClick}
       />
       
-      {popularDoramas.length > 0 && (
-        <MediaSectionLoader
-          title="Doramas Populares"
-          medias={popularDoramas}
-          sectionId="popular-doramas"
-          onLoadMore={onLoadMore || (() => {})}
-          isLoading={isLoading}
-          hasMore={hasMore}
-          onMediaClick={onMediaClick}
-        />
-      )}
+      <MediaSectionLoader 
+        title="Doramas Populares" 
+        medias={doramas}
+        sectionId="doramas"
+        onLoadMore={onLoadMore}
+        isLoading={isLoading}
+        hasMore={hasMore}
+        onMediaClick={onMediaClick}
+        mediaType="dorama"
+      />
+
+      <MediaSectionLoader 
+        title="Doramas de Romance" 
+        medias={romanceDoramas}
+        sectionId="romanceDoramas"
+        onLoadMore={onLoadMore}
+        isLoading={isLoading}
+        hasMore={hasMore}
+        onMediaClick={onMediaClick}
+        mediaType="dorama"
+      />
       
       {koreanMovies.length > 0 && (
         <MediaSectionLoader
