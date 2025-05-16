@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -129,6 +128,12 @@ const DoramaDetails = () => {
         toast.success("Adicionado aos favoritos");
       }
     }
+  };
+
+  const handleMediaClick = (media: Series) => {
+    // Converter para número antes de navegar
+    const mediaId = typeof media.id === 'string' ? parseInt(media.id, 10) : media.id;
+    navigate(`/dorama/${mediaId}`);
   };
 
   if (isLoading || !dorama) {
