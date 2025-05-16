@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MediaItem, isMovie, isSeries } from "@/types/movie";
 import MediaCard from "@/components/media/MediaCard";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
 
 interface MediaGridProps {
   mediaItems: MediaItem[];
@@ -111,21 +111,20 @@ const MediaGrid = ({
 
       {hasMore && (
         <div ref={gridRef} className="flex justify-center">
-          <Button
-            variant="outline"
-            onClick={onLoadMore}
-            disabled={isLoadingMore}
-            className="text-white border-white hover:bg-white/10"
-          >
-            {isLoadingMore ? (
-              "Carregando..."
-            ) : (
-              <>
-                <ChevronDown className="mr-2 h-4 w-4" />
-                Carregar Mais
-              </>
-            )}
-          </Button>
+          {isLoadingMore ? (
+            <div className="flex items-center justify-center p-4">
+              <Loader2 className="w-6 h-6 text-netflix-red animate-spin" />
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={onLoadMore}
+              className="text-white border-white hover:bg-white/10"
+            >
+              <ChevronDown className="mr-2 h-4 w-4" />
+              Carregar Mais
+            </Button>
+          )}
         </div>
       )}
     </div>
