@@ -72,7 +72,7 @@ export async function fetchAdminData() {
     
     // Combine user data with subscription and admin data
     const userData = authData?.user ? [authData.user] : [];
-    const combinedUsers = userData.map((user: any) => {
+    const combinedUsers = userData.map((user: any): UserWithSubscription => {
       const subscription = subscriptionsData?.find((sub: any) => sub.user_id === user.id);
       const tempAccess = tempAccessesData?.find(
         (access: any) => access.user_id === user.id && new Date(access.expires_at) > new Date()
@@ -84,18 +84,26 @@ export async function fetchAdminData() {
       const formattedSubscription = subscription ? {
         id: subscription.id,
         user_id: subscription.user_id,
-        status: subscription.status as "active" | "inactive",
+        status: subscription.status as "active" | "trialing" | "inactive",
         plan_type: subscription.plan_type,
-        start_date: subscription.current_period_start || null,
-        end_date: subscription.current_period_end || null,
         created_at: subscription.created_at,
-        updated_at: subscription.updated_at,
-        stripe_customer_id: subscription.stripe_customer_id,
-        stripe_subscription_id: subscription.stripe_subscription_id,
-        trial_end: subscription.trial_end,
+        expires_at: subscription.current_period_end, // Add expires_at field
         current_period_start: subscription.current_period_start,
-        current_period_end: subscription.current_period_end
-      } : null;
+        current_period_end: subscription.current_period_end,
+        trial_end: subscription.trial_end
+      } : undefined;
+
+      // Format temp_access to match the required type
+      const formattedTempAccess = tempAccess ? {
+        id: tempAccess.id,
+        user_id: tempAccess.user_id,
+        expires_at: tempAccess.expires_at,
+        granted_by: tempAccess.granted_by,
+        is_active: true, // Add the missing is_active property
+        created_at: tempAccess.created_at,
+        start_date: tempAccess.created_at,
+        end_date: tempAccess.expires_at
+      } : undefined;
       
       return {
         id: user.id,
@@ -103,11 +111,10 @@ export async function fetchAdminData() {
         name: user.email || '',
         last_sign_in_at: user.last_sign_in_at,
         created_at: user.created_at || profile?.created_at,
-        updated_at: user.updated_at || profile?.updated_at || user.created_at || new Date().toISOString(),
+        is_admin: isAdmin,
         subscription: formattedSubscription,
-        temp_access: tempAccess,
-        is_admin: isAdmin
-      } as UserWithSubscription;
+        temp_access: formattedTempAccess
+      };
     });
     
     // Get all users from the database
@@ -136,7 +143,7 @@ export async function fetchAdminData() {
     const stats: AdminStats = {
       totalUsers: allProfiles?.length || 0,
       activeSubscriptions: activeSubscriptions.length,
-      tempAccesses: activeTempAccesses.length,
+      tempAccess: activeTempAccesses.length,
       promoCodes: 0, // Default value
       adminUsers: adminUsersCount,
       monthlyRevenue: monthlyRevenue + annualRevenue,
@@ -146,7 +153,7 @@ export async function fetchAdminData() {
     return {
       users: combinedUsers,
       subscriptions: subscriptionsData || [],
-      tempAccesses: tempAccessesData || [],
+      tempAccess: activeTempAccesses || [],
       stats
     };
   } catch (error) {

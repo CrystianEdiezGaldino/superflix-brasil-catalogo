@@ -3,7 +3,7 @@ import { Dispatch, SetStateAction } from "react";
 import EpisodeCard from "./EpisodeCard";
 import { SelectContent, SelectGroup, Select, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Lock, ChevronDown, ChevronUp } from "lucide-react";
+import { Lock, ChevronDown, ChevronUp, PlayCircle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -36,13 +36,14 @@ const EpisodesList = ({
     <Collapsible 
       open={isOpen} 
       onOpenChange={setIsOpen} 
-      className="bg-gray-900/50 rounded-lg border border-gray-800 overflow-hidden"
+      className="bg-gray-900/50 backdrop-blur-sm rounded-lg border border-gray-800 overflow-hidden"
     >
       <div className="px-6 py-4 flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-white flex items-center">
-          Episódios
+        <h2 className="text-lg sm:text-2xl font-bold text-white flex items-center gap-2">
+          <span className="bg-netflix-red h-6 w-1 rounded-full hidden sm:block"></span>
+          <span>Episódios</span>
           {seasons.length > 0 && (
-            <span className="ml-2 text-sm bg-netflix-red px-2 py-1 rounded-full">
+            <span className="ml-1 text-xs sm:text-sm bg-netflix-red px-2 py-0.5 rounded-full">
               {seasonData?.episodes?.length || 0}
             </span>
           )}
@@ -54,7 +55,7 @@ const EpisodesList = ({
               value={selectedSeason.toString()}
               onValueChange={(value) => setSelectedSeason(Number(value))}
             >
-              <SelectTrigger className="w-40 bg-gray-800 border-gray-700">
+              <SelectTrigger className="w-28 sm:w-40 bg-gray-800 border-gray-700 text-sm sm:text-base">
                 <SelectValue placeholder="Temporada" />
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-700">
@@ -78,7 +79,7 @@ const EpisodesList = ({
       </div>
       
       <CollapsibleContent>
-        <div className="px-6 pb-6">
+        <div className="px-4 sm:px-6 pb-6">
           {isLoading ? (
             <div className="flex justify-center py-10">
               <div className="w-8 h-8 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
@@ -95,26 +96,26 @@ const EpisodesList = ({
                 />
               ))}
               
-              {/* Conteúdo bloqueado */}
-              <Card className="p-6 bg-gray-800/50 border-gray-700 text-center">
-                <div className="mb-4 flex justify-center">
+              {/* Conteúdo bloqueado - design melhorado */}
+              <Card className="p-6 sm:p-8 bg-gray-800/70 border-gray-700 text-center backdrop-blur-sm">
+                <div className="mb-6 flex justify-center">
                   <Lock size={40} className="text-netflix-red" />
                 </div>
-                <h3 className="text-xl font-bold text-white mb-2">
+                <h3 className="text-xl font-bold text-white mb-3">
                   Conteúdo restrito para assinantes
                 </h3>
-                <p className="text-gray-300 mb-4">
-                  Assine para ter acesso a todos os episódios desta série e muito mais conteúdo.
+                <p className="text-gray-300 mb-6 max-w-md mx-auto">
+                  Assine para ter acesso a todos os episódios desta série e muito mais conteúdo exclusivo.
                 </p>
                 <Link to="/subscribe">
-                  <Button className="bg-netflix-red hover:bg-red-700">
+                  <Button className="bg-netflix-red hover:bg-red-700 px-6 py-2 font-medium">
                     Ver planos de assinatura
                   </Button>
                 </Link>
               </Card>
             </div>
           ) : (
-            <div className="grid gap-4 mt-4">
+            <div className="grid gap-3 mt-4">
               {seasonData?.episodes?.map((episode: any) => (
                 <EpisodeCard
                   key={episode.id}

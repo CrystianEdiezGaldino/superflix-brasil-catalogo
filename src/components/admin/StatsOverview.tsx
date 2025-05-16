@@ -31,7 +31,7 @@ const StatsOverview = ({ stats, onRefresh }: StatsOverviewProps) => {
       
       <StatCard 
         title="Acessos Temp." 
-        value={stats.tempAccesses} 
+        value={stats.tempAccess} 
         icon={CalendarClock} 
       />
       

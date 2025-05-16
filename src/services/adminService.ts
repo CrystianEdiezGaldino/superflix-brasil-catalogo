@@ -12,19 +12,16 @@ const mockUsers: UserWithSubscription[] = [
     email: "usuario1@exemplo.com",
     name: "Usuário 1",
     created_at: "2025-02-15T10:30:00Z",
-    updated_at: "2025-02-15T10:30:00Z",
     is_admin: false,
     subscription: {
       id: "sub_1",
       user_id: "1",
-      plan_type: "premium",
+      plan_type: "monthly", // Changed from premium to monthly
       status: "active",
-      current_period_start: "2025-02-15T10:30:00Z",
-      current_period_end: "2025-06-15T10:30:00Z",
-      start_date: "2025-02-15T10:30:00Z",
-      end_date: "2025-06-15T10:30:00Z",
       created_at: "2025-02-15T10:30:00Z",
-      updated_at: "2025-02-15T10:30:00Z"
+      expires_at: "2025-06-15T10:30:00Z", // Added expires_at
+      current_period_start: "2025-02-15T10:30:00Z",
+      current_period_end: "2025-06-15T10:30:00Z"
     }
   },
   {
@@ -32,7 +29,6 @@ const mockUsers: UserWithSubscription[] = [
     email: "usuario2@exemplo.com",
     name: "Usuário 2",
     created_at: "2025-03-10T14:45:00Z",
-    updated_at: "2025-03-10T14:45:00Z",
     is_admin: false
   },
   {
@@ -40,19 +36,16 @@ const mockUsers: UserWithSubscription[] = [
     email: "admin@exemplo.com",
     name: "Administrador",
     created_at: "2025-01-01T00:00:00Z",
-    updated_at: "2025-01-01T00:00:00Z",
     is_admin: true,
     subscription: {
       id: "sub_3",
       user_id: "3",
-      plan_type: "admin",
+      plan_type: "monthly", // Changed from admin to monthly
       status: "active",
-      current_period_start: "2025-01-01T00:00:00Z",
-      current_period_end: null,
-      start_date: "2025-01-01T00:00:00Z",
-      end_date: "2099-12-31T23:59:59Z",
       created_at: "2025-01-01T00:00:00Z",
-      updated_at: "2025-01-01T00:00:00Z"
+      current_period_start: "2025-01-01T00:00:00Z",
+      expires_at: "2099-12-31T23:59:59Z", // Added expires_at
+      current_period_end: null
     }
   }
 ];
@@ -62,25 +55,33 @@ const mockPromoCodes: PromoCode[] = [
     id: "1",
     code: "WELCOME25",
     discount: 25,
+    value: 25, // Added value
     type: "percentage",
+    uses: 0, // Added uses
+    active: true, // Added active
     expires_at: "2025-07-01T23:59:59Z",
     usage_limit: 100,
     usage_count: 45,
     is_active: true,
     created_by: "3",
-    created_at: "2025-01-01T00:00:00Z"
+    created_at: "2025-01-01T00:00:00Z",
+    description: "Welcome discount" // Added description
   },
   {
     id: "2",
     code: "SUMMER50",
     discount: 50,
+    value: 50, // Added value
     type: "percentage",
+    uses: 0, // Added uses
+    active: true, // Added active
     expires_at: "2025-08-31T23:59:59Z",
     usage_limit: 50,
     usage_count: 10,
     is_active: true,
     created_by: "3",
-    created_at: "2025-01-01T00:00:00Z"
+    created_at: "2025-01-01T00:00:00Z",
+    description: "Summer discount" // Added description
   }
 ];
 
@@ -129,7 +130,7 @@ export const getAdminStats = async (): Promise<AdminStats> => {
   return {
     totalUsers: mockUsers.length,
     activeSubscriptions: mockUsers.filter(user => user.subscription?.status === "active").length,
-    tempAccesses: mockTempAccesses.filter(access => access.is_active).length,
+    tempAccess: mockTempAccesses.filter(access => access.is_active).length, // Changed from tempAccesses to tempAccess
     promoCodes: mockPromoCodes.length,
     adminUsers: mockUsers.filter(user => user.is_admin).length,
     monthlyRevenue: 2500.00,
@@ -146,7 +147,10 @@ export const createPromoCode = async (promoCode: Omit<PromoCode, "id" | "usage_c
     ...promoCode,
     usage_count: 0,
     created_at: new Date().toISOString(),
-    is_active: true
+    is_active: true,
+    active: true, // Add missing props
+    discount: promoCode.value, // Set discount equal to value
+    uses: 0 // Add uses prop
   };
   
   mockPromoCodes.push(newPromoCode);

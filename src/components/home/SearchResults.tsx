@@ -40,7 +40,10 @@ const SearchResults = ({ results, isSearching, loadMoreResults, hasMore = false 
             className="animate-fade-in"
             style={{ animationDelay: `${index * 0.05}s` }}
           >
-            <MediaCard media={media} />
+            <MediaCard 
+              media={media} 
+              onClick={() => {}} // Add empty onClick handler to satisfy the required prop
+            />
           </div>
         ))}
       </div>

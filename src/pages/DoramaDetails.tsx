@@ -130,6 +130,12 @@ const DoramaDetails = () => {
     }
   };
 
+  const handleMediaClick = (media: Series) => {
+    // Converter para número antes de navegar
+    const mediaId = typeof media.id === 'string' ? parseInt(media.id, 10) : media.id;
+    navigate(`/dorama/${mediaId}`);
+  };
+
   if (isLoading || !dorama) {
     return <SeriesLoadingState isLoading={true} hasUser={!!user} hasError={false} />;
   }
