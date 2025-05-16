@@ -34,8 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const resetPassword = async (email: string) => {
-      // Obtém a URL base do site
-      const siteUrl = window.location.origin;
+      // Usa o domínio do Lovable
+      const siteUrl = "https://naflixtv.lovable.app";
       
       // Configura o link de redirecionamento
       const redirectTo = `${siteUrl}/auth/reset-password`;
