@@ -84,18 +84,14 @@ export async function fetchAdminData() {
       const formattedSubscription = subscription ? {
         id: subscription.id,
         user_id: subscription.user_id,
-        status: subscription.status as "active" | "inactive",
+        status: subscription.status as "active" | "trialing" | "inactive",
         plan_type: subscription.plan_type,
-        start_date: subscription.current_period_start || null,
-        end_date: subscription.current_period_end || null,
         created_at: subscription.created_at,
-        updated_at: subscription.updated_at,
-        stripe_customer_id: subscription.stripe_customer_id,
-        stripe_subscription_id: subscription.stripe_subscription_id,
-        trial_end: subscription.trial_end,
+        expires_at: subscription.current_period_end, // Add expires_at field
         current_period_start: subscription.current_period_start,
-        current_period_end: subscription.current_period_end
-      } : null;
+        current_period_end: subscription.current_period_end,
+        trial_end: subscription.trial_end
+      } : undefined;
       
       return {
         id: user.id,
@@ -103,10 +99,9 @@ export async function fetchAdminData() {
         name: user.email || '',
         last_sign_in_at: user.last_sign_in_at,
         created_at: user.created_at || profile?.created_at,
-        updated_at: user.updated_at || profile?.updated_at || user.created_at || new Date().toISOString(),
+        is_admin: isAdmin,
         subscription: formattedSubscription,
-        temp_access: tempAccess,
-        is_admin: isAdmin
+        temp_access: tempAccess
       } as UserWithSubscription;
     });
     
@@ -136,7 +131,7 @@ export async function fetchAdminData() {
     const stats: AdminStats = {
       totalUsers: allProfiles?.length || 0,
       activeSubscriptions: activeSubscriptions.length,
-      tempAccesses: activeTempAccesses.length,
+      tempAccess: activeTempAccesses.length, // Changed from tempAccesses to tempAccess
       promoCodes: 0, // Default value
       adminUsers: adminUsersCount,
       monthlyRevenue: monthlyRevenue + annualRevenue,
@@ -146,7 +141,7 @@ export async function fetchAdminData() {
     return {
       users: combinedUsers,
       subscriptions: subscriptionsData || [],
-      tempAccesses: tempAccessesData || [],
+      tempAccess: activeTempAccesses || [], // Changed from tempAccesses to tempAccess
       stats
     };
   } catch (error) {

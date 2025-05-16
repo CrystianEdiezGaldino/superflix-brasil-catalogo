@@ -12,7 +12,7 @@ export const useMovieLoader = () => {
   // Buscar filmes iniciais
   const { data: initialMovies, isLoading: isLoadingInitial } = useQuery({
     queryKey: ["popularMovies", 1],
-    queryFn: () => fetchPopularMovies(1),
+    queryFn: () => fetchPopularMovies(), // Removed the argument
     staleTime: 1000 * 60 * 5, // 5 minutos
   });
 

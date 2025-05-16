@@ -20,7 +20,7 @@ export const useMoviePagination = ({ setMovies }: UseMoviePaginationProps) => {
     setIsLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const newMovies = await fetchPopularMovies(nextPage);
+      const newMovies = await fetchPopularMovies(); // Removed the argument
       
       if (newMovies.length === 0) {
         setHasMore(false);

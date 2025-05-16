@@ -49,7 +49,7 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         .eq('user_id', user.id)
         .single();
 
-      if (roleError) throw roleError;
+      if (roleError && roleError.code !== 'PGRST116') throw roleError;
 
       const isUserAdmin = userRole?.role === 'admin';
       setIsAdmin(isUserAdmin);
