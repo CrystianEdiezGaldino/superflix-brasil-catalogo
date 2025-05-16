@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { MediaItem } from "@/types/movie";
 
@@ -24,7 +25,7 @@ export const useFeaturedMedia = (
       return;
     }
     
-    // If user has access to premium content, include all media
+    // If user has access to premium content (including trial access), include all media
     if (hasAccess) {
       const allMedia = [
         ...(movieData || []),

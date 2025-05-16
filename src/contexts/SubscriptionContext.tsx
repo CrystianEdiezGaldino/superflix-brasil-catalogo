@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,12 +66,12 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Verificar assinatura ativa
+      // Verificar assinatura ativa (status pode ser 'active' OU 'trialing')
       const { data: subscription, error: subscriptionError } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', user.id)
-        .eq('status', 'active')
+        .in('status', ['active', 'trialing'])
         .single();
 
       if (subscriptionError && subscriptionError.code !== 'PGRST116') throw subscriptionError;
@@ -78,12 +79,21 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
       if (subscription) {
         setIsSubscribed(true);
         setSubscriptionTier(subscription.plan_type);
-        setSubscriptionEnd(subscription.current_period_end);
+        
+        // Se for trial, definir como trial access
+        if (subscription.status === 'trialing') {
+          setHasTrialAccess(true);
+          setTrialEnd(subscription.trial_end);
+          setSubscriptionEnd(subscription.trial_end);
+        } else {
+          setHasTrialAccess(false);
+          setTrialEnd(null);
+          setSubscriptionEnd(subscription.current_period_end);
+        }
+        
         setHasTempAccess(false);
-        setHasTrialAccess(false);
-        setTrialEnd(null);
       } else {
-        // Verificar acesso temporário
+        // Se não tem assinatura ativa ou em trial, verifica acesso temporário
         const { data: tempAccess, error: tempAccessError } = await supabase
           .from('temp_access')
           .select('*')
