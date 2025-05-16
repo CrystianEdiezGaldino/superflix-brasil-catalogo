@@ -4,10 +4,11 @@ import { useLocation } from "react-router-dom";
 import NavLink from "./NavLink";
 
 interface NavLinksProps {
-  isAuthenticated: boolean;
+  isAuthenticated?: boolean;
+  isAdmin?: boolean;
 }
 
-const NavLinks = ({ isAuthenticated }: NavLinksProps) => {
+const NavLinks = ({ isAuthenticated = false, isAdmin = false }: NavLinksProps) => {
   const location = useLocation();
   
   const isHomeActive = () => {

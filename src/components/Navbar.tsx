@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,7 +47,7 @@ const Navbar = ({ onSearch }: NavbarProps) => {
         <div className="flex items-center">
           <NavLogo />
           <div className="hidden md:flex ml-8">
-            <NavLinks isAdmin={isAdmin} />
+            <NavLinks isAuthenticated={!!user} isAdmin={isAdmin} />
           </div>
         </div>
 
@@ -57,7 +58,7 @@ const Navbar = ({ onSearch }: NavbarProps) => {
           </div>
 
           {user ? (
-            <UserAction />
+            <UserAction isAuthenticated={!!user} />
           ) : (
             <Link to="/auth" className="text-white hover:text-gray-300">
               Entrar
@@ -76,7 +77,12 @@ const Navbar = ({ onSearch }: NavbarProps) => {
       </div>
 
       {/* Mobile Menu */}
-      <MobileMenu isOpen={isMobileMenuOpen} onClose={toggleMobileMenu} isAdmin={isAdmin} />
+      <MobileMenu 
+        isOpen={isMobileMenuOpen} 
+        onClose={toggleMobileMenu} 
+        isAuthenticated={!!user}
+        isAdmin={isAdmin}
+      />
     </nav>
   );
 };

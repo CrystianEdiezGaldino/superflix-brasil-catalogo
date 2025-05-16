@@ -12,12 +12,12 @@ export const formatMovieData = (movie: any): MediaItem => {
     vote_average: movie.vote_average,
     media_type: "movie",
     genre_ids: movie.genre_ids || [],
-    genres: [],
+    genres: movie.genres || [],
     // Add required properties for Movie
     original_title: movie.original_title || movie.title,
     runtime: movie.runtime || 0,
     status: movie.status || "Unknown",
-    vote_count: movie.vote_count,
-    popularity: movie.popularity
+    vote_count: movie.vote_count || 0,
+    popularity: movie.popularity || 0
   } as Movie;
 };
