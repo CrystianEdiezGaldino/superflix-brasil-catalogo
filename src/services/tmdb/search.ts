@@ -1,10 +1,9 @@
-
 import { buildApiUrl, fetchFromApi } from "./utils";
 
 // Search for media (movies, TV shows, etc.)
-export const searchMedia = async (query: string) => {
+export const searchMedia = async (query: string, page: number = 1) => {
   try {
-    const url = buildApiUrl("/search/multi", `&query=${query}`);
+    const url = buildApiUrl("/search/multi", `&query=${query}&page=${page}`);
     const data = await fetchFromApi<{results?: any[]}>(url);
     return data.results || [];
   } catch (error) {

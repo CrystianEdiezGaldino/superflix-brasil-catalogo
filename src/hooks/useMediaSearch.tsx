@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -9,34 +8,55 @@ import { MediaItem } from "@/types/movie";
 export const useMediaSearch = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [results, setResults] = useState<MediaItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Search function
-  const handleSearch = async (query: string) => {
+  const searchMediaWithPage = async (query: string, page: number = 1) => {
     if (!user) {
       toast.error("É necessário fazer login para pesquisar");
       navigate("/auth");
-      return [];
+      return;
     }
     
     try {
-      // If query is empty, return empty array instead of making an API call
+      setIsLoading(true);
+      
+      // If query is empty, clear results
       if (!query || query.trim() === "") {
-        return [];
+        setResults([]);
+        setHasMore(false);
+        return;
       }
       
-      const results = await searchMedia(query);
+      const newResults = await searchMedia(query, page);
       
-      if (results.length === 0) {
+      if (page === 1) {
+        setResults(newResults);
+      } else {
+        setResults(prev => [...prev, ...newResults]);
+      }
+      
+      setHasMore(newResults.length === 20); // Assuming 20 items per page
+      setCurrentPage(page);
+      
+      if (newResults.length === 0 && page === 1) {
         toast.info("Nenhum resultado encontrado para sua pesquisa.");
       }
-      
-      return results;
     } catch (error) {
       console.error("Erro na pesquisa:", error);
       toast.error("Ocorreu um erro durante a pesquisa.");
-      return [];
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return { handleSearch };
+  return {
+    results,
+    isLoading,
+    hasMore,
+    currentPage,
+    searchMedia: searchMediaWithPage
+  };
 };

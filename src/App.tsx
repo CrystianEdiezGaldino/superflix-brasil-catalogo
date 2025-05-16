@@ -26,6 +26,7 @@ import Admin from "./pages/Admin";
 import Kids from "./pages/Kids";
 import TermsOfService from "./pages/TermsOfService";
 import TvChannels from "./pages/TvChannels";
+import Search from "./pages/Search";
 
 const App = () => {
   const [queryClient] = useState(() => new QueryClient());
@@ -91,6 +92,11 @@ const App = () => {
               <Route path="/tv-channels" element={
                 <ProtectedRoute>
                   <TvChannels />
+                </ProtectedRoute>
+              } />
+              <Route path="/search" element={
+                <ProtectedRoute>
+                  <Search />
                 </ProtectedRoute>
               } />
               <Route path="/favoritos" element={
