@@ -4,10 +4,10 @@ import { TMDB_API_KEY, TMDB_API_URL } from "@/config/tmdb";
 import { formatMovieData } from "@/utils/movieUtils";
 
 // Fetch popular movies
-export const fetchPopularMovies = async (): Promise<MediaItem[]> => {
+export const fetchPopularMovies = async (page = 1): Promise<MediaItem[]> => {
   try {
     const response = await fetch(
-      `${TMDB_API_URL}/movie/popular?api_key=${TMDB_API_KEY}&language=pt-BR`
+      `${TMDB_API_URL}/movie/popular?api_key=${TMDB_API_KEY}&language=pt-BR&page=${page}`
     );
     const data = await response.json();
     return data.results.map(formatMovieData);

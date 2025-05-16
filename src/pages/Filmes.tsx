@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -36,6 +36,9 @@ const Filmes = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("");
   const [page, setPage] = useState(1);
+  const [allMovies, setAllMovies] = useState<MediaItem[]>([]);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const loadingRef = useRef<HTMLDivElement>(null);
 
   // Busca filmes em destaque
   const { data: trendingMovies = [], isLoading: isLoadingTrending } = useQuery({
@@ -75,6 +78,31 @@ const Filmes = () => {
     enabled: !!selectedCategory,
   });
 
+  // Atualiza a lista de filmes quando novos dados chegam
+  useEffect(() => {
+    if (selectedCategory && categoryMovies.length > 0) {
+      if (page === 1) {
+        setAllMovies(categoryMovies);
+      } else {
+        setAllMovies(prev => [...prev, ...categoryMovies]);
+      }
+    }
+  }, [categoryMovies, selectedCategory, page]);
+
+  // Configura o Intersection Observer para detectar quando chegar ao final da página
+  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (isLoadingCategory) return;
+    if (observer.current) observer.current.disconnect();
+    
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && categoryMovies.length > 0) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    
+    if (node) observer.current.observe(node);
+  }, [isLoadingCategory, categoryMovies]);
+
   const handleMediaClick = (media: MediaItem) => {
     navigate(`/filme/${media.id}`);
   };
@@ -82,6 +110,7 @@ const Filmes = () => {
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setPage(1);
+    setAllMovies([]);
     toast.success(`Mostrando ${CATEGORIES[category as keyof typeof CATEGORIES]}`);
   };
 
@@ -152,19 +181,24 @@ const Filmes = () => {
         )}
 
         {/* Seção de categoria selecionada */}
-        {selectedCategory && categoryMovies.length > 0 && (
+        {selectedCategory && allMovies.length > 0 && (
           <MediaSection 
             title={CATEGORIES[selectedCategory as keyof typeof CATEGORIES]}
-            medias={categoryMovies}
+            medias={allMovies}
             onMediaClick={handleMediaClick}
           />
         )}
 
-        {/* Mensagem de carregamento */}
-        {isLoading && (
-          <div className="flex justify-center items-center py-8">
+        {/* Elemento de carregamento e referência para infinite scroll */}
+        <div ref={loadingRef} className="flex justify-center items-center py-8">
+          {isLoading && (
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-netflix-red"></div>
-          </div>
+          )}
+        </div>
+        
+        {/* Elemento observado para infinite scroll */}
+        {selectedCategory && !isLoading && (
+          <div ref={lastElementRef} style={{ height: "20px" }} />
         )}
       </div>
     </div>

@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
-import { fetchPopularMovies } from "@/services/tmdbApi";
+import { fetchPopularMovies } from "@/services/tmdb/movies";
 import { MediaItem } from "@/types/movie";
 
 interface UseMoviePaginationProps {
@@ -20,9 +19,9 @@ export const useMoviePagination = ({ setMovies }: UseMoviePaginationProps) => {
     setIsLoadingMore(true);
     try {
       const nextPage = page + 1;
-      const newMovies = await fetchPopularMovies();
+      const newMovies = await fetchPopularMovies(nextPage);
       
-      if (newMovies.length === 0) {
+      if (!newMovies || newMovies.length === 0) {
         setHasMore(false);
         return;
       }
