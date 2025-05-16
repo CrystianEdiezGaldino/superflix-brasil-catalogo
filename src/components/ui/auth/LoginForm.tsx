@@ -1,13 +1,13 @@
-
 import { useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { toast } from "@/hooks/use-toast";  // Updated import
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "@/hooks/use-toast";
 import {
   Form,
   FormControl,
@@ -18,10 +18,13 @@ import {
 } from "@/components/ui/form";
 import { Lock } from "lucide-react";
 
-// Modified schema to make email validation less strict
+// Modified schema to include terms acceptance
 const loginSchema = z.object({
   email: z.string().min(1, "Email é obrigatório"),
   password: z.string().min(6, "A senha precisa ter pelo menos 6 caracteres"),
+  termsAccepted: z.boolean().refine(val => val === true, {
+    message: "Você precisa aceitar os termos para continuar"
+  })
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -44,10 +47,20 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
     defaultValues: {
       email: "",
       password: "",
+      termsAccepted: true // Começa marcado por padrão
     },
   });
 
   const onSubmit = async (data: LoginFormData) => {
+    if (!data.termsAccepted) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Você precisa aceitar os termos para continuar"
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       console.log("Attempting login with:", data.email);
@@ -130,6 +143,36 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
                   />
                 </FormControl>
                 <FormMessage className="text-red-400" />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="termsAccepted"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    disabled={isLoading}
+                    className="border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red"
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel className="text-sm text-gray-300">
+                    Li e aceito os{" "}
+                    <Link 
+                      to="/termos-de-servico" 
+                      className="text-netflix-red hover:underline"
+                      target="_blank"
+                    >
+                      termos de serviço
+                    </Link>
+                  </FormLabel>
+                  <FormMessage className="text-red-400" />
+                </div>
               </FormItem>
             )}
           />

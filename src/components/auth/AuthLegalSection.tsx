@@ -1,5 +1,5 @@
-
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 
 const AuthLegalSection = () => {
   return (
@@ -10,10 +10,14 @@ const AuthLegalSection = () => {
       className="mt-8 text-center max-w-md px-6"
     >
       <p className="text-gray-400 text-sm">
-        Ao fazer login ou criar uma conta, você concorda com nossos 
-        <a href="#" className="text-netflix-red hover:underline mx-1">Termos de Uso</a>
-        e confirma que leu nossa 
-        <a href="#" className="text-netflix-red hover:underline mx-1">Política de Privacidade</a>.
+        Ao fazer login ou criar uma conta, você concorda com nossos{" "}
+        <Link to="/termos-de-servico" className="text-netflix-red hover:underline mx-1" target="_blank">
+          Termos de Uso
+        </Link>
+        e confirma que leu nossa{" "}
+        <Link to="/politica-de-privacidade" className="text-netflix-red hover:underline mx-1" target="_blank">
+          Política de Privacidade
+        </Link>.
       </p>
       <p className="text-gray-500 text-xs mt-4">
         Este site não é um serviço real de streaming. Projeto criado apenas para fins de demonstração e portfólio.

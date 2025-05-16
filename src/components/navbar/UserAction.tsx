@@ -1,6 +1,6 @@
-
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,11 +19,21 @@ interface UserActionProps {
 const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
   const { user, signOut } = useAuth();
   const { isSubscribed, isAdmin } = useSubscription();
+  const navigate = useNavigate();
   
   // Return nothing if user is not authenticated
   if (!isAuthenticated || !user) {
     return null;
   }
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+    }
+  };
   
   return (
     <DropdownMenu>
@@ -36,7 +46,8 @@ const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56 bg-black/90 backdrop-blur-md text-white border-netflix-gray/30 shadow-xl" align="end">
+      
+      <DropdownMenuContent className="w-56 bg-gray-900 border-gray-700">
         <DropdownMenuLabel className="text-gray-300">Minha Conta</DropdownMenuLabel>
         <DropdownMenuSeparator className="bg-netflix-gray/30" />
         
@@ -71,7 +82,7 @@ const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
         <DropdownMenuSeparator className="bg-netflix-gray/30" />
         <DropdownMenuItem 
           className="cursor-pointer hover:bg-netflix-red/10 text-gray-200 transition-colors"
-          onClick={() => signOut()}
+          onClick={handleSignOut}
         >
           Sair
         </DropdownMenuItem>

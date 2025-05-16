@@ -25,6 +25,7 @@ import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import Admin from "./pages/Admin";
 import Kids from "./pages/Kids";
 import TermsOfService from "./pages/TermsOfService";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TvChannels from "./pages/TvChannels";
 import Search from "./pages/Search";
 
@@ -126,6 +127,7 @@ const App = () => {
                 </ProtectedRoute>
               } />
               <Route path="/termos-de-servico" element={<TermsOfService />} />
+              <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>
