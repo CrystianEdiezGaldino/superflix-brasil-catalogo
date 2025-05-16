@@ -128,10 +128,10 @@ const SeriesDetails = () => {
     if (series) {
       const seriesId = typeof series.id === "string" ? parseInt(series.id) : series.id;
       if (isFavorite(seriesId)) {
-        removeFromFavorites(seriesId);
+        removeFromFavorites(seriesId, 'tv');
         toast.success("Removido dos favoritos");
       } else {
-        addToFavorites(seriesId);
+        addToFavorites(seriesId, 'tv');
         toast.success("Adicionado aos favoritos");
       }
     }

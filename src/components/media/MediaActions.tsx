@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { MediaItem } from "@/types/movie";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,7 @@ const MediaActions = ({ media, onWatch }: MediaActionsProps) => {
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleFavorite(media.id);
+    toggleFavorite(media.id, media.media_type);
   };
 
   const isMediaFavorite = isFavorite(media.id);

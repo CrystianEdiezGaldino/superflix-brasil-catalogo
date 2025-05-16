@@ -1,4 +1,3 @@
-
 import { Episode } from "@/types/movie";
 import { Image, Play, Film } from "lucide-react";
 
@@ -28,8 +27,9 @@ const EpisodeCard = ({ episode, isSelected, onSelect }: EpisodeCardProps) => {
               className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex flex-col items-center justify-center gap-2">
               <Film className="w-8 h-8 text-gray-400 opacity-70" />
+              <span className="text-gray-400 text-sm font-medium">Em lançamento</span>
             </div>
           )}
           <div className={`absolute inset-0 flex items-center justify-center ${isSelected ? 'bg-black/50' : 'bg-black/40 hover:bg-black/20'} transition-all`}>

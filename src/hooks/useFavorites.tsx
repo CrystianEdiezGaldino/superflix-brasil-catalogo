@@ -1,10 +1,21 @@
-
 import { useState, useEffect, useCallback } from "react";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, Movie, Series } from "@/types/movie";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
+import { fetchMovieDetails } from "@/services/tmdb/movies";
+import { fetchSeriesDetails } from "@/services/tmdb/series";
+
+interface FavoriteItem {
+  id: string;
+  user_id: string;
+  media_id: number;
+  media_type: string;
+  title: string;
+  poster_path: string;
+  added_at: string;
+}
 
 export const useFavorites = () => {
   const { user } = useAuth();
@@ -40,22 +51,43 @@ export const useFavorites = () => {
   useEffect(() => {
     if (favoritesData) {
       // Convert to MediaItem format if needed
-      const mediaItems = favoritesData.map(fav => ({
-        id: fav.media_id,
-        media_type: fav.media_type,
-        title: fav.title || '',
-        name: fav.name || '',
-        poster_path: fav.poster_path || '',
-        backdrop_path: fav.backdrop_path || '',
-        vote_average: 0,
-        vote_count: 0,
-        overview: '',
-        genres: [],
-        networks: [],
-        episode_run_time: [],
-        first_air_date: '',
-        original_language: ''
-      })) as MediaItem[];
+      const mediaItems = favoritesData.map((fav: FavoriteItem) => {
+        const baseItem = {
+          id: fav.media_id,
+          media_type: fav.media_type as 'movie' | 'tv',
+          overview: '',
+          poster_path: fav.poster_path,
+          backdrop_path: '',
+          vote_average: 0,
+          genres: [],
+          genre_ids: []
+        };
+
+        if (fav.media_type === 'movie') {
+          return {
+            ...baseItem,
+            title: fav.title,
+            release_date: '',
+            original_title: fav.title,
+            runtime: 0,
+            status: 'Released',
+            vote_count: 0,
+            popularity: 0
+          } as Movie;
+        } else {
+          return {
+            ...baseItem,
+            name: fav.title,
+            first_air_date: '',
+            original_name: fav.title,
+            original_language: '',
+            number_of_seasons: 0,
+            number_of_episodes: 0,
+            status: 'Returning Series',
+            seasons: []
+          } as Series;
+        }
+      });
       
       setFavorites(mediaItems);
     }
@@ -63,50 +95,101 @@ export const useFavorites = () => {
 
   // Function to add to favorites
   const addToFavorites = async (mediaId: number, mediaType: string) => {
+    console.log('Tentando adicionar aos favoritos:', { mediaId, mediaType, userId: user?.id });
+    
     if (!user) {
       toast.error("Faça login para adicionar aos favoritos");
       return;
     }
+
+    // Verificar se o usuário está autenticado
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      console.error("Erro ao verificar sessão:", sessionError);
+      toast.error("Sua sessão expirou. Por favor, faça login novamente.");
+      return;
+    }
     
     try {
-      const { error } = await supabase
+      // Buscar informações do TMDB baseado no tipo
+      let mediaInfo;
+      if (mediaType === 'movie') {
+        mediaInfo = await fetchMovieDetails(mediaId.toString());
+      } else {
+        mediaInfo = await fetchSeriesDetails(mediaId.toString());
+      }
+
+      if (!mediaInfo) {
+        throw new Error("Não foi possível encontrar informações do item");
+      }
+
+      const { data, error } = await supabase
         .from('favorites')
         .insert({
           user_id: user.id,
           media_id: mediaId,
           media_type: mediaType,
-          created_at: new Date().toISOString()
-        });
+          title: mediaType === 'movie' ? mediaInfo.title : (mediaInfo as Series).name || '',
+          poster_path: mediaInfo.poster_path || '',
+          added_at: new Date().toISOString()
+        })
+        .select();
       
-      if (error) throw error;
+      console.log('Resposta do Supabase ao adicionar:', { data, error });
+      
+      if (error) {
+        console.error("Erro detalhado do Supabase:", error);
+        throw error;
+      }
       
       // Update local state
-      refetchFavorites();
+      await refetchFavorites();
+      toast.success("Adicionado aos favoritos com sucesso!");
     } catch (error) {
       console.error("Error adding to favorites:", error);
-      toast.error("Erro ao adicionar aos favoritos");
+      toast.error("Erro ao adicionar aos favoritos. Tente novamente.");
     }
   };
   
   // Function to remove from favorites
   const removeFromFavorites = async (mediaId: number, mediaType: string) => {
-    if (!user) return;
+    console.log('Tentando remover dos favoritos:', { mediaId, mediaType, userId: user?.id });
+    
+    if (!user) {
+      toast.error("Faça login para remover dos favoritos");
+      return;
+    }
+
+    // Verificar se o usuário está autenticado
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      console.error("Erro ao verificar sessão:", sessionError);
+      toast.error("Sua sessão expirou. Por favor, faça login novamente.");
+      return;
+    }
     
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('favorites')
         .delete()
         .eq('user_id', user.id)
         .eq('media_id', mediaId)
-        .eq('media_type', mediaType);
+        .eq('media_type', mediaType)
+        .select();
       
-      if (error) throw error;
+      console.log('Resposta do Supabase ao remover:', { data, error });
+      
+      if (error) {
+        console.error("Erro detalhado do Supabase:", error);
+        throw error;
+      }
       
       // Update local state
-      refetchFavorites();
+      await refetchFavorites();
+      toast.success("Removido dos favoritos com sucesso!");
     } catch (error) {
       console.error("Error removing from favorites:", error);
-      toast.error("Erro ao remover dos favoritos");
+      toast.error("Erro ao remover dos favoritos. Tente novamente.");
     }
   };
   

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Series, Season } from "@/types/movie";
@@ -24,7 +23,7 @@ export const useAnimeDetails = () => {
   
   const toggleAnimeFavorite = () => {
     if (id && anime) {
-      toggleFavorite(numericId);
+      toggleFavorite(numericId, 'tv');
     }
   };
 

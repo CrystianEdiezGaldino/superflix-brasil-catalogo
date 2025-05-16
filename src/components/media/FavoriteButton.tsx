@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,7 +35,7 @@ const FavoriteButton = ({
 
     setIsLoading(true);
     try {
-      toggleFavorite(mediaId);
+      await toggleFavorite(mediaId, mediaType);
       
       const newStatus = !isFavorited;
       setIsFavorited(newStatus);

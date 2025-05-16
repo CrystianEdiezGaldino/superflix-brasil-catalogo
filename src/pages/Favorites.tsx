@@ -1,14 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
-import { MediaItem, getMediaTitle } from "@/types/movie";
-import { fetchMediaById } from "@/services/tmdbApi";
+import { MediaItem, getMediaTitle, isMovie, isSeries, Movie, Series } from "@/types/movie";
+import { fetchMovieDetails } from "@/services/tmdb/movies";
+import { fetchSeriesDetails } from "@/services/tmdb/series";
 import Navbar from "@/components/Navbar";
 
 const FavoritesPage = () => {
   const navigate = useNavigate();
-  const { favorites, getAllFavorites } = useFavorites();
+  const { favorites, isLoading } = useFavorites();
   const [favoriteItems, setFavoriteItems] = useState<MediaItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
 
@@ -16,10 +16,30 @@ const FavoritesPage = () => {
   const fetchFavoriteItems = async () => {
     setIsLoadingMedia(true);
     try {
-      const favoriteIds = getAllFavorites();
-      const mediaPromises = favoriteIds.map(id => fetchMediaById(id));
-      const mediaItems = await Promise.all(mediaPromises);
-      setFavoriteItems(mediaItems.filter(item => item !== null) as MediaItem[]);
+      // Buscar informações atualizadas do TMDB para cada item
+      const updatedItems = await Promise.all(
+        favorites.map(async (item) => {
+          try {
+            let mediaInfo;
+            if (isMovie(item)) {
+              mediaInfo = await fetchMovieDetails(item.id.toString());
+              if (mediaInfo) {
+                mediaInfo = { ...mediaInfo, media_type: 'movie' } as Movie;
+              }
+            } else if (isSeries(item)) {
+              mediaInfo = await fetchSeriesDetails(item.id.toString());
+              if (mediaInfo) {
+                mediaInfo = { ...mediaInfo, media_type: 'tv' } as Series;
+              }
+            }
+            return mediaInfo || item;
+          } catch (error) {
+            console.error(`Erro ao buscar informações do item ${item.id}:`, error);
+            return item;
+          }
+        })
+      );
+      setFavoriteItems(updatedItems);
     } catch (error) {
       console.error("Error fetching favorite items:", error);
     } finally {
@@ -27,30 +47,42 @@ const FavoritesPage = () => {
     }
   };
 
-  // Fetch favorites on mount
+  // Fetch favorites on mount and when favorites change
   useEffect(() => {
-    fetchFavoriteItems();
+    if (favorites.length > 0) {
+      fetchFavoriteItems();
+    } else {
+      setFavoriteItems([]);
+    }
   }, [favorites]);
 
-  // Refetch favorites when needed
-  const refetchFavorites = () => {
-    fetchFavoriteItems();
+  const handleMediaClick = (media: MediaItem) => {
+    console.log('Item clicado:', media);
+    
+    if (!media || !media.id) {
+      console.error('Mídia inválida:', media);
+      return;
+    }
+
+    // Verifica o tipo de mídia e redireciona para a rota correta
+    if (isSeries(media)) {
+      console.log('Redirecionando para série:', media.id);
+      navigate(`/serie/${media.id}`);
+    } else if (isMovie(media)) {
+      console.log('Redirecionando para filme:', media.id);
+      navigate(`/filme/${media.id}`);
+    } else {
+      console.error('Tipo de mídia desconhecido:', media);
+    }
   };
 
-  const handleMediaClick = (media: MediaItem) => {
-    if (!media || !media.id) return;
-    
-    if (media.media_type === 'tv') {
-      if (media.original_language === 'ko') {
-        navigate(`/dorama/${media.id}`);
-      } else if (media.original_language === 'ja') {
-        navigate(`/anime/${media.id}`);
-      } else {
-        navigate(`/serie/${media.id}`);
-      }
-    } else {
-      navigate(`/filme/${media.id}`);
+  const getMediaTypeLabel = (item: MediaItem): string => {
+    if (isSeries(item)) {
+      if (item.original_language === 'ko') return 'Dorama';
+      if (item.original_language === 'ja') return 'Anime';
+      return 'Série';
     }
+    return 'Filme';
   };
 
   return (
@@ -60,7 +92,7 @@ const FavoritesPage = () => {
       <div className="container mx-auto pt-24 pb-10 px-4">
         <h1 className="text-3xl font-bold mb-8">Meus Favoritos</h1>
         
-        {isLoadingMedia ? (
+        {isLoading || isLoadingMedia ? (
           <div className="flex justify-center items-center min-h-[60vh]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-netflix-red"></div>
           </div>
@@ -90,7 +122,7 @@ const FavoritesPage = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
                   <h3 className="text-white font-medium truncate">{getMediaTitle(item)}</h3>
                   <p className="text-sm text-gray-300">
-                    {item.media_type === "movie" ? "Filme" : item.original_language === "ja" ? "Anime" : item.original_language === "ko" ? "Dorama" : "Série"}
+                    {getMediaTypeLabel(item)}
                   </p>
                 </div>
               </div>

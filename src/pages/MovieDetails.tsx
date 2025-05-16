@@ -86,10 +86,10 @@ const MovieDetails = () => {
     if (!movie) return;
     
     if (isFavorite(movie.id)) {
-      removeFromFavorites(movie.id);
+      removeFromFavorites(movie.id, 'movie');
       toast.success("Removido dos favoritos");
     } else {
-      addToFavorites(movie.id);
+      addToFavorites(movie.id, 'movie');
       toast.success("Adicionado aos favoritos");
     }
   };

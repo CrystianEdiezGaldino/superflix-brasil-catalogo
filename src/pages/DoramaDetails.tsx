@@ -120,11 +120,12 @@ const DoramaDetails = () => {
     }
     
     if (dorama) {
-      if (isFavorite(dorama.id)) {
-        removeFromFavorites(dorama.id);
+      const doramaId = typeof dorama.id === "string" ? parseInt(dorama.id) : dorama.id;
+      if (isFavorite(doramaId)) {
+        removeFromFavorites(doramaId, 'tv');
         toast.success("Removido dos favoritos");
       } else {
-        addToFavorites(dorama.id);
+        addToFavorites(doramaId, 'tv');
         toast.success("Adicionado aos favoritos");
       }
     }
