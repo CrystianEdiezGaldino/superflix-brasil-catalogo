@@ -1,5 +1,3 @@
-
-import { Film } from "lucide-react";
 import { motion } from "framer-motion";
 
 const AuthPageBanner = () => {
@@ -10,8 +8,12 @@ const AuthPageBanner = () => {
       transition={{ duration: 0.5 }}
       className="text-center mb-8"
     >
-      <div className="inline-flex items-center justify-center p-4 bg-netflix-red rounded-full mb-6 shadow-lg">
-        <Film size={36} className="text-white" />
+      <div className="inline-flex items-center justify-center p-4 mb-6 shadow-lg">
+        <img
+          src="/lovable-uploads/efa84daa-353c-4a55-836f-0baef660aba2.png"
+          alt="NaflixTV Logo"
+          className="h-[150px] transition-transform duration-300"
+        />
       </div>
       <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">Bem-vindo ao SuperFlix</h2>
       <p className="text-xl text-gray-300 max-w-md mx-auto">
