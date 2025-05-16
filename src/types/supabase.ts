@@ -9,6 +9,90 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      watch_history: {
+        Row: {
+          id: string
+          user_id: string
+          tmdb_id: number
+          media_type: 'movie' | 'tv'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tmdb_id: number
+          media_type: 'movie' | 'tv'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tmdb_id?: number
+          media_type?: 'movie' | 'tv'
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      favorites: {
+        Row: {
+          id: string
+          user_id: string
+          media_id: number
+          media_type: string
+          title: string
+          poster_path: string
+          added_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          media_id: number
+          media_type: string
+          title: string
+          poster_path?: string
+          added_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          media_id?: number
+          media_type?: string
+          title?: string
+          poster_path?: string
+          added_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          id: string
+          user_id: string
+          username: string
+          avatar_url: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          username: string
+          avatar_url?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          username?: string
+          avatar_url?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           id: string
@@ -49,6 +133,7 @@ export interface Database {
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
         }
+        Relationships: []
       }
       temp_access: {
         Row: {
@@ -75,6 +160,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -98,6 +184,7 @@ export interface Database {
           created_at?: string
           updated_at?: string
         }
+        Relationships: []
       }
     }
     Views: {

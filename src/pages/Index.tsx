@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -9,6 +8,7 @@ import SearchResults from "@/components/home/SearchResults";
 import { useContentSections } from "@/hooks/home/useContentSections";
 import HomeHeader from "@/components/home/HomeHeader";
 import MainContent from "@/components/home/MainContent";
+import { WatchHistory } from "@/components/WatchHistory";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -141,27 +141,30 @@ const Index = () => {
         {searchQuery ? (
           <SearchResults results={searchResults} isSearching={isSearching} />
         ) : (
-          <MainContent 
-            hasAccess={hasAccess}
-            movies={movies}
-            series={seriesData || []}
-            anime={animeData || []}
-            recommendations={recommendations || []}
-            topRatedAnime={topRatedAnimeData || []}
-            doramas={doramasData || []}
-            actionMovies={actionMoviesData || []}
-            comedyMovies={comedyMoviesData || []}
-            adventureMovies={adventureMoviesData || []}
-            sciFiMovies={sciFiMoviesData || []}
-            marvelMovies={marvelMoviesData || []}
-            dcMovies={dcMoviesData || []}
-            popularSeries={popularSeries}
-            recentAnimes={recentAnimes}
-            isLoadingMore={isLoadingMore}
-            hasMore={hasMore}
-            onLoadMoreSection={handleLoadMoreSection}
-            onMediaClick={handleMediaClick}
-          />
+          <>
+            <WatchHistory />
+            <MainContent 
+              hasAccess={hasAccess}
+              movies={movies}
+              series={seriesData || []}
+              anime={animeData || []}
+              recommendations={recommendations || []}
+              topRatedAnime={topRatedAnimeData || []}
+              doramas={doramasData || []}
+              actionMovies={actionMoviesData || []}
+              comedyMovies={comedyMoviesData || []}
+              adventureMovies={adventureMoviesData || []}
+              sciFiMovies={sciFiMoviesData || []}
+              marvelMovies={marvelMoviesData || []}
+              dcMovies={dcMoviesData || []}
+              popularSeries={popularSeries}
+              recentAnimes={recentAnimes}
+              isLoadingMore={isLoadingMore}
+              hasMore={hasMore}
+              onLoadMoreSection={handleLoadMoreSection}
+              onMediaClick={handleMediaClick}
+            />
+          </>
         )}
       </main>
     </div>

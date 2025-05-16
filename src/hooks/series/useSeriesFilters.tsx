@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { MediaItem } from "@/types/movie";
 
@@ -50,10 +49,12 @@ export const useSeriesFilters = ({
   useEffect(() => {
     if (!initialSeries || !Array.isArray(initialSeries) || isSearching) return;
     
-    setIsFiltering(true);
     const filtered = applyFilters(initialSeries);
-    setSeriesList(filtered);
-    setIsFiltering(false);
+    if (JSON.stringify(filtered) !== JSON.stringify(initialSeries)) {
+      setIsFiltering(true);
+      setSeriesList(filtered);
+      setIsFiltering(false);
+    }
   }, [yearFilter, ratingFilter, initialSeries, applyFilters, isSearching, setSeriesList]);
 
   // Resetar filtros

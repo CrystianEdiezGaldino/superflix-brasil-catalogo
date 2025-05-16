@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -173,6 +172,8 @@ const SeriesDetails = () => {
             isFavorite={isFavorite(series.id)}
             hasAccess={hasAccess}
             showPlayer={showPlayer}
+            tmdbId={series.id}
+            mediaType="tv"
           />
 
           {/* Player de vídeo - com ref para scroll */}

@@ -1,6 +1,6 @@
-
 import { Heart, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { watchHistoryService } from "@/services/watchHistoryService";
 
 interface MediaActionsProps {
   onPlayClick: () => void;
@@ -8,6 +8,8 @@ interface MediaActionsProps {
   isFavorite: boolean;
   hasAccess: boolean;
   showPlayer?: boolean;
+  tmdbId: number;
+  mediaType: 'movie' | 'tv';
 }
 
 const MediaActions = ({ 
@@ -15,14 +17,29 @@ const MediaActions = ({
   onFavoriteClick, 
   isFavorite, 
   hasAccess,
-  showPlayer
+  showPlayer,
+  tmdbId,
+  mediaType
 }: MediaActionsProps) => {
+  const handlePlayClick = async () => {
+    if (hasAccess) {
+      onPlayClick();
+      try {
+        await watchHistoryService.addToHistory(tmdbId, mediaType);
+      } catch (error) {
+        console.error('Erro ao adicionar ao histórico:', error);
+      }
+    } else {
+      onPlayClick();
+    }
+  };
+
   return (
     <div className="relative z-10 px-4 sm:px-6 md:px-10 mt-2 mb-8">
       <div className="max-w-7xl mx-auto flex flex-wrap gap-3 sm:gap-6">
         {/* Botão Assistir */}
         <button
-          onClick={onPlayClick}
+          onClick={handlePlayClick}
           disabled={!hasAccess}
           className={cn(
             "flex items-center gap-2 sm:gap-3 py-3 px-6 sm:px-8 rounded-full font-medium text-base sm:text-lg transition-all duration-300 shadow-lg",

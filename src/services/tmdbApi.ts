@@ -1,4 +1,3 @@
-
 // Re-export services from subdirectories
 export * from './tmdb/movies';
 export * from './tmdb/series';
@@ -12,24 +11,42 @@ import { API_KEY, BASE_URL, DEFAULT_LANGUAGE } from './tmdb/config';
 import { MediaItem } from "@/types/movie";
 
 // Fetch media item by ID - detects whether it's a movie or TV series
-export const fetchMediaById = async (id: number): Promise<MediaItem | null> => {
+export const fetchMediaById = async (id: number, mediaType?: 'movie' | 'tv'): Promise<MediaItem | null> => {
   try {
-    // Try fetching as a movie first
-    const movieUrl = `${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}`;
-    let response = await fetch(movieUrl);
-    
-    if (response.ok) {
-      const data = await response.json();
-      return { ...data, media_type: 'movie' };
-    }
-    
-    // If not a movie, try as a TV series
-    const tvUrl = `${BASE_URL}/tv/${id}?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}`;
-    response = await fetch(tvUrl);
-    
-    if (response.ok) {
-      const data = await response.json();
-      return { ...data, media_type: 'tv' };
+    if (mediaType === 'movie') {
+      const movieUrl = `${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}`;
+      const response = await fetch(movieUrl);
+      
+      if (response.ok) {
+        const data = await response.json();
+        return { ...data, media_type: 'movie' };
+      }
+    } else if (mediaType === 'tv') {
+      const tvUrl = `${BASE_URL}/tv/${id}?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}`;
+      const response = await fetch(tvUrl);
+      
+      if (response.ok) {
+        const data = await response.json();
+        return { ...data, media_type: 'tv' };
+      }
+    } else {
+      // Try fetching as a movie first
+      const movieUrl = `${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}`;
+      let response = await fetch(movieUrl);
+      
+      if (response.ok) {
+        const data = await response.json();
+        return { ...data, media_type: 'movie' };
+      }
+      
+      // If not a movie, try as a TV series
+      const tvUrl = `${BASE_URL}/tv/${id}?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}`;
+      response = await fetch(tvUrl);
+      
+      if (response.ok) {
+        const data = await response.json();
+        return { ...data, media_type: 'tv' };
+      }
     }
     
     return null;

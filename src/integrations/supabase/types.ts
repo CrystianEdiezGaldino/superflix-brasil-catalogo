@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      watch_history: {
+        Row: {
+          id: string
+          user_id: string
+          tmdb_id: number
+          media_type: 'movie' | 'tv'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tmdb_id: number
+          media_type: 'movie' | 'tv'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tmdb_id?: number
+          media_type?: 'movie' | 'tv'
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           added_at: string
