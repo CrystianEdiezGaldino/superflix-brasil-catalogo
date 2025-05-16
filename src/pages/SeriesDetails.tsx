@@ -85,6 +85,11 @@ const SeriesDetails = () => {
       return;
     }
     
+    if (!series?.backdrop_path) {
+      toast.info("Esta série ainda não está disponível. Adicione aos favoritos para receber uma notificação quando estiver disponível!");
+      return;
+    }
+    
     setShowPlayer(!showPlayer);
     
     // Scroll to player when it becomes visible
@@ -100,6 +105,11 @@ const SeriesDetails = () => {
     if (!hasAccess) {
       toast.error("É necessário ter uma assinatura para assistir");
       navigate("/subscribe");
+      return;
+    }
+    
+    if (!series?.backdrop_path) {
+      toast.info("Esta série ainda não está disponível. Adicione aos favoritos para receber uma notificação quando estiver disponível!");
       return;
     }
     
@@ -132,7 +142,11 @@ const SeriesDetails = () => {
         toast.success("Removido dos favoritos");
       } else {
         addToFavorites(seriesId, 'tv');
-        toast.success("Adicionado aos favoritos");
+        if (!series.backdrop_path) {
+          toast.success("Adicionado aos favoritos! Você receberá uma notificação quando a série estiver disponível.");
+        } else {
+          toast.success("Adicionado aos favoritos");
+        }
       }
     }
   };
@@ -177,15 +191,17 @@ const SeriesDetails = () => {
           />
 
           {/* Player de vídeo - com ref para scroll */}
-          <div ref={playerRef} id="player-container">
-            <SeriesPlayer
-              showPlayer={showPlayer}
-              series={series}
-              selectedSeason={selectedSeason}
-              selectedEpisode={selectedEpisode}
-              hasAccess={hasAccess}
-            />
-          </div>
+          {series.backdrop_path && (
+            <div ref={playerRef} id="player-container">
+              <SeriesPlayer
+                showPlayer={showPlayer}
+                series={series}
+                selectedSeason={selectedSeason}
+                selectedEpisode={selectedEpisode}
+                hasAccess={hasAccess}
+              />
+            </div>
+          )}
 
           {/* Conteúdo da série - informações e episódios */}
           <SeriesContent 

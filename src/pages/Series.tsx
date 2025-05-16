@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import MediaView from '@/components/media/MediaView';
 import { Series } from '@/types/movie';
@@ -38,6 +37,12 @@ const SeriesPage = () => {
     resetFilters
   } = useSeries();
 
+  // Filtrar séries que não têm imagens
+  const filteredSeries = series.filter(series => series.poster_path || series.backdrop_path);
+  const filteredTrendingSeries = trendingSeries.filter(series => series.poster_path || series.backdrop_path);
+  const filteredTopRatedSeries = topRatedSeries.filter(series => series.poster_path || series.backdrop_path);
+  const filteredRecentSeries = recentSeries.filter(series => series.poster_path || series.backdrop_path);
+
   const handleMediaClick = (media: Series) => {
     if (media && media.id) {
       navigate(`/serie/${media.id}`);
@@ -53,10 +58,10 @@ const SeriesPage = () => {
       <MediaView
         title="Séries"
         type="tv"
-        mediaItems={series}
-        trendingItems={trendingSeries}
-        topRatedItems={topRatedSeries}
-        recentItems={recentSeries}
+        mediaItems={filteredSeries}
+        trendingItems={filteredTrendingSeries}
+        topRatedItems={filteredTopRatedSeries}
+        recentItems={filteredRecentSeries}
         isLoading={false}
         isLoadingMore={isLoadingMore}
         hasMore={hasMore}

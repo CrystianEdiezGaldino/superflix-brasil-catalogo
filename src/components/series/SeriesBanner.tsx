@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Heart } from "lucide-react";
+import { ArrowLeft, Heart, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Series } from "@/types/movie";
 
@@ -10,17 +10,28 @@ interface SeriesBannerProps {
 }
 
 const SeriesBanner = ({ series, isFavorite = false, onToggleFavorite }: SeriesBannerProps) => {
+  const hasBanner = !!series.backdrop_path;
+
   return (
     <div className="relative h-[50vh] md:h-[70vh]">
       <div className="absolute inset-0">
-        {series.backdrop_path ? (
+        {hasBanner ? (
           <img
             src={`https://image.tmdb.org/t/p/original${series.backdrop_path}`}
             alt={series.name}
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gray-900"></div>
+          <div className="w-full h-full bg-gradient-to-b from-netflix-red/20 to-netflix-background flex items-center justify-center">
+            <div className="text-center p-8">
+              <Bell className="w-16 h-16 text-netflix-red mx-auto mb-4" />
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Em Breve</h2>
+              <p className="text-gray-300 max-w-md mx-auto">
+                Esta série está em lançamento e será disponibilizada em breve. 
+                Adicione aos favoritos para receber uma notificação quando estiver disponível!
+              </p>
+            </div>
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-netflix-background via-netflix-background/70 to-transparent"></div>
       </div>
