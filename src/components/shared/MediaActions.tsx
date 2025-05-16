@@ -23,11 +23,13 @@ const MediaActions = ({
 }: MediaActionsProps) => {
   const handlePlayClick = async () => {
     if (hasAccess) {
+      console.log('Iniciando salvamento no histórico:', { tmdbId, mediaType });
       onPlayClick();
       try {
-        await watchHistoryService.addToHistory(tmdbId, mediaType);
+        const result = await watchHistoryService.addToHistory(tmdbId, mediaType);
+        console.log('Resultado do salvamento:', result);
       } catch (error) {
-        console.error('Erro ao adicionar ao histórico:', error);
+        console.error('Erro detalhado ao adicionar ao histórico:', error);
       }
     } else {
       onPlayClick();

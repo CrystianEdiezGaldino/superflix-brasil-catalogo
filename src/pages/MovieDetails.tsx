@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -133,6 +132,9 @@ const MovieDetails = () => {
             onFavoriteClick={handleToggleFavorite}
             isFavorite={isFavorite(movie.id)}
             hasAccess={hasAccess}
+            tmdbId={movie.id}
+            mediaType="movie"
+            showPlayer={showPlayer}
           />
 
           {/* Player de vídeo */}

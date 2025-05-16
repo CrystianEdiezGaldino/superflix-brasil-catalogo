@@ -77,11 +77,17 @@ const SeriesContent = ({
                     >
                       <div className="flex items-start gap-3 sm:gap-4">
                         <div className="relative w-32 sm:w-40 h-20 sm:h-24 flex-shrink-0">
-                          <img
-                            src={`https://image.tmdb.org/t/p/w300${episode.still_path}`}
-                            alt={episode.name}
-                            className="w-full h-full object-cover rounded"
-                          />
+                          {episode.still_path ? (
+                            <img
+                              src={`https://image.tmdb.org/t/p/w300${episode.still_path}`}
+                              alt={episode.name}
+                              className="w-full h-full object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-netflix-gray rounded flex items-center justify-center">
+                              <span className="text-white text-sm font-medium">Em lançamento</span>
+                            </div>
+                          )}
                           <div className="absolute inset-0 flex items-center justify-center">
                             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-netflix-red/80 flex items-center justify-center">
                               <span className="text-white text-xs sm:text-sm">
