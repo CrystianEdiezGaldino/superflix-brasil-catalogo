@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import SearchResults from "@/components/home/SearchResults";
 import { useMediaSearch } from "@/hooks/useMediaSearch";
@@ -8,6 +8,7 @@ const Search = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("q") || "";
   const [page, setPage] = useState(1);
+  const resultsRef = useRef<HTMLDivElement>(null);
   
   const { 
     results, 
@@ -16,6 +17,9 @@ const Search = () => {
     searchMedia 
   } = useMediaSearch();
 
+  // Filtra apenas os resultados que possuem imagem
+  const filteredResults = results.filter(media => media.poster_path);
+
   useEffect(() => {
     if (query) {
       searchMedia(query, 1);
@@ -23,18 +27,26 @@ const Search = () => {
     }
   }, [query]);
 
-  const handleLoadMore = () => {
+  const handleLoadMore = async () => {
     const nextPage = page + 1;
-    searchMedia(query, nextPage);
+    await searchMedia(query, nextPage);
     setPage(nextPage);
+    
+    // Scroll suave para o final da página após carregar novos conteúdos
+    setTimeout(() => {
+      window.scrollTo({
+        top: document.documentElement.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 100);
   };
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen pt-20">
+      <div className="min-h-screen pt-20" ref={resultsRef}>
         <SearchResults
-          results={results}
+          results={filteredResults}
           isSearching={isLoading}
           loadMoreResults={handleLoadMore}
           hasMore={hasMore}

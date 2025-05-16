@@ -32,10 +32,17 @@ export const useMediaSearch = () => {
       
       const newResults = await searchMedia(query, page);
       
+      // Se for a primeira página, substitui os resultados
+      // Se não for, adiciona aos resultados existentes
       if (page === 1) {
         setResults(newResults);
       } else {
-        setResults(prev => [...prev, ...newResults]);
+        setResults(prev => {
+          // Evita duplicatas
+          const existingIds = new Set(prev.map(item => item.id));
+          const uniqueNewResults = newResults.filter(item => !existingIds.has(item.id));
+          return [...prev, ...uniqueNewResults];
+        });
       }
       
       setHasMore(newResults.length === 20); // Assuming 20 items per page

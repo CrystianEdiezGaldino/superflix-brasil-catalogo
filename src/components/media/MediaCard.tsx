@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
 import { Card } from "@/components/ui/card";
@@ -48,7 +47,7 @@ const MediaCard = ({ media, onClick }: MediaCardProps) => {
   // Handle missing poster image
   const posterUrl = media.poster_path
     ? `https://image.tmdb.org/t/p/w500${media.poster_path}`
-    : '/placeholder.svg';
+    : null;
 
   // Get title (handle both movie and tv show titles)
   const title = 'title' in media ? media.title : 'name' in media ? media.name : "Sem título";
@@ -75,12 +74,21 @@ const MediaCard = ({ media, onClick }: MediaCardProps) => {
         onClick={handleClick}
       >
         <div className="relative aspect-[2/3] bg-gray-900 overflow-hidden">
-          <img 
-            src={posterUrl}
-            alt={title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-            loading="lazy"
-          />
+          {posterUrl ? (
+            <img 
+              src={posterUrl}
+              alt={title}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+              loading="lazy"
+            />
+          ) : (
+            <div className="h-full w-full bg-gray-900 flex items-center justify-center border border-gray-800">
+              <div className="text-center p-4">
+                <span className="text-gray-400 text-sm block mb-2">Sem imagem</span>
+                <span className="text-gray-500 text-xs">{title}</span>
+              </div>
+            </div>
+          )}
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
             <div className="text-white font-medium">{title}</div>
