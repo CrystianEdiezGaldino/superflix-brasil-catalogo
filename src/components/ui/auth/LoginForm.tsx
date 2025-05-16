@@ -17,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Lock } from "lucide-react";
+import ResetPasswordForm from "./ResetPasswordForm";
 
 // Modified schema to include terms acceptance
 const loginSchema = z.object({
@@ -38,6 +39,7 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showResetPassword, setShowResetPassword] = useState(false);
 
   // Get redirect path from location state, or default to home
   const redirectPath = location.state?.from?.pathname || "/";
@@ -47,7 +49,7 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
     defaultValues: {
       email: "",
       password: "",
-      termsAccepted: true // Começa marcado por padrão
+      termsAccepted: true
     },
   });
 
@@ -99,6 +101,16 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
     }
   };
 
+  if (showResetPassword) {
+    return (
+      <ResetPasswordForm
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        onBack={() => setShowResetPassword(false)}
+      />
+    );
+  }
+
   return (
     <>
       <h1 className="text-2xl font-bold text-white mb-6 flex items-center">
@@ -147,35 +159,46 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="termsAccepted"
-            render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                <FormControl>
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                    disabled={isLoading}
-                    className="border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red"
-                  />
-                </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel className="text-sm text-gray-300">
-                    Li e aceito os{" "}
-                    <Link 
-                      to="/termos-de-servico" 
-                      className="text-netflix-red hover:underline"
-                      target="_blank"
-                    >
-                      termos de serviço
-                    </Link>
-                  </FormLabel>
-                  <FormMessage className="text-red-400" />
-                </div>
-              </FormItem>
-            )}
-          />
+          <div className="flex items-center justify-between">
+            <FormField
+              control={form.control}
+              name="termsAccepted"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      disabled={isLoading}
+                      className="border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel className="text-sm text-gray-300">
+                      Li e aceito os{" "}
+                      <Link 
+                        to="/termos-de-servico" 
+                        className="text-netflix-red hover:underline"
+                        target="_blank"
+                      >
+                        termos de serviço
+                      </Link>
+                    </FormLabel>
+                    <FormMessage className="text-red-400" />
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <button
+              type="button"
+              onClick={() => setShowResetPassword(true)}
+              className="text-sm text-netflix-red hover:text-red-400 hover:underline transition-colors"
+              disabled={isLoading}
+            >
+              Esqueceu a senha?
+            </button>
+          </div>
 
           <Button
             type="submit"

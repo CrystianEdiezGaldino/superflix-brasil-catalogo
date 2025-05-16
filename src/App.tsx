@@ -19,6 +19,7 @@ import SeriesDetails from "./pages/SeriesDetails";
 import AnimeDetails from "./pages/AnimeDetails";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
 import Subscribe from "./pages/Subscribe";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
@@ -106,6 +107,7 @@ const App = () => {
                 </ProtectedRoute>
               } />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/auth/reset-password" element={<ResetPassword />} />
               <Route path="/profile" element={
                 <ProtectedRoute>
                   <Profile />

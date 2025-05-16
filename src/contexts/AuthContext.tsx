@@ -1,8 +1,8 @@
-
 import { createContext, useContext, ReactNode, useMemo } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { useAuthState } from "@/hooks/useAuthState";
 import { signUpUser, signInUser, signOutUser } from "@/utils/authUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextProps {
   session: Session | null;
@@ -10,6 +10,7 @@ interface AuthContextProps {
   signUp: (email: string, password: string, metadata?: { [key: string]: any }) => Promise<void>;
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   loading: boolean;
 }
 
@@ -31,6 +32,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const signOut = async () => {
       await signOutUser();
     };
+
+    const resetPassword = async (email: string) => {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      });
+      
+      if (error) {
+        throw error;
+      }
+    };
     
     return {
       session,
@@ -38,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signIn,
       signOut,
+      resetPassword,
       loading
     };
   }, [session, user, loading]);
