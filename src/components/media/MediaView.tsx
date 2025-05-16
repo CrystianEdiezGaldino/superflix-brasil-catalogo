@@ -121,7 +121,7 @@ const MediaView = ({
         </div>
         
         {/* Grade de conteúdo completa */}
-        <section className="mt-8">
+        <div className="mt-8">
           <MediaGrid 
             mediaItems={mediaItems}
             isLoading={isLoading}
@@ -133,7 +133,7 @@ const MediaView = ({
             onResetFilters={onResetFilters}
             onMediaClick={onMediaClick}
           />
-        </section>
+        </div>
       </div>
     </div>
   );

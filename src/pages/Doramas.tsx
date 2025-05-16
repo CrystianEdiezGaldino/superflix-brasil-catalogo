@@ -15,6 +15,7 @@ const Doramas = () => {
   const [page, setPage] = useState(1);
   const [allDoramas, setAllDoramas] = useState<Series[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['doramas', page],
@@ -29,6 +30,7 @@ const Doramas = () => {
       if (page === 1) {
         setAllDoramas(data.doramas);
         setIsInitialLoading(false);
+        setIsProcessing(!data.isComplete);
       } else {
         // Adiciona apenas os novos doramas que ainda não estão na lista
         setAllDoramas(prev => {
@@ -78,7 +80,7 @@ const Doramas = () => {
         title="Doramas"
         type="dorama"
         mediaItems={allDoramas}
-        isLoading={false}
+        isLoading={isInitialLoading}
         isLoadingMore={isLoading && page > 1}
         hasMore={hasMore}
         isFiltering={false}
@@ -98,9 +100,16 @@ const Doramas = () => {
           setPage(1);
           setAllDoramas([]);
           setIsInitialLoading(true);
+          setIsProcessing(false);
         }}
         onMediaClick={handleMediaClick}
       />
+      {isProcessing && (
+        <div className="fixed bottom-4 right-4 bg-netflix-background/90 backdrop-blur-sm p-4 rounded-lg shadow-lg flex items-center space-x-2">
+          <Loader2 className="w-5 h-5 text-netflix-red animate-spin" />
+          <span className="text-white text-sm">Processando mais doramas...</span>
+        </div>
+      )}
       {isLoading && page > 1 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 p-4">
           {loadingSkeletons}
