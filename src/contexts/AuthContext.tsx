@@ -34,8 +34,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const resetPassword = async (email: string) => {
+      // Obtém a URL base do site
+      const siteUrl = window.location.origin;
+      
+      // Configura o link de redirecionamento
+      const redirectTo = `${siteUrl}/auth/reset-password`;
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `http://naflixtv.lovable.app/auth/reset-password`,
+        redirectTo,
       });
       
       if (error) {
