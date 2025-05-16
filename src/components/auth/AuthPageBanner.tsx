@@ -15,7 +15,7 @@ const AuthPageBanner = () => {
           className="h-[150px] transition-transform duration-300"
         />
       </div>
-      <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">Bem-vindo ao SuperFlix</h2>
+      <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">Bem-vindo ao NaflixTV</h2>
       <p className="text-xl text-gray-300 max-w-md mx-auto">
         Filmes, séries, animes e muito mais em um só lugar
       </p>
