@@ -75,7 +75,7 @@ const MediaView = ({
     <div className="min-h-screen bg-netflix-background">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 pt-24">
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">{title}</h1>
         
         {/* Conteúdo de destaque (renderizado condicionalmente) */}
