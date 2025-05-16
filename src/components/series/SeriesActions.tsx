@@ -1,4 +1,6 @@
-import { Play, Heart } from "lucide-react";
+
+import { Heart, Play } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SeriesActionsProps {
   showPlayer: boolean;
@@ -16,30 +18,45 @@ const SeriesActions = ({
   onToggleFavorite
 }: SeriesActionsProps) => {
   return (
-    <div className="flex items-center gap-3 sm:gap-4">
-      <button
-        onClick={togglePlayer}
-        className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-md text-sm sm:text-base font-medium transition-all duration-300 ${
-          showPlayer
-            ? "bg-netflix-red/20 text-netflix-red border border-netflix-red hover:bg-netflix-red/30"
-            : "bg-netflix-red text-white hover:bg-netflix-red/90"
-        }`}
-      >
-        <Play className="w-4 h-4 sm:w-5 sm:h-5" />
-        {showPlayer ? "Fechar Player" : "Assistir"}
-      </button>
+    <div className="relative z-10 px-4 sm:px-6 md:px-10 mt-2 mb-8">
+      <div className="max-w-7xl mx-auto flex flex-wrap gap-3 sm:gap-6">
+        {/* Botão Assistir */}
+        <button
+          onClick={togglePlayer}
+          disabled={!hasAccess}
+          className={cn(
+            "flex items-center gap-2 sm:gap-3 py-3 px-6 sm:px-8 rounded-full font-medium text-base sm:text-lg transition-all duration-300 shadow-lg",
+            showPlayer 
+              ? "bg-gray-700 hover:bg-gray-600 text-white"
+              : hasAccess 
+                ? "bg-netflix-red hover:bg-red-700 text-white" 
+                : "bg-gray-700 text-gray-300 cursor-not-allowed opacity-80"
+          )}
+        >
+          <Play fill="currentColor" size={18} className="sm:size-5" />
+          <span>{showPlayer ? "Fechar Player" : "Assistir"}</span>
+        </button>
 
-      <button
-        onClick={onToggleFavorite}
-        className={`flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-md text-sm sm:text-base font-medium transition-all duration-300 ${
-          isFavorite
-            ? "bg-netflix-red/20 text-netflix-red border border-netflix-red hover:bg-netflix-red/30"
-            : "bg-netflix-gray text-gray-300 hover:bg-netflix-gray-hover"
-        }`}
-      >
-        <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isFavorite ? "fill-netflix-red" : ""}`} />
-        {isFavorite ? "Favorito" : "Favoritar"}
-      </button>
+        {/* Botão Favorito */}
+        <button
+          onClick={onToggleFavorite}
+          className={cn(
+            "flex items-center gap-2 sm:gap-3 py-3 px-6 sm:px-8 rounded-full font-medium text-base transition-all duration-300 border-2 shadow-lg",
+            isFavorite
+              ? "bg-white/10 border-white text-white hover:bg-white/20"
+              : "bg-black/60 backdrop-blur border-gray-600 text-gray-300 hover:border-white hover:text-white"
+          )}
+        >
+          <Heart
+            size={18}
+            className={cn(
+              "sm:size-5 transition-all duration-300", 
+              isFavorite && "fill-netflix-red text-netflix-red"
+            )}
+          />
+          <span>{isFavorite ? "Favorito" : "Favoritar"}</span>
+        </button>
+      </div>
     </div>
   );
 };

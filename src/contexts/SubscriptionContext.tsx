@@ -1,3 +1,4 @@
+
 import { createContext, useState, useEffect, useContext } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +10,13 @@ interface Subscription {
   price_id: string;
   interval: string;
   created_at: string;
+  current_period_start?: string;
+  current_period_end?: string;
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  updated_at?: string;
+  plan_type?: string;
+  trial_end?: string;
 }
 
 interface TempAccess {
@@ -16,6 +24,8 @@ interface TempAccess {
   user_id: string;
   expires_at: string;
   created_at: string;
+  granted_by?: string;
+  is_active?: boolean;
 }
 
 interface SubscriptionContextType {
@@ -27,7 +37,6 @@ interface SubscriptionContextType {
   tempAccess: TempAccess | null;
   isLoading: boolean;
   refreshSubscriptionStatus: () => void;
-  // Remova qualquer propriedade recursiva aqui
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -57,8 +66,30 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
           console.error("Erro ao buscar assinatura:", subscriptionError);
         }
 
-        setSubscription(subscriptionData || null);
-        setIsSubscribed(subscriptionData?.status === 'active' || false);
+        if (subscriptionData) {
+          // Ensure the subscription has the required fields
+          const validSubscription: Subscription = {
+            id: subscriptionData.id || '',
+            user_id: subscriptionData.user_id || '',
+            status: subscriptionData.status || '',
+            price_id: subscriptionData.price_id || '',
+            interval: subscriptionData.interval || '',
+            created_at: subscriptionData.created_at || '',
+            current_period_start: subscriptionData.current_period_start,
+            current_period_end: subscriptionData.current_period_end,
+            stripe_customer_id: subscriptionData.stripe_customer_id,
+            stripe_subscription_id: subscriptionData.stripe_subscription_id,
+            updated_at: subscriptionData.updated_at,
+            plan_type: subscriptionData.plan_type,
+            trial_end: subscriptionData.trial_end
+          };
+          
+          setSubscription(validSubscription);
+          setIsSubscribed(validSubscription.status === 'active' || false);
+        } else {
+          setSubscription(null);
+          setIsSubscribed(false);
+        }
 
         // Fetch temp access data
         const { data: tempAccessData, error: tempAccessError } = await supabase
@@ -74,40 +105,49 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         if (tempAccessData) {
           const expiryDate = new Date(tempAccessData.expires_at);
           const now = new Date();
-          setHasTempAccess(expiryDate > now);
-          setTempAccess(tempAccessData);
+          const isActive = expiryDate > now;
+          
+          setHasTempAccess(isActive);
+          setTempAccess({
+            ...tempAccessData,
+            is_active: isActive
+          });
         } else {
           setHasTempAccess(false);
           setTempAccess(null);
         }
 
-        // Fetch trial access data (assuming you have a table for trial access)
-        const { data: trialAccessData, error: trialAccessError } = await supabase
-          .from('trial_access')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
-
-        if (trialAccessError) {
-          console.error("Erro ao buscar acesso de teste:", trialAccessError);
-        }
-
-         if (trialAccessData) {
-          const expiryDate = new Date(trialAccessData.expires_at);
-          const now = new Date();
-          setHasTrialAccess(expiryDate > now);
-        } else {
+        // Check if trial_access table exists and handle accordingly
+        try {
+          const { data: trialAccessData, error: trialAccessError } = await supabase
+            .rpc('check_trial_access', { user_id_param: user.id });
+            
+          if (trialAccessError) {
+            console.error("Erro ao verificar acesso de teste:", trialAccessError);
+            setHasTrialAccess(false);
+          } else {
+            setHasTrialAccess(!!trialAccessData?.has_access);
+          }
+        } catch (error) {
+          console.error("Erro ao verificar acesso de teste:", error);
           setHasTrialAccess(false);
         }
 
         // Check admin role
-        const { data: adminData, error: adminError } = await supabase
-          .from('admins')
-          .select('*')
-          .eq('user_id', user.id)
-          .single();
+        try {
+          const { data: adminData, error: adminError } = await supabase
+            .rpc('check_admin_status', { user_id_param: user.id });
 
-        setIsAdmin(!!adminData);
+          if (adminError) {
+            console.error("Erro ao verificar status de admin:", adminError);
+            setIsAdmin(false);
+          } else {
+            setIsAdmin(!!adminData?.is_admin);
+          }
+        } catch (error) {
+          console.error("Erro ao verificar status de admin:", error);
+          setIsAdmin(false);
+        }
 
       } catch (error) {
         console.error("Erro ao verificar status da assinatura:", error);

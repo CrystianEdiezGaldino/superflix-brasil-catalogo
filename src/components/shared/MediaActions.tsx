@@ -7,9 +7,16 @@ interface MediaActionsProps {
   onFavoriteClick: () => void;
   isFavorite: boolean;
   hasAccess: boolean;
+  showPlayer?: boolean;
 }
 
-const MediaActions = ({ onPlayClick, onFavoriteClick, isFavorite, hasAccess }: MediaActionsProps) => {
+const MediaActions = ({ 
+  onPlayClick, 
+  onFavoriteClick, 
+  isFavorite, 
+  hasAccess,
+  showPlayer
+}: MediaActionsProps) => {
   return (
     <div className="relative z-10 px-4 sm:px-6 md:px-10 mt-2 mb-8">
       <div className="max-w-7xl mx-auto flex flex-wrap gap-3 sm:gap-6">
@@ -19,13 +26,15 @@ const MediaActions = ({ onPlayClick, onFavoriteClick, isFavorite, hasAccess }: M
           disabled={!hasAccess}
           className={cn(
             "flex items-center gap-2 sm:gap-3 py-3 px-6 sm:px-8 rounded-full font-medium text-base sm:text-lg transition-all duration-300 shadow-lg",
-            hasAccess 
-              ? "bg-netflix-red hover:bg-red-700 text-white" 
-              : "bg-gray-700 text-gray-300 cursor-not-allowed opacity-80"
+            showPlayer 
+              ? "bg-gray-700 hover:bg-gray-600 text-white"
+              : hasAccess 
+                ? "bg-netflix-red hover:bg-red-700 text-white" 
+                : "bg-gray-700 text-gray-300 cursor-not-allowed opacity-80"
           )}
         >
           <Play fill="currentColor" size={18} className="sm:size-5" />
-          <span>Assistir</span>
+          <span>{showPlayer ? "Fechar Player" : "Assistir"}</span>
         </button>
 
         {/* Botão Favorito */}

@@ -1,28 +1,29 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { fetchSeriesDetails, fetchSeriesSeasonDetails } from "@/services/tmdbApi";
+import { fetchSeriesDetails, fetchSeriesSeasonDetails, fetchSeriesRecommendations } from "@/services/tmdb/series";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useFavorites } from "@/hooks/useFavorites";
+import Navbar from "@/components/Navbar";
 import SeriesHeader from "@/components/series/SeriesHeader";
 import SeriesContent from "@/components/series/SeriesContent";
-import SeriesActions from "@/components/series/SeriesActions";
+import SeriesPlayer from "@/components/series/SeriesPlayer";
 import SeriesLoadingState from "@/components/loading/SeriesLoadingState";
-import SeriesVideoPlayer from "@/components/series/SeriesVideoPlayer";
-import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
+import MediaActions from "@/components/shared/MediaActions";
+import MediaGrid from "@/components/media/MediaGrid";
 import { Series, Season } from "@/types/movie";
-import Navbar from "@/components/Navbar";
 
 const SeriesDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
-  const [isContentAvailable, setIsContentAvailable] = useState(true);
+  const playerRef = useRef<HTMLDivElement>(null);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -32,6 +33,8 @@ const SeriesDetails = () => {
     hasTrialAccess,
     isLoading: subscriptionLoading 
   } = useSubscription();
+  
+  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
 
@@ -43,80 +46,108 @@ const SeriesDetails = () => {
     }
   }, [user, authLoading, navigate]);
 
-  const { data: series, isLoading, error } = useQuery<Series>({
+  // Fetch series details
+  const { data: series, isLoading, error } = useQuery({
     queryKey: ["series", id],
     queryFn: () => fetchSeriesDetails(id as string),
     enabled: !!id && !!user,
   });
 
-  const { data: seasonData, isLoading: isLoadingSeason } = useQuery<Season>({
-    queryKey: ["series-season", id, selectedSeason],
+  // Fetch season details
+  const { data: seasonData, isLoading: isLoadingSeason } = useQuery({
+    queryKey: ["season", id, selectedSeason],
     queryFn: () => fetchSeriesSeasonDetails(id as string, selectedSeason),
-    enabled: !!id && !!user && !!selectedSeason,
+    enabled: !!id && !!series && !!user,
   });
 
-  // Verificar se o conteúdo está disponível
-  useEffect(() => {
-    if (series && !series.external_ids?.imdb_id) {
-      setIsContentAvailable(false);
-    }
-  }, [series]);
+  // Fetch recommendations
+  const { data: recommendations, isLoading: isLoadingRecommendations } = useQuery({
+    queryKey: ["series-recommendations", id],
+    queryFn: () => fetchSeriesRecommendations(id as string),
+    enabled: !!id && !!user,
+  });
 
-  // Scroll to player when it becomes visible
-  useEffect(() => {
-    if (showPlayer) {
-      const playerElement = document.getElementById('video-player');
-      if (playerElement) {
-        setTimeout(() => {
-          playerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }
-    }
-  }, [showPlayer]);
-
+  // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [id]);
 
-  // Toggle favorite
-  const toggleFavorite = () => {
-    if (!user) {
-      toast.error("É necessário fazer login para adicionar aos favoritos");
-      return;
-    }
-    
-    setIsFavorite(!isFavorite);
-    toast.success(isFavorite ? "Removido dos favoritos" : "Adicionado aos favoritos");
-  };
+  // Create an array with season numbers based on series data
+  const seasons = Array.from(
+    { length: series?.number_of_seasons || 0 },
+    (_, i) => i + 1
+  );
 
-  // Show subscription modal if trying to watch without access
+  // Handle play button click
   const handleWatchClick = () => {
     if (!hasAccess) {
       toast.error("É necessário ter uma assinatura para assistir");
       navigate("/subscribe");
-    } else {
-      setShowPlayer(!showPlayer);
+      return;
+    }
+    
+    setShowPlayer(!showPlayer);
+    
+    // Scroll to player when it becomes visible
+    if (!showPlayer && playerRef.current) {
+      setTimeout(() => {
+        playerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
   };
 
-  const handleEpisodeSelect = (episode: number) => {
-    setSelectedEpisode(episode);
+  // Handle episode selection
+  const handleEpisodeSelect = (episodeNumber: number) => {
+    if (!hasAccess) {
+      toast.error("É necessário ter uma assinatura para assistir");
+      navigate("/subscribe");
+      return;
+    }
+    
+    setSelectedEpisode(episodeNumber);
     setShowPlayer(true);
+    
+    // Scroll to player when episode is selected
+    setTimeout(() => {
+      playerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
+  // Handle season selection
   const handleSeasonSelect = (season: number) => {
     setSelectedSeason(season);
     setSelectedEpisode(1);
   };
 
-  const seasons = Array.from(
-    { length: series?.number_of_seasons || 0 }, 
-    (_, i) => i + 1
-  );
+  // Toggle favorite
+  const handleToggleFavorite = () => {
+    if (!user) {
+      toast.error("É necessário fazer login para adicionar aos favoritos");
+      return;
+    }
+    
+    if (series) {
+      const seriesId = typeof series.id === "string" ? parseInt(series.id) : series.id;
+      if (isFavorite(seriesId)) {
+        removeFromFavorites(seriesId);
+        toast.success("Removido dos favoritos");
+      } else {
+        addToFavorites(seriesId);
+        toast.success("Adicionado aos favoritos");
+      }
+    }
+  };
+
+  // Handle recommendation click
+  const handleMediaClick = (media: Series) => {
+    const mediaId = typeof media.id === 'string' ? parseInt(media.id, 10) : media.id;
+    navigate(`/serie/${mediaId}`);
+  };
 
   return (
-    <div className="min-h-screen bg-netflix-background">
+    <div className="min-h-screen bg-netflix-background pb-10">
       <Navbar onSearch={() => {}} />
+      
       <SeriesLoadingState 
         isLoading={authLoading || subscriptionLoading || isLoading}
         hasUser={!!user}
@@ -126,42 +157,36 @@ const SeriesDetails = () => {
       {series && (
         <>
           <SeriesHeader 
-            series={series} 
-            isFavorite={isFavorite} 
-            toggleFavorite={toggleFavorite} 
+            series={series}
+            isFavorite={isFavorite(series.id)} 
+            toggleFavorite={handleToggleFavorite} 
           />
           
           <div className="px-6 md:px-10">
             <AdblockSuggestion />
           </div>
 
-          <SeriesActions 
-            showPlayer={showPlayer} 
-            hasAccess={hasAccess} 
-            togglePlayer={handleWatchClick}
-            isFavorite={isFavorite}
-            onToggleFavorite={toggleFavorite}
+          {/* Botões de ação - assistir e favoritar */}
+          <MediaActions
+            onPlayClick={handleWatchClick}
+            onFavoriteClick={handleToggleFavorite}
+            isFavorite={isFavorite(series.id)}
+            hasAccess={hasAccess}
+            showPlayer={showPlayer}
           />
 
-          {/* Player de vídeo usando componente dedicado */}
-          {showPlayer && series.external_ids?.imdb_id && (
-            <div className="px-6 md:px-10 mb-10">
-              <SeriesVideoPlayer 
-                showPlayer={true}
-                imdbId={series.external_ids.imdb_id}
-                hasAccess={hasAccess}
-                selectedSeason={selectedSeason}
-                selectedEpisode={selectedEpisode}
-              />
-            </div>
-          )}
+          {/* Player de vídeo - com ref para scroll */}
+          <div ref={playerRef} id="player-container">
+            <SeriesPlayer
+              showPlayer={showPlayer}
+              series={series}
+              selectedSeason={selectedSeason}
+              selectedEpisode={selectedEpisode}
+              hasAccess={hasAccess}
+            />
+          </div>
 
-          {!isContentAvailable && (
-            <div className="px-6 md:px-10 mb-10">
-              <ContentNotAvailable onAddToFavorites={toggleFavorite} />
-            </div>
-          )}
-
+          {/* Conteúdo da série - informações e episódios */}
           <SeriesContent 
             series={series} 
             hasAccess={hasAccess}
@@ -174,6 +199,30 @@ const SeriesDetails = () => {
             isLoadingSeason={isLoadingSeason}
             subscriptionLoading={subscriptionLoading}
           />
+
+          {/* Recomendações */}
+          {recommendations?.results && recommendations.results.length > 0 && (
+            <div className="px-4 sm:px-6 md:px-10 mt-8 sm:mt-10">
+              <div className="max-w-7xl mx-auto">
+                <h2 className="text-xl sm:text-2xl font-semibold text-white mb-4 sm:mb-6 flex items-center">
+                  <span className="bg-netflix-red h-5 w-1 mr-2 rounded-full"></span>
+                  Recomendações para você
+                </h2>
+                
+                <MediaGrid
+                  mediaItems={recommendations.results.slice(0, 10)}
+                  onMediaClick={handleMediaClick}
+                  isLoading={isLoadingRecommendations}
+                  isLoadingMore={false}
+                  hasMore={false}
+                  isSearching={false}
+                  isFiltering={false}
+                  onLoadMore={() => {}}
+                  onResetFilters={() => {}}
+                />
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

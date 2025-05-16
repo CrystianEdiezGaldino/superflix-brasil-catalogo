@@ -20,29 +20,25 @@ const SeriesPlayer = ({
 }: SeriesPlayerProps) => {
   const imdbId = series.external_ids?.imdb_id;
   
-  // Scroll to player when it becomes visible
-  useEffect(() => {
-    if (showPlayer) {
-      const playerElement = document.getElementById('video-player');
-      if (playerElement) {
-        setTimeout(() => {
-          playerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }
-    }
-  }, [showPlayer]);
-  
   if (!showPlayer || !imdbId) return null;
   
   return (
-    <div id="video-player" className="px-6 md:px-10 mb-10">
-      <SeriesVideoPlayer 
-        showPlayer={true}
-        imdbId={imdbId}
-        selectedSeason={selectedSeason}
-        selectedEpisode={selectedEpisode}
-        hasAccess={hasAccess}
-      />
+    <div className="px-4 sm:px-6 md:px-10 mb-10 w-full">
+      <div className="max-w-7xl mx-auto">
+        <div className="relative aspect-video w-full overflow-hidden rounded-lg border-2 border-gray-800 shadow-xl">
+          <SeriesVideoPlayer 
+            showPlayer={true}
+            imdbId={imdbId}
+            selectedSeason={selectedSeason}
+            selectedEpisode={selectedEpisode}
+            hasAccess={hasAccess}
+          />
+        </div>
+        
+        <div className="mt-4 px-2 text-gray-400 text-sm">
+          <p>Assistindo: Temporada {selectedSeason} | Episódio {selectedEpisode}</p>
+        </div>
+      </div>
     </div>
   );
 };
