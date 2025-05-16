@@ -18,7 +18,7 @@ interface UserActionProps {
 
 const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
   const { user, signOut } = useAuth();
-  const { hasValidSubscription, isAdmin } = useSubscription();
+  const { isSubscribed, isAdmin } = useSubscription();
   
   // Return nothing if user is not authenticated
   if (!isAuthenticated || !user) {
@@ -52,7 +52,7 @@ const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
           </DropdownMenuItem>
         </Link>
         
-        {!hasValidSubscription && (
+        {!isSubscribed && (
           <Link to="/subscribe">
             <DropdownMenuItem className="cursor-pointer hover:bg-netflix-hover text-netflix-red">
               Ativar Assinatura

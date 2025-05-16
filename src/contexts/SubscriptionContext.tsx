@@ -157,7 +157,7 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useSubscription = () => {
+export const useSubscription = (): SubscriptionContextType => {
   const context = useContext(SubscriptionContext);
   if (context === undefined) {
     throw new Error('useSubscription must be used within a SubscriptionProvider');

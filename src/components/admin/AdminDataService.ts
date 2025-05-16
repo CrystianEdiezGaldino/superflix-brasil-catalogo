@@ -72,7 +72,7 @@ export async function fetchAdminData() {
     
     // Combine user data with subscription and admin data
     const userData = authData?.user ? [authData.user] : [];
-    const combinedUsers = userData.map((user: any) => {
+    const combinedUsers = userData.map((user: any): UserWithSubscription => {
       const subscription = subscriptionsData?.find((sub: any) => sub.user_id === user.id);
       const tempAccess = tempAccessesData?.find(
         (access: any) => access.user_id === user.id && new Date(access.expires_at) > new Date()
@@ -92,6 +92,18 @@ export async function fetchAdminData() {
         current_period_end: subscription.current_period_end,
         trial_end: subscription.trial_end
       } : undefined;
+
+      // Format temp_access to match the required type
+      const formattedTempAccess = tempAccess ? {
+        id: tempAccess.id,
+        user_id: tempAccess.user_id,
+        expires_at: tempAccess.expires_at,
+        granted_by: tempAccess.granted_by,
+        is_active: true, // Add the missing is_active property
+        created_at: tempAccess.created_at,
+        start_date: tempAccess.created_at,
+        end_date: tempAccess.expires_at
+      } : undefined;
       
       return {
         id: user.id,
@@ -101,8 +113,8 @@ export async function fetchAdminData() {
         created_at: user.created_at || profile?.created_at,
         is_admin: isAdmin,
         subscription: formattedSubscription,
-        temp_access: tempAccess
-      } as UserWithSubscription;
+        temp_access: formattedTempAccess
+      };
     });
     
     // Get all users from the database
@@ -131,7 +143,7 @@ export async function fetchAdminData() {
     const stats: AdminStats = {
       totalUsers: allProfiles?.length || 0,
       activeSubscriptions: activeSubscriptions.length,
-      tempAccess: activeTempAccesses.length, // Changed from tempAccesses to tempAccess
+      tempAccess: activeTempAccesses.length,
       promoCodes: 0, // Default value
       adminUsers: adminUsersCount,
       monthlyRevenue: monthlyRevenue + annualRevenue,
@@ -141,7 +153,7 @@ export async function fetchAdminData() {
     return {
       users: combinedUsers,
       subscriptions: subscriptionsData || [],
-      tempAccess: activeTempAccesses || [], // Changed from tempAccesses to tempAccess
+      tempAccess: activeTempAccesses || [],
       stats
     };
   } catch (error) {
