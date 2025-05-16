@@ -7,6 +7,9 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import MediaCardSkeleton from '@/components/media/MediaCardSkeleton';
 
+const INITIAL_BATCH_SIZE = 10;
+const SUBSEQUENT_BATCH_SIZE = 20;
+
 const Doramas = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -16,6 +19,8 @@ const Doramas = () => {
   const [allDoramas, setAllDoramas] = useState<Series[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [displayedDoramas, setDisplayedDoramas] = useState<Series[]>([]);
+  const [currentBatchSize, setCurrentBatchSize] = useState(INITIAL_BATCH_SIZE);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['doramas', page],
@@ -29,10 +34,10 @@ const Doramas = () => {
     if (data?.doramas) {
       if (page === 1) {
         setAllDoramas(data.doramas);
+        setDisplayedDoramas(data.doramas.slice(0, INITIAL_BATCH_SIZE));
         setIsInitialLoading(false);
         setIsProcessing(!data.isComplete);
       } else {
-        // Adiciona apenas os novos doramas que ainda não estão na lista
         setAllDoramas(prev => {
           const newDoramas = data.doramas.filter(
             newDorama => !prev.some(existing => existing.id === newDorama.id)
@@ -42,6 +47,15 @@ const Doramas = () => {
       }
     }
   }, [data, page]);
+
+  // Efeito para controlar o carregamento gradual
+  useEffect(() => {
+    if (allDoramas.length > 0) {
+      const nextBatchSize = page === 1 ? INITIAL_BATCH_SIZE : currentBatchSize + SUBSEQUENT_BATCH_SIZE;
+      setDisplayedDoramas(allDoramas.slice(0, nextBatchSize));
+      setCurrentBatchSize(nextBatchSize);
+    }
+  }, [allDoramas, page]);
 
   const handleMediaClick = (media: Series) => {
     navigate(`/dorama/${media.id}`);
@@ -64,7 +78,6 @@ const Doramas = () => {
   const total = data?.total || 0;
   const hasMore = allDoramas.length < total;
 
-  // Cria um array de skeletons para mostrar durante o carregamento
   const loadingSkeletons = Array.from({ length: 6 }, (_, index) => (
     <MediaCardSkeleton key={`skeleton-${index}`} />
   ));
@@ -79,7 +92,7 @@ const Doramas = () => {
       <MediaView
         title="Doramas"
         type="dorama"
-        mediaItems={allDoramas}
+        mediaItems={displayedDoramas}
         isLoading={isInitialLoading}
         isLoadingMore={isLoading && page > 1}
         hasMore={hasMore}
@@ -99,6 +112,8 @@ const Doramas = () => {
           setSearchQuery('');
           setPage(1);
           setAllDoramas([]);
+          setDisplayedDoramas([]);
+          setCurrentBatchSize(INITIAL_BATCH_SIZE);
           setIsInitialLoading(true);
           setIsProcessing(false);
         }}
