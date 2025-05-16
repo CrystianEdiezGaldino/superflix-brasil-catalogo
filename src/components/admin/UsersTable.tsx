@@ -28,7 +28,11 @@ import {
   Filter,
   Users,
   Mail,
-  Clock
+  Clock,
+  DollarSign,
+  TrendingUp,
+  AlertCircle,
+  Clock as ClockIcon
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -185,6 +189,38 @@ export const UsersTable = ({ users, isLoading, onRefresh }: UsersTableProps) => 
     return { label: 'Ativa', variant: 'default' as const };
   };
 
+  const calculateStats = () => {
+    const totalUsers = users.length;
+    const activeSubscriptions = users.filter(user => 
+      user.subscription?.status === 'active' || user.subscription?.status === 'trialing'
+    ).length;
+    const canceledSubscriptions = users.filter(user => 
+      user.subscription?.status === 'canceled'
+    ).length;
+    const trialSubscriptions = users.filter(user => 
+      user.subscription?.status === 'trialing'
+    ).length;
+    const expiredSubscriptions = users.filter(user => {
+      if (!user.subscription?.current_period_end) return false;
+      return new Date(user.subscription.current_period_end) < new Date();
+    }).length;
+
+    const monthlyRevenue = activeSubscriptions * 9.90;
+    const projectedAnnualRevenue = monthlyRevenue * 12;
+
+    return {
+      totalUsers,
+      activeSubscriptions,
+      canceledSubscriptions,
+      trialSubscriptions,
+      expiredSubscriptions,
+      monthlyRevenue,
+      projectedAnnualRevenue
+    };
+  };
+
+  const stats = calculateStats();
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -202,6 +238,88 @@ export const UsersTable = ({ users, isLoading, onRefresh }: UsersTableProps) => 
 
   return (
     <div className="space-y-6">
+      {/* Dashboard Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-netflix-dark/50 border border-netflix-red/20 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-netflix-red/10 rounded-lg">
+              <Users className="h-5 w-5 text-netflix-red" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Total de Usuários</p>
+              <h3 className="text-2xl font-bold text-white">{stats.totalUsers}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-netflix-dark/50 border border-netflix-red/20 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-500/10 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-green-500" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Assinaturas Ativas</p>
+              <h3 className="text-2xl font-bold text-white">{stats.activeSubscriptions}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-netflix-dark/50 border border-netflix-red/20 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-yellow-500/10 rounded-lg">
+              <ClockIcon className="h-5 w-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Em Período de Teste</p>
+              <h3 className="text-2xl font-bold text-white">{stats.trialSubscriptions}</h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-netflix-dark/50 border border-netflix-red/20 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-500/10 rounded-lg">
+              <AlertCircle className="h-5 w-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Assinaturas Canceladas</p>
+              <h3 className="text-2xl font-bold text-white">{stats.canceledSubscriptions}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Revenue Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-netflix-dark/50 border border-netflix-red/20 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-500/10 rounded-lg">
+              <DollarSign className="h-5 w-5 text-green-500" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Receita Mensal Estimada</p>
+              <h3 className="text-2xl font-bold text-white">
+                R$ {stats.monthlyRevenue.toFixed(2)}
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-netflix-dark/50 border border-netflix-red/20 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-500/10 rounded-lg">
+              <TrendingUp className="h-5 w-5 text-green-500" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-400">Receita Anual Projetada</p>
+              <h3 className="text-2xl font-bold text-white">
+                R$ {stats.projectedAnnualRevenue.toFixed(2)}
+              </h3>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-netflix-red/10 rounded-lg">
