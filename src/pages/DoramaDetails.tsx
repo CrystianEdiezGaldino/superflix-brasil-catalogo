@@ -186,8 +186,8 @@ const DoramaDetails = () => {
                     key={`player-${dorama.id}-${selectedSeason}-${selectedEpisode}`}
                     type="serie"
                     imdb={dorama.id.toString()}
-                    season={selectedSeason.toString()}
-                    episode={selectedEpisode.toString()}
+                    season={Number(selectedSeason)}
+                    episode={Number(selectedEpisode)}
                     options={playerOptions}
                   />
                 </div>

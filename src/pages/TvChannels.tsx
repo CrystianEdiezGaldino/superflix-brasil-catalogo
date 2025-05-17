@@ -48,13 +48,37 @@ const TvChannels = () => {
     sessionStorage.setItem('selectedCategory', selectedCategory);
   }, [selectedCategory]);
 
-  // Clean up sessionStorage when component unmounts
+  // Restore modal state when component mounts
   useEffect(() => {
-    return () => {
-      // Don't clear the state when unmounting
-      // This allows the state to persist when switching tabs
-    };
+    const savedChannel = sessionStorage.getItem('selectedChannel');
+    const savedModalState = sessionStorage.getItem('isModalOpen');
+    
+    if (savedChannel && savedModalState === 'true') {
+      setSelectedChannel(JSON.parse(savedChannel));
+      setIsModalOpen(true);
+    }
   }, []);
+
+  // Handle visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab is hidden, maintain state
+        sessionStorage.setItem('wasModalOpen', isModalOpen.toString());
+      } else {
+        // Tab is visible again, restore state
+        const wasModalOpen = sessionStorage.getItem('wasModalOpen') === 'true';
+        if (wasModalOpen && selectedChannel) {
+          setIsModalOpen(true);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isModalOpen, selectedChannel]);
 
   // Use React Query to manage channels data with proper caching
   const { data: channels = tvChannels, isLoading } = useQuery({
@@ -102,6 +126,7 @@ const TvChannels = () => {
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
+    // Não limpar o canal selecionado aqui para manter o estado
   }, []);
 
   const hasAccess = isSubscribed || isAdmin;
@@ -178,7 +203,7 @@ const TvChannels = () => {
         
         {selectedChannel && (
           <TvChannelModal
-            key={`modal-${selectedChannel.id}-${isModalOpen}`}
+            key={`modal-${selectedChannel.id}`}
             channel={selectedChannel}
             isOpen={isModalOpen}
             onClose={handleCloseModal}

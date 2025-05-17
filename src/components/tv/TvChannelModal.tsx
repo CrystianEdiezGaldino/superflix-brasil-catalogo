@@ -20,6 +20,7 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(true);
 
   // Reset iframe loaded state when modal closes
   useEffect(() => {
@@ -46,11 +47,13 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
     const handleVisibilityChange = () => {
       if (document.hidden) {
         // Tab is hidden, maintain state
+        setIsVisible(false);
         if (iframeRef.current) {
           iframeRef.current.style.display = 'none';
         }
       } else {
         // Tab is visible again, restore state
+        setIsVisible(true);
         if (iframeRef.current) {
           iframeRef.current.style.display = 'block';
         }
@@ -62,6 +65,13 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  // Handle iframe visibility
+  useEffect(() => {
+    if (iframeRef.current) {
+      iframeRef.current.style.display = isVisible ? 'block' : 'none';
+    }
+  }, [isVisible]);
 
   return (
     <Dialog 
@@ -115,7 +125,10 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
                 className="w-full h-full"
                 frameBorder="0"
                 onLoad={handleIframeLoad}
-                style={{ opacity: isIframeLoaded ? 1 : 0 }}
+                style={{ 
+                  opacity: isIframeLoaded ? 1 : 0,
+                  display: isVisible ? 'block' : 'none'
+                }}
                 title={`${channel.name} - TV ao vivo`}
               />
             </div>
