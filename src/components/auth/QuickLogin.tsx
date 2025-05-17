@@ -29,7 +29,13 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
       screenHeight: window.screen.height,
     };
     setDeviceInfo(info);
-    generateCode(info);
+    
+    // Delay the code generation slightly to ensure the component is fully mounted
+    const timer = setTimeout(() => {
+      generateCode(info);
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Generate a new code
@@ -61,11 +67,19 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
       }
 
       const data = await response.json();
+      if (!data.code) {
+        throw new Error('Código não gerado corretamente');
+      }
+
       setCode(data.code);
       setTimeLeft(300); // Reset timer
     } catch (error: any) {
       toast.error(error.message || "Erro ao gerar código");
       console.error(error);
+      // Try to generate again after 2 seconds if failed
+      setTimeout(() => {
+        generateCode(info);
+      }, 2000);
     } finally {
       setIsGenerating(false);
     }

@@ -40,7 +40,7 @@ const Auth = () => {
   const [termsAccepted, setTermsAccepted] = useState(true);
   const [showQuickLogin, setShowQuickLogin] = useState(false);
   const [autoShowQuickLogin, setAutoShowQuickLogin] = useState(false);
-  const [quickLoginTimer, setQuickLoginTimer] = useState(20);
+  const [quickLoginTimer, setQuickLoginTimer] = useState(30);
   const [selectedBackground, setSelectedBackground] = useState<MediaItem | null>(null);
   
   const emailRef = useRef<HTMLInputElement>(null);
@@ -323,7 +323,7 @@ const Auth = () => {
     }
   }, []);
 
-  // Auto show quick login after 20 seconds
+  // Auto show quick login after 30 seconds
   useEffect(() => {
     if (user || showQuickLogin || autoShowQuickLogin) return;
 
