@@ -45,19 +45,7 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
   // Handle visibility change
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.hidden) {
-        // Tab is hidden, maintain state
-        setIsVisible(false);
-        if (iframeRef.current) {
-          iframeRef.current.style.display = 'none';
-        }
-      } else {
-        // Tab is visible again, restore state
-        setIsVisible(true);
-        if (iframeRef.current) {
-          iframeRef.current.style.display = 'block';
-        }
-      }
+      setIsVisible(!document.hidden);
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -65,13 +53,6 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
-
-  // Handle iframe visibility
-  useEffect(() => {
-    if (iframeRef.current) {
-      iframeRef.current.style.display = isVisible ? 'block' : 'none';
-    }
-  }, [isVisible]);
 
   return (
     <Dialog 
