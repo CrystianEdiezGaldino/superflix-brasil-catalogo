@@ -60,6 +60,18 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
     },
   });
 
+  // Efeito para focar no campo de email quando o componente for montado
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (emailRef.current) {
+        emailRef.current.focus();
+        setFocusedElement('email');
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const onSubmit = async (data: LoginFormData) => {
     if (!data.termsAccepted) {
       toast({
@@ -197,7 +209,7 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
                 <FormControl>
                   <Input
                     ref={emailRef}
-                    placeholder="seu.email@exemplo.com"
+                    placeholder="Digite seu email"
                     {...field}
                     disabled={isLoading}
                     className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
@@ -219,7 +231,7 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
                   <Input
                     ref={passwordRef}
                     type="password"
-                    placeholder="******"
+                    placeholder="Digite sua senha"
                     {...field}
                     disabled={isLoading}
                     className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
@@ -256,6 +268,14 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
                         target="_blank"
                       >
                         termos de serviço
+                      </Link>
+                      {" "}e{" "}
+                      <Link 
+                        to="/politica-de-privacidade" 
+                        className="text-netflix-red hover:underline"
+                        target="_blank"
+                      >
+                        política de privacidade
                       </Link>
                     </FormLabel>
                     <FormMessage className="text-red-400" />

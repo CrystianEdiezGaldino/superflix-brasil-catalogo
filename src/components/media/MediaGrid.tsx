@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { MediaItem, isMovie, isSeries } from "@/types/movie";
+import { MediaItem, isMovie, isSeries, getMediaTitle } from "@/types/movie";
 import MediaCard from "@/components/media/MediaCard";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Loader2 } from "lucide-react";
@@ -61,55 +61,71 @@ const MediaGrid = ({
   // Navegação por teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const itemsPerRow = window.innerWidth >= 1280 ? 8 : 
-                         window.innerWidth >= 1024 ? 6 : 
-                         window.innerWidth >= 768 ? 5 : 
-                         window.innerWidth >= 640 ? 4 : 3;
+      const itemsPerRow = Math.floor((gridRef.current?.clientWidth || 0) / 200); // Aproximadamente 200px por item
+      const totalRows = Math.ceil(mediaItems.length / itemsPerRow);
 
       switch (e.key) {
-        case 'Tab':
+        case "ArrowRight":
           e.preventDefault();
-          if (e.shiftKey) {
-            setFocusedIndex(prev => Math.max(prev - 1, 0));
-          } else {
-            setFocusedIndex(prev => Math.min(prev + 1, mediaItems.length - 1));
+          if (focusedIndex < mediaItems.length - 1) {
+            setFocusedIndex(prev => prev + 1);
+            const nextItem = document.querySelector(`[data-item="${focusedIndex + 1}"]`);
+            if (nextItem) {
+              nextItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
           }
           break;
-        case 'ArrowRight':
+
+        case "ArrowLeft":
           e.preventDefault();
-          setFocusedIndex(prev => Math.min(prev + 1, mediaItems.length - 1));
+          if (focusedIndex > 0) {
+            setFocusedIndex(prev => prev - 1);
+            const prevItem = document.querySelector(`[data-item="${focusedIndex - 1}"]`);
+            if (prevItem) {
+              prevItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+          }
           break;
-        case 'ArrowLeft':
+
+        case "ArrowDown":
           e.preventDefault();
-          setFocusedIndex(prev => Math.max(prev - 1, 0));
+          if (focusedIndex + itemsPerRow < mediaItems.length) {
+            setFocusedIndex(prev => prev + itemsPerRow);
+            const nextRowItem = document.querySelector(`[data-item="${focusedIndex + itemsPerRow}"]`);
+            if (nextRowItem) {
+              nextRowItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+          }
           break;
-        case 'ArrowDown':
+
+        case "ArrowUp":
           e.preventDefault();
-          setFocusedIndex(prev => Math.min(prev + itemsPerRow, mediaItems.length - 1));
+          if (focusedIndex - itemsPerRow >= 0) {
+            setFocusedIndex(prev => prev - itemsPerRow);
+            const prevRowItem = document.querySelector(`[data-item="${focusedIndex - itemsPerRow}"]`);
+            if (prevRowItem) {
+              prevRowItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+          }
           break;
-        case 'ArrowUp':
+
+        case "Enter":
           e.preventDefault();
-          setFocusedIndex(prev => Math.max(prev - itemsPerRow, 0));
-          break;
-        case 'Enter':
-          e.preventDefault();
-          if (focusedIndex >= 0 && focusedIndex < mediaItems.length) {
+          if (mediaItems[focusedIndex]) {
             onMediaClick?.(mediaItems[focusedIndex]);
           }
           break;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [focusedIndex, mediaItems, onMediaClick]);
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-        {Array.from({ length: 20 }).map((_, index) => (
-          <div key={index} className="aspect-[2/3] bg-gray-800 rounded-lg animate-pulse" />
-        ))}
+      <div className="flex justify-center items-center min-h-[200px]">
+        <Loader2 className="w-8 h-8 text-netflix-red animate-spin" />
       </div>
     );
   }
@@ -117,18 +133,17 @@ const MediaGrid = ({
   if (mediaItems.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-400 mb-4">
+        <p className="text-white text-lg">
           {isSearching
             ? "Nenhum resultado encontrado para sua busca."
             : isFiltering
-            ? "Nenhum conteúdo encontrado com os filtros selecionados."
+            ? "Nenhum resultado encontrado com os filtros selecionados."
             : "Nenhum conteúdo disponível no momento."}
         </p>
-        {(isSearching || isFiltering) && (
+        {isFiltering && onResetFilters && (
           <Button
-            variant="outline"
             onClick={onResetFilters}
-            className="text-white border-white hover:bg-white/10"
+            className="mt-4 bg-netflix-red hover:bg-red-700"
           >
             Limpar Filtros
           </Button>
@@ -138,36 +153,52 @@ const MediaGrid = ({
   }
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-        {mediaItems.map((media, index) => (
-          <MediaCard
-            key={`${media.id}-${media.media_type || 'movie'}`}
-            media={media}
-            onClick={() => onMediaClick?.(media)}
-            index={index}
-            isFocused={index === focusedIndex}
-            onFocus={setFocusedIndex}
+    <div 
+      ref={gridRef}
+      className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6"
+    >
+      {mediaItems.map((item, index) => (
+        <div
+          key={item.id}
+          data-item={index}
+          className={`relative group cursor-pointer transition-all duration-300 ${
+            index === focusedIndex ? 'ring-2 ring-netflix-red scale-105' : ''
+          }`}
+          onClick={() => onMediaClick?.(item)}
+          tabIndex={index === focusedIndex ? 0 : -1}
+        >
+          <img
+            src={`https://image.tmdb.org/t/p/w342${item.poster_path}`}
+            alt={getMediaTitle(item)}
+            className="rounded-md w-full h-auto aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = "/placeholder.svg";
+            }}
           />
-        ))}
-      </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+            <h3 className="text-white font-medium truncate">{getMediaTitle(item)}</h3>
+            <p className="text-sm text-gray-300">
+              {item.media_type === 'movie' ? 'Filme' : 
+               item.media_type === 'tv' ? 
+                 item.original_language === 'ko' ? 'Dorama' : 'Série' : 
+               'Anime'}
+            </p>
+          </div>
+        </div>
+      ))}
 
       {hasMore && (
-        <div ref={gridRef} className="flex justify-center">
-          {isLoadingMore ? (
-            <div className="flex items-center justify-center p-4">
-              <Loader2 className="w-6 h-6 text-netflix-red animate-spin" />
-            </div>
-          ) : (
-            <Button
-              variant="outline"
-              onClick={onLoadMore}
-              className="text-white border-white hover:bg-white/10"
-            >
-              <ChevronDown className="mr-2 h-4 w-4" />
-              Carregar Mais
-            </Button>
-          )}
+        <div className="col-span-full flex justify-center mt-8">
+          <Button
+            onClick={onLoadMore}
+            disabled={isLoadingMore}
+            className="bg-netflix-red hover:bg-red-700"
+          >
+            {isLoadingMore ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : null}
+            Carregar Mais
+          </Button>
         </div>
       )}
     </div>

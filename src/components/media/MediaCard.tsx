@@ -1,17 +1,55 @@
 import { Link } from "react-router-dom";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, getMediaTitle } from "@/types/movie";
 import { Card } from "@/components/ui/card";
-import { Heart } from "lucide-react";
+import { Heart, Play } from "lucide-react";
 import FavoriteButton from "./FavoriteButton";
+import { useState, useEffect, useRef } from "react";
 
 interface MediaCardProps {
   media: MediaItem;
   onClick?: (media: MediaItem) => void;
   className?: string;
   tabIndex?: number;
+  index: number;
+  isFocused: boolean;
+  onFocus: (index: number) => void;
 }
 
-const MediaCard = ({ media, onClick, className = '', tabIndex }: MediaCardProps) => {
+const MediaCard = ({ media, onClick, className = '', tabIndex, index, isFocused, onFocus }: MediaCardProps) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isFocused && cardRef.current) {
+      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+  }, [isFocused]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case "Enter":
+        e.preventDefault();
+        onClick && onClick(media);
+        break;
+      case "ArrowRight":
+        e.preventDefault();
+        onFocus(index + 1);
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        onFocus(index - 1);
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        onFocus(index - 6); // Aproximadamente 6 itens por linha
+        break;
+      case "ArrowDown":
+        e.preventDefault();
+        onFocus(index + 6); // Aproximadamente 6 itens por linha
+        break;
+    }
+  };
+
   // Fail safe check for the media object
   if (!media) {
     return null;

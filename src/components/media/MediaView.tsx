@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import MediaFilters from "./MediaFilters";
@@ -6,7 +6,16 @@ import MediaGrid from "./MediaGrid";
 import MediaSection from "@/components/MediaSection";
 import { Button } from "@/components/ui/button";
 import { MediaItem } from "@/types/movie";
-import { TrendingUp, Star, Clock } from "lucide-react";
+import { TrendingUp, Star, Clock, Filter } from "lucide-react";
+import SearchBar from "../navbar/SearchBar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import { Label } from "../ui/label";
 
 interface MediaViewProps {
   title: string;
@@ -28,9 +37,9 @@ interface MediaViewProps {
   onSearch?: (query: string) => void;
   onYearFilterChange?: (year: string) => void;
   onRatingFilterChange?: (rating: string) => void;
-  onLoadMore: () => void;
-  onResetFilters: () => void;
-  onMediaClick?: (media: MediaItem) => void;
+  onLoadMore?: () => void;
+  onResetFilters?: () => void;
+  onMediaClick: (media: MediaItem) => void;
   children?: React.ReactNode;
   focusedSection?: number;
   focusedItem?: number;
@@ -40,19 +49,19 @@ const MediaView = ({
   title,
   type,
   mediaItems,
-  trendingItems,
-  topRatedItems,
-  recentItems,
-  popularItems,
+  trendingItems = [],
+  topRatedItems = [],
+  recentItems = [],
+  popularItems = [],
   isLoading,
   isLoadingMore,
   hasMore,
   isFiltering,
   isSearching,
   page,
-  yearFilter,
-  ratingFilter,
-  searchQuery,
+  yearFilter = "",
+  ratingFilter = "",
+  searchQuery = "",
   onSearch,
   onYearFilterChange,
   onRatingFilterChange,
@@ -65,6 +74,12 @@ const MediaView = ({
 }: MediaViewProps) => {
   const [currentFocusedSection, setCurrentFocusedSection] = useState(focusedSection);
   const [currentFocusedItem, setCurrentFocusedItem] = useState(focusedItem);
+  const [showFilters, setShowFilters] = useState(false);
+  const [focusedElement, setFocusedElement] = useState<string | null>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const yearFilterRef = useRef<HTMLSelectElement>(null);
+  const ratingFilterRef = useRef<HTMLSelectElement>(null);
+  const resetFilterRef = useRef<HTMLButtonElement>(null);
 
   // Helper function to determine content section title based on type
   const getContentTypeTitle = (contentType: string) => {
@@ -84,44 +99,64 @@ const MediaView = ({
     { items: recentItems, title: `${getContentTypeTitle(type)} Recentes` }
   ];
 
-  // Navegação por teclado entre seções
+  // Efeito para navegação por controle de TV
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
-        case 'Tab':
+        case "Tab":
           e.preventDefault();
-          if (e.shiftKey) {
-            if (currentFocusedSection > 0) {
-              setCurrentFocusedSection(prev => prev - 1);
-              setCurrentFocusedItem(0);
-            }
+          if (focusedElement === null) {
+            setFocusedElement('search');
+            searchRef.current?.focus();
+          } else if (focusedElement === 'search') {
+            setFocusedElement('yearFilter');
+            yearFilterRef.current?.focus();
+          } else if (focusedElement === 'yearFilter') {
+            setFocusedElement('ratingFilter');
+            ratingFilterRef.current?.focus();
+          } else if (focusedElement === 'ratingFilter') {
+            setFocusedElement('resetFilter');
+            resetFilterRef.current?.focus();
           } else {
-            if (currentFocusedSection < sections.length) {
-              setCurrentFocusedSection(prev => prev + 1);
-              setCurrentFocusedItem(0);
-            }
+            setFocusedElement(null);
           }
           break;
-        case 'ArrowUp':
+
+        case "ArrowDown":
           e.preventDefault();
-          if (currentFocusedSection > 0) {
-            setCurrentFocusedSection(prev => prev - 1);
-            setCurrentFocusedItem(0);
+          if (focusedElement === 'search' || focusedElement === 'yearFilter' || 
+              focusedElement === 'ratingFilter' || focusedElement === 'resetFilter') {
+            setFocusedElement(null);
           }
           break;
-        case 'ArrowDown':
+
+        case "ArrowUp":
           e.preventDefault();
-          if (currentFocusedSection < sections.length) {
-            setCurrentFocusedSection(prev => prev + 1);
-            setCurrentFocusedItem(0);
+          if (focusedElement === null) {
+            setFocusedElement('search');
+            searchRef.current?.focus();
+          }
+          break;
+
+        case "Enter":
+          e.preventDefault();
+          if (focusedElement === 'resetFilter') {
+            onResetFilters?.();
+          }
+          break;
+
+        case "Backspace":
+          e.preventDefault();
+          if (focusedElement === 'search') {
+            setFocusedElement(null);
           }
           break;
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentFocusedSection, sections.length]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [focusedElement, onResetFilters]);
 
   return (
     <div className="min-h-screen bg-netflix-background">

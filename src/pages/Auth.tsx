@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
 
 const Auth = () => {
   const { user, loading, login, register } = useAuth();
@@ -34,6 +35,8 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [focusedElement, setFocusedElement] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(true);
+  const [showSignup, setShowSignup] = useState(true);
   
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -214,6 +217,14 @@ const Auth = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focusedElement, isLogin]);
 
+  // Focar no campo de email quando a página carregar
+  useEffect(() => {
+    if (emailRef.current) {
+      emailRef.current.focus();
+      setFocusedElement('email');
+    }
+  }, []);
+
   const handleSubmit = async () => {
     if (!email || !password || (!isLogin && !name)) {
       toast.error("Por favor, preencha todos os campos");
@@ -286,50 +297,80 @@ const Auth = () => {
           <div className="w-full max-w-md">
             <Card className="bg-black/75 border-gray-800 p-8">
               <div className="space-y-4">
-                <Input
-                  ref={emailRef}
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                  className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
-                  onFocus={() => setFocusedElement('email')}
-                />
-                
-                <Input
-                  ref={passwordRef}
-                  type="password"
-                  placeholder="Senha"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
-                  onFocus={() => setFocusedElement('password')}
-                />
-
-                {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-300">Email</Label>
                   <Input
-                    ref={nameRef}
-                    type="text"
-                    placeholder="Nome completo"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    ref={emailRef}
+                    id="email"
+                    type="email"
+                    placeholder="Digite seu email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
                     className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
-                    onFocus={() => setFocusedElement('name')}
+                    onFocus={() => setFocusedElement('email')}
+                    autoFocus
                   />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-gray-300">Senha</Label>
+                  <Input
+                    ref={passwordRef}
+                    id="password"
+                    type="password"
+                    placeholder="Digite sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                    className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                    onFocus={() => setFocusedElement('password')}
+                  />
+                </div>
+
+                {!isLogin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-gray-300">Nome completo</Label>
+                    <Input
+                      ref={nameRef}
+                      id="name"
+                      type="text"
+                      placeholder="Digite seu nome completo"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      disabled={isLoading}
+                      className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                      onFocus={() => setFocusedElement('name')}
+                    />
+                  </div>
                 )}
 
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     ref={termsRef}
                     id="terms"
+                    checked={true}
+                    onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
                     className="border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red"
                     onFocus={() => setFocusedElement('terms')}
                   />
                   <Label htmlFor="terms" className="text-sm text-gray-300">
-                    Li e aceito os termos de serviço
+                    Li e aceito os{" "}
+                    <Link 
+                      to="/termos-de-servico" 
+                      className="text-netflix-red hover:underline"
+                      target="_blank"
+                    >
+                      termos de serviço
+                    </Link>
+                    {" "}e{" "}
+                    <Link 
+                      to="/politica-de-privacidade" 
+                      className="text-netflix-red hover:underline"
+                      target="_blank"
+                    >
+                      política de privacidade
+                    </Link>
                   </Label>
                 </div>
 

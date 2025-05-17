@@ -67,29 +67,70 @@ const Home = () => {
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          setFocusedSection(prev => Math.min(prev + 1, sections.length - 1));
-          setFocusedItem(0);
+          if (focusedSection < sections.length - 1) {
+            setFocusedSection(prev => prev + 1);
+            setFocusedItem(0);
+            // Scroll para a próxima seção
+            const nextSection = document.querySelector(`[data-section="${focusedSection + 1}"]`);
+            if (nextSection) {
+              nextSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
           break;
+
         case "ArrowUp":
           e.preventDefault();
-          setFocusedSection(prev => Math.max(prev - 1, 0));
-          setFocusedItem(0);
+          if (focusedSection > 0) {
+            setFocusedSection(prev => prev - 1);
+            setFocusedItem(0);
+            // Scroll para a seção anterior
+            const prevSection = document.querySelector(`[data-section="${focusedSection - 1}"]`);
+            if (prevSection) {
+              prevSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
           break;
+
         case "ArrowRight":
           e.preventDefault();
-          setFocusedItem(prev => Math.min(prev + 1, sections[focusedSection].items.length - 1));
+          const currentSection = sections[focusedSection];
+          if (currentSection && focusedItem < currentSection.items.length - 1) {
+            setFocusedItem(prev => prev + 1);
+            // Scroll horizontal para o próximo item
+            const nextItem = document.querySelector(`[data-section="${focusedSection}"] [data-item="${focusedItem + 1}"]`);
+            if (nextItem) {
+              nextItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+          }
           break;
+
         case "ArrowLeft":
           e.preventDefault();
-          setFocusedItem(prev => Math.max(prev - 1, 0));
+          if (focusedItem > 0) {
+            setFocusedItem(prev => prev - 1);
+            // Scroll horizontal para o item anterior
+            const prevItem = document.querySelector(`[data-section="${focusedSection}"] [data-item="${focusedItem - 1}"]`);
+            if (prevItem) {
+              prevItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+          }
           break;
+
         case "Enter":
           e.preventDefault();
           const currentItem = sections[focusedSection].items[focusedItem];
-          if (currentItem) handleMediaClick(currentItem);
+          if (currentItem) {
+            handleMediaClick(currentItem);
+          }
+          break;
+
+        case "Backspace":
+          e.preventDefault();
+          window.history.back();
           break;
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [focusedSection, focusedItem, sections]);
