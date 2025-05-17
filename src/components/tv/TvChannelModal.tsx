@@ -16,11 +16,12 @@ interface TvChannelModalProps {
   };
 }
 
-const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: TvChannelModalProps) => {
+const TvChannelModal = React.memo(({ channel, isOpen, onClose, hasAccess, options = {} }: TvChannelModalProps) => {
   const [isIframeLoaded, setIsIframeLoaded] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
   const [isVisible, setIsVisible] = useState(true);
+  const [iframeSrc, setIframeSrc] = useState(channel.iframeUrl);
 
   // Reset iframe loaded state when modal closes
   useEffect(() => {
@@ -45,7 +46,19 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
   // Handle visibility change
   useEffect(() => {
     const handleVisibilityChange = () => {
-      setIsVisible(!document.hidden);
+      if (document.hidden) {
+        // Tab is hidden, maintain state
+        setIsVisible(false);
+        if (iframeRef.current) {
+          iframeRef.current.style.display = 'none';
+        }
+      } else {
+        // Tab is visible again, restore state
+        setIsVisible(true);
+        if (iframeRef.current) {
+          iframeRef.current.style.display = 'block';
+        }
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -53,6 +66,18 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  // Handle iframe visibility
+  useEffect(() => {
+    if (iframeRef.current) {
+      iframeRef.current.style.display = isVisible ? 'block' : 'none';
+    }
+  }, [isVisible]);
+
+  // Update iframe src when channel changes
+  useEffect(() => {
+    setIframeSrc(channel.iframeUrl);
+  }, [channel.iframeUrl]);
 
   return (
     <Dialog 
@@ -100,7 +125,7 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
               )}
               <iframe
                 ref={iframeRef}
-                src={channel.iframeUrl}
+                src={iframeSrc}
                 allow="encrypted-media"
                 allowFullScreen
                 className="w-full h-full"
@@ -132,6 +157,8 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
       </DialogContent>
     </Dialog>
   );
-};
+});
 
-export default React.memo(TvChannelModal);
+TvChannelModal.displayName = 'TvChannelModal';
+
+export default TvChannelModal;

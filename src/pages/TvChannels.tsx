@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import { tvChannels, channelCategories } from "@/data/tvChannels";
 import { TvChannel } from "@/data/tvChannels";
@@ -12,52 +11,103 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { toast } from "sonner";
 import React from "react";
 
+const STORAGE_KEY = 'tv_modal_state';
+
 const TvChannels = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { isSubscribed, isAdmin, isLoading: subscriptionLoading } = useSubscription();
   
-  // Initialize state from sessionStorage if available
+  // Initialize state from localStorage if available
   const [selectedChannel, setSelectedChannel] = useState<TvChannel | null>(() => {
-    const savedChannel = sessionStorage.getItem('selectedChannel');
-    return savedChannel ? JSON.parse(savedChannel) : null;
+    try {
+      const savedState = localStorage.getItem(STORAGE_KEY);
+      if (savedState) {
+        const { channel } = JSON.parse(savedState);
+        return channel;
+      }
+    } catch (error) {
+      console.error('Error loading saved state:', error);
+    }
+    return null;
   });
   
   const [isModalOpen, setIsModalOpen] = useState(() => {
-    return sessionStorage.getItem('isModalOpen') === 'true';
+    try {
+      const savedState = localStorage.getItem(STORAGE_KEY);
+      if (savedState) {
+        const { isOpen } = JSON.parse(savedState);
+        return isOpen;
+      }
+    } catch (error) {
+      console.error('Error loading saved state:', error);
+    }
+    return false;
   });
   
   const [selectedCategory, setSelectedCategory] = useState<string>(() => {
-    return sessionStorage.getItem('selectedCategory') || "Todas";
+    return localStorage.getItem('selectedCategory') || "Todas";
   });
 
-  // Save state to sessionStorage when it changes
+  // Save state to localStorage when it changes
   useEffect(() => {
-    if (selectedChannel) {
-      sessionStorage.setItem('selectedChannel', JSON.stringify(selectedChannel));
-    } else {
-      sessionStorage.removeItem('selectedChannel');
+    try {
+      const stateToSave = {
+        channel: selectedChannel,
+        isOpen: isModalOpen
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+    } catch (error) {
+      console.error('Error saving state:', error);
     }
-  }, [selectedChannel]);
+  }, [selectedChannel, isModalOpen]);
 
   useEffect(() => {
-    sessionStorage.setItem('isModalOpen', isModalOpen.toString());
-  }, [isModalOpen]);
-
-  useEffect(() => {
-    sessionStorage.setItem('selectedCategory', selectedCategory);
+    localStorage.setItem('selectedCategory', selectedCategory);
   }, [selectedCategory]);
 
-  // Use React Query to manage channels data with proper caching
-  const { data: channels = tvChannels, isLoading } = useQuery({
-    queryKey: ["tv-channels"],
-    queryFn: () => Promise.resolve(tvChannels),
-    staleTime: Infinity,
-    gcTime: Infinity,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    refetchOnReconnect: false,
-  });
+  // Handle visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab is hidden, maintain state
+        try {
+          const currentState = localStorage.getItem(STORAGE_KEY);
+          if (currentState) {
+            const { channel, isOpen } = JSON.parse(currentState);
+            if (isOpen && channel) {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                channel,
+                isOpen: true,
+                wasOpen: true
+              }));
+            }
+          }
+        } catch (error) {
+          console.error('Error saving visibility state:', error);
+        }
+      } else {
+        // Tab is visible again, restore state
+        try {
+          const savedState = localStorage.getItem(STORAGE_KEY);
+          if (savedState) {
+            const { channel, wasOpen } = JSON.parse(savedState);
+            if (wasOpen && channel) {
+              setSelectedChannel(channel);
+              setIsModalOpen(true);
+            }
+          }
+        } catch (error) {
+          console.error('Error restoring visibility state:', error);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // Memoize modal options to prevent unnecessary re-renders
   const modalOptions = useMemo(() => ({
@@ -69,9 +119,9 @@ const TvChannels = () => {
   // Memoize filtered channels to prevent unnecessary recalculations
   const filteredChannels = useMemo(() => 
     selectedCategory === "Todas" 
-      ? channels 
-      : channels.filter(channel => channel.category === selectedCategory),
-    [channels, selectedCategory]
+      ? tvChannels 
+      : tvChannels.filter(channel => channel.category === selectedCategory),
+    [selectedCategory]
   );
   
   useEffect(() => {
@@ -94,6 +144,7 @@ const TvChannels = () => {
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
+    // Não limpar o canal selecionado aqui para manter o estado
   }, []);
 
   const hasAccess = isSubscribed || isAdmin;
@@ -163,7 +214,7 @@ const TvChannels = () => {
           channels={filteredChannels}
           selectedChannel={selectedChannel}
           onSelectChannel={handleOpenChannel}
-          isLoading={isLoading}
+          isLoading={false}
           hasAccess={hasAccess}
           selectedCategory={selectedCategory}
         />
