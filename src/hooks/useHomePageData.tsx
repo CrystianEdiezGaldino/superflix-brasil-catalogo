@@ -17,8 +17,8 @@ export const useHomePageData = () => {
     hasTempAccess,
     hasTrialAccess,
     isLoading: subscriptionLoading, 
-    checkSubscription
-    // Remove reference to trialEnd which doesn't exist in SubscriptionContextType
+    checkSubscription,
+    trialEnd
   } = useSubscription();
   
   // Use the access control hook to get the hasAccess flag
@@ -82,8 +82,8 @@ export const useHomePageData = () => {
   );
 
   // Create a memoized search handler to prevent recreation on each render
-  const handleSearch = useCallback((query: string, page?: number) => {
-    return searchMedia(query, page);
+  const handleSearch = useCallback(async (query: string, page?: number) => {
+    return await searchMedia(query, page);
   }, [searchMedia]);
 
   // Debug log to help track subscription state
@@ -94,6 +94,7 @@ export const useHomePageData = () => {
     hasTrialAccess, 
     hasTempAccess, 
     hasAccess,
+    trialEnd,
     mediaDataLoaded: {
       movies: !!moviesData?.length,
       series: !!seriesData?.length,
@@ -110,6 +111,7 @@ export const useHomePageData = () => {
     isAdmin,
     hasAccess,
     hasTrialAccess,
+    trialEnd,
     featuredMedia,
     recommendations,
     moviesData,

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,9 +91,26 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
           
           setSubscription(validSubscription);
           setIsSubscribed(validSubscription.status === 'active' || false);
+          
+          // Set subscription tier and end date directly from subscription data
+          setSubscriptionTier(validSubscription.plan_type || null);
+          setSubscriptionEnd(validSubscription.current_period_end || null);
+          
+          // Set trial end date if available
+          if (validSubscription.status === 'trialing' && validSubscription.trial_end) {
+            setTrialEnd(validSubscription.trial_end);
+            setHasTrialAccess(new Date(validSubscription.trial_end) > new Date());
+          } else {
+            setTrialEnd(null);
+            setHasTrialAccess(false);
+          }
         } else {
           setSubscription(null);
           setIsSubscribed(false);
+          setSubscriptionTier(null);
+          setSubscriptionEnd(null);
+          setTrialEnd(null);
+          setHasTrialAccess(false);
         }
 
         // Fetch temp access data
@@ -133,7 +151,10 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
             console.error("Erro ao verificar acesso de teste:", trialAccessError);
             setHasTrialAccess(false);
           } else {
-            setHasTrialAccess(!!trialAccessData);
+            // Only update if we didn't already set this based on subscription status
+            if (subscriptionData?.status !== 'trialing') {
+              setHasTrialAccess(!!trialAccessData);
+            }
           }
         } catch (error) {
           console.error("Erro ao verificar acesso de teste:", error);
@@ -159,39 +180,6 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
           setIsAdmin(false);
         }
 
-        // Fetch subscription tier and end date
-        const { data: tierData, error: tierError } = await supabase
-          .rpc('get_subscription_tier', { 
-            user_id: user.id
-          });
-
-        if (tierError) {
-          console.error("Erro ao buscar nível de assinatura:", tierError);
-        }
-
-        if (tierData) {
-          setSubscriptionTier(tierData.tier);
-          setSubscriptionEnd(tierData.end_date);
-        } else {
-          setSubscriptionTier(null);
-          setSubscriptionEnd(null);
-        }
-
-        const { data: trialEndDateData, error: trialEndDateError } = await supabase
-          .rpc('get_trial_end_date', { 
-            user_id: user.id
-          });
-
-        if (trialEndDateError) {
-          console.error("Erro ao buscar data de término do teste:", trialEndDateError);
-        }
-
-        if (trialEndDateData) {
-          setTrialEnd(trialEndDateData.trial_end);
-        } else {
-          setTrialEnd(null);
-        }
-
       } catch (error) {
         console.error("Erro ao verificar status da assinatura:", error);
       } finally {
@@ -202,6 +190,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       setIsAdmin(false);
       setHasTempAccess(false);
       setHasTrialAccess(false);
+      setSubscriptionTier(null);
+      setSubscriptionEnd(null);
+      setTrialEnd(null);
       setIsLoading(false);
     }
   };

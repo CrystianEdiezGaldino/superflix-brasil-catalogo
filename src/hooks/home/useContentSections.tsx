@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useHomePageData } from "../useHomePageData";
 import { useMovies } from "../movies/useMovies";

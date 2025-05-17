@@ -23,8 +23,22 @@ export interface UpdateTicketData {
   admin_id?: string;
 }
 
+export interface TicketData {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+  category: TicketCategory;
+  admin_response: string;
+  admin_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export const ticketService = {
-  async createTicket(data: CreateTicketData): Promise<Ticket | null> {
+  async createTicket(data: CreateTicketData): Promise<TicketData | null> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return null;
 
@@ -41,10 +55,10 @@ export const ticketService = {
       .single();
 
     if (error) throw error;
-    return ticket as unknown as Ticket;
+    return ticket as unknown as TicketData;
   },
 
-  async getUserTickets(): Promise<Ticket[]> {
+  async getUserTickets(): Promise<TicketData[]> {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return [];
 
@@ -55,20 +69,20 @@ export const ticketService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return tickets as unknown as Ticket[];
+    return tickets as unknown as TicketData[];
   },
 
-  async getAllTickets(): Promise<Ticket[]> {
+  async getAllTickets(): Promise<TicketData[]> {
     const { data: tickets, error } = await supabase
       .from('tickets')
       .select('*')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return tickets as unknown as Ticket[];
+    return tickets as unknown as TicketData[];
   },
 
-  async updateTicket(ticketId: string, data: UpdateTicketData): Promise<Ticket | null> {
+  async updateTicket(ticketId: string, data: UpdateTicketData): Promise<TicketData | null> {
     const { data: ticket, error } = await supabase
       .from('tickets')
       .update(data as TicketUpdate)
@@ -89,10 +103,10 @@ export const ticketService = {
       }
     }
 
-    return ticket as unknown as Ticket;
+    return ticket as unknown as TicketData;
   },
 
-  async getTicketById(ticketId: string): Promise<Ticket | null> {
+  async getTicketById(ticketId: string): Promise<TicketData | null> {
     const { data: ticket, error } = await supabase
       .from('tickets')
       .select('*')
@@ -100,7 +114,7 @@ export const ticketService = {
       .single();
 
     if (error) throw error;
-    return ticket as unknown as Ticket;
+    return ticket as unknown as TicketData;
   },
 
   async sendTicketResponseEmail(ticketId: string, response: string, adminId: string): Promise<void> {
