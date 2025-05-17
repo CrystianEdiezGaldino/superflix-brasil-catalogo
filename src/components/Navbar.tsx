@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +7,7 @@ import NavLogo from "./navbar/NavLogo";
 import SearchBar from "./navbar/SearchBar";
 import UserAction from "./navbar/UserAction";
 import MobileMenu from "./navbar/MobileMenu";
+import { HelpButton } from "./help/HelpButton";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,10 @@ const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
   const { isAdmin } = useSubscription();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    console.log("Navbar - User state:", { user });
+  }, [user]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,6 +62,8 @@ const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
           <div className="mr-2 w-auto hidden sm:block">
             <SearchBar onSearch={onSearch} />
           </div>
+
+          {user && <HelpButton />}
 
           {user ? (
             <UserAction isAuthenticated={!!user} />

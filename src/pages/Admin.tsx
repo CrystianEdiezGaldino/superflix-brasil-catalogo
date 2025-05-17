@@ -9,6 +9,7 @@ import { Spinner } from "@/components/ui/spinner";
 import AdminInfoCard from "@/components/admin/AdminInfoCard";
 import AdminsTable from "@/components/admin/AdminsTable";
 import { UsersTable } from "@/components/admin/UsersTable";
+import { TicketList } from "@/components/admin/TicketList";
 
 interface AdminUser {
   id: string;
@@ -168,6 +169,7 @@ const Admin = () => {
             isLoading={isLoadingUsers} 
             onRefresh={loadUsers}
           />
+          <TicketList />
         </div>
       </div>
     </div>

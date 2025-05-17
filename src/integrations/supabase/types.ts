@@ -66,6 +66,48 @@ export type Database = {
         }
         Relationships: []
       }
+      tickets: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          description: string
+          status: 'open' | 'in_progress' | 'closed'
+          priority: 'low' | 'medium' | 'high'
+          category: 'content' | 'subscription' | 'technical' | 'other'
+          admin_response: string | null
+          admin_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          description: string
+          status?: 'open' | 'in_progress' | 'closed'
+          priority?: 'low' | 'medium' | 'high'
+          category: 'content' | 'subscription' | 'technical' | 'other'
+          admin_response?: string | null
+          admin_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          description?: string
+          status?: 'open' | 'in_progress' | 'closed'
+          priority?: 'low' | 'medium' | 'high'
+          category?: 'content' | 'subscription' | 'technical' | 'other'
+          admin_response?: string | null
+          admin_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
