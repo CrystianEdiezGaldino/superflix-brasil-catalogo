@@ -124,7 +124,7 @@ export function TicketList() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full flex flex-col">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">Tickets de Suporte</h2>
         <div className="flex items-center space-x-2">
@@ -134,7 +134,7 @@ export function TicketList() {
         </div>
       </div>
 
-      <Tabs defaultValue="open" className="w-full">
+      <Tabs defaultValue="open" className="w-full flex flex-col flex-1">
         <TabsList className="bg-black/50">
           <TabsTrigger value="open" className="data-[state=active]:bg-netflix-red">
             Abertos ({openTickets.length})
@@ -144,13 +144,15 @@ export function TicketList() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="open" className="space-y-4 mt-4">
-          {openTickets.map(renderTicketCard)}
-        </TabsContent>
+        <div className="flex-1 overflow-hidden mt-4">
+          <TabsContent value="open" className="h-full overflow-y-auto pr-2 space-y-4">
+            {openTickets.map(renderTicketCard)}
+          </TabsContent>
 
-        <TabsContent value="closed" className="space-y-4 mt-4">
-          {closedTickets.map(renderTicketCard)}
-        </TabsContent>
+          <TabsContent value="closed" className="h-full overflow-y-auto pr-2 space-y-4">
+            {closedTickets.map(renderTicketCard)}
+          </TabsContent>
+        </div>
       </Tabs>
     </div>
   );

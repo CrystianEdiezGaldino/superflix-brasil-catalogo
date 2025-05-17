@@ -237,7 +237,7 @@ export const UsersTable = ({ users, isLoading, onRefresh }: UsersTableProps) => 
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 h-full flex flex-col">
       {/* Dashboard Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-netflix-dark/50 border border-netflix-red/20 rounded-lg p-4">
@@ -348,113 +348,117 @@ export const UsersTable = ({ users, isLoading, onRefresh }: UsersTableProps) => 
         </div>
       </div>
       
-      <div className="border border-netflix-red rounded-lg overflow-hidden bg-netflix-dark/50">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-netflix-dark border-b border-netflix-red/20">
-              <TableHead className="text-white font-semibold">Avatar</TableHead>
-              <TableHead className="text-white font-semibold">Email</TableHead>
-              <TableHead className="text-white font-semibold">Data de Cadastro</TableHead>
-              <TableHead className="text-white font-semibold">Assinatura</TableHead>
-              <TableHead className="text-white font-semibold">Tipo de Plano</TableHead>
-              <TableHead className="text-white font-semibold">Próxima Renovação</TableHead>
-              <TableHead className="text-white font-semibold">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredUsers.map((user) => {
-              const status = getSubscriptionStatus(user.subscription);
-              return (
-                <TableRow key={user.id} className="bg-netflix-dark hover:bg-gray-800/50 transition-colors">
-                  <TableCell className="text-white">
-                    {user.avatar_url ? (
-                      <img 
-                        src={user.avatar_url} 
-                        alt={user.email} 
-                        className="w-10 h-10 rounded-full object-cover border-2 border-netflix-red/20"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-netflix-red/20 flex items-center justify-center text-white border-2 border-netflix-red/20">
-                        {user.email[0].toUpperCase()}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-white">
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-400" />
-                      {user.email}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-white">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-gray-400" />
-                      {format(new Date(user.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={status.variant} className="bg-opacity-20">
-                      {status.label}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-white">
-                    {user.subscription?.plan_type ? (
-                      <Badge variant="outline" className="border-netflix-red text-netflix-red bg-netflix-red/10">
-                        {user.subscription.plan_type}
-                      </Badge>
-                    ) : (
-                      <span className="text-gray-400">Sem plano</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-white">
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-gray-400" />
-                      {user.subscription?.current_period_end 
-                        ? format(new Date(user.subscription.current_period_end), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
-                        : 'N/A'
-                      }
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditUser(user)}
-                        className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white transition-colors"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setSubscriptionData({
-                            status: user.subscription?.status || 'active',
-                            plan_type: user.subscription?.plan_type || 'trial',
-                            current_period_start: user.subscription?.current_period_start || '',
-                          });
-                          setIsSubscriptionDialogOpen(true);
-                        }}
-                        className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white transition-colors"
-                      >
-                        <CreditCard className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white transition-colors"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+      <div className="flex-1 overflow-hidden">
+        <div className="border border-netflix-red rounded-lg overflow-hidden bg-netflix-dark/50 h-full flex flex-col">
+          <div className="overflow-y-auto flex-1">
+            <Table>
+              <TableHeader className="sticky top-0 z-10">
+                <TableRow className="bg-netflix-dark border-b border-netflix-red/20">
+                  <TableHead className="text-white font-semibold">Avatar</TableHead>
+                  <TableHead className="text-white font-semibold">Email</TableHead>
+                  <TableHead className="text-white font-semibold">Data de Cadastro</TableHead>
+                  <TableHead className="text-white font-semibold">Assinatura</TableHead>
+                  <TableHead className="text-white font-semibold">Tipo de Plano</TableHead>
+                  <TableHead className="text-white font-semibold">Próxima Renovação</TableHead>
+                  <TableHead className="text-white font-semibold">Ações</TableHead>
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => {
+                  const status = getSubscriptionStatus(user.subscription);
+                  return (
+                    <TableRow key={user.id} className="bg-netflix-dark hover:bg-gray-800/50 transition-colors">
+                      <TableCell className="text-white">
+                        {user.avatar_url ? (
+                          <img 
+                            src={user.avatar_url} 
+                            alt={user.email} 
+                            className="w-10 h-10 rounded-full object-cover border-2 border-netflix-red/20"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-netflix-red/20 flex items-center justify-center text-white border-2 border-netflix-red/20">
+                            {user.email[0].toUpperCase()}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-white">
+                        <div className="flex items-center gap-2">
+                          <Mail className="h-4 w-4 text-gray-400" />
+                          {user.email}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-white">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-gray-400" />
+                          {format(new Date(user.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={status.variant} className="bg-opacity-20">
+                          {status.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-white">
+                        {user.subscription?.plan_type ? (
+                          <Badge variant="outline" className="border-netflix-red text-netflix-red bg-netflix-red/10">
+                            {user.subscription.plan_type}
+                          </Badge>
+                        ) : (
+                          <span className="text-gray-400">Sem plano</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-white">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-gray-400" />
+                          {user.subscription?.current_period_end 
+                            ? format(new Date(user.subscription.current_period_end), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+                            : 'N/A'
+                          }
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditUser(user)}
+                            className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white transition-colors"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setSubscriptionData({
+                                status: user.subscription?.status || 'active',
+                                plan_type: user.subscription?.plan_type || 'trial',
+                                current_period_start: user.subscription?.current_period_start || '',
+                              });
+                              setIsSubscriptionDialogOpen(true);
+                            }}
+                            className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white transition-colors"
+                          >
+                            <CreditCard className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       </div>
 
       {/* Dialog para editar usuário */}
