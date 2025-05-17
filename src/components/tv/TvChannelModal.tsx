@@ -18,21 +18,17 @@ interface TvChannelModalProps {
 }
 
 const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: TvChannelModalProps) => {
-  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
+  // Use refs instead of state to avoid re-renders that would cause iframe refresh
+  const isIframeLoadedRef = useRef(false);
   const [isProgramInfoVisible, setIsProgramInfoVisible] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Reset iframe loaded state when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setIsIframeLoaded(false);
-    }
-  }, [isOpen]);
-
-  // Handle iframe load
+  // Handle iframe load - only set it once to avoid refreshes
   const handleIframeLoad = () => {
-    setIsIframeLoaded(true);
+    if (!isIframeLoadedRef.current) {
+      isIframeLoadedRef.current = true;
+    }
   };
 
   // Prevent modal from closing when clicking outside or pressing ESC
@@ -140,7 +136,7 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
           <div className="w-full">
             {hasAccess ? (
               <div className="aspect-video w-full bg-black relative">
-                {!isIframeLoaded && (
+                {!isIframeLoadedRef.current && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900">
                     <div className="w-12 h-12 border-4 border-netflix-red border-t-transparent rounded-full animate-spin mb-4"></div>
                     <div className="text-white text-sm">Carregando transmissão...</div>
@@ -154,7 +150,7 @@ const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: T
                   className="w-full h-full"
                   frameBorder="0"
                   onLoad={handleIframeLoad}
-                  style={{ opacity: isIframeLoaded ? 1 : 0 }}
+                  style={{ opacity: isIframeLoadedRef.current ? 1 : 0 }}
                   title={`${channel.name} - TV ao vivo`}
                 />
               </div>
