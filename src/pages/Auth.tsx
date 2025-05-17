@@ -217,6 +217,23 @@ const Auth = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focusedElement, isLogin]);
 
+  // Scroll automático para o formulário de login
+  useEffect(() => {
+    // Primeiro faz um scroll inicial para esconder o banner
+    window.scrollTo({
+      top: 300, // Ajuste este valor conforme necessário
+      behavior: 'smooth'
+    });
+
+    // Depois faz o scroll para o formulário
+    const loginForm = document.querySelector('.bg-black\\/75');
+    if (loginForm) {
+      setTimeout(() => {
+        loginForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, []);
+
   // Focar no campo de email quando a página carregar
   useEffect(() => {
     if (emailRef.current) {
