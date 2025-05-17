@@ -22,10 +22,6 @@ const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    console.log("Navbar - User state:", { user });
-  }, [user]);
-
-  useEffect(() => {
     const handleScroll = () => {
       const scrollThreshold = 20;
       setIsScrolled(window.scrollY > scrollThreshold);
@@ -42,84 +38,80 @@ const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
   return (
     <nav
       className={cn(
-        "fixed top-0 left-0 w-full z-50 transition-all duration-300 h-20 pt-2.5",
+        "fixed top-0 left-0 w-full z-50 transition-all duration-300",
         isScrolled 
-          ? "bg-black/85 backdrop-blur-md shadow-md" 
+          ? "bg-black/95 backdrop-blur-md shadow-lg" 
           : "bg-gradient-to-b from-black/90 to-transparent"
       )}
       role="banner"
       aria-label="Barra de navegação principal"
     >
-      <div className="container max-w-screen-xl mx-auto px-4 md:px-6 h-full flex items-center">
-        {/* Logo - Fixed Position */}
-        <div className="absolute left-4 top-1 z-50">
+      <div className="container max-w-screen-2xl mx-auto px-4 h-16 flex items-center justify-between">
+        {/* Seção Esquerda - Logo */}
+        <div className="flex items-center">
           <NavLogo />
         </div>
 
-        {/* Navigation Links - Centered */}
-        <div className="hidden md:flex w-full justify-center items-center h-full">
+        {/* Seção Central - Links de Navegação */}
+        <div className="hidden lg:flex items-center justify-center flex-1 px-8">
           <NavLinks isAuthenticated={!!user} isAdmin={isAdmin} />
         </div>
 
-        {/* Search Bar and User Actions */}
-        <div className="flex items-center space-x-4 h-full ml-auto">
-          <div className="hidden sm:block w-auto">
+        {/* Seção Direita - Ações do Usuário */}
+        <div className="flex items-center space-x-4">
+          {/* Barra de Pesquisa */}
+          <div className="hidden md:block">
             <SearchBar onSearch={onSearch} />
           </div>
 
+          {/* Botão de Ajuda */}
           {user && (
             <button
               tabIndex={0}
               role="button"
               aria-label="Ajuda"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background 
+              className="inline-flex items-center justify-center rounded-full text-sm font-medium
                 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 
-                disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0 
-                hover:bg-accent h-12 w-12 text-white border-2 border-transparent
-                focus:border-white hover:text-netflix-red transition-colors"
+                disabled:pointer-events-none disabled:opacity-50
+                hover:bg-accent h-10 w-10 text-white
+                hover:text-netflix-red transition-colors"
             >
               <HelpButton />
             </button>
           )}
 
+          {/* Ações do Usuário */}
           {user ? (
-            <UserAction isAuthenticated={!!user} />
+            <div className="flex items-center">
+              <UserAction isAuthenticated={!!user} />
+            </div>
           ) : (
             <Link 
               to="/auth" 
-              tabIndex={0}
-              role="button"
-              aria-label="Entrar na sua conta"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background 
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 
-                disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0 
-                hover:bg-accent h-12 w-12 text-white border-2 border-transparent
-                focus:border-white hover:text-netflix-red transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium
+                bg-netflix-red text-white hover:bg-red-700 transition-colors
+                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
               Entrar
             </Link>
           )}
 
-          {/* Mobile Menu Button */}
+          {/* Botão do Menu Mobile */}
           <button
             onClick={toggleMobileMenu}
-            tabIndex={0}
-            role="button"
+            className="lg:hidden inline-flex items-center justify-center rounded-full
+              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2
+              h-10 w-10 text-white hover:text-netflix-red transition-colors"
             aria-label="Abrir menu mobile"
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-menu"
-            className="md:hidden inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background 
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 
-              disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-5 [&_svg]:shrink-0 
-              hover:bg-accent h-12 w-12 text-white border-2 border-transparent
-              focus:border-white hover:text-netflix-red transition-colors"
           >
             <Menu className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Menu Mobile */}
       <MobileMenu 
         isOpen={isMobileMenuOpen} 
         onClose={toggleMobileMenu} 
