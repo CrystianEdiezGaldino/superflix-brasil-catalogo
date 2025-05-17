@@ -17,7 +17,11 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
   const [isChecking, setIsChecking] = useState(false);
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes in seconds
   const [deviceInfo, setDeviceInfo] = useState<any>(null);
-  const [autoGenerateTimeLeft, setAutoGenerateTimeLeft] = useState(20);
+  const [validationAttempts, setValidationAttempts] = useState(0);
+  const [isExpired, setIsExpired] = useState(false);
+  const [generationAttempts, setGenerationAttempts] = useState(0);
+  const MAX_VALIDATION_ATTEMPTS = 12; // 2 minutes (12 * 10 seconds)
+  const MAX_GENERATION_ATTEMPTS = 3; // Máximo de tentativas de geração
 
   // Get device info and generate code on mount
   useEffect(() => {
@@ -40,9 +44,14 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
 
   // Generate a new code
   const generateCode = async (info: any) => {
-    if (!info) return;
+    if (!info || generationAttempts >= MAX_GENERATION_ATTEMPTS) {
+      setIsExpired(true);
+      return;
+    }
     
     setIsGenerating(true);
+    setValidationAttempts(0);
+    setIsExpired(false);
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       if (!supabaseUrl) {
@@ -73,13 +82,16 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
 
       setCode(data.code);
       setTimeLeft(300); // Reset timer
+      setGenerationAttempts(0); // Reset generation attempts on success
     } catch (error: any) {
       toast.error(error.message || "Erro ao gerar código");
       console.error(error);
-      // Try to generate again after 2 seconds if failed
-      setTimeout(() => {
-        generateCode(info);
-      }, 2000);
+      setGenerationAttempts(prev => prev + 1);
+      
+      if (generationAttempts + 1 >= MAX_GENERATION_ATTEMPTS) {
+        setIsExpired(true);
+        toast.error("Número máximo de tentativas de geração atingido");
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -87,7 +99,7 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
 
   // Check code status
   const checkCode = async () => {
-    if (!code) return;
+    if (!code || validationAttempts >= MAX_VALIDATION_ATTEMPTS) return;
     
     setIsChecking(true);
     try {
@@ -126,11 +138,19 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
         
         onLogin(data.session);
         toast.success("Login realizado com sucesso!");
+      } else if (data.status === 'expired') {
+        setCode("");
+        setIsExpired(true);
+        toast.error("Código expirado");
+      } else if (data.status === 'invalid') {
+        setCode("");
+        toast.error("Código inválido");
       }
     } catch (error: any) {
       console.error(error);
     } finally {
       setIsChecking(false);
+      setValidationAttempts(prev => prev + 1);
     }
   };
 
@@ -143,6 +163,7 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
         if (prev <= 1) {
           clearInterval(timer);
           setCode("");
+          setIsExpired(true);
           return 0;
         }
         return prev - 1;
@@ -154,11 +175,20 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
 
   // Poll for code validation
   useEffect(() => {
-    if (!code || timeLeft <= 0) return;
+    if (!code || timeLeft <= 0 || validationAttempts >= MAX_VALIDATION_ATTEMPTS) return;
 
-    const pollInterval = setInterval(checkCode, 2000);
+    // Check immediately when code is generated
+    checkCode();
+
+    // Then check every 10 seconds
+    const pollInterval = setInterval(checkCode, 10000);
+
     return () => clearInterval(pollInterval);
-  }, [code, timeLeft]);
+  }, [code, timeLeft, validationAttempts]);
+
+  const handleRefresh = () => {
+    window.location.reload();
+  };
 
   return (
     <Card className="bg-black/75 border-gray-800 p-8">
@@ -170,11 +200,33 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
           </p>
         </div>
 
-        {!code ? (
+        {isExpired ? (
+          <div className="text-center space-y-4">
+            <p className="text-red-500 font-medium">
+              {generationAttempts >= MAX_GENERATION_ATTEMPTS 
+                ? "Número máximo de tentativas de geração atingido"
+                : "O código expirou ou atingiu o limite de tentativas"}
+            </p>
+            <p className="text-gray-400">
+              Por favor, atualize a página para tentar novamente
+            </p>
+            <Button
+              onClick={handleRefresh}
+              className="w-full bg-netflix-red hover:bg-red-700"
+            >
+              Atualizar Página
+            </Button>
+          </div>
+        ) : !code ? (
           <div className="text-center">
             <p className="text-sm text-gray-400">
               {isGenerating ? "Gerando código..." : "Aguarde, gerando código..."}
             </p>
+            {generationAttempts > 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                Tentativas de geração: {generationAttempts}/{MAX_GENERATION_ATTEMPTS}
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-4">
@@ -186,6 +238,11 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
                 Expira em {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
               </div>
               <Progress value={(timeLeft / 300) * 100} className="mt-2" />
+              {validationAttempts > 0 && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Tentativas de validação: {validationAttempts}/{MAX_VALIDATION_ATTEMPTS}
+                </p>
+              )}
             </div>
 
             <div className="text-center text-sm text-gray-400">
@@ -193,14 +250,6 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
               <p>2. Vá em Perfil {">"} Validar Acesso Rápido</p>
               <p>3. Digite o código acima</p>
             </div>
-
-            <Button
-              onClick={() => generateCode(deviceInfo)}
-              variant="outline"
-              className="w-full"
-            >
-              Gerar novo código
-            </Button>
           </div>
         )}
       </div>
