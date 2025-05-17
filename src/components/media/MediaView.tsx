@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import MediaFilters from "./MediaFilters";
@@ -63,7 +63,9 @@ const MediaView = ({
   focusedSection = 0,
   focusedItem = 0
 }: MediaViewProps) => {
-  
+  const [currentFocusedSection, setCurrentFocusedSection] = useState(focusedSection);
+  const [currentFocusedItem, setCurrentFocusedItem] = useState(focusedItem);
+
   // Helper function to determine content section title based on type
   const getContentTypeTitle = (contentType: string) => {
     switch (contentType) {
@@ -81,6 +83,45 @@ const MediaView = ({
     { items: topRatedItems, title: `${getContentTypeTitle(type)} Mais Bem Avaliados` },
     { items: recentItems, title: `${getContentTypeTitle(type)} Recentes` }
   ];
+
+  // Navegação por teclado entre seções
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'Tab':
+          e.preventDefault();
+          if (e.shiftKey) {
+            if (currentFocusedSection > 0) {
+              setCurrentFocusedSection(prev => prev - 1);
+              setCurrentFocusedItem(0);
+            }
+          } else {
+            if (currentFocusedSection < sections.length) {
+              setCurrentFocusedSection(prev => prev + 1);
+              setCurrentFocusedItem(0);
+            }
+          }
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (currentFocusedSection > 0) {
+            setCurrentFocusedSection(prev => prev - 1);
+            setCurrentFocusedItem(0);
+          }
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          if (currentFocusedSection < sections.length) {
+            setCurrentFocusedSection(prev => prev + 1);
+            setCurrentFocusedItem(0);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentFocusedSection, sections.length]);
 
   return (
     <div className="min-h-screen bg-netflix-background">
@@ -101,7 +142,11 @@ const MediaView = ({
                 title={section.title}
                 medias={section.items}
                 onMediaClick={onMediaClick}
-                focusedItem={focusedSection === idx ? focusedItem : -1}
+                focusedItem={currentFocusedSection === idx ? currentFocusedItem : -1}
+                onFocusChange={(index) => {
+                  setCurrentFocusedItem(index);
+                  setCurrentFocusedSection(idx);
+                }}
               />
             )
           ))}
@@ -119,7 +164,7 @@ const MediaView = ({
             onLoadMore={onLoadMore}
             onResetFilters={onResetFilters}
             onMediaClick={onMediaClick}
-            focusedItem={focusedSection === sections.length ? focusedItem : -1}
+            focusedItem={currentFocusedSection === sections.length ? currentFocusedItem : -1}
           />
         </div>
       </div>

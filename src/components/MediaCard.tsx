@@ -1,48 +1,131 @@
 import { Link } from "react-router-dom";
-import { MediaItem, getMediaTitle } from "@/types/movie";
+import { MediaItem } from "@/types/movie";
 import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import FavoriteButton from "./FavoriteButton";
 
 interface MediaCardProps {
   media: MediaItem;
-  onClick: () => void;
+  onClick?: (media: MediaItem) => void;
+  className?: string;
+  index: number;
+  isFocused: boolean;
+  onFocus: (index: number) => void;
 }
 
-const MediaCard = ({ media, onClick }: MediaCardProps) => {
-  // Determine link path based on media type
-  const linkPath = media.media_type === 'movie'
-    ? `/filme/${media.id}`
-    : media.original_language === 'ko'
-      ? `/dorama/${media.id}`
-      : `/serie/${media.id}`;
+const MediaCard = ({ 
+  media, 
+  onClick, 
+  className = '', 
+  index,
+  isFocused,
+  onFocus 
+}: MediaCardProps) => {
+  // Fail safe check for the media object
+  if (!media) {
+    return null;
+  }
 
-  // Handle missing poster image
+  // Determine link path based on media type
+  const getLinkPath = () => {
+    if (!media) return "#";
+    
+    const mediaId = (media as any).id;
+    if (mediaId === undefined) return "#";
+    
+    if (!media.media_type) return `/filme/${mediaId}`;
+    
+    switch (media.media_type) {
+      case 'movie':
+        return `/filme/${mediaId}`;
+      case 'tv':
+        if ('original_language' in media) {
+          if (media.original_language === 'ko') {
+            return `/dorama/${mediaId}`;
+          } else if (media.original_language === 'ja') {
+            return `/anime/${mediaId}`;
+          }
+        }
+        return `/serie/${mediaId}`;
+      default:
+        return `/filme/${mediaId}`;
+    }
+  };
+
   const posterUrl = media.poster_path
     ? `https://image.tmdb.org/t/p/w500${media.poster_path}`
-    : '/placeholder.svg';
+    : null;
 
-  // Get title (handle both movie and tv show titles)
-  const title = 'title' in media ? media.title : media.name;
-  
-  // Get vote average if available
+  const title = 'title' in media ? media.title : 'name' in media ? media.name : "Sem título";
   const rating = media.vote_average ? Math.round(media.vote_average * 10) / 10 : null;
+  const mediaId = (media as any).id;
+  
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) {
+      e.preventDefault();
+      onClick(media);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case 'Enter':
+        e.preventDefault();
+        if (onClick) onClick(media);
+        break;
+      case 'Tab':
+        e.preventDefault();
+        if (e.shiftKey) {
+          onFocus(index - 1);
+        } else {
+          onFocus(index + 1);
+        }
+        break;
+      case 'ArrowRight':
+        e.preventDefault();
+        onFocus(index + 1);
+        break;
+      case 'ArrowLeft':
+        e.preventDefault();
+        onFocus(index - 1);
+        break;
+    }
+  };
   
   return (
-    <Card className="bg-transparent border-none overflow-hidden group">
+    <Card 
+      className={`bg-transparent border-none overflow-hidden group transition-all duration-200 ${
+        isFocused ? 'scale-105 ring-4 ring-netflix-red z-10' : 'hover:scale-105'
+      } ${className}`}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onFocus={() => onFocus(index)}
+    >
       <Link 
-        to={linkPath}
-        className="block overflow-hidden rounded-lg transition-transform duration-300 relative"
+        to={getLinkPath()}
+        className="block overflow-hidden rounded-lg transition-all duration-300 relative"
+        onClick={handleClick}
       >
         <div className="relative aspect-[2/3] bg-gray-900 overflow-hidden">
-          <img 
-            src={posterUrl}
-            alt={title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
-            loading="lazy"
-          />
+          {posterUrl ? (
+            <img 
+              src={posterUrl}
+              alt={title}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+              loading="lazy"
+            />
+          ) : (
+            <div className="h-full w-full bg-gray-900 flex items-center justify-center border border-gray-800">
+              <div className="text-center p-4">
+                <span className="text-gray-400 text-sm block mb-2">Sem imagem</span>
+                <span className="text-gray-500 text-xs">{title}</span>
+              </div>
+            </div>
+          )}
           
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
+          <div className={`absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300 flex flex-col justify-end p-3 ${
+            isFocused ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`}>
             <div className="text-white font-medium">{title}</div>
             
             {rating && (
@@ -57,15 +140,17 @@ const MediaCard = ({ media, onClick }: MediaCardProps) => {
               </div>
             )}
             
-            <button 
-              className="absolute top-2 right-2 bg-black/50 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-netflix-red"
-              onClick={(e) => {
-                e.preventDefault();
-                // Favorite functionality would go here
-              }}
-            >
-              <Heart size={16} className="text-white" />
-            </button>
+            {mediaId !== undefined && (
+              <button 
+                className="absolute top-2 right-2 bg-black/50 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-netflix-red"
+                onClick={(e) => {
+                  e.preventDefault();
+                  // Função de favorito será implementada posteriormente
+                }}
+              >
+                <Heart size={16} className="text-white" />
+              </button>
+            )}
           </div>
         </div>
         

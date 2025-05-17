@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { MediaItem, getMediaTitle } from '@/types/movie';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/carousel";
 import { AspectRatio } from '@/components/ui/aspect-ratio';
 import MediaCard from "./MediaCard";
+import { Button } from '@/components/ui/button';
 
 type MediaSectionProps = {
   title: string;
@@ -21,7 +23,7 @@ type MediaSectionProps = {
   sectionId?: string;
   mediaType?: 'movie' | 'tv' | 'anime' | 'dorama' | 'tv-channel';
   focusedItem?: number;
-  onKeyDown?: (e: React.KeyboardEvent) => void;
+  onFocusChange?: (index: number) => void;
 };
 
 const MediaSection = ({ 
@@ -33,11 +35,62 @@ const MediaSection = ({
   onMediaClick,
   sectionId = 'default',
   mediaType,
-  focusedItem = 0,
-  onKeyDown
+  focusedItem = -1,
+  onFocusChange
 }: MediaSectionProps) => {
   const navigate = useNavigate();
+  const [focusedIndex, setFocusedIndex] = useState(focusedItem);
   
+  useEffect(() => {
+    setFocusedIndex(focusedItem);
+  }, [focusedItem]);
+
+  // Navegação por teclado
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const itemsPerRow = window.innerWidth >= 1280 ? 6 : 
+                         window.innerWidth >= 1024 ? 5 : 
+                         window.innerWidth >= 768 ? 4 : 
+                         window.innerWidth >= 640 ? 3 : 2;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          const newIndex = Math.min(focusedIndex + 1, medias.length - 1);
+          setFocusedIndex(newIndex);
+          onFocusChange?.(newIndex);
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          const prevIndex = Math.max(focusedIndex - 1, 0);
+          setFocusedIndex(prevIndex);
+          onFocusChange?.(prevIndex);
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          const downIndex = Math.min(focusedIndex + itemsPerRow, medias.length - 1);
+          setFocusedIndex(downIndex);
+          onFocusChange?.(downIndex);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          const upIndex = Math.max(focusedIndex - itemsPerRow, 0);
+          setFocusedIndex(upIndex);
+          onFocusChange?.(upIndex);
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (focusedIndex >= 0 && focusedIndex < medias.length) {
+            onMediaClick?.(medias[focusedIndex]);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedIndex, medias, onMediaClick, onFocusChange]);
+
   // Only show load more for sections with showLoadMore flag
   const shouldShowLoadMore = showLoadMore && onLoadMore;
   
@@ -87,22 +140,23 @@ const MediaSection = ({
       className="space-y-4 py-4" 
       id={`media-section-${sectionId}`} 
       data-section-id={sectionId}
-      onKeyDown={onKeyDown}
     >
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 relative">
         {medias.map((media, index) => (
           <MediaCard
             key={media.id}
             media={media}
             onClick={() => handleClick(media)}
-            className={`transition-all duration-200 ${
-              index === focusedItem ? 'scale-105' : ''
-            }`}
-            tabIndex={index === focusedItem ? 0 : -1}
+            index={index}
+            isFocused={index === focusedIndex}
+            onFocus={(idx) => {
+              setFocusedIndex(idx);
+              onFocusChange?.(idx);
+            }}
           />
         ))}
       </div>
@@ -113,10 +167,10 @@ const MediaSection = ({
           <button 
             onClick={handleLoadMore}
             className={`group relative overflow-hidden rounded-lg bg-netflix-red hover:bg-red-700 transition-all duration-300 flex items-center justify-center cursor-pointer px-6 py-3 min-w-[200px] focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-100 ${
-              focusedItem === medias.length ? 'scale-105' : ''
+              focusedIndex === medias.length ? 'scale-105' : ''
             }`}
             data-section-id={sectionId}
-            tabIndex={focusedItem === medias.length ? 0 : -1}
+            tabIndex={focusedIndex === medias.length ? 0 : -1}
           >
             <div className="flex items-center space-x-2">
               {isLoading ? (

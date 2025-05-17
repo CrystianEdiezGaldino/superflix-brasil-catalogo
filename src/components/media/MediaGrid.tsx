@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { MediaItem, isMovie, isSeries } from "@/types/movie";
 import MediaCard from "@/components/media/MediaCard";
@@ -15,6 +15,7 @@ interface MediaGridProps {
   onLoadMore: () => void;
   onResetFilters: () => void;
   onMediaClick?: (media: MediaItem) => void;
+  focusedItem?: number;
 }
 
 const MediaGrid = ({
@@ -26,9 +27,15 @@ const MediaGrid = ({
   isFiltering,
   onLoadMore,
   onResetFilters,
-  onMediaClick
+  onMediaClick,
+  focusedItem = -1
 }: MediaGridProps) => {
   const gridRef = useRef<HTMLDivElement>(null);
+  const [focusedIndex, setFocusedIndex] = useState(focusedItem);
+
+  useEffect(() => {
+    setFocusedIndex(focusedItem);
+  }, [focusedItem]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -50,6 +57,52 @@ const MediaGrid = ({
       }
     };
   }, [hasMore, isLoadingMore, onLoadMore]);
+
+  // Navegação por teclado
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const itemsPerRow = window.innerWidth >= 1280 ? 8 : 
+                         window.innerWidth >= 1024 ? 6 : 
+                         window.innerWidth >= 768 ? 5 : 
+                         window.innerWidth >= 640 ? 4 : 3;
+
+      switch (e.key) {
+        case 'Tab':
+          e.preventDefault();
+          if (e.shiftKey) {
+            setFocusedIndex(prev => Math.max(prev - 1, 0));
+          } else {
+            setFocusedIndex(prev => Math.min(prev + 1, mediaItems.length - 1));
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          setFocusedIndex(prev => Math.min(prev + 1, mediaItems.length - 1));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          setFocusedIndex(prev => Math.max(prev - 1, 0));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setFocusedIndex(prev => Math.min(prev + itemsPerRow, mediaItems.length - 1));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setFocusedIndex(prev => Math.max(prev - itemsPerRow, 0));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (focusedIndex >= 0 && focusedIndex < mediaItems.length) {
+            onMediaClick?.(mediaItems[focusedIndex]);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedIndex, mediaItems, onMediaClick]);
 
   if (isLoading) {
     return (
@@ -87,25 +140,15 @@ const MediaGrid = ({
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
-        {mediaItems.map((media) => (
-          <div
-            key={media.id}
+        {mediaItems.map((media, index) => (
+          <MediaCard
+            key={`${media.id}-${media.media_type || 'movie'}`}
+            media={media}
             onClick={() => onMediaClick?.(media)}
-            className="relative aspect-[2/3] rounded-lg overflow-hidden group cursor-pointer"
-          >
-            <img
-              src={`https://image.tmdb.org/t/p/w342${media.poster_path}`}
-              alt={isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="absolute bottom-0 left-0 right-0 p-2">
-                <h3 className="text-sm font-medium text-white truncate">
-                  {isMovie(media) ? media.title : isSeries(media) ? media.name : ''}
-                </h3>
-              </div>
-            </div>
-          </div>
+            index={index}
+            isFocused={index === focusedIndex}
+            onFocus={setFocusedIndex}
+          />
         ))}
       </div>
 
