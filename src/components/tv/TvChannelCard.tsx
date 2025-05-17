@@ -1,46 +1,35 @@
-
 import React from 'react';
-import { TvChannel } from '@/types/tvChannel';
-import { Card } from '@/components/ui/card';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import { Play, Tv } from 'lucide-react';
+import { TvChannel } from '@/data/tvChannels';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Play } from 'lucide-react';
 
 interface TvChannelCardProps {
   channel: TvChannel;
   onSelect: (channel: TvChannel) => void;
+  hasAccess: boolean;
 }
 
-const TvChannelCard = ({ channel, onSelect }: TvChannelCardProps) => {
+const TvChannelCard = ({ channel, onSelect, hasAccess }: TvChannelCardProps) => {
   return (
-    <Card 
-      className="group overflow-hidden bg-gray-800/50 border-gray-700 hover:border-netflix-red transition-all cursor-pointer"
-      onClick={() => onSelect(channel)}
-    >
-      <div className="relative">
-        <AspectRatio ratio={16/9} className="bg-gray-900 flex items-center justify-center">
-          {channel.logo ? (
-            <img 
-              src={channel.logo} 
-              alt={channel.name} 
-              className="object-contain h-16 w-full p-2"
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center p-4">
-              <Tv size={32} className="text-gray-400 mb-2" />
-              <span className="text-sm font-medium text-center text-white">{channel.name}</span>
-            </div>
-          )}
-        </AspectRatio>
-        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-300">
-          <div className="rounded-full bg-netflix-red p-3">
-            <Play size={22} fill="white" className="text-white ml-1" />
-          </div>
-        </div>
-      </div>
-      <div className="p-2 text-center">
-        <h3 className="font-medium text-sm text-white truncate">{channel.name}</h3>
-        <p className="text-xs text-gray-400">{channel.category}</p>
-      </div>
+    <Card className="bg-netflix-card hover:bg-netflix-card-hover transition-colors duration-200 cursor-pointer">
+      <CardHeader className="p-4">
+        <h3 className="text-lg font-semibold text-white truncate">{channel.name}</h3>
+        <p className="text-sm text-gray-400">{channel.category}</p>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        <p className="text-sm text-gray-300 line-clamp-2">{channel.description}</p>
+      </CardContent>
+      <CardFooter className="p-4 pt-0">
+        <Button
+          onClick={() => onSelect(channel)}
+          className="w-full bg-netflix-red hover:bg-netflix-red-hover"
+          disabled={!hasAccess}
+        >
+          <Play className="w-4 h-4 mr-2" />
+          Assistir
+        </Button>
+      </CardFooter>
     </Card>
   );
 };

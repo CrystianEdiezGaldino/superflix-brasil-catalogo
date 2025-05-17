@@ -1,132 +1,143 @@
-
-import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { TvChannel } from '@/types/tvChannel';
-import { X, AlertCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { AspectRatio } from '@/components/ui/aspect-ratio';
+import React, { useState, useEffect, useRef } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { TvChannel } from "@/data/tvChannels";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 interface TvChannelModalProps {
-  channel: TvChannel | null;
+  channel: TvChannel;
   isOpen: boolean;
   onClose: () => void;
-  hasAccess: boolean; 
+  hasAccess: boolean;
+  options?: {
+    preventClose?: boolean;
+    closeOnOutsideClick?: boolean;
+    closeOnEsc?: boolean;
+  };
 }
 
-const TvChannelModal = ({ channel, isOpen, onClose, hasAccess = true }: TvChannelModalProps) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
+const TvChannelModal = ({ channel, isOpen, onClose, hasAccess, options = {} }: TvChannelModalProps) => {
+  const [isIframeLoaded, setIsIframeLoaded] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
-  if (!channel) return null;
+  // Reset iframe loaded state when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setIsIframeLoaded(false);
+    }
+  }, [isOpen]);
 
+  // Handle iframe load
   const handleIframeLoad = () => {
-    setIsLoading(false);
+    setIsIframeLoaded(true);
   };
 
-  const handleIframeError = () => {
-    setIsLoading(false);
-    setHasError(true);
+  // Prevent modal from closing when clicking outside or pressing ESC
+  const handleOpenChange = (open: boolean) => {
+    if (!open && options.preventClose) {
+      return;
+    }
+    onClose();
   };
 
-  // Show restricted access message if no access
-  if (!hasAccess) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl bg-netflix-background border-netflix-red">
-          <DialogTitle className="text-2xl font-bold text-white">
-            {channel.name}
-          </DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Conteúdo exclusivo para assinantes
-          </DialogDescription>
-          
-          <div className="flex justify-end">
+  // Handle visibility change
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        // Tab is hidden, maintain state
+        if (iframeRef.current) {
+          iframeRef.current.style.display = 'none';
+        }
+      } else {
+        // Tab is visible again, restore state
+        if (iframeRef.current) {
+          iframeRef.current.style.display = 'block';
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  return (
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={handleOpenChange}
+    >
+      <DialogContent 
+        ref={modalRef}
+        className="max-w-4xl bg-netflix-background border-netflix-border"
+        onPointerDownOutside={(e) => {
+          if (options.closeOnOutsideClick === false) {
+            e.preventDefault();
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          if (options.closeOnEsc === false) {
+            e.preventDefault();
+          }
+        }}
+      >
+        <DialogHeader>
+          <DialogTitle className="text-xl font-bold text-white flex items-center justify-between">
+            <span>{channel.name}</span>
             <Button
               variant="ghost"
               size="icon"
-              className="text-white hover:text-netflix-red"
               onClick={onClose}
+              className="hover:bg-netflix-card-hover"
             >
-              <X className="h-6 w-6" />
+              <X className="h-4 w-4" />
             </Button>
-          </div>
-          
-          <div className="w-full p-8 text-center">
-            <AlertCircle className="h-12 w-12 text-netflix-red mb-4 mx-auto" />
-            <h3 className="text-xl font-bold mb-2 text-white">Acesso Restrito</h3>
-            <p className="mb-6 text-gray-300">Este canal está disponível apenas para assinantes.</p>
-            <Button className="bg-netflix-red hover:bg-red-700">
-              Assinar Agora
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    );
-  }
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {channel.description}
+          </DialogDescription>
+        </DialogHeader>
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh] bg-netflix-background border-netflix-red">
-        <DialogTitle className="text-2xl font-bold text-white">
-          {channel.name}
-        </DialogTitle>
-        <DialogDescription className="text-gray-400">
-          Assistindo ao vivo
-        </DialogDescription>
-        
-        <div className="flex justify-end">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-white hover:text-netflix-red"
-            onClick={onClose}
-          >
-            <X className="h-6 w-6" />
-          </Button>
-        </div>
-        
-        <div className="w-full h-full relative">
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <Loader2 className="h-8 w-8 text-white animate-spin" />
+        <div className="mt-4">
+          {hasAccess ? (
+            <div className="aspect-video w-full bg-black relative">
+              {!isIframeLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-12 h-12 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+              <iframe
+                ref={iframeRef}
+                src={channel.iframeUrl}
+                allow="encrypted-media"
+                allowFullScreen
+                className="w-full h-full"
+                frameBorder="0"
+                onLoad={handleIframeLoad}
+                style={{ opacity: isIframeLoaded ? 1 : 0 }}
+                title={`${channel.name} - TV ao vivo`}
+              />
+            </div>
+          ) : (
+            <div className="aspect-video w-full bg-black flex items-center justify-center">
+              <div className="text-center p-8">
+                <h3 className="text-xl font-bold text-white mb-2">Conteúdo Exclusivo</h3>
+                <p className="text-gray-400">
+                  Assine agora para ter acesso a todos os canais de TV ao vivo.
+                </p>
+              </div>
             </div>
           )}
-          
-          {hasError && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white p-4 text-center">
-              <AlertCircle className="h-12 w-12 text-netflix-red mb-4" />
-              <h3 className="text-xl font-bold mb-2">Erro ao carregar o canal</h3>
-              <p className="mb-4">Não foi possível carregar o stream deste canal. Por favor, tente novamente mais tarde.</p>
-              <Button
-                variant="outline"
-                className="text-white border-white hover:bg-white/10"
-                onClick={() => {
-                  setHasError(false);
-                  setIsLoading(true);
-                }}
-              >
-                Tentar novamente
-              </Button>
-            </div>
-          )}
-          
-          <AspectRatio ratio={16/9} className="bg-black">
-            <iframe
-              src={channel.embedUrl}
-              className="w-full h-full border-0"
-              allowFullScreen
-              title={`Assistir ${channel.name} ao vivo`}
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-              onLoad={handleIframeLoad}
-              onError={handleIframeError}
-            />
-          </AspectRatio>
+
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold text-white mb-2">Sobre o Canal</h3>
+            <p className="text-gray-300">{channel.description}</p>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
 
-export default TvChannelModal;
+export default React.memo(TvChannelModal);

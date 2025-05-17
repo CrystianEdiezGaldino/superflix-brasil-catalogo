@@ -1,25 +1,86 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
 import { tvChannels, channelCategories } from "@/data/tvChannels";
-import { TvChannel } from "@/types/tvChannel";
+import { TvChannel } from "@/data/tvChannels";
 import TvChannelsList from "@/components/tv/TvChannelsList";
 import TvChannelModal from "@/components/tv/TvChannelModal";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { toast } from "sonner";
+import React from "react";
 
 const TvChannels = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { isSubscribed, isAdmin, isLoading: subscriptionLoading } = useSubscription();
   
-  const [selectedChannel, setSelectedChannel] = useState<TvChannel | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("Todas");
+  // Initialize state from sessionStorage if available
+  const [selectedChannel, setSelectedChannel] = useState<TvChannel | null>(() => {
+    const savedChannel = sessionStorage.getItem('selectedChannel');
+    return savedChannel ? JSON.parse(savedChannel) : null;
+  });
+  
+  const [isModalOpen, setIsModalOpen] = useState(() => {
+    return sessionStorage.getItem('isModalOpen') === 'true';
+  });
+  
+  const [selectedCategory, setSelectedCategory] = useState<string>(() => {
+    return sessionStorage.getItem('selectedCategory') || "Todas";
+  });
+
+  // Save state to sessionStorage when it changes
+  useEffect(() => {
+    if (selectedChannel) {
+      sessionStorage.setItem('selectedChannel', JSON.stringify(selectedChannel));
+    } else {
+      sessionStorage.removeItem('selectedChannel');
+    }
+  }, [selectedChannel]);
+
+  useEffect(() => {
+    sessionStorage.setItem('isModalOpen', isModalOpen.toString());
+  }, [isModalOpen]);
+
+  useEffect(() => {
+    sessionStorage.setItem('selectedCategory', selectedCategory);
+  }, [selectedCategory]);
+
+  // Clean up sessionStorage when component unmounts
+  useEffect(() => {
+    return () => {
+      // Don't clear the state when unmounting
+      // This allows the state to persist when switching tabs
+    };
+  }, []);
+
+  // Use React Query to manage channels data with proper caching
+  const { data: channels = tvChannels, isLoading } = useQuery({
+    queryKey: ["tv-channels"],
+    queryFn: () => Promise.resolve(tvChannels),
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+  });
+
+  // Memoize modal options to prevent unnecessary re-renders
+  const modalOptions = useMemo(() => ({
+    preventClose: true,
+    closeOnOutsideClick: false,
+    closeOnEsc: false
+  }), []);
+
+  // Memoize filtered channels to prevent unnecessary recalculations
+  const filteredChannels = useMemo(() => 
+    selectedCategory === "Todas" 
+      ? channels 
+      : channels.filter(channel => channel.category === selectedCategory),
+    [channels, selectedCategory]
+  );
   
   useEffect(() => {
     // Only redirect if we're not loading and definitely have no user
@@ -28,27 +89,20 @@ const TvChannels = () => {
       navigate("/auth");
       return;
     }
-
-    // Simulate loading for better UX
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
   }, [user, authLoading, navigate]);
 
-  const handleCategoryChange = (category: string) => {
+  const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category);
-  };
+  }, []);
 
-  const filteredChannels = selectedCategory === "Todas" 
-    ? tvChannels 
-    : tvChannels.filter(channel => channel.category === selectedCategory);
-
-  const handleOpenChannel = (channel: TvChannel) => {
+  const handleOpenChannel = useCallback((channel: TvChannel) => {
     setSelectedChannel(channel);
     setIsModalOpen(true);
-  };
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
 
   const hasAccess = isSubscribed || isAdmin;
 
@@ -116,7 +170,7 @@ const TvChannels = () => {
         <TvChannelsList
           channels={filteredChannels}
           selectedChannel={selectedChannel}
-          onSelectChannel={(channel) => handleOpenChannel(channel)}
+          onSelectChannel={handleOpenChannel}
           isLoading={isLoading}
           hasAccess={hasAccess}
           selectedCategory={selectedCategory}
@@ -124,10 +178,12 @@ const TvChannels = () => {
         
         {selectedChannel && (
           <TvChannelModal
+            key={`modal-${selectedChannel.id}-${isModalOpen}`}
             channel={selectedChannel}
             isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
+            onClose={handleCloseModal}
             hasAccess={hasAccess}
+            options={modalOptions}
           />
         )}
       </div>
@@ -135,4 +191,4 @@ const TvChannels = () => {
   );
 };
 
-export default TvChannels;
+export default React.memo(TvChannels);
