@@ -181,7 +181,7 @@ const DoramaDetails = () => {
           {showPlayer && (
             <div className="px-4 sm:px-6 md:px-10 mb-10">
               <div className="max-w-7xl mx-auto">
-                <div className="aspect-video w-full bg-black rounded-lg overflow-hidden">
+                <div className="aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden">
                   <SuperFlixPlayer
                     key={`player-${dorama.id}-${selectedSeason}-${selectedEpisode}`}
                     type="serie"

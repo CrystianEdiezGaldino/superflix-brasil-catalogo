@@ -192,14 +192,18 @@ const SeriesDetails = () => {
 
           {/* Player de vídeo - com ref para scroll */}
           {series.backdrop_path && (
-            <div ref={playerRef} id="player-container">
-              <SeriesPlayer
-                showPlayer={showPlayer}
-                series={series}
-                selectedSeason={selectedSeason}
-                selectedEpisode={selectedEpisode}
-                hasAccess={hasAccess}
-              />
+            <div ref={playerRef} id="player-container" className="px-4 sm:px-6 md:px-10 mb-8 sm:mb-10">
+              <div className="max-w-7xl mx-auto">
+                <div className="aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl">
+                  <SeriesPlayer
+                    showPlayer={showPlayer}
+                    series={series}
+                    selectedSeason={selectedSeason}
+                    selectedEpisode={selectedEpisode}
+                    hasAccess={hasAccess}
+                  />
+                </div>
+              </div>
             </div>
           )}
 

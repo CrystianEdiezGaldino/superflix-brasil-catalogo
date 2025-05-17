@@ -23,6 +23,7 @@ const MovieDetails = () => {
   const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
   const [isContentAvailable, setIsContentAvailable] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -35,6 +36,42 @@ const MovieDetails = () => {
   const { isFavorite, addToFavorites, removeFromFavorites, toggleFavorite } = useFavorites();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
+
+  // Check if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handle orientation change
+  useEffect(() => {
+    if (showPlayer && isMobile) {
+      try {
+        // Try to lock screen orientation to landscape
+        if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => {
+            // If lock fails, show message to user
+            toast.info("Por favor, gire seu dispositivo para modo paisagem para melhor visualização");
+          });
+        }
+      } catch (error) {
+        toast.info("Por favor, gire seu dispositivo para modo paisagem para melhor visualização");
+      }
+    }
+
+    return () => {
+      // Unlock orientation when component unmounts or player is closed
+      if (screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+    };
+  }, [showPlayer, isMobile]);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -139,13 +176,15 @@ const MovieDetails = () => {
 
           {/* Player de vídeo */}
           {showPlayer && ((movie.imdb_id || movie.external_ids?.imdb_id)) && (
-            <div id="video-player" className="px-4 sm:px-6 md:px-10 mb-8 sm:mb-10">
-              <div className="max-w-6xl mx-auto">
-                <MovieVideoPlayer 
-                  showPlayer={true}
-                  imdbId={movie.imdb_id || movie.external_ids?.imdb_id || ''}
-                  hasAccess={hasAccess}
-                />
+            <div id="video-player" className={`${isMobile ? 'fixed inset-0 z-50 bg-black' : 'px-4 sm:px-6 md:px-10 mb-8 sm:mb-10'}`}>
+              <div className={`${isMobile ? 'h-full w-full' : 'max-w-6xl mx-auto'}`}>
+                <div className={`${isMobile ? 'h-full w-full' : 'aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl'}`}>
+                  <MovieVideoPlayer 
+                    showPlayer={true}
+                    imdbId={movie.imdb_id || movie.external_ids?.imdb_id || ''}
+                    hasAccess={hasAccess}
+                  />
+                </div>
               </div>
             </div>
           )}
