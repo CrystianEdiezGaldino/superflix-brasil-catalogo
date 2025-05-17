@@ -25,7 +25,12 @@ const MovieDetails = () => {
   const [isContentAvailable, setIsContentAvailable] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [focusedElement, setFocusedElement] = useState<string | null>(null);
+  const [focusedButton, setFocusedButton] = useState<string | null>(null);
   const playerRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const recommendationsRef = useRef<HTMLDivElement>(null);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -147,55 +152,149 @@ const MovieDetails = () => {
     navigate(`/filme/${movie.id}`);
   };
 
-  // Navegação por controle de TV
+  // Navegação por controle de TV e Tab
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       switch (e.key) {
+        case 'Tab':
+          e.preventDefault();
+          if (focusedButton) {
+            if (e.shiftKey) {
+              setFocusedButton(null);
+              setFocusedElement('header');
+              headerRef.current?.focus();
+            } else {
+              setFocusedButton('favorite');
+            }
+          } else if (focusedElement === 'header') {
+            if (e.shiftKey) {
+              // Não faz nada, já está no topo
+            } else {
+              setFocusedElement('actions');
+              setFocusedButton('watch');
+            }
+          } else if (focusedElement === 'actions') {
+            if (e.shiftKey) {
+              setFocusedElement('header');
+              headerRef.current?.focus();
+            } else {
+              setFocusedElement('content');
+              contentRef.current?.focus();
+            }
+          } else if (focusedElement === 'content') {
+            if (e.shiftKey) {
+              setFocusedElement('actions');
+              setFocusedButton('watch');
+            } else {
+              setFocusedElement('recommendations');
+              recommendationsRef.current?.focus();
+            }
+          } else if (focusedElement === 'recommendations') {
+            if (e.shiftKey) {
+              setFocusedElement('content');
+              contentRef.current?.focus();
+            }
+            // Não faz nada se for para frente, já está no final
+          }
+          break;
         case 'ArrowUp':
           e.preventDefault();
-          if (focusedElement === 'player') {
-            setFocusedElement('actions');
+          if (focusedButton) {
+            setFocusedButton(null);
+            if (actionsRef.current) {
+              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          } else if (focusedElement === 'actions') {
+            setFocusedElement('header');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           } else if (focusedElement === 'content') {
             setFocusedElement('actions');
+            if (actionsRef.current) {
+              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
           } else if (focusedElement === 'recommendations') {
             setFocusedElement('content');
+            if (actionsRef.current) {
+              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
           }
           break;
         case 'ArrowDown':
           e.preventDefault();
-          if (focusedElement === 'actions') {
+          if (focusedButton) {
+            setFocusedButton(null);
+            if (actionsRef.current) {
+              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          } else if (focusedElement === 'header') {
+            setFocusedElement('actions');
+            if (actionsRef.current) {
+              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          } else if (focusedElement === 'actions') {
             if (showPlayer) {
               setFocusedElement('player');
+              if (playerRef.current) {
+                playerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
             } else {
               setFocusedElement('content');
+              window.scrollBy({ top: 300, behavior: 'smooth' });
             }
           } else if (focusedElement === 'content') {
             setFocusedElement('recommendations');
+            window.scrollBy({ top: 300, behavior: 'smooth' });
           }
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          if (focusedElement === 'actions') {
+          if (focusedButton === 'favorite') {
+            setFocusedButton('watch');
+          } else if (focusedButton === 'watch') {
+            setFocusedButton(null);
             setFocusedElement('header');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          } else if (focusedElement === 'actions') {
+            setFocusedElement('header');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }
           break;
         case 'ArrowRight':
           e.preventDefault();
-          if (focusedElement === 'header') {
+          if (focusedButton === 'watch') {
+            setFocusedButton('favorite');
+          } else if (focusedButton === null && focusedElement === 'actions') {
+            setFocusedButton('watch');
+          } else if (focusedElement === 'header') {
             setFocusedElement('actions');
+            if (actionsRef.current) {
+              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
           }
           break;
         case 'Enter':
           e.preventDefault();
-          if (focusedElement === 'actions') {
+          if (focusedButton === 'watch') {
             handleWatchClick();
+          } else if (focusedButton === 'favorite') {
+            handleToggleFavorite();
+          } else if (focusedElement === 'recommendations') {
+            const selectedMovie = recommendations[0];
+            if (selectedMovie) {
+              handleMovieClick(selectedMovie);
+            }
           }
           break;
         case 'Backspace':
           e.preventDefault();
-          if (showPlayer) {
+          if (focusedButton) {
+            setFocusedButton(null);
+          } else if (showPlayer) {
             setShowPlayer(false);
             setFocusedElement('actions');
+            if (actionsRef.current) {
+              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
           } else {
             navigate(-1);
           }
@@ -205,7 +304,7 @@ const MovieDetails = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedElement, showPlayer, navigate]);
+  }, [focusedElement, focusedButton, showPlayer, navigate, recommendations]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
@@ -219,8 +318,12 @@ const MovieDetails = () => {
       {movie && (
         <>
           <div 
-            className={`${focusedElement === 'header' ? 'ring-2 ring-netflix-red' : ''}`}
-            onFocus={() => setFocusedElement('header')}
+            ref={headerRef}
+            tabIndex={0}
+            onFocus={() => {
+              setFocusedElement('header');
+              setFocusedButton(null);
+            }}
           >
             <MovieHeader 
               movie={movie} 
@@ -232,8 +335,12 @@ const MovieDetails = () => {
           </div>
 
           <div 
-            className={`${focusedElement === 'actions' ? 'ring-2 ring-netflix-red' : ''}`}
-            onFocus={() => setFocusedElement('actions')}
+            ref={actionsRef}
+            tabIndex={0}
+            onFocus={() => {
+              setFocusedElement('actions');
+              setFocusedButton(null);
+            }}
           >
             <MediaActions 
               onPlayClick={handleWatchClick}
@@ -243,16 +350,21 @@ const MovieDetails = () => {
               tmdbId={movie.id}
               mediaType="movie"
               showPlayer={showPlayer}
+              focusedButton={focusedButton}
+              onButtonFocus={setFocusedButton}
             />
           </div>
 
-          {/* Player de vídeo */}
           {showPlayer && ((movie.imdb_id || movie.external_ids?.imdb_id)) && (
             <div 
               ref={playerRef}
               id="video-player" 
-              className={`${isMobile ? 'fixed inset-0 z-50 bg-black' : 'px-4 sm:px-6 md:px-10 mb-8 sm:mb-10'} ${focusedElement === 'player' ? 'ring-2 ring-netflix-red' : ''}`}
-              onFocus={() => setFocusedElement('player')}
+              tabIndex={0}
+              className={`${isMobile ? 'fixed inset-0 z-50 bg-black' : 'px-4 sm:px-6 md:px-10 mb-8 sm:mb-10'}`}
+              onFocus={() => {
+                setFocusedElement('player');
+                setFocusedButton(null);
+              }}
             >
               <div className={`${isMobile ? 'h-full w-full' : 'max-w-6xl mx-auto'}`}>
                 <div className={`${isMobile ? 'h-full w-full' : 'aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl'}`}>
@@ -273,17 +385,25 @@ const MovieDetails = () => {
           )}
 
           <div 
-            className={`${focusedElement === 'content' ? 'ring-2 ring-netflix-red' : ''}`}
-            onFocus={() => setFocusedElement('content')}
+            ref={contentRef}
+            tabIndex={0}
+            onFocus={() => {
+              setFocusedElement('content');
+              setFocusedButton(null);
+            }}
           >
             <MovieContent movie={movie} hasAccess={hasAccess} />
           </div>
 
-          {/* Seção de Recomendações */}
           {recommendations.length > 0 && (
             <div 
-              className={`px-4 sm:px-6 md:px-10 mt-8 sm:mt-12 mb-12 sm:mb-16 ${focusedElement === 'recommendations' ? 'ring-2 ring-netflix-red' : ''}`}
-              onFocus={() => setFocusedElement('recommendations')}
+              ref={recommendationsRef}
+              tabIndex={0}
+              className="px-4 sm:px-6 md:px-10 mt-8 sm:mt-12 mb-12 sm:mb-16"
+              onFocus={() => {
+                setFocusedElement('recommendations');
+                setFocusedButton(null);
+              }}
             >
               <div className="max-w-7xl mx-auto">
                 <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 border-l-4 border-netflix-red pl-3">

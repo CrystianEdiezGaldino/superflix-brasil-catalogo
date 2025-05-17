@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -30,6 +30,11 @@ interface ResetPasswordFormProps {
 
 const ResetPasswordForm = ({ isLoading, setIsLoading, onBack }: ResetPasswordFormProps) => {
   const { resetPassword } = useAuth();
+  const [focusedElement, setFocusedElement] = useState<string | null>(null);
+  
+  const emailRef = useRef<HTMLInputElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
 
   const form = useForm<ResetPasswordFormData>({
     resolver: zodResolver(resetPasswordSchema),
@@ -59,11 +64,52 @@ const ResetPasswordForm = ({ isLoading, setIsLoading, onBack }: ResetPasswordFor
     }
   };
 
+  // Navegação por Tab
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        
+        switch (focusedElement) {
+          case 'email':
+            if (e.shiftKey) {
+              setFocusedElement('back');
+              backRef.current?.focus();
+            } else {
+              setFocusedElement('submit');
+              submitRef.current?.focus();
+            }
+            break;
+            
+          case 'back':
+            if (e.shiftKey) {
+              // Não faz nada, já está no primeiro elemento
+            } else {
+              setFocusedElement('email');
+              emailRef.current?.focus();
+            }
+            break;
+            
+          case 'submit':
+            if (e.shiftKey) {
+              setFocusedElement('email');
+              emailRef.current?.focus();
+            }
+            // Não faz nada se for para frente, já está no último elemento
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedElement]);
+
   return (
     <>
       <h1 className="text-2xl font-bold text-white mb-6 flex items-center">
         <KeyRound className="mr-2 h-6 w-6 text-netflix-red" />
-        Recuperar Senha
+        Redefinir Senha
       </h1>
 
       <Form {...form}>
@@ -76,10 +122,12 @@ const ResetPasswordForm = ({ isLoading, setIsLoading, onBack }: ResetPasswordFor
                 <FormLabel className="text-gray-300">Email</FormLabel>
                 <FormControl>
                   <Input
+                    ref={emailRef}
                     placeholder="seu.email@exemplo.com"
                     {...field}
                     disabled={isLoading}
                     className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                    onFocus={() => setFocusedElement('email')}
                   />
                 </FormControl>
                 <FormMessage className="text-red-400" />
@@ -87,23 +135,27 @@ const ResetPasswordForm = ({ isLoading, setIsLoading, onBack }: ResetPasswordFor
             )}
           />
 
-          <div className="flex flex-col gap-3">
+          <div className="flex gap-4">
             <Button
-              type="submit"
-              className="w-full bg-netflix-red hover:bg-red-700 transition-all duration-200 font-medium py-2"
+              ref={backRef}
+              type="button"
+              variant="outline"
+              onClick={onBack}
+              className="flex-1 border-gray-600 text-white hover:bg-gray-700"
               disabled={isLoading}
+              onFocus={() => setFocusedElement('back')}
             >
-              {isLoading ? "Enviando..." : "Enviar Email de Recuperação"}
+              Voltar
             </Button>
 
             <Button
-              type="button"
-              variant="ghost"
-              onClick={onBack}
-              className="w-full text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
+              ref={submitRef}
+              type="submit"
+              className="flex-1 bg-netflix-red hover:bg-red-700"
               disabled={isLoading}
+              onFocus={() => setFocusedElement('submit')}
             >
-              Voltar para o Login
+              {isLoading ? "Processando..." : "Enviar"}
             </Button>
           </div>
         </form>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -40,6 +40,13 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [showResetPassword, setShowResetPassword] = useState(false);
+  const [focusedElement, setFocusedElement] = useState<string | null>(null);
+  
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const termsRef = useRef<HTMLButtonElement>(null);
+  const forgotPasswordRef = useRef<HTMLButtonElement>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
 
   // Get redirect path from location state, or default to home
   const redirectPath = location.state?.from?.pathname || "/";
@@ -101,6 +108,67 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
     }
   };
 
+  // Navegação por Tab
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        
+        switch (focusedElement) {
+          case 'email':
+            if (e.shiftKey) {
+              // Não faz nada, já está no primeiro elemento
+            } else {
+              setFocusedElement('password');
+              passwordRef.current?.focus();
+            }
+            break;
+            
+          case 'password':
+            if (e.shiftKey) {
+              setFocusedElement('email');
+              emailRef.current?.focus();
+            } else {
+              setFocusedElement('terms');
+              termsRef.current?.focus();
+            }
+            break;
+            
+          case 'terms':
+            if (e.shiftKey) {
+              setFocusedElement('password');
+              passwordRef.current?.focus();
+            } else {
+              setFocusedElement('forgotPassword');
+              forgotPasswordRef.current?.focus();
+            }
+            break;
+            
+          case 'forgotPassword':
+            if (e.shiftKey) {
+              setFocusedElement('terms');
+              termsRef.current?.focus();
+            } else {
+              setFocusedElement('submit');
+              submitRef.current?.focus();
+            }
+            break;
+            
+          case 'submit':
+            if (e.shiftKey) {
+              setFocusedElement('forgotPassword');
+              forgotPasswordRef.current?.focus();
+            }
+            // Não faz nada se for para frente, já está no último elemento
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedElement]);
+
   if (showResetPassword) {
     return (
       <ResetPasswordForm
@@ -128,10 +196,12 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
                 <FormLabel className="text-gray-300">Email</FormLabel>
                 <FormControl>
                   <Input
+                    ref={emailRef}
                     placeholder="seu.email@exemplo.com"
                     {...field}
                     disabled={isLoading}
                     className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                    onFocus={() => setFocusedElement('email')}
                   />
                 </FormControl>
                 <FormMessage className="text-red-400" />
@@ -147,11 +217,13 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
                 <FormLabel className="text-gray-300">Senha</FormLabel>
                 <FormControl>
                   <Input
+                    ref={passwordRef}
                     type="password"
                     placeholder="******"
                     {...field}
                     disabled={isLoading}
                     className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                    onFocus={() => setFocusedElement('password')}
                   />
                 </FormControl>
                 <FormMessage className="text-red-400" />
@@ -167,10 +239,12 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
                 <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                   <FormControl>
                     <Checkbox
+                      ref={termsRef}
                       checked={field.value}
                       onCheckedChange={field.onChange}
                       disabled={isLoading}
                       className="border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red"
+                      onFocus={() => setFocusedElement('terms')}
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
@@ -191,19 +265,23 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
             />
 
             <button
+              ref={forgotPasswordRef}
               type="button"
               onClick={() => setShowResetPassword(true)}
               className="text-sm text-netflix-red hover:text-red-400 hover:underline transition-colors"
               disabled={isLoading}
+              onFocus={() => setFocusedElement('forgotPassword')}
             >
               Esqueceu a senha?
             </button>
           </div>
 
           <Button
+            ref={submitRef}
             type="submit"
             className="w-full bg-netflix-red hover:bg-red-700 transition-all duration-200 font-medium py-2 mt-2"
             disabled={isLoading}
+            onFocus={() => setFocusedElement('submit')}
           >
             {isLoading ? "Processando..." : "Entrar"}
           </Button>

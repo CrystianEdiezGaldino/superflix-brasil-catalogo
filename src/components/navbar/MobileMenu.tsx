@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Film, Tv, Baby, Heart, FileText, Monitor, X } from "lucide-react";
+import { Film, Tv, Baby, Heart, FileText, Monitor, X, LogOut } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sheet,
@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/sheet";
 import SearchBar from "./SearchBar";
 import { pauseDoramasProcessing } from "@/services/doramas";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface NavLinkItem {
   path: string;
@@ -32,6 +34,7 @@ const MobileMenu = ({
   onSearch 
 }: MobileMenuProps) => {
   const location = useLocation();
+  const { signOut } = useAuth();
 
   const isRouteActive = (path: string) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
@@ -42,6 +45,16 @@ const MobileMenu = ({
       pauseDoramasProcessing();
     }
     onClose();
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      window.location.reload();
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
+      toast.error('Erro ao fazer logout');
+    }
   };
 
   // Define navigation links
@@ -90,7 +103,7 @@ const MobileMenu = ({
           <SearchBar onSearch={onSearch || (() => {})} />
         </div>
         
-        <nav aria-label="Menu de navegação mobile" className="overflow-y-auto h-[calc(100vh-180px)]">
+        <nav className="flex flex-col h-full">
           <ul className="py-4 space-y-2 px-4">
             {allLinks.map((link, index) => (
               <li key={link.path}>
@@ -114,6 +127,25 @@ const MobileMenu = ({
                 </Link>
               </li>
             ))}
+
+            {isAuthenticated && (
+              <li>
+                <button
+                  onClick={handleSignOut}
+                  tabIndex={0}
+                  role="menuitem"
+                  className="flex items-center w-full py-3 px-4 rounded-[45px] transition-all duration-200 
+                    focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black
+                    border-2 text-white border-white/30 hover:border-white hover:bg-white/5"
+                  aria-label="Sair"
+                >
+                  <span className="mr-3" aria-hidden="true">
+                    <LogOut className="h-5 w-5" />
+                  </span>
+                  <span className="text-base font-medium">Sair</span>
+                </button>
+              </li>
+            )}
           </ul>
         </nav>
       </SheetContent>

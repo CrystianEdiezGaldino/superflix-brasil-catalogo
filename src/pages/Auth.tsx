@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const Auth = () => {
   const { user, loading, login, register } = useAuth();
@@ -32,8 +33,15 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState(0);
-  const [focusedButton, setFocusedButton] = useState(0);
+  const [focusedElement, setFocusedElement] = useState<string | null>(null);
+  
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+  const nameRef = useRef<HTMLInputElement>(null);
+  const submitRef = useRef<HTMLButtonElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const termsRef = useRef<HTMLButtonElement>(null);
+  const forgotPasswordRef = useRef<HTMLButtonElement>(null);
   
   // Get the intended redirect path from state, or default to home page
   const redirectTo = location.state?.from?.pathname || "/";
@@ -104,46 +112,97 @@ const Auth = () => {
   // Navegação por controle de TV
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const totalFields = isLogin ? 2 : 3;
-      const totalButtons = 2;
-
       switch (e.key) {
         case 'ArrowDown':
           e.preventDefault();
-          if (focusedField < totalFields - 1) {
-            setFocusedField(prev => prev + 1);
-          } else {
-            setFocusedButton(0);
+          if (focusedElement === 'email') {
+            setFocusedElement('password');
+            passwordRef.current?.focus();
+          } else if (focusedElement === 'password' && !isLogin) {
+            setFocusedElement('name');
+            nameRef.current?.focus();
+          } else if (focusedElement === 'name' || focusedElement === 'password') {
+            setFocusedElement('terms');
+            termsRef.current?.focus();
+          } else if (focusedElement === 'terms') {
+            setFocusedElement('submit');
+            submitRef.current?.focus();
+          } else if (focusedElement === 'submit') {
+            setFocusedElement('toggle');
+            toggleRef.current?.focus();
+          } else if (focusedElement === 'toggle') {
+            setFocusedElement('forgotPassword');
+            forgotPasswordRef.current?.focus();
           }
           break;
+
         case 'ArrowUp':
           e.preventDefault();
-          if (focusedButton > 0) {
-            setFocusedButton(0);
-          } else {
-            setFocusedField(prev => Math.max(prev - 1, 0));
+          if (focusedElement === 'password') {
+            setFocusedElement('email');
+            emailRef.current?.focus();
+          } else if (focusedElement === 'name') {
+            setFocusedElement('password');
+            passwordRef.current?.focus();
+          } else if (focusedElement === 'terms') {
+            if (isLogin) {
+              setFocusedElement('password');
+              passwordRef.current?.focus();
+            } else {
+              setFocusedElement('name');
+              nameRef.current?.focus();
+            }
+          } else if (focusedElement === 'submit') {
+            setFocusedElement('terms');
+            termsRef.current?.focus();
+          } else if (focusedElement === 'toggle') {
+            setFocusedElement('submit');
+            submitRef.current?.focus();
+          } else if (focusedElement === 'forgotPassword') {
+            setFocusedElement('toggle');
+            toggleRef.current?.focus();
           }
           break;
+
         case 'ArrowLeft':
           e.preventDefault();
-          if (focusedButton > 0) {
-            setFocusedButton(prev => prev - 1);
+          if (focusedElement === 'submit') {
+            setFocusedElement('terms');
+            termsRef.current?.focus();
+          } else if (focusedElement === 'toggle') {
+            setFocusedElement('submit');
+            submitRef.current?.focus();
+          } else if (focusedElement === 'forgotPassword') {
+            setFocusedElement('toggle');
+            toggleRef.current?.focus();
           }
           break;
+
         case 'ArrowRight':
           e.preventDefault();
-          if (focusedButton < totalButtons - 1) {
-            setFocusedButton(prev => prev + 1);
+          if (focusedElement === 'terms') {
+            setFocusedElement('submit');
+            submitRef.current?.focus();
+          } else if (focusedElement === 'submit') {
+            setFocusedElement('toggle');
+            toggleRef.current?.focus();
+          } else if (focusedElement === 'toggle') {
+            setFocusedElement('forgotPassword');
+            forgotPasswordRef.current?.focus();
           }
           break;
+
         case 'Enter':
           e.preventDefault();
-          if (focusedButton === 0) {
+          if (focusedElement === 'submit') {
             handleSubmit();
-          } else {
+          } else if (focusedElement === 'toggle') {
             setIsLogin(!isLogin);
+          } else if (focusedElement === 'forgotPassword') {
+            // Implementar lógica de "Esqueceu a senha?"
           }
           break;
+
         case 'Backspace':
           e.preventDefault();
           window.history.back();
@@ -153,7 +212,7 @@ const Auth = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedField, focusedButton, isLogin]);
+  }, [focusedElement, isLogin]);
 
   const handleSubmit = async () => {
     if (!email || !password || (!isLogin && !name)) {
@@ -224,11 +283,92 @@ const Auth = () => {
       <div className="container max-w-full pt-14 pb-20">
         <div className="flex flex-col items-center justify-center mb-10">
           <AuthPageBanner />
-          <AuthForm />
+          <div className="w-full max-w-md">
+            <Card className="bg-black/75 border-gray-800 p-8">
+              <div className="space-y-4">
+                <Input
+                  ref={emailRef}
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                  onFocus={() => setFocusedElement('email')}
+                />
+                
+                <Input
+                  ref={passwordRef}
+                  type="password"
+                  placeholder="Senha"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                  onFocus={() => setFocusedElement('password')}
+                />
+
+                {!isLogin && (
+                  <Input
+                    ref={nameRef}
+                    type="text"
+                    placeholder="Nome completo"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={isLoading}
+                    className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                    onFocus={() => setFocusedElement('name')}
+                  />
+                )}
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    ref={termsRef}
+                    id="terms"
+                    className="border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red"
+                    onFocus={() => setFocusedElement('terms')}
+                  />
+                  <Label htmlFor="terms" className="text-sm text-gray-300">
+                    Li e aceito os termos de serviço
+                  </Label>
+                </div>
+
+                <Button
+                  ref={submitRef}
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="w-full bg-netflix-red hover:bg-red-700"
+                  onFocus={() => setFocusedElement('submit')}
+                >
+                  {isLoading ? "Processando..." : isLogin ? "Entrar" : "Criar Conta"}
+                </Button>
+
+                <Button
+                  ref={toggleRef}
+                  variant="ghost"
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="w-full text-gray-400 hover:text-white"
+                  onFocus={() => setFocusedElement('toggle')}
+                >
+                  {isLogin ? "Criar uma conta" : "Já tenho uma conta"}
+                </Button>
+
+                {isLogin && (
+                  <Button
+                    ref={forgotPasswordRef}
+                    variant="link"
+                    className="w-full text-netflix-red hover:text-red-400"
+                    onFocus={() => setFocusedElement('forgotPassword')}
+                  >
+                    Esqueceu a senha?
+                  </Button>
+                )}
+              </div>
+            </Card>
+          </div>
           <AuthLegalSection />
         </div>
         
-        {/* Preview Content Section */}
         <AuthPreviewSection 
           movies={filteredMovies}
           series={filteredSeries}
