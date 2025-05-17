@@ -1,5 +1,6 @@
-
-import { useState } from "react";
+import React from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,17 +10,19 @@ import SubscriptionPlansSection from "./SubscriptionPlansSection";
 import SubscriptionActionButtons from "./SubscriptionActionButtons";
 
 interface ActiveSubscriptionProps {
-  subscriptionTier: string | null;
+  isSubscribed?: boolean;
   hasTrialAccess?: boolean;
   hasTempAccess?: boolean;
-  trialEnd?: string | null;
+  subscriptionTier?: string;
+  trialEnd?: string;
 }
 
 const ActiveSubscription = ({ 
-  subscriptionTier, 
-  hasTrialAccess = false,
+  isSubscribed = false, 
+  hasTrialAccess = false, 
   hasTempAccess = false,
-  trialEnd = null
+  subscriptionTier = "standard", 
+  trialEnd 
 }: ActiveSubscriptionProps) => {
   const navigate = useNavigate();
   const { user, session } = useAuth();

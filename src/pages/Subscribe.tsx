@@ -12,11 +12,9 @@ import PromoCodeSection from "@/components/subscribe/PromoCodeSection";
 const Subscribe = () => {
   const { 
     isSubscribed, 
-    subscriptionTier, 
     isLoading, 
     hasTrialAccess,
-    hasTempAccess,
-    trialEnd 
+    hasTempAccess 
   } = useSubscription();
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -45,10 +43,9 @@ const Subscribe = () => {
       <>
         <Navbar onSearch={() => {}} />
         <ActiveSubscription 
-          subscriptionTier={subscriptionTier} 
+          isSubscribed={isSubscribed}
           hasTrialAccess={hasTrialAccess}
           hasTempAccess={hasTempAccess}
-          trialEnd={trialEnd}
         />
       </>
     );

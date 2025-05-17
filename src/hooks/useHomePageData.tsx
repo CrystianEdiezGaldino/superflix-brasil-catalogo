@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -8,9 +9,6 @@ import { useFeaturedMedia } from "./useFeaturedMedia";
 import { useAccessControl } from "./useAccessControl";
 import { usePopularContent } from "./usePopularContent";
 
-// Remove the import to prevent circular dependency
-// import { useAuthRedirect } from "./useAuthRedirect";
-
 export const useHomePageData = () => {
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -19,8 +17,8 @@ export const useHomePageData = () => {
     hasTempAccess,
     hasTrialAccess,
     isLoading: subscriptionLoading, 
-    trialEnd,
     checkSubscription
+    // Remove reference to trialEnd which doesn't exist in SubscriptionContextType
   } = useSubscription();
   
   // Use the access control hook to get the hasAccess flag
@@ -48,7 +46,13 @@ export const useHomePageData = () => {
   } = usePopularContent(user?.id);
   
   // Import data from smaller hooks
-  const { handleSearch: originalHandleSearch } = useMediaSearch();
+  const { 
+    results,
+    isLoading: searchLoading,
+    hasMore: searchHasMore,
+    searchMedia
+  } = useMediaSearch();
+  
   const { recommendations } = useRecommendations();
   const { 
     moviesData, 
@@ -78,7 +82,9 @@ export const useHomePageData = () => {
   );
 
   // Create a memoized search handler to prevent recreation on each render
-  const handleSearch = useCallback(originalHandleSearch, [originalHandleSearch]);
+  const handleSearch = useCallback((query: string, page?: number) => {
+    return searchMedia(query, page);
+  }, [searchMedia]);
 
   // Debug log to help track subscription state
   console.log("Home page data:", { 
@@ -104,7 +110,6 @@ export const useHomePageData = () => {
     isAdmin,
     hasAccess,
     hasTrialAccess,
-    trialEnd,
     featuredMedia,
     recommendations,
     moviesData,
