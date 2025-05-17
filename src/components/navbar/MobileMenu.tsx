@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Film, Tv, Baby, Heart, FileText, Monitor, Search } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
@@ -9,6 +8,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { pauseDoramasProcessing } from "@/services/doramas";
 
 interface NavLinkItem {
   path: string;
@@ -42,6 +42,13 @@ const MobileMenu = ({
     e.preventDefault();
     if (onSearch) {
       onSearch(searchQuery);
+    }
+    onClose();
+  };
+
+  const handleLinkClick = () => {
+    if (window.location.pathname === '/doramas') {
+      pauseDoramasProcessing();
     }
     onClose();
   };
@@ -104,7 +111,7 @@ const MobileMenu = ({
                       ? "bg-netflix-red/20 text-netflix-red font-medium"
                       : "text-white hover:bg-gray-800/50"
                   }`}
-                  onClick={onClose}
+                  onClick={handleLinkClick}
                 >
                   <span className="mr-3">{link.icon}</span>
                   <span>{link.label}</span>

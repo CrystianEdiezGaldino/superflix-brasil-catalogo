@@ -1,16 +1,18 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import MediaView from '@/components/media/MediaView';
 import { Series } from '@/types/movie';
-import { useState, useEffect } from 'react';
-import { getDoramas } from '@/services/doramas';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { getDoramas, pauseDoramasProcessing, resumeDoramasProcessing } from '@/services/doramas';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import MediaCardSkeleton from '@/components/media/MediaCardSkeleton';
+import { useInView } from 'react-intersection-observer';
 
 const INITIAL_DISPLAY_SIZE = 20;
 
 const Doramas = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
   const [yearFilter, setYearFilter] = useState('');
   const [ratingFilter, setRatingFilter] = useState('');
@@ -18,27 +20,119 @@ const Doramas = () => {
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [displayedDoramas, setDisplayedDoramas] = useState<Series[]>([]);
   const [total, setTotal] = useState(0);
+  const { ref, inView } = useInView();
+  const location = useLocation();
+  const isMounted = useRef(true);
+  const controllerRef = useRef<AbortController | null>(null);
+  const hasInitialized = useRef(false);
+
+  // Efeito para controlar o ciclo de vida do componente
+  useEffect(() => {
+    isMounted.current = true;
+    controllerRef.current = new AbortController();
+
+    // Se já temos dados no cache, usamos eles
+    const cachedData = queryClient.getQueryData(['doramas']);
+    if (cachedData) {
+      const { doramas, total } = cachedData as { doramas: Series[], total: number };
+      setAllDoramas(doramas);
+      setTotal(total);
+      setDisplayedDoramas(doramas);
+      setIsInitialLoading(false);
+    }
+
+    // Se houver doramas já processados, retoma o processamento
+    if (allDoramas.length > 0 && !hasInitialized.current) {
+      hasInitialized.current = true;
+      resumeDoramasProcessing((newDoramas, totalCount) => {
+        if (!controllerRef.current?.signal.aborted && isMounted.current) {
+          setAllDoramas(newDoramas);
+          setTotal(totalCount);
+          setDisplayedDoramas(newDoramas);
+          setIsInitialLoading(false);
+          // Atualiza o cache do React Query
+          queryClient.setQueryData(['doramas'], { doramas: newDoramas, total: totalCount });
+        }
+      }, controllerRef.current.signal);
+    }
+
+    return () => {
+      isMounted.current = false;
+      console.log('Componente Doramas desmontando...');
+      pauseDoramasProcessing();
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+        controllerRef.current = null;
+      }
+    };
+  }, [queryClient]);
+
+  // Efeito para pausar/retomar o processamento quando mudar de rota
+  useEffect(() => {
+    const handleRouteChange = () => {
+      if (location.pathname !== '/doramas' && isMounted.current) {
+        console.log('Mudando de rota, pausando processamento...');
+        pauseDoramasProcessing();
+      } else if (location.pathname === '/doramas' && isMounted.current) {
+        console.log('Retornando à rota de doramas, retomando processamento...');
+        controllerRef.current = new AbortController();
+        resumeDoramasProcessing((newDoramas, totalCount) => {
+          if (!controllerRef.current?.signal.aborted && isMounted.current) {
+            setAllDoramas(newDoramas);
+            setTotal(totalCount);
+            setDisplayedDoramas(newDoramas);
+            setIsInitialLoading(false);
+            // Atualiza o cache do React Query
+            queryClient.setQueryData(['doramas'], { doramas: newDoramas, total: totalCount });
+          }
+        }, controllerRef.current.signal);
+      }
+    };
+
+    // Executa imediatamente ao montar o componente
+    handleRouteChange();
+
+    window.addEventListener('popstate', handleRouteChange);
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+    };
+  }, [location, queryClient]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['doramas'],
-    queryFn: () => getDoramas((newDoramas, totalCount) => {
-      if (newDoramas.length > 0) {
-        setAllDoramas(newDoramas);
-        setTotal(totalCount);
+    queryFn: async ({ signal }) => {
+      if (!isMounted.current) {
+        return { doramas: [], total: 0, isComplete: false };
       }
-    }),
-    staleTime: 1000 * 60 * 60, // 1 hora
-    gcTime: 1000 * 60 * 60 * 24, // 24 horas
+
+      const result = await getDoramas((newDoramas, totalCount) => {
+        if (!signal.aborted && isMounted.current) {
+          setAllDoramas(newDoramas);
+          setTotal(totalCount);
+          setDisplayedDoramas(newDoramas);
+          setIsInitialLoading(false);
+        }
+      }, signal);
+
+      return result;
+    },
+    staleTime: Infinity, // Mantém os dados em cache indefinidamente
+    gcTime: Infinity, // Mantém o cache indefinidamente
+    refetchOnMount: false, // Não refetch ao montar
+    refetchOnWindowFocus: false, // Não refetch ao focar na janela
+    refetchOnReconnect: false, // Não refetch ao reconectar
   });
 
-  // Atualiza a lista exibida quando novos dados chegam
+  // Efeito para carregar mais doramas quando o usuário rolar até o final
   useEffect(() => {
-    if (allDoramas.length > 0) {
-      // Mostra todos os doramas disponíveis até o momento
-      setDisplayedDoramas(allDoramas);
-      setIsInitialLoading(false);
+    if (inView && !isInitialLoading && displayedDoramas.length < allDoramas.length && isMounted.current) {
+      const nextBatch = allDoramas.slice(
+        displayedDoramas.length,
+        displayedDoramas.length + 20
+      );
+      setDisplayedDoramas(prev => [...prev, ...nextBatch]);
     }
-  }, [allDoramas]);
+  }, [inView, allDoramas, displayedDoramas, isInitialLoading]);
 
   const handleMediaClick = (media: Series) => {
     navigate(`/dorama/${media.id}`);
@@ -69,7 +163,7 @@ const Doramas = () => {
         mediaItems={displayedDoramas}
         isLoading={isInitialLoading}
         isLoadingMore={isLoading}
-        hasMore={false}
+        hasMore={displayedDoramas.length < allDoramas.length}
         isFiltering={false}
         isSearching={false}
         page={1}
@@ -87,6 +181,8 @@ const Doramas = () => {
           setAllDoramas([]);
           setDisplayedDoramas([]);
           setIsInitialLoading(true);
+          hasInitialized.current = false;
+          queryClient.removeQueries({ queryKey: ['doramas'] });
         }}
         onMediaClick={handleMediaClick}
       />

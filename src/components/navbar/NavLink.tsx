@@ -1,6 +1,6 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import { pauseDoramasProcessing } from "@/services/doramas";
 
 interface NavLinkProps {
   to: string;
@@ -18,10 +18,18 @@ const NavLink = ({ to, children, checkActive }: NavLinkProps) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
+  const handleClick = () => {
+    // Cancela o processamento de doramas se estiver na rota de doramas
+    if (location.pathname === '/doramas') {
+      pauseDoramasProcessing();
+    }
+  };
+
   return (
     <li>
       <Link
         to={to}
+        onClick={handleClick}
         className={`relative flex items-center text-sm lg:text-base transition duration-300 py-1.5 px-1 
           ${isRouteActive(to)
             ? "text-white font-medium"

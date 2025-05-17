@@ -1,4 +1,3 @@
-
 import { API_KEY, BASE_URL, DEFAULT_LANGUAGE } from "./config";
 
 // Helper function to build API URLs
@@ -7,15 +6,18 @@ export const buildApiUrl = (endpoint: string, additionalParams: string = "") => 
 };
 
 // Helper for fetch requests with error handling
-export async function fetchFromApi<T>(url: string): Promise<T> {
+export async function fetchFromApi<T>(url: string, signal?: AbortSignal): Promise<T> {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { signal });
     if (!response.ok) {
       console.error(`API Error: ${response.status} for URL: ${url}`);
       return {} as T;
     }
     return await response.json();
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw error;
+    }
     console.error("Fetch error:", error);
     return {} as T;
   }

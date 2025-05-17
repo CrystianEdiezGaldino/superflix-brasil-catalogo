@@ -4,6 +4,32 @@ import { Series } from '@/types/movie';
 const BATCH_SIZE = 5;
 const INITIAL_DISPLAY_SIZE = 20;
 
+// Estado global do processamento
+interface ProcessingState {
+  isProcessing: boolean;
+  isPaused: boolean;
+  currentBatch: number;
+  totalBatches: number;
+  processedCount: number;
+  totalCount: number;
+  lastProcessedIndex: number;
+}
+
+let processingState: ProcessingState = {
+  isProcessing: false,
+  isPaused: false,
+  currentBatch: 0,
+  totalBatches: 0,
+  processedCount: 0,
+  totalCount: 0,
+  lastProcessedIndex: 0
+};
+
+// Buffer para armazenar doramas processados
+let processedDoramas: Series[] = [];
+let currentAbortController: AbortController | null = null;
+let seriesIds: string[] = [];
+
 // Função para verificar se uma série é um dorama coreano
 const isKoreanDrama = (series: Series): boolean => {
   if (!series) return false;
@@ -23,110 +49,192 @@ const isKoreanDrama = (series: Series): boolean => {
   return isKorean && (hasKoreanDrama || hasDramaGenre);
 };
 
-// Função para ordenar doramas por popularidade
-const sortByPopularity = (a: Series, b: Series): number => {
-  return (b.popularity || 0) - (a.popularity || 0);
+// Função para pausar o processamento
+export const pauseDoramasProcessing = () => {
+  console.log('Pausando processamento de doramas...');
+  processingState.isPaused = true;
+  if (currentAbortController) {
+    currentAbortController.abort();
+    currentAbortController = null;
+  }
 };
 
-// Buffer para armazenar doramas processados
-let processedDoramas: Series[] = [];
-let isProcessingComplete = false;
+// Função para retomar o processamento
+export const resumeDoramasProcessing = async (
+  onUpdate?: (doramas: Series[], total: number) => void,
+  signal?: AbortSignal
+) => {
+  if (!processingState.isPaused) return;
 
-export const getDoramas = async (onUpdate?: (doramas: Series[], total: number) => void): Promise<{ doramas: Series[], total: number, isComplete: boolean }> => {
+  console.log('Retomando processamento de doramas...');
+  processingState.isPaused = false;
+  processingState.isProcessing = true;
+
+  // Cria um novo controller para este processamento
+  currentAbortController = new AbortController();
+  const currentSignal = signal || currentAbortController.signal;
+
+  // Continua o processamento de onde parou
+  await processRemainingDoramas(seriesIds, onUpdate, currentSignal);
+};
+
+// Função para resetar o estado global
+const resetState = () => {
+  console.log('Resetando estado do processamento...');
+  processingState = {
+    isProcessing: false,
+    isPaused: false,
+    currentBatch: 0,
+    totalBatches: 0,
+    processedCount: 0,
+    totalCount: 0,
+    lastProcessedIndex: 0
+  };
+  processedDoramas = [];
+  seriesIds = [];
+  if (currentAbortController) {
+    currentAbortController.abort();
+    currentAbortController = null;
+  }
+};
+
+// Função para verificar se o processamento deve continuar
+const shouldContinueProcessing = () => {
+  return !processingState.isPaused && processingState.isProcessing;
+};
+
+export const getDoramas = async (
+  onUpdate?: (doramas: Series[], total: number) => void,
+  signal?: AbortSignal
+): Promise<{ doramas: Series[], total: number, isComplete: boolean }> => {
   try {
-    // Se já temos todos os doramas processados, retorna do buffer
-    if (isProcessingComplete) {
+    // Se o processamento está pausado, retoma de onde parou
+    if (processingState.isPaused) {
+      await resumeDoramasProcessing(onUpdate, signal);
       return {
         doramas: processedDoramas,
-        total: processedDoramas.length,
-        isComplete: true
-      };
-    }
-
-    // Se não temos doramas processados, inicia o processamento
-    if (processedDoramas.length === 0) {
-      console.log('Buscando dados da API...');
-      const response = await fetch('/series.txt');
-      if (!response.ok) {
-        console.error('Erro ao carregar series.txt:', response.status);
-        throw new Error('Falha ao carregar lista de séries');
-      }
-
-      const text = await response.text();
-      const seriesIds = text.split('\n')
-        .map(id => id.trim())
-        .filter(id => id.length > 0);
-
-      console.log(`IDs de séries encontrados: ${seriesIds.length}`);
-
-      // Processa os primeiros 20 imediatamente
-      const firstBatch = seriesIds.slice(0, INITIAL_DISPLAY_SIZE);
-      const firstResults = await Promise.all(
-        firstBatch.map(async (id) => {
-          try {
-            const series = await fetchSeriesDetails(id, 'pt-BR');
-            return series;
-          } catch (error) {
-            console.error(`Erro ao buscar série ${id}:`, error);
-            return null;
-          }
-        })
-      );
-
-      const firstDoramas = firstResults
-        .filter((series): series is Series => {
-          if (!series) return false;
-          return isKoreanDrama(series);
-        });
-
-      processedDoramas = firstDoramas;
-
-      // Notifica a UI com os primeiros doramas
-      if (onUpdate) {
-        onUpdate(firstDoramas, seriesIds.length);
-      }
-
-      // Inicia o processamento do resto em background
-      processRemainingDoramas(seriesIds, onUpdate);
-
-      return {
-        doramas: firstDoramas,
-        total: seriesIds.length,
+        total: processingState.totalCount,
         isComplete: false
       };
     }
 
-    // Se temos alguns doramas mas não todos, retorna o que temos até agora
+    // Se já temos doramas processados, retorna eles
+    if (processedDoramas.length > 0) {
+      return {
+        doramas: processedDoramas,
+        total: processingState.totalCount,
+        isComplete: false
+      };
+    }
+
+    // Inicia um novo processamento
+    processingState.isProcessing = true;
+    processingState.isPaused = false;
+
+    // Cria um novo controller para este processamento
+    currentAbortController = new AbortController();
+    const currentSignal = signal || currentAbortController.signal;
+
+    console.log('Buscando dados da API...');
+    const response = await fetch('/series.txt', { signal: currentSignal });
+    if (!response.ok) {
+      console.error('Erro ao carregar series.txt:', response.status);
+      throw new Error('Falha ao carregar lista de séries');
+    }
+
+    const text = await response.text();
+    seriesIds = text.split('\n')
+      .map(id => id.trim())
+      .filter(id => id.length > 0);
+
+    console.log(`IDs de séries encontrados: ${seriesIds.length}`);
+    
+    // Atualiza o estado com o total de séries
+    processingState.totalCount = seriesIds.length;
+    processingState.totalBatches = Math.ceil(seriesIds.length / BATCH_SIZE);
+
+    // Processa os primeiros 20 imediatamente
+    const firstBatch = seriesIds.slice(0, INITIAL_DISPLAY_SIZE);
+    const firstResults = await Promise.all(
+      firstBatch.map(async (id) => {
+        if (!shouldContinueProcessing()) return null;
+        try {
+          const series = await fetchSeriesDetails(id, 'pt-BR', currentSignal);
+          processingState.processedCount++;
+          return series;
+        } catch (error) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            throw error;
+          }
+          console.error(`Erro ao buscar série ${id}:`, error);
+          return null;
+        }
+      })
+    );
+
+    if (!shouldContinueProcessing()) {
+      return { doramas: [], total: 0, isComplete: false };
+    }
+
+    const firstDoramas = firstResults
+      .filter((series): series is Series => {
+        if (!series) return false;
+        return isKoreanDrama(series);
+      });
+
+    processedDoramas = firstDoramas;
+    processingState.lastProcessedIndex = INITIAL_DISPLAY_SIZE;
+
+    // Notifica a UI com os primeiros doramas
+    if (onUpdate && !currentSignal.aborted && shouldContinueProcessing()) {
+      onUpdate(firstDoramas, seriesIds.length);
+    }
+
+    // Inicia o processamento do resto em background
+    processRemainingDoramas(seriesIds, onUpdate, currentSignal);
+
     return {
-      doramas: processedDoramas,
-      total: processedDoramas.length,
+      doramas: firstDoramas,
+      total: seriesIds.length,
       isComplete: false
     };
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.log('Processamento pausado');
+      return { doramas: processedDoramas, total: processingState.totalCount, isComplete: false };
+    }
     console.error('Erro ao buscar doramas:', error);
     return { doramas: [], total: 0, isComplete: false };
   }
 };
 
 // Função para processar o resto dos doramas em background
-const processRemainingDoramas = async (seriesIds: string[], onUpdate?: (doramas: Series[], total: number) => void) => {
-  const results: (Series | null)[] = [...processedDoramas];
-  let validSeriesCount = processedDoramas.length;
+const processRemainingDoramas = async (
+  seriesIds: string[],
+  onUpdate?: (doramas: Series[], total: number) => void,
+  signal?: AbortSignal
+) => {
+  for (let i = processingState.lastProcessedIndex; i < seriesIds.length; i += BATCH_SIZE) {
+    if (!shouldContinueProcessing()) {
+      console.log('Processamento pausado durante o loop');
+      return;
+    }
 
-  for (let i = INITIAL_DISPLAY_SIZE; i < seriesIds.length; i += BATCH_SIZE) {
+    processingState.currentBatch = Math.floor(i / BATCH_SIZE) + 1;
     const batch = seriesIds.slice(i, i + BATCH_SIZE);
-    console.log(`Processando lote ${Math.floor(i/BATCH_SIZE) + 1} de ${Math.ceil(seriesIds.length/BATCH_SIZE)}`);
+    console.log(`Processando lote ${processingState.currentBatch} de ${processingState.totalBatches}`);
     
     const batchResults = await Promise.all(
       batch.map(async (id) => {
+        if (!shouldContinueProcessing()) return null;
         try {
-          const series = await fetchSeriesDetails(id, 'pt-BR');
-          if (series) {
-            validSeriesCount++;
-            return series;
-          }
-          return null;
+          const series = await fetchSeriesDetails(id, 'pt-BR', signal);
+          processingState.processedCount++;
+          return series;
         } catch (error) {
+          if (error instanceof Error && error.name === 'AbortError') {
+            throw error;
+          }
           if (error instanceof Error && error.message.includes('404')) {
             return null;
           }
@@ -135,6 +243,11 @@ const processRemainingDoramas = async (seriesIds: string[], onUpdate?: (doramas:
         }
       })
     );
+
+    if (!shouldContinueProcessing()) {
+      console.log('Processamento pausado durante o lote');
+      return;
+    }
 
     // Filtra apenas os novos doramas válidos
     const newDoramas = batchResults
@@ -145,13 +258,16 @@ const processRemainingDoramas = async (seriesIds: string[], onUpdate?: (doramas:
 
     // Adiciona os novos doramas ao final da lista
     processedDoramas = [...processedDoramas, ...newDoramas];
+    processingState.lastProcessedIndex = i + BATCH_SIZE;
 
     // Notifica a UI com todos os doramas processados até agora
-    if (onUpdate) {
+    if (onUpdate && !signal?.aborted && shouldContinueProcessing()) {
       onUpdate(processedDoramas, seriesIds.length);
     }
   }
 
-  isProcessingComplete = true;
-  console.log(`Processamento concluído. Total de doramas: ${processedDoramas.length}`);
+  if (shouldContinueProcessing()) {
+    console.log(`Processamento concluído. Total de doramas: ${processedDoramas.length}`);
+    processingState.isProcessing = false;
+  }
 }; 
