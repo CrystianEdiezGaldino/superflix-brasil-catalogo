@@ -1,3 +1,4 @@
+
 import { MediaItem, isSeries } from "@/types/movie";
 import MediaSectionLoader from "../MediaSectionLoader";
 
@@ -22,7 +23,7 @@ const DoramaSections = ({
   onLoadMore,
   isLoading = false,
   hasMore = false,
-  romanceDoramas
+  romanceDoramas = [] // Provide default empty array
 }: DoramaSectionsProps) => {
   return (
     <div className="space-y-8">
