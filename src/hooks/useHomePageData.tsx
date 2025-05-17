@@ -8,6 +8,7 @@ import { useRecommendations } from "./useRecommendations";
 import { useFeaturedMedia } from "./useFeaturedMedia";
 import { useAccessControl } from "./useAccessControl";
 import { usePopularContent } from "./usePopularContent";
+import { MediaItem } from "@/types/movie";
 
 export const useHomePageData = () => {
   const { user, loading: authLoading } = useAuth();
@@ -82,9 +83,11 @@ export const useHomePageData = () => {
   );
 
   // Create a memoized search handler to prevent recreation on each render
-  const handleSearch = useCallback(async (query: string, page?: number) => {
-    return await searchMedia(query, page);
-  }, [searchMedia]);
+  // Make sure it returns results for consumption by other components
+  const handleSearch = useCallback(async (query: string, page?: number): Promise<MediaItem[]> => {
+    await searchMedia(query, page);
+    return results;
+  }, [searchMedia, results]);
 
   // Debug log to help track subscription state
   console.log("Home page data:", { 

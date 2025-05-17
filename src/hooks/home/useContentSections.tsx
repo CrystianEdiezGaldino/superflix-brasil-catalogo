@@ -142,7 +142,8 @@ export const useContentSections = () => {
     
     try {
       const results = await originalHandleSearch(query);
-      if (results) {
+      // Fix: Check if results exists instead of directly checking truthiness of the Promise result
+      if (results && results.length > 0) {
         setSearchResults(results);
       } else {
         setSearchResults([]);
