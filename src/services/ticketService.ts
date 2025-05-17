@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/types/supabase';
 
@@ -40,7 +41,7 @@ export const ticketService = {
       .single();
 
     if (error) throw error;
-    return ticket;
+    return ticket as unknown as Ticket;
   },
 
   async getUserTickets(): Promise<Ticket[]> {
@@ -54,7 +55,7 @@ export const ticketService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return tickets || [];
+    return tickets as unknown as Ticket[];
   },
 
   async getAllTickets(): Promise<Ticket[]> {
@@ -64,7 +65,7 @@ export const ticketService = {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return tickets || [];
+    return tickets as unknown as Ticket[];
   },
 
   async updateTicket(ticketId: string, data: UpdateTicketData): Promise<Ticket | null> {
@@ -88,7 +89,7 @@ export const ticketService = {
       }
     }
 
-    return ticket;
+    return ticket as unknown as Ticket;
   },
 
   async getTicketById(ticketId: string): Promise<Ticket | null> {
@@ -99,7 +100,7 @@ export const ticketService = {
       .single();
 
     if (error) throw error;
-    return ticket;
+    return ticket as unknown as Ticket;
   },
 
   async sendTicketResponseEmail(ticketId: string, response: string, adminId: string): Promise<void> {

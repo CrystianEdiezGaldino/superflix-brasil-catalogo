@@ -14,7 +14,9 @@ const Subscribe = () => {
     isSubscribed, 
     isLoading, 
     hasTrialAccess,
-    hasTempAccess 
+    hasTempAccess,
+    subscriptionTier,
+    trialEnd
   } = useSubscription();
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -46,6 +48,8 @@ const Subscribe = () => {
           isSubscribed={isSubscribed}
           hasTrialAccess={hasTrialAccess}
           hasTempAccess={hasTempAccess}
+          subscriptionTier={subscriptionTier}
+          trialEnd={trialEnd}
         />
       </>
     );

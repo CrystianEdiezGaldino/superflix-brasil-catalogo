@@ -35,6 +35,9 @@ interface SubscriptionContextType {
   hasTrialAccess: boolean;
   tempAccess: TempAccess | null;
   isLoading: boolean;
+  subscriptionTier: string | null;
+  subscriptionEnd: string | null;
+  trialEnd: string | null;
   refreshSubscriptionStatus: () => void;
   checkSubscription: () => Promise<void>;
 }
@@ -50,6 +53,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   const [hasTrialAccess, setHasTrialAccess] = useState(false);
   const [tempAccess, setTempAccess] = useState<TempAccess | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
+  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
+  const [trialEnd, setTrialEnd] = useState<string | null>(null);
 
   const checkSubscriptionStatus = async () => {
     setIsLoading(true);
@@ -153,6 +159,39 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
           setIsAdmin(false);
         }
 
+        // Fetch subscription tier and end date
+        const { data: tierData, error: tierError } = await supabase
+          .rpc('get_subscription_tier', { 
+            user_id: user.id
+          });
+
+        if (tierError) {
+          console.error("Erro ao buscar nível de assinatura:", tierError);
+        }
+
+        if (tierData) {
+          setSubscriptionTier(tierData.tier);
+          setSubscriptionEnd(tierData.end_date);
+        } else {
+          setSubscriptionTier(null);
+          setSubscriptionEnd(null);
+        }
+
+        const { data: trialEndDateData, error: trialEndDateError } = await supabase
+          .rpc('get_trial_end_date', { 
+            user_id: user.id
+          });
+
+        if (trialEndDateError) {
+          console.error("Erro ao buscar data de término do teste:", trialEndDateError);
+        }
+
+        if (trialEndDateData) {
+          setTrialEnd(trialEndDateData.trial_end);
+        } else {
+          setTrialEnd(null);
+        }
+
       } catch (error) {
         console.error("Erro ao verificar status da assinatura:", error);
       } finally {
@@ -183,6 +222,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     hasTrialAccess,
     tempAccess,
     isLoading,
+    subscriptionTier,
+    subscriptionEnd,
+    trialEnd,
     refreshSubscriptionStatus,
     checkSubscription: checkSubscriptionStatus,
   };

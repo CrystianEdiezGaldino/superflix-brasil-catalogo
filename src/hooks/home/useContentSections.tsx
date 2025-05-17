@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useHomePageData } from "../useHomePageData";
 import { useMovies } from "../movies/useMovies";
@@ -142,7 +141,11 @@ export const useContentSections = () => {
     
     try {
       const results = await originalHandleSearch(query);
-      setSearchResults(results || []);
+      if (results) {
+        setSearchResults(results);
+      } else {
+        setSearchResults([]);
+      }
     } catch (error) {
       console.error("Search error:", error);
       setSearchResults([]);
