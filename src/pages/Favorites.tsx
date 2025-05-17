@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFavorites } from "@/hooks/useFavorites";
 import { MediaItem, getMediaTitle, isMovie, isSeries, Movie, Series } from "@/types/movie";
@@ -11,6 +11,8 @@ const FavoritesPage = () => {
   const { favorites, isLoading } = useFavorites();
   const [favoriteItems, setFavoriteItems] = useState<MediaItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
+  const [focusedItem, setFocusedItem] = useState(0);
+  const gridRef = useRef<HTMLDivElement>(null);
 
   // Function to fetch favorite media items
   const fetchFavoriteItems = async () => {
@@ -55,6 +57,48 @@ const FavoritesPage = () => {
       setFavoriteItems([]);
     }
   }, [favorites]);
+
+  // Navegação por controle de TV
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const itemsPerRow = window.innerWidth >= 1280 ? 6 : 
+                         window.innerWidth >= 1024 ? 5 : 
+                         window.innerWidth >= 768 ? 4 : 
+                         window.innerWidth >= 640 ? 3 : 2;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          setFocusedItem(prev => Math.min(prev + 1, favoriteItems.length - 1));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          setFocusedItem(prev => Math.max(prev - 1, 0));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setFocusedItem(prev => Math.min(prev + itemsPerRow, favoriteItems.length - 1));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setFocusedItem(prev => Math.max(prev - itemsPerRow, 0));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (favoriteItems[focusedItem]) {
+            handleMediaClick(favoriteItems[focusedItem]);
+          }
+          break;
+        case 'Backspace':
+          e.preventDefault();
+          navigate(-1);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedItem, favoriteItems, navigate]);
 
   const handleMediaClick = (media: MediaItem) => {
     console.log('Item clicado:', media);
@@ -104,12 +148,18 @@ const FavoritesPage = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
-            {favoriteItems.map((item) => (
+          <div 
+            ref={gridRef}
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6"
+          >
+            {favoriteItems.map((item, index) => (
               <div 
                 key={item.id} 
-                className="relative group cursor-pointer"
+                className={`relative group cursor-pointer ${
+                  index === focusedItem ? 'ring-2 ring-netflix-red scale-105' : ''
+                }`}
                 onClick={() => handleMediaClick(item)}
+                tabIndex={index === focusedItem ? 0 : -1}
               >
                 <img
                   src={`https://image.tmdb.org/t/p/w342${item.poster_path}`}

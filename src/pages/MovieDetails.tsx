@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMovieDetails } from "@/services/tmdbApi";
@@ -24,6 +24,8 @@ const MovieDetails = () => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [isContentAvailable, setIsContentAvailable] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+  const [focusedElement, setFocusedElement] = useState<string | null>(null);
+  const playerRef = useRef<HTMLDivElement>(null);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -54,8 +56,8 @@ const MovieDetails = () => {
     if (showPlayer && isMobile) {
       try {
         // Try to lock screen orientation to landscape
-        if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock('landscape').catch(() => {
+        if (screen.orientation && 'lock' in screen.orientation) {
+          (screen.orientation as any).lock('landscape').catch(() => {
             // If lock fails, show message to user
             toast.info("Por favor, gire seu dispositivo para modo paisagem para melhor visualização");
           });
@@ -67,8 +69,8 @@ const MovieDetails = () => {
 
     return () => {
       // Unlock orientation when component unmounts or player is closed
-      if (screen.orientation && screen.orientation.unlock) {
-        screen.orientation.unlock();
+      if (screen.orientation && 'unlock' in screen.orientation) {
+        (screen.orientation as any).unlock();
       }
     };
   }, [showPlayer, isMobile]);
@@ -145,6 +147,66 @@ const MovieDetails = () => {
     navigate(`/filme/${movie.id}`);
   };
 
+  // Navegação por controle de TV
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          if (focusedElement === 'player') {
+            setFocusedElement('actions');
+          } else if (focusedElement === 'content') {
+            setFocusedElement('actions');
+          } else if (focusedElement === 'recommendations') {
+            setFocusedElement('content');
+          }
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          if (focusedElement === 'actions') {
+            if (showPlayer) {
+              setFocusedElement('player');
+            } else {
+              setFocusedElement('content');
+            }
+          } else if (focusedElement === 'content') {
+            setFocusedElement('recommendations');
+          }
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (focusedElement === 'actions') {
+            setFocusedElement('header');
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          if (focusedElement === 'header') {
+            setFocusedElement('actions');
+          }
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (focusedElement === 'actions') {
+            handleWatchClick();
+          }
+          break;
+        case 'Backspace':
+          e.preventDefault();
+          if (showPlayer) {
+            setShowPlayer(false);
+            setFocusedElement('actions');
+          } else {
+            navigate(-1);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedElement, showPlayer, navigate]);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
       <Navbar onSearch={() => {}} />
@@ -156,27 +218,42 @@ const MovieDetails = () => {
 
       {movie && (
         <>
-          <MovieHeader 
-            movie={movie} 
-          />
+          <div 
+            className={`${focusedElement === 'header' ? 'ring-2 ring-netflix-red' : ''}`}
+            onFocus={() => setFocusedElement('header')}
+          >
+            <MovieHeader 
+              movie={movie} 
+            />
+          </div>
           
           <div className="px-4 sm:px-6 md:px-10">
             <AdblockSuggestion />
           </div>
 
-          <MediaActions 
-            onPlayClick={handleWatchClick}
-            onFavoriteClick={handleToggleFavorite}
-            isFavorite={isFavorite(movie.id)}
-            hasAccess={hasAccess}
-            tmdbId={movie.id}
-            mediaType="movie"
-            showPlayer={showPlayer}
-          />
+          <div 
+            className={`${focusedElement === 'actions' ? 'ring-2 ring-netflix-red' : ''}`}
+            onFocus={() => setFocusedElement('actions')}
+          >
+            <MediaActions 
+              onPlayClick={handleWatchClick}
+              onFavoriteClick={handleToggleFavorite}
+              isFavorite={isFavorite(movie.id)}
+              hasAccess={hasAccess}
+              tmdbId={movie.id}
+              mediaType="movie"
+              showPlayer={showPlayer}
+            />
+          </div>
 
           {/* Player de vídeo */}
           {showPlayer && ((movie.imdb_id || movie.external_ids?.imdb_id)) && (
-            <div id="video-player" className={`${isMobile ? 'fixed inset-0 z-50 bg-black' : 'px-4 sm:px-6 md:px-10 mb-8 sm:mb-10'}`}>
+            <div 
+              ref={playerRef}
+              id="video-player" 
+              className={`${isMobile ? 'fixed inset-0 z-50 bg-black' : 'px-4 sm:px-6 md:px-10 mb-8 sm:mb-10'} ${focusedElement === 'player' ? 'ring-2 ring-netflix-red' : ''}`}
+              onFocus={() => setFocusedElement('player')}
+            >
               <div className={`${isMobile ? 'h-full w-full' : 'max-w-6xl mx-auto'}`}>
                 <div className={`${isMobile ? 'h-full w-full' : 'aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl'}`}>
                   <MovieVideoPlayer 
@@ -195,11 +272,19 @@ const MovieDetails = () => {
             </div>
           )}
 
-          <MovieContent movie={movie} hasAccess={hasAccess} />
+          <div 
+            className={`${focusedElement === 'content' ? 'ring-2 ring-netflix-red' : ''}`}
+            onFocus={() => setFocusedElement('content')}
+          >
+            <MovieContent movie={movie} hasAccess={hasAccess} />
+          </div>
 
           {/* Seção de Recomendações */}
           {recommendations.length > 0 && (
-            <div className="px-4 sm:px-6 md:px-10 mt-8 sm:mt-12 mb-12 sm:mb-16">
+            <div 
+              className={`px-4 sm:px-6 md:px-10 mt-8 sm:mt-12 mb-12 sm:mb-16 ${focusedElement === 'recommendations' ? 'ring-2 ring-netflix-red' : ''}`}
+              onFocus={() => setFocusedElement('recommendations')}
+            >
               <div className="max-w-7xl mx-auto">
                 <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 border-l-4 border-netflix-red pl-3">
                   Recomendados para Você

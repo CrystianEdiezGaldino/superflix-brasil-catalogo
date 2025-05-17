@@ -22,6 +22,7 @@ const SeriesDetails = () => {
   const [showPlayer, setShowPlayer] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
+  const [focusedElement, setFocusedElement] = useState<string | null>(null);
   const playerRef = useRef<HTMLDivElement>(null);
   
   const { user, loading: authLoading } = useAuth();
@@ -76,6 +77,62 @@ const SeriesDetails = () => {
     { length: series?.number_of_seasons || 0 },
     (_, i) => i + 1
   );
+
+  // Função para navegação por controle de TV
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowUp':
+          e.preventDefault();
+          if (focusedElement === 'player') {
+            setFocusedElement('actions');
+          } else if (focusedElement === 'episodes') {
+            setFocusedElement('actions');
+          }
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          if (focusedElement === 'actions') {
+            if (showPlayer) {
+              setFocusedElement('player');
+            } else {
+              setFocusedElement('episodes');
+            }
+          }
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (focusedElement === 'actions') {
+            setFocusedElement('header');
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          if (focusedElement === 'header') {
+            setFocusedElement('actions');
+          }
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (focusedElement === 'actions') {
+            handleWatchClick();
+          }
+          break;
+        case 'Backspace':
+          e.preventDefault();
+          if (showPlayer) {
+            setShowPlayer(false);
+            setFocusedElement('actions');
+          } else {
+            navigate(-1);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedElement, showPlayer, navigate]);
 
   // Handle play button click
   const handleWatchClick = () => {
@@ -169,30 +226,43 @@ const SeriesDetails = () => {
 
       {series && (
         <>
-          <SeriesHeader 
-            series={series}
-            isFavorite={isFavorite(series.id)} 
-            toggleFavorite={handleToggleFavorite} 
-          />
+          <div 
+            className={`${focusedElement === 'header' ? 'ring-2 ring-netflix-red' : ''}`}
+            onFocus={() => setFocusedElement('header')}
+          >
+            <SeriesHeader 
+              series={series}
+              isFavorite={isFavorite(series.id)} 
+              toggleFavorite={handleToggleFavorite} 
+            />
+          </div>
           
           <div className="px-6 md:px-10">
             <AdblockSuggestion />
           </div>
 
-          {/* Botões de ação - assistir e favoritar */}
-          <MediaActions
-            onPlayClick={handleWatchClick}
-            onFavoriteClick={handleToggleFavorite}
-            isFavorite={isFavorite(series.id)}
-            hasAccess={hasAccess}
-            showPlayer={showPlayer}
-            tmdbId={series.id}
-            mediaType="tv"
-          />
+          <div 
+            className={`${focusedElement === 'actions' ? 'ring-2 ring-netflix-red' : ''}`}
+            onFocus={() => setFocusedElement('actions')}
+          >
+            <MediaActions
+              onPlayClick={handleWatchClick}
+              onFavoriteClick={handleToggleFavorite}
+              isFavorite={isFavorite(series.id)}
+              hasAccess={hasAccess}
+              showPlayer={showPlayer}
+              tmdbId={series.id}
+              mediaType="tv"
+            />
+          </div>
 
-          {/* Player de vídeo - com ref para scroll */}
-          {series.backdrop_path && (
-            <div ref={playerRef} id="player-container" className="px-4 sm:px-6 md:px-10 mb-8 sm:mb-10">
+          {showPlayer && series.backdrop_path && (
+            <div 
+              ref={playerRef} 
+              id="player-container" 
+              className={`px-4 sm:px-6 md:px-10 mb-8 sm:mb-10 ${focusedElement === 'player' ? 'ring-2 ring-netflix-red' : ''}`}
+              onFocus={() => setFocusedElement('player')}
+            >
               <div className="max-w-7xl mx-auto">
                 <div className="aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl">
                   <SeriesPlayer
@@ -207,19 +277,23 @@ const SeriesDetails = () => {
             </div>
           )}
 
-          {/* Conteúdo da série - informações e episódios */}
-          <SeriesContent 
-            series={series} 
-            hasAccess={hasAccess}
-            seasonData={seasonData}
-            selectedSeason={selectedSeason}
-            selectedEpisode={selectedEpisode}
-            seasons={seasons}
-            setSelectedSeason={handleSeasonSelect}
-            handleEpisodeSelect={handleEpisodeSelect}
-            isLoadingSeason={isLoadingSeason}
-            subscriptionLoading={subscriptionLoading}
-          />
+          <div 
+            className={`${focusedElement === 'episodes' ? 'ring-2 ring-netflix-red' : ''}`}
+            onFocus={() => setFocusedElement('episodes')}
+          >
+            <SeriesContent 
+              series={series} 
+              hasAccess={hasAccess}
+              seasonData={seasonData}
+              selectedSeason={selectedSeason}
+              selectedEpisode={selectedEpisode}
+              seasons={seasons}
+              setSelectedSeason={handleSeasonSelect}
+              handleEpisodeSelect={handleEpisodeSelect}
+              isLoadingSeason={isLoadingSeason}
+              subscriptionLoading={subscriptionLoading}
+            />
+          </div>
 
           {/* Recomendações */}
           {recommendations?.results && recommendations.results.length > 0 && (

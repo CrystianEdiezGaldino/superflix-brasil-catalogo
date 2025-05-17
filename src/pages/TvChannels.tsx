@@ -49,6 +49,9 @@ const TvChannels = () => {
     return localStorage.getItem('selectedCategory') || "Todas";
   });
 
+  const [focusedChannel, setFocusedChannel] = useState(0);
+  const [focusedButton, setFocusedButton] = useState(0);
+
   // Save state to localStorage when it changes
   useEffect(() => {
     try {
@@ -147,6 +150,51 @@ const TvChannels = () => {
     // Não limpar o canal selecionado aqui para manter o estado
   }, []);
 
+  // Navegação por controle de TV
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const itemsPerRow = window.innerWidth >= 1280 ? 4 : 
+                         window.innerWidth >= 1024 ? 3 : 
+                         window.innerWidth >= 768 ? 2 : 1;
+
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          setFocusedChannel(prev => Math.min(prev + 1, filteredChannels.length - 1));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          setFocusedChannel(prev => Math.max(prev - 1, 0));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setFocusedChannel(prev => Math.min(prev + itemsPerRow, filteredChannels.length - 1));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setFocusedChannel(prev => Math.max(prev - itemsPerRow, 0));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (focusedButton === 0) {
+            // Assistir canal
+            handleOpenChannel(filteredChannels[focusedChannel]);
+          } else {
+            // Ver programação
+            navigate(`/tv/${filteredChannels[focusedChannel].id}/schedule`);
+          }
+          break;
+        case 'Backspace':
+          e.preventDefault();
+          window.history.back();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedChannel, focusedButton, filteredChannels, handleOpenChannel, navigate]);
+
   const hasAccess = isSubscribed || isAdmin;
 
   // Show loading state while checking auth/subscription status
@@ -188,11 +236,15 @@ const TvChannels = () => {
         )}
         
         {/* Category filter */}
-        <div className="mb-8 overflow-x-auto hide-scrollbar">
-          <div className="flex space-x-2 pb-2">
+        <div className="mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
             <Button
               variant={selectedCategory === "Todas" ? "default" : "outline"}
-              className={selectedCategory === "Todas" ? "bg-netflix-red" : "border-gray-700 hover:bg-gray-800"}
+              className={`${
+                selectedCategory === "Todas" 
+                  ? "bg-netflix-red hover:bg-red-700" 
+                  : "border-gray-700 hover:bg-gray-800"
+              } text-sm sm:text-base w-full`}
               onClick={() => handleCategoryChange("Todas")}
             >
               Todas
@@ -201,7 +253,11 @@ const TvChannels = () => {
               <Button
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
-                className={selectedCategory === category ? "bg-netflix-red" : "border-gray-700 hover:bg-gray-800"}
+                className={`${
+                  selectedCategory === category 
+                    ? "bg-netflix-red hover:bg-red-700" 
+                    : "border-gray-700 hover:bg-gray-800"
+                } text-sm sm:text-base w-full`}
                 onClick={() => handleCategoryChange(category)}
               >
                 {category}

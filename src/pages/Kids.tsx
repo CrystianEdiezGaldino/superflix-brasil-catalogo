@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import MediaView from "@/components/media/MediaView";
 import { useKidsContent } from "@/hooks/kids/useKidsContent";
@@ -8,6 +7,9 @@ import { MediaItem } from "@/types/movie";
 
 const Kids = () => {
   const navigate = useNavigate();
+  const [focusedSection, setFocusedSection] = useState(0);
+  const [focusedItem, setFocusedItem] = useState(0);
+  
   const {
     kidsContent,
     trendingContent,
@@ -47,6 +49,52 @@ const Kids = () => {
     }
   };
 
+  // Navegação por controle de TV
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const sections = [
+        { items: trendingContent, title: 'Tendências' },
+        { items: topRatedContent, title: 'Mais Bem Avaliados' },
+        { items: recentContent, title: 'Recentes' },
+        { items: popularContent, title: 'Populares' }
+      ];
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          setFocusedSection(prev => Math.min(prev + 1, sections.length - 1));
+          setFocusedItem(0);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setFocusedSection(prev => Math.max(prev - 1, 0));
+          setFocusedItem(0);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          const currentSection = sections[focusedSection];
+          if (currentSection?.items) {
+            setFocusedItem(prev => Math.min(prev + 1, currentSection.items.length - 1));
+          }
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          setFocusedItem(prev => Math.max(prev - 1, 0));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          const section = sections[focusedSection];
+          if (section?.items?.[focusedItem]) {
+            handleMediaClick(section.items[focusedItem]);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedSection, focusedItem, trendingContent, topRatedContent, recentContent, popularContent]);
+
   return (
     <MediaView
       title="Conteúdo Infantil"
@@ -71,6 +119,8 @@ const Kids = () => {
       onLoadMore={loadMore}
       onResetFilters={resetFilters}
       onMediaClick={handleMediaClick}
+      focusedSection={focusedSection}
+      focusedItem={focusedItem}
     >
       <div className="mb-8 bg-gradient-to-b from-purple-900/70 to-black/20 rounded-lg p-6">
         <div className="flex items-center gap-3 mb-4">

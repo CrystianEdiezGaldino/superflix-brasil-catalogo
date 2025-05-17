@@ -12,6 +12,8 @@ interface AuthContextProps {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   loading: boolean;
+  login: (email: string, password: string) => Promise<any>;
+  register: (email: string, password: string, name: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -48,6 +50,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     };
+
+    const login = async (email: string, password: string) => {
+      return await signInUser(email, password);
+    };
+
+    const register = async (email: string, password: string, name: string) => {
+      await signUpUser(email, password, { name });
+    };
     
     return {
       session,
@@ -56,7 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signOut,
       resetPassword,
-      loading
+      loading,
+      login,
+      register
     };
   }, [session, user, loading]);
   

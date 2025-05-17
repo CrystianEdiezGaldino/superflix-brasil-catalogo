@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import MediaCard from "@/components/MediaCard";
 import { Card } from "@/components/ui/card";
@@ -9,9 +8,10 @@ interface SearchResultsProps {
   isSearching: boolean;
   loadMoreResults?: () => void;
   hasMore?: boolean;
+  focusedItem?: number;
 }
 
-const SearchResults = ({ results, isSearching, loadMoreResults, hasMore = false }: SearchResultsProps) => {
+const SearchResults = ({ results, isSearching, loadMoreResults, hasMore = false, focusedItem = 0 }: SearchResultsProps) => {
   if (isSearching) {
     return (
       <div className="flex justify-center items-center min-h-[300px] w-full">
@@ -37,7 +37,9 @@ const SearchResults = ({ results, isSearching, loadMoreResults, hasMore = false 
         {results.map((media, index) => (
           <div 
             key={`${media.media_type}-${media.id}`} 
-            className="animate-fade-in"
+            className={`animate-fade-in transition-transform duration-200 ${
+              index === focusedItem ? 'scale-105 ring-2 ring-netflix-red' : ''
+            }`}
             style={{ animationDelay: `${index * 0.05}s` }}
           >
             <MediaCard 

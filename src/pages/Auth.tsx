@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
@@ -15,14 +14,26 @@ import AuthPreviewSection from "@/components/auth/AuthPreviewSection";
 import { MediaItem } from "@/types/movie";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 const Auth = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [backgroundImage, setBackgroundImage] = useState("");
   const [redirecting, setRedirecting] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [focusedField, setFocusedField] = useState(0);
+  const [focusedButton, setFocusedButton] = useState(0);
   
   // Get the intended redirect path from state, or default to home page
   const redirectTo = location.state?.from?.pathname || "/";
@@ -89,6 +100,82 @@ const Auth = () => {
       }
     };
   }, [user, redirecting, navigate, redirectTo, loading]);
+  
+  // Navegação por controle de TV
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const totalFields = isLogin ? 2 : 3;
+      const totalButtons = 2;
+
+      switch (e.key) {
+        case 'ArrowDown':
+          e.preventDefault();
+          if (focusedField < totalFields - 1) {
+            setFocusedField(prev => prev + 1);
+          } else {
+            setFocusedButton(0);
+          }
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (focusedButton > 0) {
+            setFocusedButton(0);
+          } else {
+            setFocusedField(prev => Math.max(prev - 1, 0));
+          }
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          if (focusedButton > 0) {
+            setFocusedButton(prev => prev - 1);
+          }
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          if (focusedButton < totalButtons - 1) {
+            setFocusedButton(prev => prev + 1);
+          }
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (focusedButton === 0) {
+            handleSubmit();
+          } else {
+            setIsLogin(!isLogin);
+          }
+          break;
+        case 'Backspace':
+          e.preventDefault();
+          window.history.back();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedField, focusedButton, isLogin]);
+
+  const handleSubmit = async () => {
+    if (!email || !password || (!isLogin && !name)) {
+      toast.error("Por favor, preencha todos os campos");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await register(email, password, name);
+      }
+      navigate("/");
+    } catch (error) {
+      console.error("Erro na autenticação:", error);
+      toast.error(isLogin ? "Erro ao fazer login" : "Erro ao criar conta");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   // Display loading during authentication check
   if (loading) {

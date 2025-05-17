@@ -1,85 +1,145 @@
-
-import { useState } from "react";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
-import SubscriptionPlans from "@/components/subscribe/SubscriptionPlans";
-import ContentCategories from "@/components/subscribe/ContentCategories";
-import ActiveSubscription from "@/components/subscribe/ActiveSubscription";
-import SubscriptionHeader from "@/components/subscribe/SubscriptionHeader";
-import DemoModeNotification from "@/components/subscribe/DemoModeNotification";
-import PromoCodeSection from "@/components/subscribe/PromoCodeSection";
 
 const Subscribe = () => {
-  const { 
-    isSubscribed, 
-    subscriptionTier, 
-    isLoading, 
-    hasTrialAccess,
-    hasTempAccess,
-    trialEnd 
-  } = useSubscription();
-  
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const [focusedItem, setFocusedItem] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isDemoMode, setIsDemoMode] = useState(false);
-  
-  // Verifica se o usuário tem qualquer tipo de acesso válido
-  const hasValidAccess = isSubscribed || hasTrialAccess || hasTempAccess;
-  
-  if (isLoading) {
-    return (
-      <>
-        <Navbar onSearch={() => {}} />
-        <div className="min-h-screen bg-netflix-background flex justify-center items-center">
-          <div className="flex flex-col items-center">
-            <div className="w-10 h-10 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p className="text-white text-lg">Verificando assinatura...</p>
-          </div>
-        </div>
-      </>
-    );
-  }
-  
-  // Se já possui qualquer tipo de acesso válido, mostra o plano atual
-  if (hasValidAccess) {
-    return (
-      <>
-        <Navbar onSearch={() => {}} />
-        <ActiveSubscription 
-          subscriptionTier={subscriptionTier} 
-          hasTrialAccess={hasTrialAccess}
-          hasTempAccess={hasTempAccess}
-          trialEnd={trialEnd}
-        />
-      </>
-    );
-  }
+
+  const plans = [
+    {
+      id: "basic",
+      name: "Básico",
+      price: "R$ 19,90",
+      features: [
+        "Acesso a todo o catálogo",
+        "Qualidade de vídeo padrão",
+        "Um dispositivo por vez",
+        "Sem anúncios"
+      ]
+    },
+    {
+      id: "standard",
+      name: "Padrão",
+      price: "R$ 29,90",
+      features: [
+        "Acesso a todo o catálogo",
+        "Qualidade de vídeo HD",
+        "Dois dispositivos simultâneos",
+        "Sem anúncios",
+        "Downloads disponíveis"
+      ]
+    },
+    {
+      id: "premium",
+      name: "Premium",
+      price: "R$ 39,90",
+      features: [
+        "Acesso a todo o catálogo",
+        "Qualidade de vídeo 4K + HDR",
+        "Quatro dispositivos simultâneos",
+        "Sem anúncios",
+        "Downloads disponíveis",
+        "Áudio espacial"
+      ]
+    }
+  ];
+
+  // Navegação por controle de TV
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          setFocusedItem(prev => Math.min(prev + 1, plans.length - 1));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          setFocusedItem(prev => Math.max(prev - 1, 0));
+          break;
+        case 'Enter':
+          e.preventDefault();
+          handleSubscribe(plans[focusedItem].id);
+          break;
+        case 'Backspace':
+          e.preventDefault();
+          window.history.back();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedItem]);
+
+  const handleSubscribe = async (planId: string) => {
+    if (!user) {
+      toast.error("Você precisa estar logado para assinar um plano");
+      navigate("/auth");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // Aqui você implementaria a lógica de pagamento
+      // Por enquanto, vamos apenas simular um sucesso
+      setTimeout(() => {
+        navigate("/subscription-success");
+      }, 1000);
+    } catch (error) {
+      console.error("Erro ao processar assinatura:", error);
+      toast.error("Ocorreu um erro ao processar sua assinatura");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-netflix-background">
-      <Navbar onSearch={() => {}} />
-      <div className="container mx-auto pt-24 px-4 pb-16">
-        <div className="max-w-4xl mx-auto">
-          <SubscriptionHeader />
+    <>
+      <Navbar />
+      <div className="min-h-screen pt-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-white mb-8 text-center">
+            Escolha seu Plano
+          </h1>
           
-          <DemoModeNotification isDemoMode={isDemoMode} />
-          
-          <SubscriptionPlans 
-            isProcessing={isProcessing} 
-            setIsProcessing={setIsProcessing} 
-            isDemoMode={isDemoMode}
-          />
-          
-          <PromoCodeSection />
-          
-          <ContentCategories />
-          
-          <p className="text-gray-400 text-sm mt-8 text-center">
-            Ao assinar, você concorda com os Termos de Serviço e nossa Política de Privacidade.
-            Você poderá cancelar sua assinatura a qualquer momento.
-          </p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {plans.map((plan, index) => (
+              <Card 
+                key={plan.id}
+                className={`bg-black/60 border-netflix-red/20 backdrop-blur-sm p-6 transition-all duration-200 ${
+                  index === focusedItem ? 'scale-105 ring-2 ring-netflix-red' : ''
+                }`}
+              >
+                <h2 className="text-2xl font-bold text-white mb-4">{plan.name}</h2>
+                <p className="text-3xl font-bold text-netflix-red mb-6">{plan.price}</p>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature, i) => (
+                    <li key={i} className="text-white flex items-center">
+                      <span className="text-netflix-red mr-2">✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <Button
+                  onClick={() => handleSubscribe(plan.id)}
+                  disabled={isProcessing}
+                  className="w-full bg-netflix-red hover:bg-red-700 text-white"
+                >
+                  {isProcessing ? "Processando..." : "Assinar Agora"}
+                </Button>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
