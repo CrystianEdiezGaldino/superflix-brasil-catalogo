@@ -1,3 +1,4 @@
+
 export const channelCategories = [
   "Futebol",
   "Esportes",
@@ -18,13 +19,13 @@ export interface TvChannel {
 
 export const tvChannels: TvChannel[] = [
   // Futebol
-
   {
     id: "premiere-2",
     name: "Premiere 2",
     category: "Futebol",
     description: "Canal dedicado à transmissão dos principais jogos do Campeonato Brasileiro.",
     iframeUrl: "https://embedcanaistv.com/premiere2/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/premiere.png"
   },
   {
     id: "espn",
@@ -32,6 +33,7 @@ export const tvChannels: TvChannel[] = [
     category: "Futebol",
     description: "Canal líder em esportes nos Estados Unidos, com foco em futebol e outros esportes.",
     iframeUrl: "https://embedcanaistv.com/espn/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/espn.png"
   },
   {
     id: "espn-2",
@@ -39,6 +41,7 @@ export const tvChannels: TvChannel[] = [
     category: "Futebol",
     description: "Segundo canal da ESPN com programação complementar de esportes.",
     iframeUrl: "https://embedcanaistv.com/espn2/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/espn2.png"
   },
 
   // Esportes
@@ -48,6 +51,7 @@ export const tvChannels: TvChannel[] = [
     category: "Esportes",
     description: "Canal brasileiro dedicado à transmissão de eventos esportivos.",
     iframeUrl: "https://embedcanaistv.com/sportv/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/sportv.png"
   },
   {
     id: "sportv-2",
@@ -55,6 +59,7 @@ export const tvChannels: TvChannel[] = [
     category: "Esportes",
     description: "Segundo canal da SporTV com programação complementar de esportes.",
     iframeUrl: "https://embedcanaistv.com/sportv2/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/sportv2.png"
   },
   {
     id: "band-sports",
@@ -62,6 +67,7 @@ export const tvChannels: TvChannel[] = [
     category: "Esportes",
     description: "Canal esportivo da Band com foco em diversos esportes.",
     iframeUrl: "https://embedcanaistv.com/bandsports/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/bandsports.png"
   },
 
   // Abertos
@@ -71,6 +77,7 @@ export const tvChannels: TvChannel[] = [
     category: "Abertos",
     description: "Sinal da TV Globo para São Paulo.",
     iframeUrl: "https://embedcanaistv.com/globosp/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/globo.png"
   },
   {
     id: "sbt",
@@ -78,6 +85,7 @@ export const tvChannels: TvChannel[] = [
     category: "Abertos",
     description: "Sistema Brasileiro de Televisão, uma das maiores emissoras do Brasil.",
     iframeUrl: "https://embedcanaistv.com/sbt/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/sbt.png"
   },
   {
     id: "record",
@@ -85,6 +93,7 @@ export const tvChannels: TvChannel[] = [
     category: "Abertos",
     description: "Rede Record de Televisão, uma das principais emissoras do Brasil.",
     iframeUrl: "https://embedcanaistv.com/recordsp/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/recordtvsp.png"
   },
 
   // Filmes e Séries
@@ -94,6 +103,7 @@ export const tvChannels: TvChannel[] = [
     category: "Filmes e Séries",
     description: "Canal premium com filmes e séries exclusivas.",
     iframeUrl: "https://embedcanaistv.com/hbo/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/hbo.png"
   },
   {
     id: "hbo-2",
@@ -101,6 +111,7 @@ export const tvChannels: TvChannel[] = [
     category: "Filmes e Séries",
     description: "Segundo canal da HBO com programação complementar.",
     iframeUrl: "https://embedcanaistv.com/hbo2/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/hbo2.png"
   },
   {
     id: "tnt",
@@ -108,6 +119,7 @@ export const tvChannels: TvChannel[] = [
     category: "Filmes e Séries",
     description: "Canal com filmes e séries de sucesso.",
     iframeUrl: "https://embedcanaistv.com/tnt/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/tnt.png"
   },
 
   // Variedades
@@ -117,6 +129,7 @@ export const tvChannels: TvChannel[] = [
     category: "Variedades",
     description: "Canal com documentários e programas educativos.",
     iframeUrl: "https://embedcanaistv.com/discovery/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/discoverychannel.png"
   },
   {
     id: "animal-planet",
@@ -124,6 +137,7 @@ export const tvChannels: TvChannel[] = [
     category: "Variedades",
     description: "Canal dedicado à vida animal e natureza.",
     iframeUrl: "https://embedcanaistv.com/animalplanet/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/animalplanet.png"
   },
   {
     id: "history",
@@ -131,6 +145,7 @@ export const tvChannels: TvChannel[] = [
     category: "Variedades",
     description: "Canal com documentários históricos e programas educativos.",
     iframeUrl: "https://embedcanaistv.com/history/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/history.png"
   },
 
   // Notícias
@@ -140,6 +155,7 @@ export const tvChannels: TvChannel[] = [
     category: "Notícias",
     description: "Canal de notícias 24 horas da Globo.",
     iframeUrl: "https://embedcanaistv.com/globonews/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/globonews.png"
   },
   {
     id: "cnn-brasil",
@@ -147,6 +163,7 @@ export const tvChannels: TvChannel[] = [
     category: "Notícias",
     description: "Canal de notícias 24 horas da CNN no Brasil.",
     iframeUrl: "https://embedcanaistv.com/cnnbrasil/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/cnnbrasil.png"
   },
   {
     id: "band-news",
@@ -154,5 +171,6 @@ export const tvChannels: TvChannel[] = [
     category: "Notícias",
     description: "Canal de notícias 24 horas da Band.",
     iframeUrl: "https://embedcanaistv.com/bandnews/",
+    logoUrl: "https://iptv-org.github.io/epg/logo/br/bandnews.png"
   },
 ];

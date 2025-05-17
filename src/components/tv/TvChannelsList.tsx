@@ -1,5 +1,6 @@
+
 import { TvChannel } from "@/data/tvChannels";
-import TvChannelCard from "./TvChannelCard";
+import ChannelCard from "./ChannelCard";
 
 interface TvChannelsListProps {
   channels: TvChannel[];
@@ -20,11 +21,11 @@ const TvChannelsList = ({
 }: TvChannelsListProps) => {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {[...Array(8)].map((_, index) => (
           <div
             key={index}
-            className="bg-netflix-card animate-pulse rounded-lg h-48"
+            className="bg-gray-800/50 animate-pulse rounded-lg h-48"
           />
         ))}
       </div>
@@ -33,7 +34,7 @@ const TvChannelsList = ({
 
   if (channels.length === 0) {
     return (
-      <div className="text-center py-12">
+      <div className="text-center py-12 bg-gray-800/20 rounded-lg border border-gray-700/30">
         <h3 className="text-xl font-semibold text-white mb-2">
           Nenhum canal encontrado
         </h3>
@@ -45,13 +46,12 @@ const TvChannelsList = ({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
       {channels.map((channel) => (
-        <TvChannelCard
+        <ChannelCard
           key={channel.id}
           channel={channel}
           onSelect={onSelectChannel}
-          hasAccess={hasAccess}
         />
       ))}
     </div>

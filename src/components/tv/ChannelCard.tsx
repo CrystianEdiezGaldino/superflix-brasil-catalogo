@@ -18,11 +18,29 @@ const ChannelCard = ({ channel, onSelect }: ChannelCardProps) => {
     >
       <div className="relative">
         <AspectRatio ratio={16/9} className="bg-gray-900 flex items-center justify-center">
-          {channel.logo ? (
+          {channel.logoUrl ? (
             <img 
-              src={channel.logo} 
+              src={channel.logoUrl} 
               alt={channel.name} 
               className="object-contain h-16 w-full p-2"
+              onError={(e) => {
+                // Fallback se a imagem não carregar
+                (e.target as HTMLImageElement).style.display = 'none';
+                (e.target as HTMLImageElement).parentElement!.classList.add('fallback-bg');
+                const parent = (e.target as HTMLImageElement).parentElement;
+                if (parent) {
+                  const fallback = document.createElement('div');
+                  fallback.className = 'flex flex-col items-center justify-center h-full';
+                  fallback.innerHTML = `
+                    <svg class="text-gray-400 mb-2" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                      <polyline points="17 2 12 7 7 2"></polyline>
+                    </svg>
+                    <span class="text-sm font-medium text-center text-white">${channel.name}</span>
+                  `;
+                  parent.appendChild(fallback);
+                }
+              }}
             />
           ) : (
             <div className="flex flex-col items-center justify-center p-4">
@@ -37,8 +55,8 @@ const ChannelCard = ({ channel, onSelect }: ChannelCardProps) => {
           </div>
         </div>
       </div>
-      <div className="p-2 text-center">
-        <h3 className="font-medium text-sm text-white truncate">{channel.name}</h3>
+      <div className="p-3 text-center">
+        <h3 className="font-medium text-base text-white truncate">{channel.name}</h3>
         <p className="text-xs text-gray-400">{channel.category}</p>
       </div>
     </Card>
