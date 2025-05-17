@@ -53,32 +53,15 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
     setValidationAttempts(0);
     setIsExpired(false);
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (!supabaseUrl) {
-        throw new Error('Supabase URL não configurada');
-      }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/quick-login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('quick-login', {
+        body: {
           action: 'generate',
           deviceInfo: info
-        })
+        }
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to generate code');
-      }
-
-      const data = await response.json();
-      if (!data.code) {
-        throw new Error('Código não gerado corretamente');
-      }
+      if (error) throw error;
+      if (!data?.code) throw new Error('Código não gerado corretamente');
 
       setCode(data.code);
       setTimeLeft(300); // Reset timer
@@ -103,38 +86,23 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
     
     setIsChecking(true);
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      if (!supabaseUrl) {
-        throw new Error('Supabase URL não configurada');
-      }
-
-      const response = await fetch(`${supabaseUrl}/functions/v1/quick-login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('quick-login', {
+        body: {
           action: 'check',
           code
-        })
+        }
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to check code');
-      }
-
-      const data = await response.json();
+      if (error) throw error;
       
       if (data.status === 'validated') {
         // Set the session
-        const { error } = await supabase.auth.setSession({
+        const { error: sessionError } = await supabase.auth.setSession({
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token
         });
 
-        if (error) throw error;
+        if (sessionError) throw sessionError;
         
         onLogin(data.session);
         toast.success("Login realizado com sucesso!");
