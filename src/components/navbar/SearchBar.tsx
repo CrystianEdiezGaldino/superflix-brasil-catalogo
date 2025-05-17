@@ -64,22 +64,14 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
         style={{ width: isSearchOpen ? "auto" : "40px" }}
       >
         {isSearchOpen && (
-<<<<<<< HEAD
           <div className="relative flex-1">
-=======
-          <div className="relative">
->>>>>>> d49e97c11088c627460ed8d7be45f118db33758a
             <Input
               ref={inputRef}
               type="search"
               placeholder="Títulos, pessoas, gêneros..."
               value={query}
               onChange={handleSearchInputChange}
-<<<<<<< HEAD
               className="w-full bg-transparent border-none pl-4 pr-8 placeholder:text-gray-400 text-white focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
-=======
-              className="w-[180px] md:w-[220px] lg:w-[280px] bg-transparent border-none pl-4 pr-8 placeholder:text-gray-400 text-white focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
->>>>>>> d49e97c11088c627460ed8d7be45f118db33758a
             />
             {query && (
               <button
@@ -95,7 +87,6 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
         <Button
           type={isSearchOpen ? "submit" : "button"}
           onClick={!isSearchOpen ? toggleSearch : undefined}
-<<<<<<< HEAD
           tabIndex={0}
           role="button"
           aria-label="Buscar conteúdo"
@@ -107,13 +98,6 @@ const SearchBar = ({ onSearch }: SearchBarProps) => {
             ${isSearchOpen ? 'ml-auto' : ''}`}
         >
           <Search className="lucide lucide-search" aria-hidden="true" />
-=======
-          variant="ghost"
-          size="icon"
-          className={`text-white ${isSearchOpen ? 'hover:text-white' : 'hover:text-netflix-red'} transition-colors`}
-        >
-          <Search size={18} />
->>>>>>> d49e97c11088c627460ed8d7be45f118db33758a
         </Button>
       </div>
     </form>
