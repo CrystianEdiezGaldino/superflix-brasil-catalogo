@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -8,7 +7,9 @@ import { useRecommendations } from "./useRecommendations";
 import { useFeaturedMedia } from "./useFeaturedMedia";
 import { useAccessControl } from "./useAccessControl";
 import { usePopularContent } from "./usePopularContent";
-import { MediaItem } from "@/types/movie";
+
+// Remove the import to prevent circular dependency
+// import { useAuthRedirect } from "./useAuthRedirect";
 
 export const useHomePageData = () => {
   const { user, loading: authLoading } = useAuth();
@@ -18,8 +19,8 @@ export const useHomePageData = () => {
     hasTempAccess,
     hasTrialAccess,
     isLoading: subscriptionLoading, 
-    checkSubscription,
-    trialEnd
+    trialEnd,
+    checkSubscription
   } = useSubscription();
   
   // Use the access control hook to get the hasAccess flag
@@ -47,13 +48,7 @@ export const useHomePageData = () => {
   } = usePopularContent(user?.id);
   
   // Import data from smaller hooks
-  const { 
-    results,
-    isLoading: searchLoading,
-    hasMore: searchHasMore,
-    searchMedia
-  } = useMediaSearch();
-  
+  const { handleSearch: originalHandleSearch } = useMediaSearch();
   const { recommendations } = useRecommendations();
   const { 
     moviesData, 
@@ -83,11 +78,7 @@ export const useHomePageData = () => {
   );
 
   // Create a memoized search handler to prevent recreation on each render
-  // Make sure it returns results for consumption by other components
-  const handleSearch = useCallback(async (query: string, page?: number): Promise<MediaItem[]> => {
-    await searchMedia(query, page);
-    return results;
-  }, [searchMedia, results]);
+  const handleSearch = useCallback(originalHandleSearch, [originalHandleSearch]);
 
   // Debug log to help track subscription state
   console.log("Home page data:", { 
@@ -97,7 +88,6 @@ export const useHomePageData = () => {
     hasTrialAccess, 
     hasTempAccess, 
     hasAccess,
-    trialEnd,
     mediaDataLoaded: {
       movies: !!moviesData?.length,
       series: !!seriesData?.length,

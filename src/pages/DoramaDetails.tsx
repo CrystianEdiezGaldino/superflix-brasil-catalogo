@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -147,10 +146,6 @@ const DoramaDetails = () => {
     ? Array.from({ length: dorama.number_of_seasons }, (_, i) => i + 1) 
     : [1];
 
-  // Convert season and episode to numbers for the player
-  const seasonNumber = Number(selectedSeason);
-  const episodeNumber = Number(selectedEpisode);
-
   return (
     <div className="min-h-screen bg-netflix-background">
       <Navbar onSearch={() => {}} />
@@ -191,8 +186,8 @@ const DoramaDetails = () => {
                     key={`player-${dorama.id}-${selectedSeason}-${selectedEpisode}`}
                     type="serie"
                     imdb={dorama.id.toString()}
-                    season={seasonNumber}
-                    episode={episodeNumber}
+                    season={selectedSeason.toString()}
+                    episode={selectedEpisode.toString()}
                     options={playerOptions}
                   />
                 </div>

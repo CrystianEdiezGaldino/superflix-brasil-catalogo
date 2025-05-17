@@ -6,7 +6,7 @@ import { fetchMediaById } from "@/services/tmdbApi";
 import { useQuery } from "@tanstack/react-query";
 
 const FavoritesTab = () => {
-  const { favorites, isFavorite, toggleFavorite } = useFavorites();
+  const { favorites, getAllFavorites } = useFavorites();
   const [favoriteItems, setFavoriteItems] = useState<MediaItem[]>([]);
   const [isLoadingMedia, setIsLoadingMedia] = useState(false);
 
@@ -14,9 +14,8 @@ const FavoritesTab = () => {
   const fetchFavoriteItems = async () => {
     setIsLoadingMedia(true);
     try {
-      // Instead of using getAllFavorites which doesn't exist,
-      // we'll use the favorites array that we already have
-      const mediaPromises = favorites.map(item => fetchMediaById(item.id));
+      const favoriteIds = getAllFavorites();
+      const mediaPromises = favoriteIds.map(id => fetchMediaById(id));
       const mediaItems = await Promise.all(mediaPromises);
       setFavoriteItems(mediaItems.filter(item => item !== null) as MediaItem[]);
     } catch (error) {

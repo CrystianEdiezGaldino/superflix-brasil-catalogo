@@ -163,7 +163,6 @@ const FullContent = ({
         topRatedDoramas={koreanDramas || []}
         popularDoramas={japaneseDramas || []}
         koreanMovies={chineseDramas || []}
-        romanceDoramas={romanceMovies || []} // Adding the missing romanceDoramas prop
         onMediaClick={onMediaClick}
         onLoadMore={onLoadMore}
         isLoading={isLoading}

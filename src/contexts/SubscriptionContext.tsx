@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useAuth } from "./AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,9 +35,6 @@ interface SubscriptionContextType {
   hasTrialAccess: boolean;
   tempAccess: TempAccess | null;
   isLoading: boolean;
-  subscriptionTier: string | null;
-  subscriptionEnd: string | null;
-  trialEnd: string | null;
   refreshSubscriptionStatus: () => void;
   checkSubscription: () => Promise<void>;
 }
@@ -54,9 +50,6 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
   const [hasTrialAccess, setHasTrialAccess] = useState(false);
   const [tempAccess, setTempAccess] = useState<TempAccess | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
-  const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
-  const [trialEnd, setTrialEnd] = useState<string | null>(null);
 
   const checkSubscriptionStatus = async () => {
     setIsLoading(true);
@@ -91,26 +84,9 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
           
           setSubscription(validSubscription);
           setIsSubscribed(validSubscription.status === 'active' || false);
-          
-          // Set subscription tier and end date directly from subscription data
-          setSubscriptionTier(validSubscription.plan_type || null);
-          setSubscriptionEnd(validSubscription.current_period_end || null);
-          
-          // Set trial end date if available
-          if (validSubscription.status === 'trialing' && validSubscription.trial_end) {
-            setTrialEnd(validSubscription.trial_end);
-            setHasTrialAccess(new Date(validSubscription.trial_end) > new Date());
-          } else {
-            setTrialEnd(null);
-            setHasTrialAccess(false);
-          }
         } else {
           setSubscription(null);
           setIsSubscribed(false);
-          setSubscriptionTier(null);
-          setSubscriptionEnd(null);
-          setTrialEnd(null);
-          setHasTrialAccess(false);
         }
 
         // Fetch temp access data
@@ -151,10 +127,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
             console.error("Erro ao verificar acesso de teste:", trialAccessError);
             setHasTrialAccess(false);
           } else {
-            // Only update if we didn't already set this based on subscription status
-            if (subscriptionData?.status !== 'trialing') {
-              setHasTrialAccess(!!trialAccessData);
-            }
+            setHasTrialAccess(!!trialAccessData);
           }
         } catch (error) {
           console.error("Erro ao verificar acesso de teste:", error);
@@ -190,9 +163,6 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
       setIsAdmin(false);
       setHasTempAccess(false);
       setHasTrialAccess(false);
-      setSubscriptionTier(null);
-      setSubscriptionEnd(null);
-      setTrialEnd(null);
       setIsLoading(false);
     }
   };
@@ -213,9 +183,6 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     hasTrialAccess,
     tempAccess,
     isLoading,
-    subscriptionTier,
-    subscriptionEnd,
-    trialEnd,
     refreshSubscriptionStatus,
     checkSubscription: checkSubscriptionStatus,
   };

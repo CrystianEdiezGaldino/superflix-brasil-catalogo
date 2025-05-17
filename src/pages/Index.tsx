@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
@@ -10,7 +9,6 @@ import { useContentSections } from "@/hooks/home/useContentSections";
 import HomeHeader from "@/components/home/HomeHeader";
 import MainContent from "@/components/home/MainContent";
 import { WatchHistory } from "@/components/WatchHistory";
-import UnauthenticatedState from "@/components/home/UnauthenticatedState";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -69,6 +67,13 @@ const Index = () => {
     }
   }, [isLoading, loadingTimeout]);
   
+  // Redirect to auth page if user is not logged in
+  useEffect(() => {
+    if (initialLoadComplete && !user && !isLoading) {
+      navigate("/auth", { replace: true });
+    }
+  }, [user, isLoading, initialLoadComplete, navigate]);
+
   // Clear search when user clicks on navigation links - with useCallback to prevent recreation
   const handleNavigation = useCallback(() => {
     handleSearch("");
@@ -105,14 +110,16 @@ const Index = () => {
     return <LoadingState />;
   }
   
+  // Removed the unauthenticated state check since we're redirecting directly
+  
   // Show error state if there was an error loading data
   if (hasError) {
     return <ErrorState />;
   }
 
-  // Show unauthenticated state when user is not logged in
-  if (initialLoadComplete && !user && !isLoading) {
-    return <UnauthenticatedState />;
+  // Only render the actual content if the user is logged in
+  if (!user) {
+    return <LoadingState />;
   }
 
   return (
@@ -135,7 +142,7 @@ const Index = () => {
           <SearchResults results={searchResults} isSearching={isSearching} />
         ) : (
           <>
-            {user && <WatchHistory />}
+            <WatchHistory />
             <MainContent 
               hasAccess={hasAccess}
               movies={movies}

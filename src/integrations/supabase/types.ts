@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      watch_history: {
+        Row: {
+          id: string
+          user_id: string
+          tmdb_id: number
+          media_type: 'movie' | 'tv'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          tmdb_id: number
+          media_type: 'movie' | 'tv'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          tmdb_id?: number
+          media_type?: 'movie' | 'tv'
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           added_at: string
@@ -36,6 +63,48 @@ export type Database = {
           poster_path?: string | null
           title?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      tickets: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          description: string
+          status: 'open' | 'in_progress' | 'closed'
+          priority: 'low' | 'medium' | 'high'
+          category: 'content' | 'subscription' | 'technical' | 'other'
+          admin_response: string | null
+          admin_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          description: string
+          status?: 'open' | 'in_progress' | 'closed'
+          priority?: 'low' | 'medium' | 'high'
+          category: 'content' | 'subscription' | 'technical' | 'other'
+          admin_response?: string | null
+          admin_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          description?: string
+          status?: 'open' | 'in_progress' | 'closed'
+          priority?: 'low' | 'medium' | 'high'
+          category?: 'content' | 'subscription' | 'technical' | 'other'
+          admin_response?: string | null
+          admin_id?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -227,48 +296,6 @@ export type Database = {
         }
         Relationships: []
       }
-      tickets: {
-        Row: {
-          admin_id: string | null
-          admin_response: string | null
-          category: string
-          created_at: string
-          description: string
-          id: string
-          priority: string
-          status: string
-          title: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          admin_id?: string | null
-          admin_response?: string | null
-          category: string
-          created_at?: string
-          description: string
-          id?: string
-          priority?: string
-          status?: string
-          title: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          admin_id?: string | null
-          admin_response?: string | null
-          category?: string
-          created_at?: string
-          description?: string
-          id?: string
-          priority?: string
-          status?: string
-          title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -287,33 +314,6 @@ export type Database = {
           id?: string
           role?: string
           user_id?: string
-        }
-        Relationships: []
-      }
-      watch_history: {
-        Row: {
-          created_at: string
-          id: string
-          media_type: string
-          tmdb_id: number
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          media_type: string
-          tmdb_id: number
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          media_type?: string
-          tmdb_id?: number
-          updated_at?: string
-          user_id?: string | null
         }
         Relationships: []
       }

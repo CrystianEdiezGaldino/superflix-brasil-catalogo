@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { MediaItem, Movie, Series } from "@/types/movie";
 import { useAuth } from "@/contexts/AuthContext";
@@ -93,11 +92,6 @@ export const useFavorites = () => {
       setFavorites(mediaItems);
     }
   }, [favoritesData]);
-
-  // Function to get all favorites IDs - Adding this to fix the missing method error
-  const getAllFavorites = useCallback(() => {
-    return favorites.map(fav => fav.id);
-  }, [favorites]);
 
   // Function to add to favorites
   const addToFavorites = async (mediaId: number, mediaType: string) => {
@@ -220,7 +214,6 @@ export const useFavorites = () => {
     isFavorite,
     toggleFavorite,
     isLoading,
-    refetchFavorites,
-    getAllFavorites // Add this to fix the missing method error
+    refetchFavorites
   };
 };
