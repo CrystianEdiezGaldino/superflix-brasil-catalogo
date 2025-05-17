@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -120,10 +121,10 @@ const AnimeDetails = () => {
     
     if (anime) {
       if (isFavorite(anime.id)) {
-        removeFromFavorites(anime.id);
+        removeFromFavorites(anime.id, 'tv');
         toast.success("Removido dos favoritos");
       } else {
-        addToFavorites(anime.id);
+        addToFavorites(anime.id, 'tv');
         toast.success("Adicionado aos favoritos");
       }
     }
