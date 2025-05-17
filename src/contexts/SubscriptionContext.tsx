@@ -83,7 +83,17 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
           };
           
           setSubscription(validSubscription);
-          setIsSubscribed(validSubscription.status === 'active' || false);
+          
+          // Check if subscription is valid based on dates
+          const now = new Date();
+          const isTrialValid = validSubscription.status === 'trialing' && 
+                             validSubscription.trial_end && 
+                             new Date(validSubscription.trial_end) > now;
+          const isActiveValid = validSubscription.status === 'active' && 
+                              validSubscription.current_period_end && 
+                              new Date(validSubscription.current_period_end) > now;
+          
+          setIsSubscribed(isTrialValid || isActiveValid);
         } else {
           setSubscription(null);
           setIsSubscribed(false);

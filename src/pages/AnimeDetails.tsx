@@ -120,10 +120,10 @@ const AnimeDetails = () => {
     
     if (anime) {
       if (isFavorite(anime.id)) {
-        removeFromFavorites(anime.id);
+        removeFromFavorites(anime.id, user?.uid);
         toast.success("Removido dos favoritos");
       } else {
-        addToFavorites(anime.id);
+        addToFavorites(anime.id, user?.uid);
         toast.success("Adicionado aos favoritos");
       }
     }

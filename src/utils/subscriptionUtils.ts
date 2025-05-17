@@ -42,7 +42,9 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
                          directData.trial_end && 
                          new Date(directData.trial_end) > now;
                          
-      const isActive = directData.status === 'active';
+      const isActive = directData.status === 'active' && 
+                      directData.current_period_end && 
+                      new Date(directData.current_period_end) > now;
       
       const result = {
         hasActiveSubscription: isActive,
@@ -104,7 +106,7 @@ export const processSubscriptionData = (data: any) => {
   const isActive = Boolean(data?.hasActiveSubscription);
 
   return {
-    isSubscribed: isActive,
+    isSubscribed: isActive || hasTrialAccess,
     isAdmin: Boolean(data?.isAdmin),
     hasTempAccess: Boolean(data?.hasTempAccess),
     hasTrialAccess: hasTrialAccess,

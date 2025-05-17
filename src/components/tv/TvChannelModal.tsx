@@ -86,7 +86,7 @@ const TvChannelModal = React.memo(({ channel, isOpen, onClose, hasAccess, option
     >
       <DialogContent 
         ref={modalRef}
-        className="max-w-4xl bg-netflix-background border-netflix-border"
+        className="bg-netflix-background border-netflix-border max-h-[80vh] w-[90vw] [@media(max-width:932px)and(orientation:landscape)]:w-[95vw] [@media(max-width:932px)and(orientation:landscape)]:max-h-[90vh] [@media(max-width:932px)]:min-w-[80vw] sm:!w-[350px] sm:!h-[350px]"
         onPointerDownOutside={(e) => {
           if (options.closeOnOutsideClick === false) {
             e.preventDefault();
@@ -117,7 +117,7 @@ const TvChannelModal = React.memo(({ channel, isOpen, onClose, hasAccess, option
 
         <div className="mt-4">
           {hasAccess ? (
-            <div className="aspect-video w-full bg-black relative">
+            <div className="aspect-video sm:aspect-video w-full bg-black relative overflow-hidden">
               {!isIframeLoaded && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-12 h-12 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
@@ -128,12 +128,14 @@ const TvChannelModal = React.memo(({ channel, isOpen, onClose, hasAccess, option
                 src={iframeSrc}
                 allow="encrypted-media"
                 allowFullScreen
-                className="w-full h-full"
+                className="w-full h-full object-contain sm:object-none"
                 frameBorder="0"
                 onLoad={handleIframeLoad}
                 style={{ 
                   opacity: isIframeLoaded ? 1 : 0,
-                  display: isVisible ? 'block' : 'none'
+                  display: isVisible ? 'block' : 'none',
+                  maxWidth: '100%',
+                  maxHeight: '100%'
                 }}
                 title={`${channel.name} - TV ao vivo`}
               />

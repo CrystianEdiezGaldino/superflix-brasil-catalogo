@@ -21,6 +21,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
   const { user, loading, login, register } = useAuth();
@@ -32,15 +33,14 @@ const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [focusedElement, setFocusedElement] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(true);
-  const [showSignup, setShowSignup] = useState(true);
   
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
-  const nameRef = useRef<HTMLInputElement>(null);
+  const codeRef = useRef<HTMLInputElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const termsRef = useRef<HTMLButtonElement>(null);
@@ -122,9 +122,9 @@ const Auth = () => {
             setFocusedElement('password');
             passwordRef.current?.focus();
           } else if (focusedElement === 'password' && !isLogin) {
-            setFocusedElement('name');
-            nameRef.current?.focus();
-          } else if (focusedElement === 'name' || focusedElement === 'password') {
+            setFocusedElement('code');
+            codeRef.current?.focus();
+          } else if (focusedElement === 'code' || focusedElement === 'password') {
             setFocusedElement('terms');
             termsRef.current?.focus();
           } else if (focusedElement === 'terms') {
@@ -144,7 +144,7 @@ const Auth = () => {
           if (focusedElement === 'password') {
             setFocusedElement('email');
             emailRef.current?.focus();
-          } else if (focusedElement === 'name') {
+          } else if (focusedElement === 'code') {
             setFocusedElement('password');
             passwordRef.current?.focus();
           } else if (focusedElement === 'terms') {
@@ -152,8 +152,8 @@ const Auth = () => {
               setFocusedElement('password');
               passwordRef.current?.focus();
             } else {
-              setFocusedElement('name');
-              nameRef.current?.focus();
+              setFocusedElement('code');
+              codeRef.current?.focus();
             }
           } else if (focusedElement === 'submit') {
             setFocusedElement('terms');
@@ -225,14 +225,6 @@ const Auth = () => {
             setFocusedElement('password');
             passwordRef.current?.focus();
           } else if (focusedElement === 'password') {
-            if (isLogin) {
-              setFocusedElement('terms');
-              termsRef.current?.focus();
-            } else {
-              setFocusedElement('name');
-              nameRef.current?.focus();
-            }
-          } else if (focusedElement === 'name') {
             setFocusedElement('terms');
             termsRef.current?.focus();
           } else if (focusedElement === 'terms') {
@@ -289,8 +281,8 @@ const Auth = () => {
   }, []);
 
   const handleSubmit = async () => {
-    if (!email || !password || (!isLogin && !name)) {
-      toast.error("Por favor, preencha todos os campos");
+    if (!email || !password) {
+      toast.error("Por favor, preencha email e senha");
       return;
     }
 
@@ -299,7 +291,45 @@ const Auth = () => {
       if (isLogin) {
         await login(email, password);
       } else {
-        await register(email, password, name);
+        // Se houver um código, valida ele
+        if (code) {
+          const { data: promoCode, error: promoError } = await supabase
+            .from('promo_codes')
+            .select('*')
+            .eq('code', code)
+            .single();
+
+          if (promoError || !promoCode) {
+            toast.error("Código de acesso inválido");
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Register with a default name based on email
+        const defaultName = email.split('@')[0];
+        await register(email, password, defaultName);
+        
+        // Get the current user after registration
+        const { data: { user: newUser } } = await supabase.auth.getUser();
+        
+        if (newUser) {
+          // Call the grant-trial-access function
+          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/grant-trial-access`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({ userId: newUser.id })
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to activate trial subscription');
+          }
+
+          toast.success("Conta criada com sucesso! Assinatura de teste ativada.");
+        }
       }
       navigate("/");
     } catch (error) {
@@ -395,18 +425,18 @@ const Auth = () => {
 
                 {!isLogin && (
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-gray-300">Nome completo</Label>
+                    <Label htmlFor="code" className="text-gray-300">Código de Acesso (Opcional)</Label>
                     <Input
-                      ref={nameRef}
-                      id="name"
+                      ref={codeRef}
+                      id="code"
                       type="text"
-                      placeholder="Digite seu nome completo"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Digite o código de acesso (opcional)"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
                       disabled={isLoading}
-                      className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('name')}`}
-                      onFocus={() => setFocusedElement('name')}
-                      aria-label="Campo de nome completo"
+                      className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('code')}`}
+                      onFocus={() => setFocusedElement('code')}
+                      aria-label="Campo de código de acesso (opcional)"
                     />
                   </div>
                 )}
