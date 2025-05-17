@@ -73,7 +73,7 @@ export const useAuthState = () => {
       isActive = false; // Mark as inactive
       subscription.unsubscribe();
     };
-  }, []);  // Remove dependencies to prevent loop
+  }, []);  // Empty dependencies to prevent loop
 
   // Handle tab visibility changes
   useEffect(() => {

@@ -3,6 +3,7 @@ export interface TvChannel {
   id: string;
   name: string;
   logo?: string;
+  logoUrl?: string; // Add this property to fix the error
   category: string;
   description: string;
   iframeUrl: string;

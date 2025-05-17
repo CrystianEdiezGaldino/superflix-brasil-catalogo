@@ -18,9 +18,9 @@ const ChannelCard = ({ channel, onSelect }: ChannelCardProps) => {
     >
       <div className="relative">
         <AspectRatio ratio={16/9} className="bg-gray-900 flex items-center justify-center">
-          {channel.logoUrl ? (
+          {(channel.logoUrl || channel.logo) ? (
             <img 
-              src={channel.logoUrl} 
+              src={channel.logoUrl || channel.logo} 
               alt={channel.name} 
               className="object-contain h-16 w-full p-2"
               onError={(e) => {
