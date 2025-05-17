@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Shield, User, Heart, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import ProfileHeader from "@/components/profile/ProfileHeader";
-import ProfileTab from "@/components/profile/ProfileTab";
+import { ProfileTab } from "@/components/profile/ProfileTab";
 import FavoritesTab from "@/components/profile/FavoritesTab";
 import SubscriptionTab from "@/components/profile/SubscriptionTab";
 

@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { QuickLogin } from "@/components/auth/QuickLogin";
 
 const Auth = () => {
   const { user, loading, login, register } = useAuth();
@@ -37,6 +38,10 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [focusedElement, setFocusedElement] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(true);
+  const [showQuickLogin, setShowQuickLogin] = useState(false);
+  const [autoShowQuickLogin, setAutoShowQuickLogin] = useState(false);
+  const [quickLoginTimer, setQuickLoginTimer] = useState(20);
+  const [selectedBackground, setSelectedBackground] = useState<MediaItem | null>(null);
   
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -69,10 +74,48 @@ const Auth = () => {
       ...filteredAnimes
     ];
     
-    if (allMedia.length > 0) {
-      const backgroundUrl = selectRandomBackground(allMedia);
-      setBackgroundImage(backgroundUrl);
+    if (allMedia.length > 0 && !selectedBackground) {
+      const randomIndex = Math.floor(Math.random() * allMedia.length);
+      const selected = allMedia[randomIndex];
+      setSelectedBackground(selected);
+      
+      if (selected.backdrop_path) {
+        const backgroundUrl = `https://image.tmdb.org/t/p/original${selected.backdrop_path}`;
+        setBackgroundImage(backgroundUrl);
+      } else if (selected.poster_path) {
+        const backgroundUrl = `https://image.tmdb.org/t/p/original${selected.poster_path}`;
+        setBackgroundImage(backgroundUrl);
+      }
     }
+  }, [filteredMovies, filteredSeries, filteredAnimes, selectedBackground]);
+
+  // Change background every 30 seconds
+  useEffect(() => {
+    if (!filteredMovies.length && !filteredSeries.length && !filteredAnimes.length) return;
+
+    const interval = setInterval(() => {
+      const allMedia: MediaItem[] = [
+        ...filteredMovies, 
+        ...filteredSeries, 
+        ...filteredAnimes
+      ];
+      
+      if (allMedia.length > 0) {
+        const randomIndex = Math.floor(Math.random() * allMedia.length);
+        const selected = allMedia[randomIndex];
+        setSelectedBackground(selected);
+        
+        if (selected.backdrop_path) {
+          const backgroundUrl = `https://image.tmdb.org/t/p/original${selected.backdrop_path}`;
+          setBackgroundImage(backgroundUrl);
+        } else if (selected.poster_path) {
+          const backgroundUrl = `https://image.tmdb.org/t/p/original${selected.poster_path}`;
+          setBackgroundImage(backgroundUrl);
+        }
+      }
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
   }, [filteredMovies, filteredSeries, filteredAnimes]);
   
   // Improved user redirection with proper cleanup
@@ -280,6 +323,24 @@ const Auth = () => {
     }
   }, []);
 
+  // Auto show quick login after 20 seconds
+  useEffect(() => {
+    if (user || showQuickLogin || autoShowQuickLogin) return;
+
+    const timer = setInterval(() => {
+      setQuickLoginTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setAutoShowQuickLogin(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [user, showQuickLogin, autoShowQuickLogin]);
+
   const handleSubmit = async () => {
     if (!email || !password) {
       toast.error("Por favor, preencha email e senha");
@@ -375,7 +436,7 @@ const Auth = () => {
   
   return (
     <div 
-      className="min-h-screen bg-netflix-background bg-cover bg-center"
+      className="min-h-screen bg-netflix-background bg-cover bg-center transition-all duration-1000"
       style={{ 
         backgroundImage: backgroundImage 
           ? `linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.7), rgba(0,0,0,0.85)), url('${backgroundImage}')`
@@ -388,124 +449,154 @@ const Auth = () => {
         <div className="flex flex-col items-center justify-center mb-10">
           <AuthPageBanner />
           <div className="w-full max-w-md">
-            <Card className="bg-black/75 border-gray-800 p-8">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-300">Email</Label>
-                  <Input
-                    ref={emailRef}
-                    id="email"
-                    type="email"
-                    placeholder="Digite seu email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading}
-                    className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('email')}`}
-                    onFocus={() => setFocusedElement('email')}
-                    autoFocus
-                    aria-label="Campo de email"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-gray-300">Senha</Label>
-                  <Input
-                    ref={passwordRef}
-                    id="password"
-                    type="password"
-                    placeholder="Digite sua senha"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
-                    className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('password')}`}
-                    onFocus={() => setFocusedElement('password')}
-                    aria-label="Campo de senha"
-                  />
-                </div>
-
-                {!isLogin && (
+            {showQuickLogin || autoShowQuickLogin ? (
+              <QuickLogin onLogin={(session) => {
+                navigate("/");
+              }} />
+            ) : (
+              <Card className="bg-black/75 border-gray-800 p-8">
+                <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="code" className="text-gray-300">Código de Acesso (Opcional)</Label>
+                    <Label htmlFor="email" className="text-gray-300">Email</Label>
                     <Input
-                      ref={codeRef}
-                      id="code"
-                      type="text"
-                      placeholder="Digite o código de acesso (opcional)"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
+                      ref={emailRef}
+                      id="email"
+                      type="email"
+                      placeholder="Digite seu email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       disabled={isLoading}
-                      className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('code')}`}
-                      onFocus={() => setFocusedElement('code')}
-                      aria-label="Campo de código de acesso (opcional)"
+                      className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('email')}`}
+                      onFocus={() => setFocusedElement('email')}
+                      autoFocus
+                      aria-label="Campo de email"
                     />
                   </div>
-                )}
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-gray-300">Senha</Label>
+                    <Input
+                      ref={passwordRef}
+                      id="password"
+                      type="password"
+                      placeholder="Digite sua senha"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      disabled={isLoading}
+                      className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('password')}`}
+                      onFocus={() => setFocusedElement('password')}
+                      aria-label="Campo de senha"
+                    />
+                  </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    ref={termsRef}
-                    id="terms"
-                    checked={true}
-                    onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-                    className={`border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red ${getFocusClasses('terms')}`}
-                    onFocus={() => setFocusedElement('terms')}
-                    aria-label="Aceitar termos de serviço"
-                  />
-                  <Label htmlFor="terms" className="text-sm text-gray-300">
-                    Li e aceito os{" "}
-                    <Link 
-                      to="/termos-de-servico" 
-                      className="text-netflix-red hover:underline"
-                      target="_blank"
-                    >
-                      termos de serviço
-                    </Link>
-                    {" "}e{" "}
-                    <Link 
-                      to="/politica-de-privacidade" 
-                      className="text-netflix-red hover:underline"
-                      target="_blank"
-                    >
-                      política de privacidade
-                    </Link>
-                  </Label>
-                </div>
+                  {!isLogin && (
+                    <div className="space-y-2">
+                      <Label htmlFor="code" className="text-gray-300">Código de Acesso (Opcional)</Label>
+                      <Input
+                        ref={codeRef}
+                        id="code"
+                        type="text"
+                        placeholder="Digite o código de acesso (opcional)"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        disabled={isLoading}
+                        className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('code')}`}
+                        onFocus={() => setFocusedElement('code')}
+                        aria-label="Campo de código de acesso (opcional)"
+                      />
+                    </div>
+                  )}
 
-                <Button
-                  ref={submitRef}
-                  onClick={handleSubmit}
-                  disabled={isLoading}
-                  className={`w-full bg-netflix-red hover:bg-red-700 ${getFocusClasses('submit')}`}
-                  onFocus={() => setFocusedElement('submit')}
-                  aria-label={isLogin ? "Botão de entrar" : "Botão de criar conta"}
-                >
-                  {isLoading ? "Processando..." : isLogin ? "Entrar" : "Criar Conta"}
-                </Button>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      ref={termsRef}
+                      id="terms"
+                      checked={true}
+                      onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                      className={`border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red ${getFocusClasses('terms')}`}
+                      onFocus={() => setFocusedElement('terms')}
+                      aria-label="Aceitar termos de serviço"
+                    />
+                    <Label htmlFor="terms" className="text-sm text-gray-300">
+                      Li e aceito os{" "}
+                      <Link 
+                        to="/termos-de-servico" 
+                        className="text-netflix-red hover:underline"
+                        target="_blank"
+                      >
+                        termos de serviço
+                      </Link>
+                      {" "}e{" "}
+                      <Link 
+                        to="/politica-de-privacidade" 
+                        className="text-netflix-red hover:underline"
+                        target="_blank"
+                      >
+                        política de privacidade
+                      </Link>
+                    </Label>
+                  </div>
 
-                <Button
-                  ref={toggleRef}
-                  variant="ghost"
-                  onClick={() => setIsLogin(!isLogin)}
-                  className={`w-full text-gray-400 hover:text-white ${getFocusClasses('toggle')}`}
-                  onFocus={() => setFocusedElement('toggle')}
-                  aria-label={isLogin ? "Botão para criar conta" : "Botão para fazer login"}
-                >
-                  {isLogin ? "Criar uma conta" : "Já tenho uma conta"}
-                </Button>
-
-                {isLogin && (
                   <Button
-                    ref={forgotPasswordRef}
-                    variant="link"
-                    className={`w-full text-netflix-red hover:text-red-400 ${getFocusClasses('forgotPassword')}`}
-                    onFocus={() => setFocusedElement('forgotPassword')}
-                    aria-label="Botão de esqueceu a senha"
+                    ref={submitRef}
+                    onClick={handleSubmit}
+                    disabled={isLoading}
+                    className={`w-full bg-netflix-red hover:bg-red-700 ${getFocusClasses('submit')}`}
+                    onFocus={() => setFocusedElement('submit')}
+                    aria-label={isLogin ? "Botão de entrar" : "Botão de criar conta"}
                   >
-                    Esqueceu a senha?
+                    {isLoading ? "Processando..." : isLogin ? "Entrar" : "Criar Conta"}
                   </Button>
-                )}
-              </div>
-            </Card>
+
+                  <Button
+                    ref={toggleRef}
+                    variant="ghost"
+                    onClick={() => setIsLogin(!isLogin)}
+                    className={`w-full text-gray-400 hover:text-white ${getFocusClasses('toggle')}`}
+                    onFocus={() => setFocusedElement('toggle')}
+                    aria-label={isLogin ? "Botão para criar conta" : "Botão para fazer login"}
+                  >
+                    {isLogin ? "Criar uma conta" : "Já tenho uma conta"}
+                  </Button>
+
+                  {isLogin && (
+                    <>
+                      <Button
+                        ref={forgotPasswordRef}
+                        variant="link"
+                        className={`w-full text-netflix-red hover:text-red-400 ${getFocusClasses('forgotPassword')}`}
+                        onFocus={() => setFocusedElement('forgotPassword')}
+                        aria-label="Botão de esqueceu a senha"
+                      >
+                        Esqueceu a senha?
+                      </Button>
+
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t border-gray-700" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-black/75 px-2 text-gray-400">ou</span>
+                        </div>
+                      </div>
+
+                      <div className="text-center">
+                        <p className="text-sm text-gray-400 mb-2">
+                          Login rápido disponível em {quickLoginTimer} segundos
+                        </p>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowQuickLogin(true)}
+                          className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
+                        >
+                          Login Rápido com Código
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </Card>
+            )}
           </div>
           <AuthLegalSection />
         </div>
