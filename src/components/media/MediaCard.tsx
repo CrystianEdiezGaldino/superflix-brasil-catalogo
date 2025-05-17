@@ -7,9 +7,11 @@ import FavoriteButton from "./FavoriteButton";
 interface MediaCardProps {
   media: MediaItem;
   onClick?: (media: MediaItem) => void;
+  className?: string;
+  tabIndex?: number;
 }
 
-const MediaCard = ({ media, onClick }: MediaCardProps) => {
+const MediaCard = ({ media, onClick, className = '', tabIndex }: MediaCardProps) => {
   // Fail safe check for the media object
   if (!media) {
     return null;
@@ -67,11 +69,12 @@ const MediaCard = ({ media, onClick }: MediaCardProps) => {
   };
   
   return (
-    <Card className="bg-transparent border-none overflow-hidden group">
+    <Card className={`bg-transparent border-none overflow-hidden group ${className}`}>
       <Link 
         to={getLinkPath()}
-        className="block overflow-hidden rounded-lg transition-transform duration-300 relative"
+        className="block overflow-hidden rounded-lg transition-all duration-300 relative focus:outline-none focus:scale-105 focus:ring-4 focus:ring-netflix-red"
         onClick={handleClick}
+        tabIndex={tabIndex}
       >
         <div className="relative aspect-[2/3] bg-gray-900 overflow-hidden">
           {posterUrl ? (
@@ -91,7 +94,7 @@ const MediaCard = ({ media, onClick }: MediaCardProps) => {
           )}
           
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-3">
-            <div className="text-white font-medium">{title}</div>
+            <div className="text-white font-medium group-focus-within:text-netflix-red transition-colors duration-200">{title}</div>
             
             {rating && (
               <div className="flex items-center mt-1">
@@ -114,7 +117,7 @@ const MediaCard = ({ media, onClick }: MediaCardProps) => {
           </div>
         </div>
         
-        <div className="mt-2 text-sm text-white truncate">{title}</div>
+        <div className="mt-2 text-sm text-white group-focus-within:text-netflix-red transition-colors duration-200 truncate">{title}</div>
       </Link>
     </Card>
   );

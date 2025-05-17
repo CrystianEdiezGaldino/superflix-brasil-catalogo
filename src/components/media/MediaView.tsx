@@ -32,6 +32,8 @@ interface MediaViewProps {
   onResetFilters: () => void;
   onMediaClick?: (media: MediaItem) => void;
   children?: React.ReactNode;
+  focusedSection?: number;
+  focusedItem?: number;
 }
 
 const MediaView = ({
@@ -57,7 +59,9 @@ const MediaView = ({
   onLoadMore,
   onResetFilters,
   onMediaClick,
-  children
+  children,
+  focusedSection = 0,
+  focusedItem = 0
 }: MediaViewProps) => {
   
   // Helper function to determine content section title based on type
@@ -71,6 +75,13 @@ const MediaView = ({
     }
   };
 
+  // Array de sessões para navegação por foco
+  const sections = [
+    { items: trendingItems, title: `Tendências em ${getContentTypeTitle(type)}` },
+    { items: topRatedItems, title: `${getContentTypeTitle(type)} Mais Bem Avaliados` },
+    { items: recentItems, title: `${getContentTypeTitle(type)} Recentes` }
+  ];
+
   return (
     <div className="min-h-screen bg-netflix-background">
       <Navbar />
@@ -83,41 +94,17 @@ const MediaView = ({
         
         {/* Seções de conteúdo - ocultadas durante a busca */}
         <div className={isSearching ? "hidden" : ""}>
-          {/* Seção de tendências */}
-          {!isFiltering && trendingItems && trendingItems.length > 0 && (
-            <MediaSection 
-              title={`Tendências em ${getContentTypeTitle(type)}`}
-              medias={trendingItems}
-              onMediaClick={onMediaClick}
-            />
-          )}
-          
-          {/* Seção dos mais bem avaliados */}
-          {!isFiltering && topRatedItems && topRatedItems.length > 0 && (
-            <MediaSection 
-              title={`${getContentTypeTitle(type)} Mais Bem Avaliados`}
-              medias={topRatedItems}
-              onMediaClick={onMediaClick}
-            />
-          )}
-          
-          {/* Seção dos mais populares */}
-          {!isFiltering && popularItems && popularItems.length > 0 && (
-            <MediaSection 
-              title={`${getContentTypeTitle(type)} Populares`}
-              medias={popularItems}
-              onMediaClick={onMediaClick}
-            />
-          )}
-          
-          {/* Seção de conteúdo recente */}
-          {!isFiltering && recentItems && recentItems.length > 0 && (
-            <MediaSection 
-              title={`${getContentTypeTitle(type)} Recentes`}
-              medias={recentItems}
-              onMediaClick={onMediaClick}
-            />
-          )}
+          {sections.map((section, idx) => (
+            section.items && section.items.length > 0 && (
+              <MediaSection
+                key={section.title}
+                title={section.title}
+                medias={section.items}
+                onMediaClick={onMediaClick}
+                focusedItem={focusedSection === idx ? focusedItem : -1}
+              />
+            )
+          ))}
         </div>
         
         {/* Grade de conteúdo completa */}
@@ -132,6 +119,7 @@ const MediaView = ({
             onLoadMore={onLoadMore}
             onResetFilters={onResetFilters}
             onMediaClick={onMediaClick}
+            focusedItem={focusedSection === sections.length ? focusedItem : -1}
           />
         </div>
       </div>

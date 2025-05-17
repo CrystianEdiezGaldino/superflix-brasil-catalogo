@@ -20,6 +20,8 @@ type MediaSectionProps = {
   onMediaClick?: (media: MediaItem) => void;
   sectionId?: string;
   mediaType?: 'movie' | 'tv' | 'anime' | 'dorama' | 'tv-channel';
+  focusedItem?: number;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
 };
 
 const MediaSection = ({ 
@@ -30,7 +32,9 @@ const MediaSection = ({
   isLoading = false,
   onMediaClick,
   sectionId = 'default',
-  mediaType
+  mediaType,
+  focusedItem = 0,
+  onKeyDown
 }: MediaSectionProps) => {
   const navigate = useNavigate();
   
@@ -79,17 +83,26 @@ const MediaSection = ({
   }
 
   return (
-    <div className="space-y-4 py-4" id={`media-section-${sectionId}`} data-section-id={sectionId}>
+    <div 
+      className="space-y-4 py-4" 
+      id={`media-section-${sectionId}`} 
+      data-section-id={sectionId}
+      onKeyDown={onKeyDown}
+    >
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {medias.map((media) => (
+        {medias.map((media, index) => (
           <MediaCard
             key={media.id}
             media={media}
             onClick={() => handleClick(media)}
+            className={`transition-all duration-200 ${
+              index === focusedItem ? 'scale-105' : ''
+            }`}
+            tabIndex={index === focusedItem ? 0 : -1}
           />
         ))}
       </div>
@@ -99,8 +112,11 @@ const MediaSection = ({
         <div className="flex items-center justify-center mt-6">
           <button 
             onClick={handleLoadMore}
-            className="group relative overflow-hidden rounded-lg bg-netflix-red hover:bg-red-700 transition-all duration-300 flex items-center justify-center cursor-pointer px-6 py-3 min-w-[200px]"
+            className={`group relative overflow-hidden rounded-lg bg-netflix-red hover:bg-red-700 transition-all duration-300 flex items-center justify-center cursor-pointer px-6 py-3 min-w-[200px] focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-100 ${
+              focusedItem === medias.length ? 'scale-105' : ''
+            }`}
             data-section-id={sectionId}
+            tabIndex={focusedItem === medias.length ? 0 : -1}
           >
             <div className="flex items-center space-x-2">
               {isLoading ? (

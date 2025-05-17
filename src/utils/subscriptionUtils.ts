@@ -1,5 +1,11 @@
-
 import { supabase } from "@/integrations/supabase/client";
+import { cacheManager } from "./cacheManager";
+
+const CACHE_KEYS = {
+  SUBSCRIPTION: (userId: string) => `subscription_${userId}`,
+  TRIAL: (userId: string) => `trial_${userId}`,
+  TEMP_ACCESS: (userId: string) => `temp_access_${userId}`
+};
 
 /**
  * Verifica o estado da assinatura do usuário
@@ -13,12 +19,19 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
   }
 
   try {
-    // Tentar obter dados diretamente do banco de dados primeiro
-    // isso é mais rápido e evita problemas com a função Edge
+    // Verificar cache primeiro
+    const cachedData = cacheManager.get(CACHE_KEYS.SUBSCRIPTION(userId));
+    if (cachedData) {
+      console.log("Dados de assinatura obtidos do cache");
+      return cachedData;
+    }
+
+    // Consulta otimizada para buscar apenas os campos necessários
     const { data: directData, error: directError } = await supabase
       .from('subscriptions')
-      .select('*')
+      .select('status, plan_type, trial_end, current_period_end, current_period_start')
       .eq('user_id', userId)
+      .in('status', ['active', 'trialing'])
       .maybeSingle();
     
     if (!directError && directData) {
@@ -31,22 +44,23 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
                          
       const isActive = directData.status === 'active';
       
-      // Retornar dados formatados compatíveis com o que a edge function retornaria
-      return {
+      const result = {
         hasActiveSubscription: isActive,
         has_trial_access: isTrialing,
         subscription_tier: directData.plan_type,
         trial_end: directData.trial_end,
         subscription_end: directData.current_period_end,
-        // Ainda precisamos verificar admin e acesso temporário
-        // Mas pelo menos temos informação básica de assinatura
       };
+
+      // Salvar no cache
+      cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), result);
+      
+      return result;
     }
     
     // Se não conseguir dados diretos, tenta a edge function
     console.log("Tentando edge function para obter dados de assinatura");
     
-    // Usar o token de sessão para autorização
     const { data, error } = await supabase.functions.invoke('check-subscription', {
       body: { user_id: userId },
       headers: sessionToken ? { Authorization: `Bearer ${sessionToken}` } : undefined
@@ -57,14 +71,10 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
       throw error;
     }
     
-    // Log simplificado do resultado
-    console.log('Resultado da verificação de assinatura:', {
-      isSubscribed: data?.hasActiveSubscription || false,
-      isAdmin: data?.isAdmin || false,
-      hasTempAccess: data?.hasTempAccess || false,
-      hasTrialAccess: data?.has_trial_access || false,
-      subscriptionTier: data?.subscription_tier || null
-    });
+    // Salvar resultado no cache
+    if (data) {
+      cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), data);
+    }
     
     return data;
   } catch (error) {
@@ -78,7 +88,6 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
  * @param data - Dados retornados da função check-subscription
  */
 export const processSubscriptionData = (data: any) => {
-  // Valores padrão caso os dados sejam inválidos
   const defaults = {
     isSubscribed: false,
     isAdmin: false,
@@ -94,7 +103,6 @@ export const processSubscriptionData = (data: any) => {
   const hasTrialAccess = Boolean(data?.has_trial_access);
   const isActive = Boolean(data?.hasActiveSubscription);
 
-  // Processamento simplificado para determinar o estado da assinatura
   return {
     isSubscribed: isActive,
     isAdmin: Boolean(data?.isAdmin),

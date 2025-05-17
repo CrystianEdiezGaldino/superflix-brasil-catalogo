@@ -1,4 +1,3 @@
-
 // Check if user is admin
 export const checkAdminStatus = async (supabaseClient: any, userId: string) => {
   const { data: adminData, error: adminError } = await supabaseClient
@@ -16,12 +15,11 @@ export const checkAdminStatus = async (supabaseClient: any, userId: string) => {
 
 // Check for active subscription
 export const checkSubscription = async (supabaseClient: any, userId: string) => {
-  // Fix: Especificamente buscando por assinaturas com status "active"
   const { data: subscription, error: subscriptionError } = await supabaseClient
     .from('subscriptions')
-    .select('*')
+    .select('status, plan_type, trial_end, current_period_end, current_period_start')
     .eq('user_id', userId)
-    .eq('status', 'active')
+    .in('status', ['active', 'trialing'])
     .maybeSingle();
   
   if (subscriptionError) {
@@ -41,10 +39,9 @@ export const checkSubscription = async (supabaseClient: any, userId: string) => 
 export const checkTrialAccess = async (supabaseClient: any, userId: string) => {
   const now = new Date();
   
-  // Fix: Melhoramos a query para pegar explicitamente assinaturas em período de teste
   const { data: subscriptionWithTrial, error: trialError } = await supabaseClient
     .from('subscriptions')
-    .select('*')
+    .select('status, trial_end, plan_type')
     .eq('user_id', userId)
     .eq('status', 'trialing')
     .gt('trial_end', now.toISOString())
@@ -68,10 +65,9 @@ export const checkTrialAccess = async (supabaseClient: any, userId: string) => {
 export const checkTempAccess = async (supabaseClient: any, userId: string) => {
   const now = new Date();
   
-  // Fix: Melhoramos a query para garantir que apenas acessos temporários válidos sejam considerados
   const { data: tempAccess, error: tempAccessError } = await supabaseClient
     .from('temp_access')
-    .select('*')
+    .select('expires_at, granted_by')
     .eq('user_id', userId)
     .gt('expires_at', now.toISOString())
     .maybeSingle();

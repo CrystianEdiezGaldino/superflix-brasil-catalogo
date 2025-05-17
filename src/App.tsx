@@ -7,7 +7,7 @@ import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import Index from "./pages/Index";
+import Home from "./pages/Home";
 import Movies from "./pages/Movies";
 import Series from "./pages/Series";
 import Animes from "./pages/Animes";
@@ -43,7 +43,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={
                 <ProtectedRoute>
-                  <Index />
+                  <Home />
                 </ProtectedRoute>
               } />
               <Route path="/filmes" element={
