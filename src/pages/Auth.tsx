@@ -226,9 +226,9 @@ const Auth = () => {
                       type="text"
                       placeholder="Digite o código de acesso (opcional)"
                       value={code}
-                      onChange={(e) => setCode(e.target.value)}
+                      onChange={(e) => setCode(e.target.value.toUpperCase())}
                       disabled={isLoading}
-                      className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                      className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red uppercase"
                       aria-label="Campo de código de acesso (opcional)"
                     />
                   </div>
@@ -270,6 +270,11 @@ const Auth = () => {
                         await login(email, password);
                       } else {
                         await register(email, password, code);
+                        // Se tinha um código de acesso, força refresh para atualizar dados da assinatura
+                        if (code) {
+                          window.location.reload();
+                          return;
+                        }
                       }
                     } catch (error: any) {
                       toast.error(error.message || "Ocorreu um erro");

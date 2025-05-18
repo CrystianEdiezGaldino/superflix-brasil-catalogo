@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Film, Tv, Baby, Heart, FileText, Monitor, X, LogOut } from "lucide-react";
+import { Film, Tv, Baby, Heart, FileText, Monitor, X, LogOut, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Sheet,
@@ -77,9 +77,6 @@ const MobileMenu = ({
   if (isAuthenticated) {
     allLinks.push({ path: "/favoritos", label: "Favoritos", icon: <Heart className="h-5 w-5" /> });
   }
-  
-  // Add Terms of Service
-  allLinks.push({ path: "/termos-de-servico", label: "Termos", icon: <FileText className="h-5 w-5" /> });
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -90,15 +87,6 @@ const MobileMenu = ({
       >
         <SheetHeader className="p-4 border-b border-netflix-gray/20 flex flex-row items-center justify-between">
           <SheetTitle className="text-white text-xl font-bold" tabIndex={0}>Menu</SheetTitle>
-          <button
-            onClick={onClose}
-            tabIndex={0}
-            role="button"
-            aria-label="Fechar menu"
-            className="text-white hover:text-netflix-red transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black rounded-md p-1"
-          >
-            <X className="h-6 w-6" aria-hidden="true" />
-          </button>
         </SheetHeader>
         
         {/* Mobile Search */}
@@ -132,23 +120,60 @@ const MobileMenu = ({
             ))}
 
             {isAuthenticated && (
-              <li>
-                <button
-                  onClick={handleSignOut}
-                  tabIndex={0}
-                  role="menuitem"
-                  className="flex items-center w-full py-3 px-4 rounded-[45px] transition-all duration-200 
-                    focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black
-                    border-2 text-white border-white/30 hover:border-white hover:bg-white/5"
-                  aria-label="Sair"
-                >
-                  <span className="mr-3" aria-hidden="true">
-                    <LogOut className="h-5 w-5" />
-                  </span>
-                  <span className="text-base font-medium">Sair</span>
-                </button>
-              </li>
+              <>
+                <li>
+                  <Link
+                    to="/profile"
+                    tabIndex={0}
+                    role="menuitem"
+                    className="flex items-center py-3 px-4 rounded-[45px] transition-all duration-200 
+                      focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black
+                      border-2 text-white border-white/30 hover:border-white hover:bg-white/5"
+                    onClick={handleLinkClick}
+                    aria-label="Meu Perfil"
+                  >
+                    <span className="mr-3" aria-hidden="true">
+                      <User className="h-5 w-5" />
+                    </span>
+                    <span className="text-base font-medium">Meu Perfil</span>
+                  </Link>
+                </li>
+                <li>
+                  <button
+                    onClick={handleSignOut}
+                    tabIndex={0}
+                    role="menuitem"
+                    className="flex items-center w-full py-3 px-4 rounded-[45px] transition-all duration-200 
+                      focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black
+                      border-2 text-white border-white/30 hover:border-white hover:bg-white/5"
+                    aria-label="Sair"
+                  >
+                    <span className="mr-3" aria-hidden="true">
+                      <LogOut className="h-5 w-5" />
+                    </span>
+                    <span className="text-base font-medium">Sair</span>
+                  </button>
+                </li>
+              </>
             )}
+
+            <li>
+              <Link
+                to="/termos-de-servico"
+                tabIndex={0}
+                role="menuitem"
+                className="flex items-center py-3 px-4 rounded-[45px] transition-all duration-200 
+                  focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black
+                  border-2 text-white border-white/30 hover:border-white hover:bg-white/5"
+                onClick={handleLinkClick}
+                aria-label="Termos"
+              >
+                <span className="mr-3" aria-hidden="true">
+                  <FileText className="h-5 w-5" />
+                </span>
+                <span className="text-base font-medium">Termos</span>
+              </Link>
+            </li>
           </ul>
         </nav>
       </SheetContent>

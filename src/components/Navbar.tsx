@@ -8,8 +8,9 @@ import SearchBar from "./navbar/SearchBar";
 import UserAction from "./navbar/UserAction";
 import MobileMenu from "./navbar/MobileMenu";
 import { HelpButton } from "./help/HelpButton";
-import { Menu } from "lucide-react";
+import { Menu, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface NavbarProps {
   onSearch?: (query: string) => Promise<void> | void;
@@ -72,33 +73,22 @@ const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
           )}
 
           {/* Ações do Usuário */}
-          {user ? (
-            <div className="flex items-center">
-              <UserAction isAuthenticated={!!user} />
-            </div>
-          ) : (
-            <Link 
-              to="/auth" 
-              className="inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium
-                bg-netflix-red text-white hover:bg-red-700 transition-colors
-                focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              Entrar
-            </Link>
-          )}
+          <div className="flex items-center">
+            <UserAction isAuthenticated={!!user} />
+          </div>
 
-          {/* Botão do Menu Mobile */}
-          <button
-            onClick={toggleMobileMenu}
-            className="lg:hidden inline-flex items-center justify-center rounded-full
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2
-              h-[50px] w-[50px] text-white hover:text-netflix-red transition-colors"
-            aria-label="Abrir menu mobile"
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-menu"
-          >
-            <Menu className="h-6 w-6" aria-hidden="true" />
-          </button>
+          {/* Menu Mobile */}
+          <div className="lg:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-[50px] w-[50px] text-white hover:text-netflix-red"
+              onClick={toggleMobileMenu}
+              aria-label="Abrir menu"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          </div>
         </div>
       </div>
 
