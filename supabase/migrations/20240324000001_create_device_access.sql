@@ -1,5 +1,8 @@
+-- Drop existing table if it exists
+DROP TABLE IF EXISTS public.device_access;
+
 -- Create device_access table
-CREATE TABLE IF NOT EXISTS public.device_access (
+CREATE TABLE public.device_access (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     device_info JSONB,

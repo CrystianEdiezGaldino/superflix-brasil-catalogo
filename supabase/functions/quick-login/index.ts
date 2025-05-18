@@ -198,7 +198,7 @@ serve(async (req) => {
 
           log("Code valid, updating with user ID", { userId });
 
-          // Update the code with the user's ID and mark as used
+          // First, update the login code status
           const { error: updateError } = await supabaseClient
             .from("login_codes")
             .update({
@@ -207,7 +207,9 @@ serve(async (req) => {
               status: 'validated',
               validated_at: new Date().toISOString()
             })
-            .eq("id", loginCode.id);
+            .eq("id", loginCode.id)
+            .select()
+            .single();
 
           if (updateError) {
             log("Error updating login code", updateError, true);
@@ -217,14 +219,17 @@ serve(async (req) => {
             );
           }
 
-          // Create a new access record for the user
+          // Then, create a new device access record
           const { error: accessError } = await supabaseClient
             .from("device_access")
             .insert({
               user_id: userId,
-              device_info: loginCode.device_info,
-              created_at: new Date().toISOString()
-            });
+              device_info: loginCode.device_info || {},
+              created_at: new Date().toISOString(),
+              last_used_at: new Date().toISOString()
+            })
+            .select()
+            .single();
 
           if (accessError) {
             log("Error creating device access record", accessError, true);
@@ -233,7 +238,10 @@ serve(async (req) => {
 
           log("Code validated successfully", { userId });
           return new Response(
-            JSON.stringify({ status: "success" }),
+            JSON.stringify({ 
+              status: "success",
+              message: "Code validated successfully"
+            }),
             { headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         } catch (error) {
