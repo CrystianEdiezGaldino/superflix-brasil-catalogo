@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,8 @@ export const QuickLoginValidator = () => {
 
     setIsValidating(true);
     try {
-      console.log("Attempting to validate code with session token");
+      console.log("Attempting to validate code:", code);
+      console.log("Using session token:", session.access_token);
       
       const { data, error } = await supabase.functions.invoke('quick-login', {
         body: {

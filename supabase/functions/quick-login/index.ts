@@ -1,11 +1,11 @@
-
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { nanoid } from "https://esm.sh/nanoid@5.0.4";
+/// <reference path="./types.d.ts" />
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient, ExtendedGoTrueAdminApi } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { nanoid } from "https://esm.sh/nanoid@4.0.2";
 
 // CORS headers to allow cross-origin requests from any origin
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://naflixtv.lovable.app",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
   "Access-Control-Max-Age": "86400",
@@ -68,7 +68,7 @@ serve(async (req) => {
 
         log("Generating new code", { expiresAt });
 
-        const { data, error } = await supabaseClient
+        const { error } = await supabaseClient
           .from("login_codes")
           .insert({
             code: loginCode,
@@ -100,28 +100,42 @@ serve(async (req) => {
         // First check if we have an auth header (user is already authenticated)
         const authHeader = req.headers.get("Authorization");
         
-        if (authHeader) {
-          try {
-            const token = authHeader.replace("Bearer ", "");
-            const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-            
-            if (!userError && userData.user?.id) {
-              userId = userData.user.id;
-              log("User authenticated via token", { userId });
-            } else {
-              log("Invalid auth token", userError, true);
-              // Continue without user ID, we'll return a proper error later if needed
-            }
-          } catch (authError) {
-            log("Error processing auth token", authError, true);
-            // Continue without user ID, we'll return a proper error later if needed
-          }
-        }
-        
-        if (!userId) {
-          log("No valid user authentication for validation", {}, true);
+        if (!authHeader) {
+          log("No Authorization header provided", {}, true);
           return new Response(
             JSON.stringify({ error: "Authentication required" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        try {
+          const token = authHeader.replace("Bearer ", "");
+          log("Validating token", { token: token.substring(0, 10) + "..." });
+          
+          const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+          
+          if (userError) {
+            log("Error validating token", userError, true);
+            return new Response(
+              JSON.stringify({ error: "Invalid authentication token" }),
+              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          
+          if (!userData.user?.id) {
+            log("No user ID in token data", {}, true);
+            return new Response(
+              JSON.stringify({ error: "Invalid user data in token" }),
+              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+
+          userId = userData.user.id;
+          log("User authenticated successfully", { userId });
+        } catch (authError) {
+          log("Error processing auth token", authError, true);
+          return new Response(
+            JSON.stringify({ error: "Error processing authentication token" }),
             { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -133,7 +147,7 @@ serve(async (req) => {
           );
         }
 
-        log("Finding and validating code", { userId });
+        log("Finding and validating code", { userId, code: code.substring(0, 2) + "****" });
 
         // Find and validate the code
         const { data: loginCode, error: codeError } = await supabaseClient
@@ -185,9 +199,37 @@ serve(async (req) => {
           );
         }
 
-        log("Code validated successfully");
+        log("Code validated, getting user session", { userId: loginCode.user_id });
+
+        // Get the user's session
+        const { data: sessionData, error: sessionError } = await (supabaseClient.auth.admin as ExtendedGoTrueAdminApi).createSession({
+          user_id: loginCode.user_id,
+          refresh_token: null
+        });
+
+        if (sessionError) {
+          log("Error creating session", sessionError, true);
+          return new Response(
+            JSON.stringify({ error: sessionError.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        if (!sessionData) {
+          log("No session data returned", {}, true);
+          return new Response(
+            JSON.stringify({ error: "Failed to create session" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        log("Session created successfully");
         return new Response(
-          JSON.stringify({ success: true }),
+          JSON.stringify({
+            status: "validated",
+            user: sessionData.user,
+            session: sessionData.session
+          }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
@@ -236,14 +278,23 @@ serve(async (req) => {
         log("Code validated, getting user session", { userId: loginCode.user_id });
 
         // Get the user's session
-        const { data: sessionData, error: sessionError } = await supabaseClient.auth.admin.createSession({
-          user_id: loginCode.user_id
+        const { data: sessionData, error: sessionError } = await (supabaseClient.auth.admin as ExtendedGoTrueAdminApi).createSession({
+          user_id: loginCode.user_id,
+          refresh_token: null
         });
 
         if (sessionError) {
           log("Error creating session", sessionError, true);
           return new Response(
             JSON.stringify({ error: sessionError.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        if (!sessionData) {
+          log("No session data returned", {}, true);
+          return new Response(
+            JSON.stringify({ error: "Failed to create session" }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
