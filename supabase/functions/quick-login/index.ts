@@ -198,7 +198,7 @@ serve(async (req) => {
 
           log("Code valid, updating with user ID", { userId });
 
-          // First, update the login code status
+          // Update the login code with user ID and mark as validated
           const { error: updateError } = await supabaseClient
             .from("login_codes")
             .update({
@@ -217,23 +217,6 @@ serve(async (req) => {
               JSON.stringify({ error: updateError.message }),
               { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
-          }
-
-          // Then, create a new device access record
-          const { error: accessError } = await supabaseClient
-            .from("device_access")
-            .insert({
-              user_id: userId,
-              device_info: loginCode.device_info || {},
-              created_at: new Date().toISOString(),
-              last_used_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-
-          if (accessError) {
-            log("Error creating device access record", accessError, true);
-            // Don't return error here as the code was already validated
           }
 
           log("Code validated successfully", { userId });
@@ -271,16 +254,8 @@ serve(async (req) => {
             .eq("code", code)
             .single();
 
-          if (codeError) {
-            log("Error finding code", codeError, true);
-            return new Response(
-              JSON.stringify({ status: "invalid" }),
-              { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          }
-
-          if (!loginCode) {
-            log("Code not found", {}, true);
+          if (codeError || !loginCode) {
+            log("Code not found", codeError, true);
             return new Response(
               JSON.stringify({ status: "invalid" }),
               { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -288,7 +263,7 @@ serve(async (req) => {
           }
 
           if (new Date(loginCode.expires_at) < new Date()) {
-            log("Code expired during check", {}, true);
+            log("Code expired", {}, true);
             // Update status to expired
             await supabaseClient
               .from("login_codes")
@@ -301,68 +276,70 @@ serve(async (req) => {
             );
           }
 
-          if (!loginCode.user_id) {
-            log("Code pending validation");
-            return new Response(
-              JSON.stringify({ status: "pending" }),
-              { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          }
+          // Se o código tem user_id, significa que foi validado
+          if (loginCode.user_id) {
+            log("Code validated, getting user session", { userId: loginCode.user_id });
 
-          log("Code validated, getting user session", { userId: loginCode.user_id });
+            try {
+              // Get the user's session
+              const { data: sessionData, error: sessionError } = await (supabaseClient.auth.admin as ExtendedGoTrueAdminApi).createSession({
+                user_id: loginCode.user_id,
+                refresh_token: null
+              });
 
-          try {
-            // Get the user's session
-            const { data: sessionData, error: sessionError } = await (supabaseClient.auth.admin as ExtendedGoTrueAdminApi).createSession({
-              user_id: loginCode.user_id,
-              refresh_token: null
-            });
+              if (sessionError) {
+                log("Error creating session", sessionError, true);
+                return new Response(
+                  JSON.stringify({ error: sessionError.message }),
+                  { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+              }
 
-            if (sessionError) {
-              log("Error creating session", sessionError, true);
+              if (!sessionData) {
+                log("No session data returned", {}, true);
+                return new Response(
+                  JSON.stringify({ error: "Failed to create session" }),
+                  { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+              }
+
+              log("Session created successfully", { 
+                userId: sessionData.user.id,
+                sessionId: sessionData.session.id 
+              });
+
+              // Return the session data
               return new Response(
-                JSON.stringify({ error: sessionError.message }),
-                { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                JSON.stringify({
+                  status: "validated",
+                  user: {
+                    id: sessionData.user.id,
+                    email: sessionData.user.email,
+                    user_metadata: sessionData.user.user_metadata
+                  },
+                  session: {
+                    access_token: sessionData.session.access_token,
+                    refresh_token: sessionData.session.refresh_token,
+                    expires_at: sessionData.session.expires_at
+                  }
+                }),
+                { headers: { ...corsHeaders, "Content-Type": "application/json" } }
               );
-            }
-
-            if (!sessionData) {
-              log("No session data returned", {}, true);
+            } catch (sessionError) {
+              log("Error creating session", sessionError, true);
               return new Response(
                 JSON.stringify({ error: "Failed to create session" }),
                 { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
               );
             }
-
-            log("Session created successfully", { 
-              userId: sessionData.user.id,
-              sessionId: sessionData.session.id 
-            });
-
-            // Return the session data
-            return new Response(
-              JSON.stringify({
-                status: "validated",
-                user: {
-                  id: sessionData.user.id,
-                  email: sessionData.user.email,
-                  user_metadata: sessionData.user.user_metadata
-                },
-                session: {
-                  access_token: sessionData.session.access_token,
-                  refresh_token: sessionData.session.refresh_token,
-                  expires_at: sessionData.session.expires_at
-                }
-              }),
-              { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
-          } catch (sessionError) {
-            log("Error creating session", sessionError, true);
-            return new Response(
-              JSON.stringify({ error: "Failed to create session" }),
-              { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-            );
           }
+
+          // Se não tem user_id, o código ainda está pendente
+          log("Code pending validation");
+          return new Response(
+            JSON.stringify({ status: "pending" }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         } catch (error) {
           log("Unexpected error in check action", error, true);
           return new Response(
