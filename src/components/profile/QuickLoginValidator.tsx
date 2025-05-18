@@ -19,19 +19,24 @@ export const QuickLoginValidator = () => {
 
     setIsValidating(true);
     try {
-      const session = await supabase.auth.getSession();
-      if (!session.data.session) {
-        throw new Error("Você precisa estar logado para validar um código");
+      // Get the current session first to use its access token
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        toast.error("Você precisa estar logado para validar um código");
+        return;
       }
 
-      // Adiciona o token de autorização explicitamente no cabeçalho
+      console.log("Attempting to validate code with session token");
+      
       const { data, error } = await supabase.functions.invoke('quick-login', {
         body: {
           action: 'validate',
           code
         },
+        // Explicitly pass the access token in headers
         headers: {
-          Authorization: `Bearer ${session.data.session.access_token}`
+          Authorization: `Bearer ${sessionData.session.access_token}`
         }
       });
 

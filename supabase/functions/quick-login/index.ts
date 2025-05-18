@@ -37,7 +37,10 @@ serve(async (req) => {
       body = await req.json();
     } catch (e) {
       log("Error parsing request body", e);
-      throw new Error("Invalid request body");
+      return new Response(
+        JSON.stringify({ error: "Invalid request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const { action, code, deviceInfo } = body;
@@ -64,7 +67,10 @@ serve(async (req) => {
 
         if (error) {
           log("Error inserting login code", error);
-          throw error;
+          return new Response(
+            JSON.stringify({ error: error.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         log("Code generated successfully");
@@ -79,20 +85,30 @@ serve(async (req) => {
         const authHeader = req.headers.get("Authorization");
         if (!authHeader) {
           log("Missing authorization header");
-          throw new Error("No authorization header provided");
+          return new Response(
+            JSON.stringify({ error: "No authorization header provided" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         const token = authHeader.replace("Bearer ", "");
         const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+        
         if (userError) {
           log("Authentication error", userError);
-          throw new Error(`Authentication error: ${userError.message}`);
+          return new Response(
+            JSON.stringify({ error: `Authentication error: ${userError.message}` }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
         
         const user = userData.user;
         if (!user?.id) {
           log("User not authenticated");
-          throw new Error("User not authenticated");
+          return new Response(
+            JSON.stringify({ error: "User not authenticated" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         log("User authenticated, validating code", { userId: user.id });
@@ -106,17 +122,26 @@ serve(async (req) => {
 
         if (codeError || !loginCode) {
           log("Invalid or expired code", codeError);
-          throw new Error("Invalid or expired code");
+          return new Response(
+            JSON.stringify({ error: "Invalid or expired code" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         if (loginCode.used) {
           log("Code already used");
-          throw new Error("Code has already been used");
+          return new Response(
+            JSON.stringify({ error: "Code has already been used" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         if (new Date(loginCode.expires_at) < new Date()) {
           log("Code expired");
-          throw new Error("Code has expired");
+          return new Response(
+            JSON.stringify({ error: "Code has expired" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         log("Code valid, updating with user ID");
@@ -132,7 +157,10 @@ serve(async (req) => {
 
         if (updateError) {
           log("Error updating login code", updateError);
-          throw updateError;
+          return new Response(
+            JSON.stringify({ error: updateError.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         log("Code validated successfully");
@@ -146,13 +174,20 @@ serve(async (req) => {
         // Check if a code has been validated
         log("Checking code status", { code: code?.substring(0, 2) + "****" });
         
+        if (!code) {
+          return new Response(
+            JSON.stringify({ error: "Code is required" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
         const { data: loginCode, error: codeError } = await supabaseClient
           .from("login_codes")
           .select("*")
           .eq("code", code)
           .single();
 
-        if (codeError || !loginCode) {
+        if (codeError) {
           log("Invalid or expired code", codeError);
           return new Response(
             JSON.stringify({ status: "invalid" }),
@@ -185,7 +220,10 @@ serve(async (req) => {
 
         if (sessionError) {
           log("Error creating session", sessionError);
-          throw sessionError;
+          return new Response(
+            JSON.stringify({ error: sessionError.message }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
         }
 
         log("Session created successfully");
@@ -201,14 +239,17 @@ serve(async (req) => {
 
       default:
         log("Invalid action", { action });
-        throw new Error("Invalid action");
+        return new Response(
+          JSON.stringify({ error: "Invalid action" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
     }
   } catch (error) {
     log("Error processing request", error);
     return new Response(
       JSON.stringify({ error: error.message || "Unknown error" }),
       { 
-        status: 400, 
+        status: 500, 
         headers: { ...corsHeaders, "Content-Type": "application/json" } 
       }
     );
