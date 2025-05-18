@@ -26,12 +26,15 @@ export const QuickLoginValidator = () => {
     setIsValidating(true);
     try {
       console.log("[Quick Login Validator] Iniciando validação do código:", code);
-      console.log("[Quick Login Validator] Token de sessão:", session.access_token.substring(0, 10) + "...");
       
+      if (!session?.access_token) {
+        throw new Error("Sessão inválida");
+      }
+
       const { data, error } = await supabase.functions.invoke('quick-login', {
         body: {
           action: 'validate',
-          code
+          code: code.toUpperCase()
         },
         headers: {
           Authorization: `Bearer ${session.access_token}`
@@ -44,17 +47,11 @@ export const QuickLoginValidator = () => {
         console.error("[Quick Login Validator] Erro na validação:", error);
         throw new Error(error.message || "Erro de comunicação com o servidor");
       }
-      
-      if (data?.status !== 'success') {
-        console.error("[Quick Login Validator] Resposta inválida:", data);
-        throw new Error('Falha ao validar código');
-      }
 
-      console.log("[Quick Login Validator] Código validado com sucesso!");
       toast.success("Dispositivo validado com sucesso!");
       setCode("");
     } catch (error: any) {
-      console.error("Error in validateCode:", error);
+      console.error("[Quick Login Validator] Erro:", error);
       toast.error(error.message || "Erro ao validar código");
     } finally {
       setIsValidating(false);

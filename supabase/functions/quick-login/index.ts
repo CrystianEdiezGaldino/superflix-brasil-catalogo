@@ -3,8 +3,18 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, ExtendedGoTrueAdminApi } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { nanoid } from "https://esm.sh/nanoid@4.0.2";
 
-// Custom alphabet for nanoid to use only alphanumeric characters
+// Custom alphabet for generating codes
 const ALPHANUMERIC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+// Function to generate a random alphanumeric code
+const generateAlphanumericCode = (length: number): string => {
+  let result = '';
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * ALPHANUMERIC.length);
+    result += ALPHANUMERIC[randomIndex];
+  }
+  return result;
+};
 
 // CORS headers to allow cross-origin requests from any origin
 const corsHeaders = {
@@ -65,7 +75,7 @@ serve(async (req) => {
     switch (action) {
       case "generate": {
         // Generate a new login code using only alphanumeric characters
-        const loginCode = nanoid(6).replace(/[^A-Z0-9]/g, '');
+        const loginCode = generateAlphanumericCode(6);
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 minutes expiration
 
@@ -159,7 +169,7 @@ serve(async (req) => {
           const { data: loginCode, error: codeError } = await supabaseClient
             .from("login_codes")
             .select("*")
-            .eq("code", code)
+            .eq("code", code.toUpperCase())
             .single();
 
           if (codeError || !loginCode) {
