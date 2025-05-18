@@ -248,9 +248,10 @@ serve(async (req) => {
         }
         
         try {
+          // Busca o código e verifica se tem user_id
           const { data: loginCode, error: codeError } = await supabaseClient
             .from("login_codes")
-            .select("*")
+            .select("*, user:user_id(*)")
             .eq("code", code)
             .single();
 
@@ -262,9 +263,9 @@ serve(async (req) => {
             );
           }
 
+          // Verifica se o código expirou
           if (new Date(loginCode.expires_at) < new Date()) {
             log("Code expired", {}, true);
-            // Update status to expired
             await supabaseClient
               .from("login_codes")
               .update({ status: 'expired' })
@@ -276,12 +277,12 @@ serve(async (req) => {
             );
           }
 
-          // Se o código tem user_id, significa que foi validado
+          // Se tem user_id, cria a sessão
           if (loginCode.user_id) {
-            log("Code validated, getting user session", { userId: loginCode.user_id });
+            log("Code validated, creating session for user", { userId: loginCode.user_id });
 
             try {
-              // Get the user's session
+              // Cria a sessão usando o user_id do código
               const { data: sessionData, error: sessionError } = await (supabaseClient.auth.admin as ExtendedGoTrueAdminApi).createSession({
                 user_id: loginCode.user_id,
                 refresh_token: null
@@ -308,7 +309,7 @@ serve(async (req) => {
                 sessionId: sessionData.session.id 
               });
 
-              // Return the session data
+              // Retorna os dados da sessão
               return new Response(
                 JSON.stringify({
                   status: "validated",
