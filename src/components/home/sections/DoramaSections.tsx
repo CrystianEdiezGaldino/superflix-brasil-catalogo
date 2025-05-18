@@ -1,16 +1,17 @@
-import { MediaItem, isSeries } from "@/types/movie";
-import MediaSectionLoader from "../MediaSectionLoader";
 
-interface DoramaSectionsProps {
+import { MediaItem } from "@/types/movie";
+import MediaSection from "@/components/MediaSection";
+
+export interface DoramaSectionsProps {
   doramas: MediaItem[];
   topRatedDoramas: MediaItem[];
   popularDoramas: MediaItem[];
   koreanMovies: MediaItem[];
+  romanceDoramas?: MediaItem[];
   onMediaClick?: (media: MediaItem) => void;
-  onLoadMore?: (sectionId: string) => void;
-  isLoading?: boolean;
-  hasMore?: boolean;
-  romanceDoramas: MediaItem[];
+  onLoadMore: (sectionId: string) => void;
+  isLoading: boolean;
+  hasMore: boolean;
 }
 
 const DoramaSections = ({
@@ -18,65 +19,85 @@ const DoramaSections = ({
   topRatedDoramas,
   popularDoramas,
   koreanMovies,
+  romanceDoramas = [], // Add default value for optional prop
   onMediaClick,
   onLoadMore,
-  isLoading = false,
-  hasMore = false,
-  romanceDoramas
+  isLoading,
+  hasMore
 }: DoramaSectionsProps) => {
+  if (!doramas.length && 
+      !topRatedDoramas.length && 
+      !popularDoramas.length && 
+      !koreanMovies.length) {
+    return null;
+  }
+
   return (
-    <div className="space-y-8">
-      <MediaSectionLoader
-        title="Doramas em Destaque"
-        medias={doramas}
-        sectionId="featured-doramas"
-        onLoadMore={onLoadMore || (() => {})}
-        isLoading={isLoading}
-        hasMore={hasMore}
-        onMediaClick={onMediaClick}
-      />
+    <div className="space-y-8 mb-16">
+      <h2 className="text-2xl md:text-3xl font-bold text-white">Doramas</h2>
 
-      <MediaSectionLoader
-        title="Doramas Coreanos"
-        medias={topRatedDoramas}
-        sectionId="korean-doramas"
-        onLoadMore={onLoadMore || (() => {})}
-        isLoading={isLoading}
-        hasMore={hasMore}
-        onMediaClick={onMediaClick}
-      />
-      
-      <MediaSectionLoader 
-        title="Doramas Populares" 
-        medias={doramas}
-        sectionId="doramas"
-        onLoadMore={onLoadMore}
-        isLoading={isLoading}
-        hasMore={hasMore}
-        onMediaClick={onMediaClick}
-        mediaType="dorama"
-      />
+      {doramas.length > 0 && (
+        <MediaSection
+          title="Doramas em Alta"
+          medias={doramas}
+          showLoadMore={hasMore}
+          onLoadMore={() => onLoadMore('doramas')}
+          isLoading={isLoading}
+          onMediaClick={onMediaClick}
+          sectionId="doramas"
+          mediaType="dorama"
+        />
+      )}
 
-      <MediaSectionLoader 
-        title="Doramas de Romance" 
-        medias={romanceDoramas}
-        sectionId="romanceDoramas"
-        onLoadMore={onLoadMore}
-        isLoading={isLoading}
-        hasMore={hasMore}
-        onMediaClick={onMediaClick}
-        mediaType="dorama"
-      />
-      
+      {topRatedDoramas.length > 0 && (
+        <MediaSection
+          title="Doramas Mais Bem Avaliados"
+          medias={topRatedDoramas}
+          showLoadMore={hasMore}
+          onLoadMore={() => onLoadMore('topRatedDoramas')}
+          isLoading={isLoading}
+          onMediaClick={onMediaClick}
+          sectionId="topRatedDoramas"
+          mediaType="dorama"
+        />
+      )}
+
+      {popularDoramas.length > 0 && (
+        <MediaSection
+          title="Doramas Populares"
+          medias={popularDoramas}
+          showLoadMore={hasMore}
+          onLoadMore={() => onLoadMore('popularDoramas')}
+          isLoading={isLoading}
+          onMediaClick={onMediaClick}
+          sectionId="popularDoramas"
+          mediaType="dorama"
+        />
+      )}
+
+      {romanceDoramas && romanceDoramas.length > 0 && (
+        <MediaSection
+          title="Doramas Românticos"
+          medias={romanceDoramas}
+          showLoadMore={hasMore}
+          onLoadMore={() => onLoadMore('romanceDoramas')}
+          isLoading={isLoading}
+          onMediaClick={onMediaClick}
+          sectionId="romanceDoramas"
+          mediaType="dorama"
+        />
+      )}
+
       {koreanMovies.length > 0 && (
-        <MediaSectionLoader
+        <MediaSection
           title="Filmes Coreanos"
           medias={koreanMovies}
-          sectionId="korean-movies"
-          onLoadMore={onLoadMore || (() => {})}
+          showLoadMore={hasMore}
+          onLoadMore={() => onLoadMore('koreanMovies')}
           isLoading={isLoading}
-          hasMore={hasMore}
           onMediaClick={onMediaClick}
+          sectionId="koreanMovies"
+          mediaType="movie"
         />
       )}
     </div>

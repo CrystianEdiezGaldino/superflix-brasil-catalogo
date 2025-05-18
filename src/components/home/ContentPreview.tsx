@@ -1,3 +1,4 @@
+
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
 import { useState } from "react";
@@ -23,6 +24,31 @@ const ContentPreview = ({ movies, series = [], anime = [] }: ContentPreviewProps
     { title: "Anime em Alta (Prévia)", items: filteredAnime }
   ].filter(section => section.items.length > 0);
   
+  const handleKeyNavigation = (sectionIndex: number, e: React.KeyboardEvent) => {
+    if (sectionIndex === focusedSection) {
+      switch (e.key) {
+        case 'ArrowRight':
+          e.preventDefault();
+          setFocusedItem(prev => Math.min(prev + 1, sections[sectionIndex].items.length - 1));
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          setFocusedItem(prev => Math.max(prev - 1, 0));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          setFocusedSection(prev => Math.min(prev + 1, sections.length - 1));
+          setFocusedItem(0);
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setFocusedSection(prev => Math.max(prev - 1, 0));
+          setFocusedItem(0);
+          break;
+      }
+    }
+  };
+  
   return (
     <div className="space-y-8">
       {sections.map((section, sectionIndex) => (
@@ -31,29 +57,9 @@ const ContentPreview = ({ movies, series = [], anime = [] }: ContentPreviewProps
           title={section.title}
           medias={section.items.slice(0, 10)}
           focusedItem={sectionIndex === focusedSection ? focusedItem : -1}
-          onKeyDown={(e) => {
-            if (sectionIndex === focusedSection) {
-              switch (e.key) {
-                case 'ArrowRight':
-                  e.preventDefault();
-                  setFocusedItem(prev => Math.min(prev + 1, section.items.length - 1));
-                  break;
-                case 'ArrowLeft':
-                  e.preventDefault();
-                  setFocusedItem(prev => Math.max(prev - 1, 0));
-                  break;
-                case 'ArrowDown':
-                  e.preventDefault();
-                  setFocusedSection(prev => Math.min(prev + 1, sections.length - 1));
-                  setFocusedItem(0);
-                  break;
-                case 'ArrowUp':
-                  e.preventDefault();
-                  setFocusedSection(prev => Math.max(prev - 1, 0));
-                  setFocusedItem(0);
-                  break;
-              }
-            }
+          onFocusChange={(idx) => {
+            setFocusedSection(sectionIndex);
+            setFocusedItem(idx);
           }}
         />
       ))}

@@ -1,7 +1,9 @@
+
 import { MediaItem } from "@/types/movie";
-import MediaCard from "@/components/MediaCard";
+import MediaCard from "@/components/media/MediaCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface SearchResultsProps {
   results: MediaItem[];
@@ -12,6 +14,8 @@ interface SearchResultsProps {
 }
 
 const SearchResults = ({ results, isSearching, loadMoreResults, hasMore = false, focusedItem = 0 }: SearchResultsProps) => {
+  const [focusedIndex, setFocusedIndex] = useState(focusedItem);
+
   if (isSearching) {
     return (
       <div className="flex justify-center items-center min-h-[300px] w-full">
@@ -38,13 +42,16 @@ const SearchResults = ({ results, isSearching, loadMoreResults, hasMore = false,
           <div 
             key={`${media.media_type}-${media.id}`} 
             className={`animate-fade-in transition-transform duration-200 ${
-              index === focusedItem ? 'scale-105 ring-2 ring-netflix-red' : ''
+              index === focusedIndex ? 'scale-105 ring-2 ring-netflix-red' : ''
             }`}
             style={{ animationDelay: `${index * 0.05}s` }}
           >
             <MediaCard 
               media={media} 
-              onClick={() => {}} // Add empty onClick handler to satisfy the required prop
+              onClick={() => {}} 
+              index={index}
+              isFocused={index === focusedIndex}
+              onFocus={setFocusedIndex}
             />
           </div>
         ))}

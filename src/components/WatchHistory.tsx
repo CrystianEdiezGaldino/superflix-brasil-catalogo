@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchMediaById } from '@/services/tmdbApi';
 import { MediaItem } from '@/types/movie';
 import { useNavigate } from 'react-router-dom';
+import MediaCard from '@/components/media/MediaCard';
 
 export function WatchHistory() {
   const { data: history, isLoading } = useQuery({
@@ -63,7 +64,6 @@ export function WatchHistory() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
         {mediaDetails.map((media, idx) => (
           <div key={media.id} className="w-full">
-            {/* Added required props for MediaCard */}
             <MediaCard
               media={media}
               onClick={() => handleMediaClick(media)}

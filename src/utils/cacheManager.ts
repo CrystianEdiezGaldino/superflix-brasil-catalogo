@@ -1,4 +1,3 @@
-import { AnalyticsData, AdminData } from '@/types/admin';
 
 interface CacheEntry<T> {
   data: T;

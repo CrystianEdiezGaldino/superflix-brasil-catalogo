@@ -1,9 +1,10 @@
+
 import { useState, useEffect, useRef } from "react";
 import { MediaItem, getMediaTitle } from "@/types/movie";
 import { Play, Heart, Share2, Plus } from "lucide-react";
 import { Button } from "../ui/button";
-import { useAuth } from "../../hooks/useAuth";
-import { useToast } from "../../hooks/useToast";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "../ui/use-toast";
 
 interface MediaDetailsProps {
   media: MediaItem;
@@ -176,4 +177,4 @@ const MediaDetails = ({ media, onClose, onPlay, onAddToList, onShare }: MediaDet
   );
 };
 
-export default MediaDetails; 
+export default MediaDetails;

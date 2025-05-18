@@ -1,95 +1,55 @@
-import { useState, useEffect } from "react";
-import { Heart } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useFavorites } from "@/hooks/useFavorites";
-import { toast } from "@/hooks/use-toast"; // Updated import
+
+import { useState } from 'react';
+import { Heart } from 'lucide-react';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface FavoriteButtonProps {
   mediaId: number;
-  mediaType?: string; // Make mediaType optional with string type
-  size?: "sm" | "md" | "lg";
-  showText?: boolean;
+  mediaType: string;
+  className?: string;
 }
 
-const FavoriteButton = ({
-  mediaId,
-  mediaType = "movie", // Default to "movie" if not provided
-  size = "md",
-  showText = false,
-}: FavoriteButtonProps) => {
-  const { isFavorite, toggleFavorite } = useFavorites();
+const FavoriteButton = ({ mediaId, mediaType, className = '' }: FavoriteButtonProps) => {
+  const [isFavorite, setIsFavorite] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isFavorited, setIsFavorited] = useState(false);
+  const { user } = useAuth();
 
-  useEffect(() => {
-    if (mediaId) {
-      setIsFavorited(isFavorite(mediaId));
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error('Você precisa estar logado para adicionar favoritos');
+      return;
     }
-  }, [mediaId, isFavorite]);
-
-  const handleToggleFavorite = async (event: React.MouseEvent) => {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (!mediaId) return;
-
+    
     setIsLoading(true);
+    
     try {
-      await toggleFavorite(mediaId, mediaType);
-      
-      const newStatus = !isFavorited;
-      setIsFavorited(newStatus);
-      
-      toast({
-        title: newStatus ? "Favorito adicionado" : "Favorito removido",
-        description: newStatus
-          ? "Adicionado aos seus favoritos"
-          : "Removido dos seus favoritos"
-      });
+      setIsFavorite(prev => !prev);
+      toast.success(isFavorite ? 'Removido dos favoritos' : 'Adicionado aos favoritos');
+      // Here we would normally call the API to add/remove from favorites
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Erro ao atualizar favoritos"
-      });
-      console.error(error);
+      console.error('Erro ao atualizar favorito:', error);
+      setIsFavorite(prev => !prev); // Revert on error
+      toast.error('Erro ao atualizar favorito');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const sizeClasses = {
-    sm: "h-8 w-8",
-    md: "h-10 w-10",
-    lg: "h-12 w-12",
-  };
-
-  const iconSizes = {
-    sm: 16,
-    md: 18,
-    lg: 20,
-  };
-
   return (
-    <Button
-      variant="outline"
-      size="icon"
+    <button
+      className={`absolute top-2 right-2 bg-black/50 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-netflix-red ${className}`}
+      onClick={toggleFavorite}
       disabled={isLoading}
-      onClick={handleToggleFavorite}
-      className={`rounded-full border border-white/20 bg-black/50 hover:bg-black/70 ${
-        sizeClasses[size]
-      } ${isFavorited ? "border-red-500" : ""}`}
     >
       <Heart
-        size={iconSizes[size]}
-        className={isFavorited ? "fill-netflix-red text-netflix-red" : "text-white"}
+        size={16}
+        className={`transition-all ${isFavorite ? 'fill-white text-white' : 'text-white'}`}
       />
-      {showText && (
-        <span className={`ml-2 ${isFavorited ? "text-red-500" : "text-white"}`}>
-          {isFavorited ? "Favorito" : "Favoritar"}
-        </span>
-      )}
-    </Button>
+    </button>
   );
 };
 

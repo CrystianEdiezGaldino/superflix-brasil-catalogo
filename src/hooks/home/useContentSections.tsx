@@ -23,7 +23,6 @@ export const useContentSections = () => {
     isAdmin,
     hasAccess,
     hasTrialAccess,
-    trialEnd,
     featuredMedia,
     recommendations,
     moviesData,
@@ -41,6 +40,8 @@ export const useContentSections = () => {
     recentAnimes,
     isLoading,
     hasError,
+    searchResults,
+    isSearchLoading,
     handleSearch: originalHandleSearch,
   } = useHomePageData();
 
@@ -141,8 +142,8 @@ export const useContentSections = () => {
     }
     
     try {
-      const results = await originalHandleSearch(query);
-      setSearchResults(results || []);
+      await originalHandleSearch(query);
+      setSearchResults(searchResults || []);
     } catch (error) {
       console.error("Search error:", error);
       setSearchResults([]);
@@ -256,7 +257,6 @@ export const useContentSections = () => {
     isAdmin,
     hasAccess,
     hasTrialAccess,
-    trialEnd,
     featuredMedia,
     recommendations,
     moviesData: sectionData.movies?.items || moviesData || [],

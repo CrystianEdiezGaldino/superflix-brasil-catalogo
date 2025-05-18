@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { MediaItem, getMediaTitle } from '@/types/movie';
@@ -10,7 +11,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { AspectRatio } from '@/components/ui/aspect-ratio';
-import MediaCard from "./MediaCard";
+import MediaCard from "./media/MediaCard";
 import { Button } from '@/components/ui/button';
 
 type MediaSectionProps = {
@@ -24,6 +25,7 @@ type MediaSectionProps = {
   mediaType?: 'movie' | 'tv' | 'anime' | 'dorama' | 'tv-channel';
   focusedItem?: number;
   onFocusChange?: (index: number) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
 };
 
 const MediaSection = ({ 
@@ -36,7 +38,8 @@ const MediaSection = ({
   sectionId = 'default',
   mediaType,
   focusedItem = -1,
-  onFocusChange
+  onFocusChange,
+  onKeyDown
 }: MediaSectionProps) => {
   const navigate = useNavigate();
   const [focusedIndex, setFocusedIndex] = useState(focusedItem);
@@ -48,6 +51,11 @@ const MediaSection = ({
   // Navegação por teclado
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (onKeyDown) {
+        onKeyDown(e as unknown as React.KeyboardEvent);
+        return;
+      }
+      
       const itemsPerRow = window.innerWidth >= 1280 ? 6 : 
                          window.innerWidth >= 1024 ? 5 : 
                          window.innerWidth >= 768 ? 4 : 
@@ -89,7 +97,7 @@ const MediaSection = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, medias, onMediaClick, onFocusChange]);
+  }, [focusedIndex, medias, onMediaClick, onFocusChange, onKeyDown]);
 
   // Only show load more for sections with showLoadMore flag
   const shouldShowLoadMore = showLoadMore && onLoadMore;
