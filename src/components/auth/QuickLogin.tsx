@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -126,7 +125,7 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
       
       console.log("Code check response:", data);
       
-      if (data.status === 'validated') {
+      if (data.status === 'validated' && data.session) {
         // Set the session
         try {
           console.log("Setting user session", data.session);
@@ -154,9 +153,12 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
       } else if (data.status === 'invalid') {
         setCode("");
         toast.error("Código inválido");
+      } else if (data.status === 'pending') {
+        console.log("Code still pending validation");
       }
     } catch (error: any) {
       console.error("Error in checkCode:", error);
+      toast.error(error.message || "Erro ao verificar código");
     } finally {
       setIsChecking(false);
       setValidationAttempts(prev => prev + 1);

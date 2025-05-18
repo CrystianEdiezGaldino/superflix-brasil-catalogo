@@ -223,12 +223,25 @@ serve(async (req) => {
           );
         }
 
-        log("Session created successfully");
+        log("Session created successfully", { 
+          userId: sessionData.user.id,
+          sessionId: sessionData.session.id 
+        });
+
+        // Return the session data
         return new Response(
           JSON.stringify({
             status: "validated",
-            user: sessionData.user,
-            session: sessionData.session
+            user: {
+              id: sessionData.user.id,
+              email: sessionData.user.email,
+              user_metadata: sessionData.user.user_metadata
+            },
+            session: {
+              access_token: sessionData.session.access_token,
+              refresh_token: sessionData.session.refresh_token,
+              expires_at: sessionData.session.expires_at
+            }
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
