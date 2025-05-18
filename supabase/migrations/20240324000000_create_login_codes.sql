@@ -1,3 +1,4 @@
+
 -- Create login_codes table
 CREATE TABLE IF NOT EXISTS public.login_codes (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -12,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.login_codes (
 -- Add RLS policies
 ALTER TABLE public.login_codes ENABLE ROW LEVEL SECURITY;
 
--- Allow anyone to create a login code
+-- Allow anyone to create login codes
 CREATE POLICY "Anyone can create login codes"
 ON public.login_codes FOR INSERT
 TO public

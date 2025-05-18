@@ -24,11 +24,14 @@ export const QuickLoginValidator = () => {
         throw new Error("Você precisa estar logado para validar um código");
       }
 
-      // Use the Supabase client's invoke method to call the edge function
+      // Adiciona o token de autorização explicitamente no cabeçalho
       const { data, error } = await supabase.functions.invoke('quick-login', {
         body: {
           action: 'validate',
           code
+        },
+        headers: {
+          Authorization: `Bearer ${session.data.session.access_token}`
         }
       });
 
