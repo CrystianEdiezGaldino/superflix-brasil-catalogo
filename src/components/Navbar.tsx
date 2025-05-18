@@ -58,7 +58,7 @@ const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
         </div>
 
         {/* Seção Direita - Ações do Usuário */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center gap-4">
           {/* Barra de Pesquisa */}
           <div className="hidden md:block">
             <SearchBar onSearch={onSearch} />
@@ -66,18 +66,9 @@ const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
 
           {/* Botão de Ajuda */}
           {user && (
-            <button
-              tabIndex={0}
-              role="button"
-              aria-label="Ajuda"
-              className="inline-flex items-center justify-center rounded-full text-sm font-medium
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 
-                disabled:pointer-events-none disabled:opacity-50
-                hover:bg-accent h-10 w-10 text-white
-                hover:text-netflix-red transition-colors"
-            >
+            <div className="flex items-center">
               <HelpButton />
-            </button>
+            </div>
           )}
 
           {/* Ações do Usuário */}
@@ -101,7 +92,7 @@ const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
             onClick={toggleMobileMenu}
             className="lg:hidden inline-flex items-center justify-center rounded-full
               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2
-              h-10 w-10 text-white hover:text-netflix-red transition-colors"
+              h-[50px] w-[50px] text-white hover:text-netflix-red transition-colors"
             aria-label="Abrir menu mobile"
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-menu"

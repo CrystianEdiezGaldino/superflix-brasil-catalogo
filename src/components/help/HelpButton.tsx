@@ -13,10 +13,10 @@ export const HelpButton = () => {
         <Button
           variant="ghost"
           size="icon"
-          className="h-9 w-9 rounded-full bg-netflix-red hover:bg-red-700 text-white"
+          className="h-[50px] w-[50px] rounded-full bg-netflix-red hover:bg-red-700 text-white"
           aria-label="Abrir ajuda"
         >
-          <HelpCircle className="h-5 w-5" />
+          <HelpCircle className="h-6 w-6" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px] bg-netflix-background border-netflix-red">

@@ -44,8 +44,8 @@ const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="flex items-center space-x-2 cursor-pointer focus:outline-none group">
-          <Avatar className="h-8 w-8 border-2 border-netflix-red transition-all duration-200 group-hover:border-white group-hover:scale-105">
-            <AvatarFallback className="bg-netflix-red text-white text-xs font-medium">
+          <Avatar className="h-[50px] w-[50px] border-2 border-netflix-red transition-all duration-200 group-hover:border-white group-hover:scale-105">
+            <AvatarFallback className="bg-netflix-red text-white text-base font-medium">
               {user.email?.substring(0, 2).toUpperCase() || "US"}
             </AvatarFallback>
           </Avatar>

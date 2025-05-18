@@ -86,7 +86,7 @@ const TvChannelModal = React.memo(({ channel, isOpen, onClose, hasAccess, option
     >
       <DialogContent 
         ref={modalRef}
-        className="bg-netflix-background border-netflix-border max-h-[80vh] w-[90vw] [@media(max-width:932px)and(orientation:landscape)]:w-[95vw] [@media(max-width:932px)and(orientation:landscape)]:max-h-[90vh] [@media(max-width:932px)]:min-w-[80vw] sm:!w-[350px] sm:!h-[350px]"
+        className="modal-content bg-netflix-background border-none p-0 w-screen h-screen max-w-none max-h-none rounded-none"
         onPointerDownOutside={(e) => {
           if (options.closeOnOutsideClick === false) {
             e.preventDefault();
@@ -98,7 +98,7 @@ const TvChannelModal = React.memo(({ channel, isOpen, onClose, hasAccess, option
           }
         }}
       >
-        <DialogHeader>
+        <DialogHeader className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent p-4">
           <DialogTitle className="text-xl font-bold text-white flex items-center justify-between">
             <span>{channel.name}</span>
             <Button
@@ -115,9 +115,9 @@ const TvChannelModal = React.memo(({ channel, isOpen, onClose, hasAccess, option
           </DialogDescription>
         </DialogHeader>
 
-        <div className="mt-4">
+        <div className="h-full w-full">
           {hasAccess ? (
-            <div className="aspect-video sm:aspect-video w-full bg-black relative overflow-hidden">
+            <div className="h-full w-full bg-black relative">
               {!isIframeLoaded && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="w-12 h-12 border-4 border-netflix-red border-t-transparent rounded-full animate-spin"></div>
@@ -128,20 +128,18 @@ const TvChannelModal = React.memo(({ channel, isOpen, onClose, hasAccess, option
                 src={iframeSrc}
                 allow="encrypted-media"
                 allowFullScreen
-                className="w-full h-full object-contain sm:object-none"
+                className="w-full h-full"
                 frameBorder="0"
                 onLoad={handleIframeLoad}
                 style={{ 
                   opacity: isIframeLoaded ? 1 : 0,
-                  display: isVisible ? 'block' : 'none',
-                  maxWidth: '100%',
-                  maxHeight: '100%'
+                  display: isVisible ? 'block' : 'none'
                 }}
                 title={`${channel.name} - TV ao vivo`}
               />
             </div>
           ) : (
-            <div className="aspect-video w-full bg-black flex items-center justify-center">
+            <div className="h-full w-full bg-black flex items-center justify-center">
               <div className="text-center p-8">
                 <h3 className="text-xl font-bold text-white mb-2">Conteúdo Exclusivo</h3>
                 <p className="text-gray-400">
@@ -151,7 +149,7 @@ const TvChannelModal = React.memo(({ channel, isOpen, onClose, hasAccess, option
             </div>
           )}
 
-          <div className="mt-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
             <h3 className="text-lg font-semibold text-white mb-2">Sobre o Canal</h3>
             <p className="text-gray-300">{channel.description}</p>
           </div>

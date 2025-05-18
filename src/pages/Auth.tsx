@@ -22,7 +22,6 @@ import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { QuickLogin } from "@/components/auth/QuickLogin";
 
 const Auth = () => {
   const { user, loading, login, register } = useAuth();
@@ -37,9 +36,6 @@ const Auth = () => {
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(true);
-  const [showQuickLogin, setShowQuickLogin] = useState(false);
-  const [autoShowQuickLogin, setAutoShowQuickLogin] = useState(false);
-  const [quickLoginTimer, setQuickLoginTimer] = useState(30);
   const [selectedBackground, setSelectedBackground] = useState<MediaItem | null>(null);
   
   const emailRef = useRef<HTMLInputElement>(null);
@@ -65,57 +61,43 @@ const Auth = () => {
   const filteredSeries = getFilteredSeries().filter(serie => serie.poster_path || serie.backdrop_path);
   const filteredAnimes = getFilteredAnimes().filter(anime => anime.poster_path || anime.backdrop_path);
   
-  // Choose a random background from all content with images
+  // Combine all content for background selection
+  const allContent = [...filteredMovies, ...filteredSeries, ...filteredAnimes];
+  
+  // Select random background on mount and change it periodically
   useEffect(() => {
-    const allMedia: MediaItem[] = [
-      ...filteredMovies, 
-      ...filteredSeries, 
-      ...filteredAnimes
-    ];
+    let intervalId: number | undefined;
     
-    if (allMedia.length > 0 && !selectedBackground) {
-      const randomIndex = Math.floor(Math.random() * allMedia.length);
-      const selected = allMedia[randomIndex];
-      setSelectedBackground(selected);
-      
-      if (selected.backdrop_path) {
-        const backgroundUrl = `https://image.tmdb.org/t/p/original${selected.backdrop_path}`;
-        setBackgroundImage(backgroundUrl);
-      } else if (selected.poster_path) {
-        const backgroundUrl = `https://image.tmdb.org/t/p/original${selected.poster_path}`;
+    // Set initial background
+    const setInitialBackground = () => {
+      const backgroundUrl = selectRandomBackground(allContent);
+      if (backgroundUrl) {
         setBackgroundImage(backgroundUrl);
       }
-    }
-  }, [filteredMovies, filteredSeries, filteredAnimes, selectedBackground]);
+    };
 
-  // Change background every 30 seconds
-  useEffect(() => {
-    if (!filteredMovies.length && !filteredSeries.length && !filteredAnimes.length) return;
-
-    const interval = setInterval(() => {
-      const allMedia: MediaItem[] = [
-        ...filteredMovies, 
-        ...filteredSeries, 
-        ...filteredAnimes
-      ];
-      
-      if (allMedia.length > 0) {
-        const randomIndex = Math.floor(Math.random() * allMedia.length);
-        const selected = allMedia[randomIndex];
-        setSelectedBackground(selected);
-        
-        if (selected.backdrop_path) {
-          const backgroundUrl = `https://image.tmdb.org/t/p/original${selected.backdrop_path}`;
-          setBackgroundImage(backgroundUrl);
-        } else if (selected.poster_path) {
-          const backgroundUrl = `https://image.tmdb.org/t/p/original${selected.poster_path}`;
+    // Change background periodically
+    const startBackgroundRotation = () => {
+      intervalId = window.setInterval(() => {
+        const backgroundUrl = selectRandomBackground(allContent);
+        if (backgroundUrl) {
           setBackgroundImage(backgroundUrl);
         }
-      }
-    }, 30000); // 30 seconds
+      }, 15000); // Change every 15 seconds
+    };
 
-    return () => clearInterval(interval);
-  }, [filteredMovies, filteredSeries, filteredAnimes]);
+    // Set initial background and start rotation after a delay
+    setInitialBackground();
+    const timeoutId = setTimeout(startBackgroundRotation, 10000); // Start rotation after 10 seconds
+
+    // Cleanup function
+    return () => {
+      if (intervalId !== undefined) {
+        clearInterval(intervalId);
+      }
+      clearTimeout(timeoutId);
+    };
+  }, [allContent]);
   
   // Improved user redirection with proper cleanup
   useEffect(() => {
@@ -153,83 +135,6 @@ const Auth = () => {
       }
     };
   }, [user, redirecting, navigate, redirectTo, loading]);
-  
-  // Auto show quick login after 30 seconds
-  useEffect(() => {
-    if (user || showQuickLogin || autoShowQuickLogin || !isLogin) return;
-
-    const timer = setInterval(() => {
-      setQuickLoginTimer(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          setAutoShowQuickLogin(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [user, showQuickLogin, autoShowQuickLogin, isLogin]);
-
-  const handleSubmit = async () => {
-    if (!email || !password) {
-      toast.error("Por favor, preencha email e senha");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      if (isLogin) {
-        await login(email, password);
-      } else {
-        // Se houver um código, valida ele
-        if (code) {
-          const { data: promoCode, error: promoError } = await supabase
-            .from('promo_codes')
-            .select('*')
-            .eq('code', code)
-            .single();
-
-          if (promoError || !promoCode) {
-            toast.error("Código de acesso inválido");
-            setIsLoading(false);
-            return;
-          }
-        }
-
-        // Register with a default name based on email
-        const defaultName = email.split('@')[0];
-        await register(email, password, defaultName);
-        
-        // Get the current user after registration
-        const { data: { user: newUser } } = await supabase.auth.getUser();
-        
-        if (newUser) {
-          // Call the grant-trial-access function
-          const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/grant-trial-access`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-            },
-            body: JSON.stringify({ userId: newUser.id })
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to activate trial subscription');
-          }
-
-          toast.success("Conta criada com sucesso! Assinatura de teste ativada.");
-        }
-      }
-      navigate("/");
-    } catch (error) {
-      console.error("Erro na autenticação:", error);
-      toast.error(isLogin ? "Erro ao fazer login" : "Erro ao criar conta");
-      setIsLoading(false); // Ensure loading state is reset on error
-    }
-  };
   
   // Display loading during authentication check
   if (loading) {
@@ -279,147 +184,127 @@ const Auth = () => {
         <div className="flex flex-col items-center justify-center mb-10">
           <AuthPageBanner />
           <div className="w-full max-w-md">
-            {showQuickLogin || autoShowQuickLogin ? (
-              <QuickLogin onLogin={(session) => {
-                navigate("/");
-              }} />
-            ) : (
-              <Card className="bg-black/75 border-gray-800 p-8">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-gray-300">Email</Label>
-                    <Input
-                      ref={emailRef}
-                      id="email"
-                      type="email"
-                      placeholder="Digite seu email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isLoading}
-                      className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
-                      autoFocus
-                      aria-label="Campo de email"
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-gray-300">Senha</Label>
-                    <Input
-                      ref={passwordRef}
-                      id="password"
-                      type="password"
-                      placeholder="Digite sua senha"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={isLoading}
-                      className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
-                      aria-label="Campo de senha"
-                    />
-                  </div>
-
-                  {!isLogin && (
-                    <div className="space-y-2">
-                      <Label htmlFor="code" className="text-gray-300">Código de Acesso (Opcional)</Label>
-                      <Input
-                        ref={codeRef}
-                        id="code"
-                        type="text"
-                        placeholder="Digite o código de acesso (opcional)"
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        disabled={isLoading}
-                        className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
-                        aria-label="Campo de código de acesso (opcional)"
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      ref={termsRef}
-                      id="terms"
-                      checked={true}
-                      onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-                      className="border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red"
-                      aria-label="Aceitar termos de serviço"
-                    />
-                    <Label htmlFor="terms" className="text-sm text-gray-300">
-                      Li e aceito os{" "}
-                      <Link 
-                        to="/termos-de-servico" 
-                        className="text-netflix-red hover:underline"
-                        target="_blank"
-                      >
-                        termos de serviço
-                      </Link>
-                      {" "}e{" "}
-                      <Link 
-                        to="/politica-de-privacidade" 
-                        className="text-netflix-red hover:underline"
-                        target="_blank"
-                      >
-                        política de privacidade
-                      </Link>
-                    </Label>
-                  </div>
-
-                  <Button
-                    ref={submitRef}
-                    onClick={handleSubmit}
+            <Card className="bg-black/75 border-gray-800 p-8">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-gray-300">Email</Label>
+                  <Input
+                    ref={emailRef}
+                    id="email"
+                    type="email"
+                    placeholder="Digite seu email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     disabled={isLoading}
-                    className="w-full bg-netflix-red hover:bg-red-700"
-                    aria-label={isLogin ? "Botão de entrar" : "Botão de criar conta"}
-                  >
-                    {isLoading ? "Processando..." : isLogin ? "Entrar" : "Criar Conta"}
-                  </Button>
-
-                  <Button
-                    ref={toggleRef}
-                    variant="ghost"
-                    onClick={() => setIsLogin(!isLogin)}
-                    className="w-full text-gray-400 hover:text-white"
-                    aria-label={isLogin ? "Botão para criar conta" : "Botão para fazer login"}
-                  >
-                    {isLogin ? "Criar uma conta" : "Já tenho uma conta"}
-                  </Button>
-
-                  {isLogin && (
-                    <>
-                      <Button
-                        ref={forgotPasswordRef}
-                        variant="link"
-                        className="w-full text-netflix-red hover:text-red-400"
-                        aria-label="Botão de esqueceu a senha"
-                      >
-                        Esqueceu a senha?
-                      </Button>
-
-                      <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                          <span className="w-full border-t border-gray-700" />
-                        </div>
-                        <div className="relative flex justify-center text-xs uppercase">
-                          <span className="bg-black/75 px-2 text-gray-400">ou</span>
-                        </div>
-                      </div>
-
-                      <div className="text-center">
-                        <p className="text-sm text-gray-400 mb-2">
-                          Login rápido disponível em {quickLoginTimer} segundos
-                        </p>
-                        <Button
-                          variant="outline"
-                          onClick={() => setShowQuickLogin(true)}
-                          className="w-full border-gray-700 text-gray-300 hover:bg-gray-800"
-                        >
-                          Login Rápido com Código
-                        </Button>
-                      </div>
-                    </>
-                  )}
+                    className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                    autoFocus
+                    aria-label="Campo de email"
+                  />
                 </div>
-              </Card>
-            )}
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-gray-300">Senha</Label>
+                  <Input
+                    ref={passwordRef}
+                    id="password"
+                    type="password"
+                    placeholder="Digite sua senha"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                    className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                    aria-label="Campo de senha"
+                  />
+                </div>
+
+                {!isLogin && (
+                  <div className="space-y-2">
+                    <Label htmlFor="code" className="text-gray-300">Código de Acesso (Opcional)</Label>
+                    <Input
+                      ref={codeRef}
+                      id="code"
+                      type="text"
+                      placeholder="Digite o código de acesso (opcional)"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      disabled={isLoading}
+                      className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                      aria-label="Campo de código de acesso (opcional)"
+                    />
+                  </div>
+                )}
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={termsAccepted}
+                    onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                    disabled={isLoading}
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm text-gray-300"
+                  >
+                    Eu concordo com os{" "}
+                    <Link to="/terms" className="text-netflix-red hover:underline">
+                      Termos de Uso
+                    </Link>{" "}
+                    e{" "}
+                    <Link to="/privacy" className="text-netflix-red hover:underline">
+                      Política de Privacidade
+                    </Link>
+                  </label>
+                </div>
+
+                <Button
+                  ref={submitRef}
+                  onClick={async () => {
+                    if (!termsAccepted) {
+                      toast.error("Você precisa aceitar os termos para continuar");
+                      return;
+                    }
+
+                    setIsLoading(true);
+                    try {
+                      if (isLogin) {
+                        await login(email, password);
+                      } else {
+                        await register(email, password, code);
+                      }
+                    } catch (error: any) {
+                      toast.error(error.message || "Ocorreu um erro");
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  disabled={isLoading}
+                  className="w-full bg-netflix-red hover:bg-red-700"
+                >
+                  {isLoading ? "Processando..." : isLogin ? "Entrar" : "Criar Conta"}
+                </Button>
+
+                <Button
+                  ref={toggleRef}
+                  variant="ghost"
+                  onClick={() => setIsLogin(!isLogin)}
+                  className="w-full text-gray-400 hover:text-white"
+                  aria-label={isLogin ? "Botão para criar conta" : "Botão para fazer login"}
+                >
+                  {isLogin ? "Criar uma conta" : "Já tenho uma conta"}
+                </Button>
+
+                {isLogin && (
+                  <Button
+                    ref={forgotPasswordRef}
+                    variant="link"
+                    className="w-full text-netflix-red hover:text-red-400"
+                    aria-label="Botão de esqueceu a senha"
+                  >
+                    Esqueceu a senha?
+                  </Button>
+                )}
+              </div>
+            </Card>
           </div>
           <AuthLegalSection />
         </div>

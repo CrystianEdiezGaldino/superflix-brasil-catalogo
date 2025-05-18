@@ -48,6 +48,8 @@ export type Database = {
           id: string
           used: boolean | null
           user_id: string | null
+          status: 'pending' | 'validated' | 'expired'
+          validated_at: string | null
         }
         Insert: {
           code: string
@@ -57,6 +59,8 @@ export type Database = {
           id?: string
           used?: boolean | null
           user_id?: string | null
+          status?: 'pending' | 'validated' | 'expired'
+          validated_at?: string | null
         }
         Update: {
           code?: string
@@ -66,6 +70,8 @@ export type Database = {
           id?: string
           used?: boolean | null
           user_id?: string | null
+          status?: 'pending' | 'validated' | 'expired'
+          validated_at?: string | null
         }
         Relationships: []
       }
@@ -76,6 +82,7 @@ export type Database = {
           id: string
           updated_at: string
           username: string | null
+          email: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -83,6 +90,7 @@ export type Database = {
           id: string
           updated_at?: string
           username?: string | null
+          email?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -90,6 +98,7 @@ export type Database = {
           id?: string
           updated_at?: string
           username?: string | null
+          email?: string | null
         }
         Relationships: []
       }

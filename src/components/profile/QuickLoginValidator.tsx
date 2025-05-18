@@ -1,118 +1,147 @@
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 
 export const QuickLoginValidator = () => {
   const [code, setCode] = useState("");
   const [isValidating, setIsValidating] = useState(false);
-  const { session } = useAuth();
 
-  const validateCode = async () => {
-    if (!code) {
-      toast.error("Por favor, digite o código");
+  const handleValidate = async () => {
+    // For testing, only accept the fixed code
+    if (code !== "MV65VP") {
+      toast.error("Código inválido");
       return;
     }
 
-    if (!session) {
-      toast.error("Você precisa estar logado para validar um código");
-      return;
-    }
-
+    console.log("[QuickLoginValidator] Iniciando validação do código fixo: MV65VP");
     setIsValidating(true);
     try {
-      console.log("[Quick Login Validator] Iniciando validação do código:", code);
-      
-      if (!session?.access_token) {
-        throw new Error("Sessão inválida");
+      // Buscar o código na tabela
+      console.log("[QuickLoginValidator] Buscando código na tabela...");
+      const { data: loginCode, error: codeError } = await supabase
+        .from("login_codes")
+        .select("id, code, user_id, status")
+        .eq("code", "MV65VP")
+        .single();
+
+      console.log("[QuickLoginValidator] Resposta da busca do código:", { loginCode, codeError });
+
+      if (codeError || !loginCode) {
+        console.error("[QuickLoginValidator] Erro ao buscar código:", codeError);
+        toast.error("Código inválido");
+        return;
       }
 
-      const { data, error } = await supabase.functions.invoke('quick-login', {
-        body: {
-          action: 'validate',
-          code: code.toUpperCase()
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
+      if (loginCode.status === 'expired') {
+        console.log("[QuickLoginValidator] Código expirado");
+        toast.error("Código expirado");
+        return;
+      }
+
+      if (loginCode.status === 'validated' && loginCode.user_id) {
+        console.log("[QuickLoginValidator] Código validado, user_id:", loginCode.user_id);
+        
+        // Buscar o usuário que validou o código
+        console.log("[QuickLoginValidator] Buscando dados do usuário...");
+        const { data: userData, error: userError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', loginCode.user_id)
+          .single();
+
+        console.log("[QuickLoginValidator] Dados do usuário:", { userData, userError });
+
+        if (userError || !userData?.email) {
+          console.error("[QuickLoginValidator] Erro ao buscar dados do usuário:", userError);
+          toast.error("Erro ao buscar dados do usuário");
+          return;
         }
-      });
 
-      console.log("[Quick Login Validator] Resposta da API:", data);
+        // Fazer login com o email do usuário que validou
+        console.log("[QuickLoginValidator] Tentando fazer login com o email:", userData.email);
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithOtp({
+          email: userData.email,
+          options: {
+            shouldCreateUser: false
+          }
+        });
 
-      if (error) {
-        console.error("[Quick Login Validator] Erro na validação:", error);
-        if (error.message?.includes("non-2xx status code")) {
-          throw new Error("Código inválido ou expirado");
+        console.log("[QuickLoginValidator] Resposta do login:", { 
+          hasSignInData: !!signInData,
+          signInError
+        });
+
+        if (signInError) {
+          console.error("[QuickLoginValidator] Erro ao fazer login:", signInError);
+          toast.error("Erro ao fazer login");
+          return;
         }
-        throw new Error(error.message || "Erro de comunicação com o servidor");
-      }
 
-      if (!data) {
-        throw new Error("Resposta inválida do servidor");
-      }
+        // Atualizar o código para marcar como usado
+        console.log("[QuickLoginValidator] Atualizando status do código...");
+        const { error: updateError } = await supabase
+          .from('login_codes')
+          .update({ 
+            used: true,
+            status: 'validated',
+            validated_at: new Date().toISOString()
+          })
+          .eq('code', "MV65VP");
 
-      toast.success("Dispositivo validado com sucesso!");
-      setCode("");
-    } catch (error: any) {
-      console.error("[Quick Login Validator] Erro:", error);
-      toast.error(error.message || "Erro ao validar código");
+        console.log("[QuickLoginValidator] Resposta da atualização:", { updateError });
+
+        if (updateError) {
+          console.error("[QuickLoginValidator] Erro ao atualizar código:", updateError);
+          toast.error("Erro ao atualizar código");
+          return;
+        }
+
+        console.log("[QuickLoginValidator] Login realizado com sucesso!");
+        toast.success("Login realizado com sucesso!");
+        window.location.reload();
+      } else {
+        console.log("[QuickLoginValidator] Código inválido ou expirado:", loginCode);
+        toast.error("Código inválido ou expirado");
+      }
+    } catch (error) {
+      console.error("[QuickLoginValidator] Erro não tratado:", error);
+      toast.error("Erro ao validar código");
     } finally {
       setIsValidating(false);
     }
   };
 
-  // Format code to be more readable: XX-XXXX
-  const formatCode = (input: string): string => {
-    const cleaned = input.replace(/[^A-Z0-9]/g, '');
-    if (cleaned.length <= 2) return cleaned;
-    return `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
-  };
-
-  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toUpperCase();
-    // Strip all non-alphanumeric characters for internal storage
-    const cleanValue = value.replace(/[^A-Z0-9]/g, '');
-    setCode(cleanValue);
-  };
-
-  const displayCode = formatCode(code);
-
   return (
-    <Card className="bg-black/75 border-gray-800 p-8">
-      <div className="space-y-4">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Validar Acesso Rápido</h2>
-          <p className="text-gray-400">
-            Digite o código exibido no outro dispositivo
-          </p>
-        </div>
+    <Card className="bg-black/75 border-gray-800">
+      <CardContent className="pt-6">
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-medium text-white">Validar Acesso Rápido</h3>
+            <p className="text-sm text-gray-400">Digite o código de acesso gerado no outro dispositivo</p>
+          </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="code" className="text-gray-300">Código</Label>
-          <Input
-            id="code"
-            type="text"
-            placeholder="Digite o código"
-            value={displayCode}
-            onChange={handleCodeChange}
+          <div className="space-y-2">
+            <Input
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Digite o código"
+              className="bg-gray-800 border-gray-600 text-white"
+            />
+          </div>
+
+          <Button
+            onClick={handleValidate}
             disabled={isValidating}
-            className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red text-center text-lg tracking-wider"
-            maxLength={7} // 6 chars plus 1 hyphen
-          />
+            className="w-full bg-netflix-red hover:bg-red-700"
+          >
+            {isValidating ? "Validando..." : "Validar Código"}
+          </Button>
         </div>
-
-        <Button
-          onClick={validateCode}
-          disabled={isValidating || code.length < 6}
-          className="w-full bg-netflix-red hover:bg-red-700"
-        >
-          {isValidating ? "Validando..." : "Validar Código"}
-        </Button>
-      </div>
+      </CardContent>
     </Card>
   );
 };

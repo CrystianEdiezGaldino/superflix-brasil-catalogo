@@ -143,6 +143,17 @@ const TvChannels = () => {
   const handleOpenChannel = useCallback((channel: TvChannel) => {
     setSelectedChannel(channel);
     setIsModalOpen(true);
+    // Request fullscreen when opening the modal
+    const modalElement = document.querySelector('.modal-content');
+    if (modalElement) {
+      if (modalElement.requestFullscreen) {
+        modalElement.requestFullscreen();
+      } else if ((modalElement as any).webkitRequestFullscreen) {
+        (modalElement as any).webkitRequestFullscreen();
+      } else if ((modalElement as any).msRequestFullscreen) {
+        (modalElement as any).msRequestFullscreen();
+      }
+    }
   }, []);
 
   const handleCloseModal = useCallback(() => {

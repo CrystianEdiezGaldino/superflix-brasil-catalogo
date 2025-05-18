@@ -102,6 +102,20 @@ const AnimeDetails = () => {
     setSelectedEpisode(1);
   };
 
+  // Handle episode selection
+  const handleEpisodeSelect = (episodeNumber: number) => {
+    setSelectedEpisode(episodeNumber);
+    setShowPlayer(true);
+    
+    // Scroll to player after a short delay to ensure it's rendered
+    setTimeout(() => {
+      const playerElement = document.getElementById('SuperFlixAPIContainerVideo');
+      if (playerElement) {
+        playerElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  };
+
   // Show subscription modal if trying to watch without access
   const handleWatchClick = () => {
     if (!hasAccess) {
@@ -140,85 +154,96 @@ const AnimeDetails = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
-   
+      <Navbar onSearch={() => {}} />
       
-      <AnimeLoadingState 
-        isLoading={authLoading || subscriptionLoading || isLoading}
-        hasUser={!!user}
-        hasError={!!error || !anime}
-      />
+      <div className="relative">
+        {/* Background gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-netflix-background pointer-events-none" />
+        
+        <AnimeLoadingState 
+          isLoading={authLoading || subscriptionLoading || isLoading}
+          hasUser={!!user}
+          hasError={!!error || !anime}
+        />
 
-      {anime && (
-        <>
-          <AnimeHeader 
-            anime={anime} 
-            isFavorite={isFavorite(anime.id)} 
-            toggleFavorite={handleToggleFavorite} 
-          />
+        {anime && (
+          <div className="relative z-10">
+            <div className="max-w-[2000px] mx-auto">
+              <AnimeHeader 
+                anime={anime} 
+                isFavorite={isFavorite(anime.id)} 
+                toggleFavorite={handleToggleFavorite} 
+              />
 
-          <div className="px-4 sm:px-6 md:px-10">
-            <AdblockSuggestion />
-          </div>
+              <div className="px-4 sm:px-6 md:px-10 lg:px-16">
+                <AdblockSuggestion />
+              </div>
 
-          <div className="px-4 sm:px-6 md:px-10 mb-4 sm:mb-6">
-            <AnimeActions 
-              showPlayer={showPlayer} 
-              hasAccess={hasAccess} 
-              togglePlayer={handleWatchClick}
-              isFavorite={isFavorite(anime.id)}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          </div>
+              <div className="px-4 sm:px-6 md:px-10 lg:px-16 mb-6 sm:mb-8">
+                <AnimeActions 
+                  showPlayer={showPlayer} 
+                  hasAccess={hasAccess} 
+                  togglePlayer={handleWatchClick}
+                  isFavorite={isFavorite(anime.id)}
+                  onToggleFavorite={handleToggleFavorite}
+                />
+              </div>
 
-          {showPlayer && (
-            <div className="px-4 sm:px-6 md:px-10 mb-6 sm:mb-10">
-              <div className="max-w-7xl mx-auto">
-                <div className="aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl">
-                  <SuperFlixPlayer
-                    key={`player-${anime.id}-${selectedSeason}-${selectedEpisode}`}
-                    type="serie"
-                    imdb={anime.id.toString()}
-                    season={selectedSeason}
-                    episode={selectedEpisode}
-                    options={{
-                      transparent: true,
-                      noLink: true,
-                      noEpList: true
-                    }}
+              {showPlayer && (
+                <div className="px-4 sm:px-6 md:px-10 lg:px-16 mb-8 sm:mb-12">
+                  <div className="max-w-7xl mx-auto">
+                    <div id="SuperFlixAPIContainerVideo" className="aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden shadow-2xl ring-1 ring-white/10">
+                      <SuperFlixPlayer
+                        key={`player-${anime.id}-${selectedSeason}-${selectedEpisode}`}
+                        type="serie"
+                        imdb={anime.id.toString()}
+                        season={selectedSeason}
+                        episode={selectedEpisode}
+                        options={{
+                          transparent: true,
+                          noLink: true,
+                          noEpList: true
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!isContentAvailable && (
+                <div className="px-4 sm:px-6 md:px-10 lg:px-16 mb-8 sm:mb-12">
+                  <div className="max-w-7xl mx-auto">
+                    <ContentNotAvailable onAddToFavorites={handleToggleFavorite} />
+                  </div>
+                </div>
+              )}
+
+              <div className="px-4 sm:px-6 md:px-10 lg:px-16 mb-8 sm:mb-12">
+                <div className="max-w-7xl mx-auto">
+                  <AnimeContent 
+                    anime={anime} 
+                    hasAccess={hasAccess}
+                    seasonData={seasonData}
+                    selectedSeason={selectedSeason}
+                    selectedEpisode={selectedEpisode}
+                    seasons={seasons}
+                    setSelectedSeason={handleSeasonChange}
+                    handleEpisodeSelect={handleEpisodeSelect}
+                    isLoadingSeason={isSeasonLoading}
+                    subscriptionLoading={subscriptionLoading}
                   />
                 </div>
               </div>
-            </div>
-          )}
 
-          {!isContentAvailable && (
-            <div className="px-4 sm:px-6 md:px-10 mb-6 sm:mb-10">
-              <div className="max-w-7xl mx-auto">
-                <ContentNotAvailable onAddToFavorites={handleToggleFavorite} />
+              <div className="px-4 sm:px-6 md:px-10 lg:px-16 mb-8 sm:mb-12">
+                <div className="max-w-7xl mx-auto">
+                  <AnimeRecommendations anime={anime} />
+                </div>
               </div>
             </div>
-          )}
-
-          <div className="px-4 sm:px-6 md:px-10 mb-6 sm:mb-10">
-            <AnimeContent 
-              anime={anime} 
-              hasAccess={hasAccess}
-              seasonData={seasonData}
-              selectedSeason={selectedSeason}
-              selectedEpisode={selectedEpisode}
-              seasons={seasons}
-              setSelectedSeason={handleSeasonChange}
-              handleEpisodeSelect={setSelectedEpisode}
-              isLoadingSeason={isSeasonLoading}
-              subscriptionLoading={subscriptionLoading}
-            />
           </div>
-
-          <div className="px-4 sm:px-6 md:px-10 mb-6 sm:mb-10">
-            <AnimeRecommendations anime={anime} />
-          </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
   );
 };
