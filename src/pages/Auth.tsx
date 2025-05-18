@@ -325,7 +325,7 @@ const Auth = () => {
 
   // Auto show quick login after 30 seconds
   useEffect(() => {
-    if (user || showQuickLogin || autoShowQuickLogin) return;
+    if (user || showQuickLogin || autoShowQuickLogin || !isLogin) return;
 
     const timer = setInterval(() => {
       setQuickLoginTimer(prev => {
@@ -339,7 +339,7 @@ const Auth = () => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [user, showQuickLogin, autoShowQuickLogin]);
+  }, [user, showQuickLogin, autoShowQuickLogin, isLogin]);
 
   const handleSubmit = async () => {
     if (!email || !password) {

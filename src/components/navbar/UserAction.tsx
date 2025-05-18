@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 interface UserActionProps {
   isAuthenticated?: boolean;
@@ -29,9 +30,13 @@ const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      window.location.reload();
+      // Clear any session-related data
+      localStorage.removeItem('supabase.auth.token');
+      // Use window.location.href instead of reload to ensure a fresh state
+      window.location.href = '/';
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
+      toast.error('Erro ao fazer logout');
     }
   };
   

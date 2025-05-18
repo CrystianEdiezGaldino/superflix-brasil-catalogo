@@ -18,8 +18,9 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
   const [validationAttempts, setValidationAttempts] = useState(0);
   const [isExpired, setIsExpired] = useState(false);
   const [generationAttempts, setGenerationAttempts] = useState(0);
-  const MAX_VALIDATION_ATTEMPTS = 12; // 2 minutes (12 * 10 seconds)
+  const MAX_VALIDATION_ATTEMPTS = 300; // 5 minutes (300 seconds)
   const MAX_GENERATION_ATTEMPTS = 3; // Max generation attempts
+  const POLLING_INTERVAL = 5000; // 5 seconds
 
   // Get device info and generate code on mount
   useEffect(() => {
@@ -105,11 +106,11 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
 
   // Check code status
   const checkCode = async () => {
-    if (!code || validationAttempts >= MAX_VALIDATION_ATTEMPTS) return;
+    if (!code || timeLeft <= 0) return;
     
     setIsChecking(true);
     try {
-      console.log("Checking code status:", code);
+      console.log(`[Quick Login] Verificando código ${code} - Tentativa ${validationAttempts + 1} - Tempo restante: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`);
       
       const { data, error } = await supabase.functions.invoke('quick-login', {
         body: {
@@ -119,16 +120,21 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
       });
 
       if (error) {
-        console.error("Error checking code:", error);
+        console.error("[Quick Login] Erro ao verificar código:", error);
         throw error;
       }
       
-      console.log("Code check response:", data);
+      console.log("[Quick Login] Resposta do servidor:", {
+        status: data.status,
+        hasSession: !!data.session,
+        attempt: validationAttempts + 1,
+        timeLeft: `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`
+      });
       
       if (data.status === 'validated' && data.session) {
         // Set the session
         try {
-          console.log("Setting user session", data.session);
+          console.log("[Quick Login] Código validado! Configurando sessão...");
           
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: data.session.access_token,
@@ -136,34 +142,68 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
           });
 
           if (sessionError) {
-            console.error("Error setting session:", sessionError);
+            console.error("[Quick Login] Erro ao configurar sessão:", sessionError);
             throw sessionError;
           }
           
+          console.log("[Quick Login] Sessão configurada com sucesso!");
           onLogin(data.session);
           toast.success("Login realizado com sucesso!");
+          setCode(""); // Clear code after successful login
         } catch (sessionError: any) {
-          console.error("Error setting session:", sessionError);
+          console.error("[Quick Login] Erro ao configurar sessão:", sessionError);
           toast.error("Erro ao configurar sessão: " + sessionError.message);
         }
       } else if (data.status === 'expired') {
+        console.log("[Quick Login] Código expirado");
         setCode("");
         setIsExpired(true);
         toast.error("Código expirado");
       } else if (data.status === 'invalid') {
+        console.log("[Quick Login] Código inválido");
         setCode("");
         toast.error("Código inválido");
       } else if (data.status === 'pending') {
-        console.log("Code still pending validation");
+        console.log(`[Quick Login] Aguardando validação... Tentativa ${validationAttempts + 1} - Tempo restante: ${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`);
       }
     } catch (error: any) {
-      console.error("Error in checkCode:", error);
+      console.error("[Quick Login] Erro ao verificar código:", error);
       toast.error(error.message || "Erro ao verificar código");
     } finally {
       setIsChecking(false);
       setValidationAttempts(prev => prev + 1);
     }
   };
+
+  // Poll for code validation
+  useEffect(() => {
+    if (!code || timeLeft <= 0) {
+      if (code && timeLeft <= 0) {
+        console.log("[Quick Login] Parando verificação - Tempo expirado");
+      }
+      return;
+    }
+
+    console.log(`[Quick Login] Iniciando verificação do código ${code}`);
+    
+    // Check immediately when code is generated
+    checkCode();
+
+    // Then check every 5 seconds
+    const pollInterval = setInterval(() => {
+      if (timeLeft <= 0) {
+        console.log("[Quick Login] Parando verificação - Tempo expirado");
+        clearInterval(pollInterval);
+        return;
+      }
+      checkCode();
+    }, POLLING_INTERVAL);
+
+    return () => {
+      console.log("[Quick Login] Limpando intervalo de verificação");
+      clearInterval(pollInterval);
+    };
+  }, [code, timeLeft]);
 
   // Timer effect
   useEffect(() => {
@@ -183,19 +223,6 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
 
     return () => clearInterval(timer);
   }, [code, timeLeft]);
-
-  // Poll for code validation
-  useEffect(() => {
-    if (!code || timeLeft <= 0 || validationAttempts >= MAX_VALIDATION_ATTEMPTS) return;
-
-    // Check immediately when code is generated
-    checkCode();
-
-    // Then check every 10 seconds
-    const pollInterval = setInterval(checkCode, 10000);
-
-    return () => clearInterval(pollInterval);
-  }, [code, timeLeft, validationAttempts]);
 
   const handleRefresh = () => {
     window.location.reload();

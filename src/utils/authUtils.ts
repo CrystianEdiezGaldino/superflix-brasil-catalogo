@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -110,11 +109,24 @@ export const signInUser = async (email: string, password: string) => {
 export const signOutUser = async () => {
   try {
     console.log("Attempting to sign out");
+    
+    // First, get the current session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      console.log("No active session found, proceeding with sign out");
+    }
+    
+    // Sign out
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error("Sign out error:", error);
       throw error;
     }
+    
+    // Clear any local storage items that might be related to the session
+    localStorage.removeItem('supabase.auth.token');
+    
     console.log("Sign out successful");
   } catch (error: any) {
     console.error("Error during sign out:", error);
