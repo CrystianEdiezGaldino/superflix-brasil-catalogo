@@ -23,7 +23,6 @@ const MovieDetails = () => {
   const navigate = useNavigate();
   const [showPlayer, setShowPlayer] = useState(false);
   const [isContentAvailable, setIsContentAvailable] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
   const [focusedElement, setFocusedElement] = useState<string | null>(null);
   const [focusedButton, setFocusedButton] = useState<string | null>(null);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -43,42 +42,6 @@ const MovieDetails = () => {
   const { isFavorite, addToFavorites, removeFromFavorites, toggleFavorite } = useFavorites();
 
   const hasAccess = isSubscribed || isAdmin || hasTempAccess || hasTrialAccess;
-
-  // Check if device is mobile
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Handle orientation change
-  useEffect(() => {
-    if (showPlayer && isMobile) {
-      try {
-        // Try to lock screen orientation to landscape
-        if (screen.orientation && 'lock' in screen.orientation) {
-          (screen.orientation as any).lock('landscape').catch(() => {
-            // If lock fails, show message to user
-            toast.info("Por favor, gire seu dispositivo para modo paisagem para melhor visualização");
-          });
-        }
-      } catch (error) {
-        toast.info("Por favor, gire seu dispositivo para modo paisagem para melhor visualização");
-      }
-    }
-
-    return () => {
-      // Unlock orientation when component unmounts or player is closed
-      if (screen.orientation && 'unlock' in screen.orientation) {
-        (screen.orientation as any).unlock();
-      }
-    };
-  }, [showPlayer, isMobile]);
 
   // Redirect to auth if not logged in
   useEffect(() => {
@@ -152,160 +115,6 @@ const MovieDetails = () => {
     navigate(`/filme/${movie.id}`);
   };
 
-  // Navegação por controle de TV e Tab
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'Tab':
-          e.preventDefault();
-          if (focusedButton) {
-            if (e.shiftKey) {
-              setFocusedButton(null);
-              setFocusedElement('header');
-              headerRef.current?.focus();
-            } else {
-              setFocusedButton('favorite');
-            }
-          } else if (focusedElement === 'header') {
-            if (e.shiftKey) {
-              // Não faz nada, já está no topo
-            } else {
-              setFocusedElement('actions');
-              setFocusedButton('watch');
-            }
-          } else if (focusedElement === 'actions') {
-            if (e.shiftKey) {
-              setFocusedElement('header');
-              headerRef.current?.focus();
-            } else {
-              setFocusedElement('content');
-              contentRef.current?.focus();
-            }
-          } else if (focusedElement === 'content') {
-            if (e.shiftKey) {
-              setFocusedElement('actions');
-              setFocusedButton('watch');
-            } else {
-              setFocusedElement('recommendations');
-              recommendationsRef.current?.focus();
-            }
-          } else if (focusedElement === 'recommendations') {
-            if (e.shiftKey) {
-              setFocusedElement('content');
-              contentRef.current?.focus();
-            }
-            // Não faz nada se for para frente, já está no final
-          }
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          if (focusedButton) {
-            setFocusedButton(null);
-            if (actionsRef.current) {
-              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          } else if (focusedElement === 'actions') {
-            setFocusedElement('header');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } else if (focusedElement === 'content') {
-            setFocusedElement('actions');
-            if (actionsRef.current) {
-              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          } else if (focusedElement === 'recommendations') {
-            setFocusedElement('content');
-            if (actionsRef.current) {
-              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          if (focusedButton) {
-            setFocusedButton(null);
-            if (actionsRef.current) {
-              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          } else if (focusedElement === 'header') {
-            setFocusedElement('actions');
-            if (actionsRef.current) {
-              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          } else if (focusedElement === 'actions') {
-            if (showPlayer) {
-              setFocusedElement('player');
-              if (playerRef.current) {
-                playerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
-            } else {
-              setFocusedElement('content');
-              window.scrollBy({ top: 300, behavior: 'smooth' });
-            }
-          } else if (focusedElement === 'content') {
-            setFocusedElement('recommendations');
-            window.scrollBy({ top: 300, behavior: 'smooth' });
-          }
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          if (focusedButton === 'favorite') {
-            setFocusedButton('watch');
-          } else if (focusedButton === 'watch') {
-            setFocusedButton(null);
-            setFocusedElement('header');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } else if (focusedElement === 'actions') {
-            setFocusedElement('header');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-          break;
-        case 'ArrowRight':
-          e.preventDefault();
-          if (focusedButton === 'watch') {
-            setFocusedButton('favorite');
-          } else if (focusedButton === null && focusedElement === 'actions') {
-            setFocusedButton('watch');
-          } else if (focusedElement === 'header') {
-            setFocusedElement('actions');
-            if (actionsRef.current) {
-              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          }
-          break;
-        case 'Enter':
-          e.preventDefault();
-          if (focusedButton === 'watch') {
-            handleWatchClick();
-          } else if (focusedButton === 'favorite') {
-            handleToggleFavorite();
-          } else if (focusedElement === 'recommendations') {
-            const selectedMovie = recommendations[0];
-            if (selectedMovie) {
-              handleMovieClick(selectedMovie);
-            }
-          }
-          break;
-        case 'Backspace':
-          e.preventDefault();
-          if (focusedButton) {
-            setFocusedButton(null);
-          } else if (showPlayer) {
-            setShowPlayer(false);
-            setFocusedElement('actions');
-            if (actionsRef.current) {
-              actionsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-          } else {
-            navigate(-1);
-          }
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedElement, focusedButton, showPlayer, navigate, recommendations]);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
       <Navbar onSearch={() => {}} />
@@ -324,13 +133,14 @@ const MovieDetails = () => {
               setFocusedElement('header');
               setFocusedButton(null);
             }}
+            className="mb-4 sm:mb-6"
           >
             <MovieHeader 
               movie={movie} 
             />
           </div>
           
-          <div className="px-4 sm:px-6 md:px-10">
+          <div className="px-4 sm:px-6 md:px-10 mb-4 sm:mb-6">
             <AdblockSuggestion />
           </div>
 
@@ -341,6 +151,7 @@ const MovieDetails = () => {
               setFocusedElement('actions');
               setFocusedButton(null);
             }}
+            className="mb-6 sm:mb-8"
           >
             <MediaActions 
               onPlayClick={handleWatchClick}
@@ -360,14 +171,14 @@ const MovieDetails = () => {
               ref={playerRef}
               id="video-player" 
               tabIndex={0}
-              className={`${isMobile ? 'fixed inset-0 z-50 bg-black' : 'px-4 sm:px-6 md:px-10 mb-8 sm:mb-10'}`}
+              className="px-4 sm:px-6 md:px-10 mb-8 sm:mb-10"
               onFocus={() => {
                 setFocusedElement('player');
                 setFocusedButton(null);
               }}
             >
-              <div className={`${isMobile ? 'h-full w-full' : 'max-w-6xl mx-auto'}`}>
-                <div className={`${isMobile ? 'h-full w-full' : 'aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl'}`}>
+              <div className="max-w-6xl mx-auto">
+                <div className="aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl">
                   <MovieVideoPlayer 
                     showPlayer={true}
                     imdbId={movie.imdb_id || movie.external_ids?.imdb_id || ''}
@@ -391,6 +202,7 @@ const MovieDetails = () => {
               setFocusedElement('content');
               setFocusedButton(null);
             }}
+            className="mb-8 sm:mb-12"
           >
             <MovieContent movie={movie} hasAccess={hasAccess} />
           </div>

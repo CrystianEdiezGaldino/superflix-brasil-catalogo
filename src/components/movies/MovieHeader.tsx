@@ -11,7 +11,7 @@ const MovieHeader = ({ movie }: MovieHeaderProps) => {
   const releaseYear = new Date(movie.release_date).getFullYear();
   
   return (
-    <div className="relative h-[40vh] sm:h-[50vh] md:h-[70vh]">
+    <div className="relative h-[35vh] sm:h-[50vh] md:h-[70vh]">
       <div className="absolute inset-0">
         {movie.backdrop_path ? (
           <img
@@ -25,23 +25,23 @@ const MovieHeader = ({ movie }: MovieHeaderProps) => {
         <div className="absolute inset-0 bg-gradient-to-t from-netflix-background via-netflix-background/70 to-transparent"></div>
       </div>
       
-      <div className="absolute top-[15%] sm:top-[20%] left-4 sm:left-6 z-10">
+      <div className="absolute top-4 sm:top-[15%] left-4 sm:left-6 z-10">
         <Link to="/">
           <Button 
             variant="ghost" 
-            className="rounded-full bg-black/50 hover:bg-black/70 p-4 flex items-center justify-center text-white font-medium shadow-lg hover:scale-105 transition-transform"
+            className="rounded-full bg-black/50 hover:bg-black/70 p-2 sm:p-4 flex items-center justify-center text-white font-medium shadow-lg hover:scale-105 transition-transform"
           >
-            <ArrowLeft className="text-white h-8 w-8" />
+            <ArrowLeft className="text-white h-6 w-6 sm:h-8 sm:w-8" />
           </Button>
         </Link>
       </div>
       
       <div className="absolute bottom-0 left-0 w-full p-4 sm:p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 drop-shadow-lg">{movie.title}</h1>
-          <div className="flex items-center gap-3 text-sm text-gray-300">
-            <span className="bg-black/30 px-3 py-1 rounded-full">{releaseYear}</span>
-            <span className="px-3 py-1 bg-netflix-red rounded-full text-sm text-white font-medium">
+          <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-white mb-2 sm:mb-3 drop-shadow-lg">{movie.title}</h1>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-300">
+            <span className="bg-black/30 px-2 sm:px-3 py-1 rounded-full">{releaseYear}</span>
+            <span className="px-2 sm:px-3 py-1 bg-netflix-red rounded-full text-white font-medium">
               {Math.round(movie.vote_average * 10)}% Aprovação
             </span>
           </div>
@@ -49,7 +49,7 @@ const MovieHeader = ({ movie }: MovieHeaderProps) => {
       </div>
 
       {/* Gradiente adicional para melhor transição */}
-      <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-netflix-background to-transparent"></div>
+      <div className="absolute bottom-0 left-0 w-full h-24 sm:h-32 bg-gradient-to-t from-netflix-background to-transparent"></div>
     </div>
   );
 };

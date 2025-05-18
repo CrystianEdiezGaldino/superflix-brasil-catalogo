@@ -36,7 +36,6 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [focusedElement, setFocusedElement] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(true);
   const [showQuickLogin, setShowQuickLogin] = useState(false);
   const [autoShowQuickLogin, setAutoShowQuickLogin] = useState(false);
@@ -155,174 +154,6 @@ const Auth = () => {
     };
   }, [user, redirecting, navigate, redirectTo, loading]);
   
-  // Navegação por controle de TV
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case 'ArrowDown':
-          e.preventDefault();
-          if (focusedElement === 'email') {
-            setFocusedElement('password');
-            passwordRef.current?.focus();
-          } else if (focusedElement === 'password' && !isLogin) {
-            setFocusedElement('code');
-            codeRef.current?.focus();
-          } else if (focusedElement === 'code' || focusedElement === 'password') {
-            setFocusedElement('terms');
-            termsRef.current?.focus();
-          } else if (focusedElement === 'terms') {
-            setFocusedElement('submit');
-            submitRef.current?.focus();
-          } else if (focusedElement === 'submit') {
-            setFocusedElement('toggle');
-            toggleRef.current?.focus();
-          } else if (focusedElement === 'toggle') {
-            setFocusedElement('forgotPassword');
-            forgotPasswordRef.current?.focus();
-          }
-          break;
-
-        case 'ArrowUp':
-          e.preventDefault();
-          if (focusedElement === 'password') {
-            setFocusedElement('email');
-            emailRef.current?.focus();
-          } else if (focusedElement === 'code') {
-            setFocusedElement('password');
-            passwordRef.current?.focus();
-          } else if (focusedElement === 'terms') {
-            if (isLogin) {
-              setFocusedElement('password');
-              passwordRef.current?.focus();
-            } else {
-              setFocusedElement('code');
-              codeRef.current?.focus();
-            }
-          } else if (focusedElement === 'submit') {
-            setFocusedElement('terms');
-            termsRef.current?.focus();
-          } else if (focusedElement === 'toggle') {
-            setFocusedElement('submit');
-            submitRef.current?.focus();
-          } else if (focusedElement === 'forgotPassword') {
-            setFocusedElement('toggle');
-            toggleRef.current?.focus();
-          }
-          break;
-
-        case 'ArrowLeft':
-          e.preventDefault();
-          if (focusedElement === 'submit') {
-            setFocusedElement('terms');
-            termsRef.current?.focus();
-          } else if (focusedElement === 'toggle') {
-            setFocusedElement('submit');
-            submitRef.current?.focus();
-          } else if (focusedElement === 'forgotPassword') {
-            setFocusedElement('toggle');
-            toggleRef.current?.focus();
-          }
-          break;
-
-        case 'ArrowRight':
-          e.preventDefault();
-          if (focusedElement === 'terms') {
-            setFocusedElement('submit');
-            submitRef.current?.focus();
-          } else if (focusedElement === 'submit') {
-            setFocusedElement('toggle');
-            toggleRef.current?.focus();
-          } else if (focusedElement === 'toggle') {
-            setFocusedElement('forgotPassword');
-            forgotPasswordRef.current?.focus();
-          }
-          break;
-
-        case 'Enter':
-          e.preventDefault();
-          if (focusedElement === 'submit') {
-            handleSubmit();
-          } else if (focusedElement === 'toggle') {
-            setIsLogin(!isLogin);
-          } else if (focusedElement === 'forgotPassword') {
-            // Implementar lógica de "Esqueceu a senha?"
-          } else if (focusedElement === 'terms') {
-            setTermsAccepted(!termsAccepted);
-          }
-          break;
-
-        case 'Backspace':
-          e.preventDefault();
-          window.history.back();
-          break;
-
-        case 'Escape':
-          e.preventDefault();
-          window.history.back();
-          break;
-
-        case 'Tab':
-          e.preventDefault();
-          // Navegação circular
-          if (focusedElement === 'email') {
-            setFocusedElement('password');
-            passwordRef.current?.focus();
-          } else if (focusedElement === 'password') {
-            setFocusedElement('terms');
-            termsRef.current?.focus();
-          } else if (focusedElement === 'terms') {
-            setFocusedElement('submit');
-            submitRef.current?.focus();
-          } else if (focusedElement === 'submit') {
-            setFocusedElement('toggle');
-            toggleRef.current?.focus();
-          } else if (focusedElement === 'toggle') {
-            setFocusedElement('forgotPassword');
-            forgotPasswordRef.current?.focus();
-          } else if (focusedElement === 'forgotPassword') {
-            setFocusedElement('email');
-            emailRef.current?.focus();
-          }
-          break;
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedElement, isLogin, termsAccepted]);
-
-  // Adicionar classes de foco visível para TV
-  const getFocusClasses = (element: string) => {
-    return focusedElement === element 
-      ? 'ring-2 ring-netflix-red ring-offset-2 ring-offset-black' 
-      : '';
-  };
-
-  // Scroll automático para o formulário de login
-  useEffect(() => {
-    // Primeiro faz um scroll inicial para esconder o banner
-    window.scrollTo({
-      top: 300, // Ajuste este valor conforme necessário
-      behavior: 'smooth'
-    });
-
-    // Depois faz o scroll para o formulário
-    const loginForm = document.querySelector('.bg-black\\/75');
-    if (loginForm) {
-      setTimeout(() => {
-        loginForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 100);
-    }
-  }, []);
-
-  // Focar no campo de email quando a página carregar
-  useEffect(() => {
-    if (emailRef.current) {
-      emailRef.current.focus();
-      setFocusedElement('email');
-    }
-  }, []);
-
   // Auto show quick login after 30 seconds
   useEffect(() => {
     if (user || showQuickLogin || autoShowQuickLogin || !isLogin) return;
@@ -396,8 +227,7 @@ const Auth = () => {
     } catch (error) {
       console.error("Erro na autenticação:", error);
       toast.error(isLogin ? "Erro ao fazer login" : "Erro ao criar conta");
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Ensure loading state is reset on error
     }
   };
   
@@ -466,8 +296,7 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       disabled={isLoading}
-                      className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('email')}`}
-                      onFocus={() => setFocusedElement('email')}
+                      className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
                       autoFocus
                       aria-label="Campo de email"
                     />
@@ -483,8 +312,7 @@ const Auth = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       disabled={isLoading}
-                      className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('password')}`}
-                      onFocus={() => setFocusedElement('password')}
+                      className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
                       aria-label="Campo de senha"
                     />
                   </div>
@@ -500,8 +328,7 @@ const Auth = () => {
                         value={code}
                         onChange={(e) => setCode(e.target.value)}
                         disabled={isLoading}
-                        className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${getFocusClasses('code')}`}
-                        onFocus={() => setFocusedElement('code')}
+                        className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
                         aria-label="Campo de código de acesso (opcional)"
                       />
                     </div>
@@ -513,8 +340,7 @@ const Auth = () => {
                       id="terms"
                       checked={true}
                       onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-                      className={`border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red ${getFocusClasses('terms')}`}
-                      onFocus={() => setFocusedElement('terms')}
+                      className="border-gray-600 data-[state=checked]:bg-netflix-red data-[state=checked]:border-netflix-red"
                       aria-label="Aceitar termos de serviço"
                     />
                     <Label htmlFor="terms" className="text-sm text-gray-300">
@@ -541,8 +367,7 @@ const Auth = () => {
                     ref={submitRef}
                     onClick={handleSubmit}
                     disabled={isLoading}
-                    className={`w-full bg-netflix-red hover:bg-red-700 ${getFocusClasses('submit')}`}
-                    onFocus={() => setFocusedElement('submit')}
+                    className="w-full bg-netflix-red hover:bg-red-700"
                     aria-label={isLogin ? "Botão de entrar" : "Botão de criar conta"}
                   >
                     {isLoading ? "Processando..." : isLogin ? "Entrar" : "Criar Conta"}
@@ -552,8 +377,7 @@ const Auth = () => {
                     ref={toggleRef}
                     variant="ghost"
                     onClick={() => setIsLogin(!isLogin)}
-                    className={`w-full text-gray-400 hover:text-white ${getFocusClasses('toggle')}`}
-                    onFocus={() => setFocusedElement('toggle')}
+                    className="w-full text-gray-400 hover:text-white"
                     aria-label={isLogin ? "Botão para criar conta" : "Botão para fazer login"}
                   >
                     {isLogin ? "Criar uma conta" : "Já tenho uma conta"}
@@ -564,8 +388,7 @@ const Auth = () => {
                       <Button
                         ref={forgotPasswordRef}
                         variant="link"
-                        className={`w-full text-netflix-red hover:text-red-400 ${getFocusClasses('forgotPassword')}`}
-                        onFocus={() => setFocusedElement('forgotPassword')}
+                        className="w-full text-netflix-red hover:text-red-400"
                         aria-label="Botão de esqueceu a senha"
                       >
                         Esqueceu a senha?
