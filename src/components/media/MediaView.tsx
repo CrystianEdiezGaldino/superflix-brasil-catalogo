@@ -41,8 +41,6 @@ interface MediaViewProps {
   onResetFilters?: () => void;
   onMediaClick: (media: MediaItem) => void;
   children?: React.ReactNode;
-  focusedSection?: number;
-  focusedItem?: number;
 }
 
 const MediaView = ({
@@ -69,17 +67,15 @@ const MediaView = ({
   onResetFilters,
   onMediaClick,
   children,
-  focusedSection = 0,
-  focusedItem = 0
 }: MediaViewProps) => {
-  const [currentFocusedSection, setCurrentFocusedSection] = useState(focusedSection);
-  const [currentFocusedItem, setCurrentFocusedItem] = useState(focusedItem);
-  const [showFilters, setShowFilters] = useState(false);
+  const [currentFocusedSection, setCurrentFocusedSection] = useState(0);
+  const [currentFocusedItem, setCurrentFocusedItem] = useState(0);
   const [focusedElement, setFocusedElement] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const yearFilterRef = useRef<HTMLSelectElement>(null);
   const ratingFilterRef = useRef<HTMLSelectElement>(null);
   const resetFilterRef = useRef<HTMLButtonElement>(null);
+  const sectionsRef = useRef<HTMLDivElement>(null);
 
   // Helper function to determine content section title based on type
   const getContentTypeTitle = (contentType: string) => {
@@ -102,6 +98,9 @@ const MediaView = ({
   // Efeito para navegação por controle de TV
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const currentSectionItems = sections[currentFocusedSection]?.items || [];
+      const itemsPerRow = Math.floor((sectionsRef.current?.clientWidth || 0) / 200); // Aproximadamente 200px por item
+
       switch (e.key) {
         case "Tab":
           e.preventDefault();
@@ -127,14 +126,70 @@ const MediaView = ({
           if (focusedElement === 'search' || focusedElement === 'yearFilter' || 
               focusedElement === 'ratingFilter' || focusedElement === 'resetFilter') {
             setFocusedElement(null);
+            setCurrentFocusedSection(0);
+            setCurrentFocusedItem(0);
+          } else if (currentFocusedSection < sections.length) {
+            if (currentFocusedItem + itemsPerRow < currentSectionItems.length) {
+              setCurrentFocusedItem(prev => prev + itemsPerRow);
+              const nextRowItem = document.querySelector(`[data-section="${currentFocusedSection}"][data-item="${currentFocusedItem + itemsPerRow}"]`);
+              if (nextRowItem) {
+                nextRowItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+              }
+            } else if (currentFocusedSection < sections.length - 1) {
+              setCurrentFocusedSection(prev => prev + 1);
+              setCurrentFocusedItem(0);
+              const nextSectionItem = document.querySelector(`[data-section="${currentFocusedSection + 1}"][data-item="0"]`);
+              if (nextSectionItem) {
+                nextSectionItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+              }
+            }
           }
           break;
 
         case "ArrowUp":
           e.preventDefault();
-          if (focusedElement === null) {
-            setFocusedElement('search');
-            searchRef.current?.focus();
+          if (currentFocusedSection < sections.length) {
+            if (currentFocusedItem - itemsPerRow >= 0) {
+              setCurrentFocusedItem(prev => prev - itemsPerRow);
+              const prevRowItem = document.querySelector(`[data-section="${currentFocusedSection}"][data-item="${currentFocusedItem - itemsPerRow}"]`);
+              if (prevRowItem) {
+                prevRowItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+              }
+            } else if (currentFocusedSection > 0) {
+              setCurrentFocusedSection(prev => prev - 1);
+              const prevSectionItems = sections[currentFocusedSection - 1]?.items || [];
+              const newIndex = Math.max(0, prevSectionItems.length - itemsPerRow);
+              setCurrentFocusedItem(newIndex);
+              const prevSectionItem = document.querySelector(`[data-section="${currentFocusedSection - 1}"][data-item="${newIndex}"]`);
+              if (prevSectionItem) {
+                prevSectionItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+              }
+            } else {
+              setFocusedElement('search');
+              searchRef.current?.focus();
+            }
+          }
+          break;
+
+        case "ArrowRight":
+          e.preventDefault();
+          if (currentFocusedSection < sections.length && currentFocusedItem < currentSectionItems.length - 1) {
+            setCurrentFocusedItem(prev => prev + 1);
+            const nextItem = document.querySelector(`[data-section="${currentFocusedSection}"][data-item="${currentFocusedItem + 1}"]`);
+            if (nextItem) {
+              nextItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+          }
+          break;
+
+        case "ArrowLeft":
+          e.preventDefault();
+          if (currentFocusedSection < sections.length && currentFocusedItem > 0) {
+            setCurrentFocusedItem(prev => prev - 1);
+            const prevItem = document.querySelector(`[data-section="${currentFocusedSection}"][data-item="${currentFocusedItem - 1}"]`);
+            if (prevItem) {
+              prevItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
           }
           break;
 
@@ -142,6 +197,8 @@ const MediaView = ({
           e.preventDefault();
           if (focusedElement === 'resetFilter') {
             onResetFilters?.();
+          } else if (currentFocusedSection < sections.length && currentSectionItems[currentFocusedItem]) {
+            onMediaClick(currentSectionItems[currentFocusedItem]);
           }
           break;
 
@@ -156,7 +213,7 @@ const MediaView = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [focusedElement, onResetFilters]);
+  }, [currentFocusedSection, currentFocusedItem, focusedElement, sections, onResetFilters, onMediaClick]);
 
   return (
     <div className="min-h-screen bg-netflix-background">
@@ -169,19 +226,20 @@ const MediaView = ({
         {!isSearching && !isFiltering && children}
         
         {/* Seções de conteúdo - ocultadas durante a busca */}
-        <div className={isSearching ? "hidden" : ""}>
-          {sections.map((section, idx) => (
+        <div ref={sectionsRef} className={isSearching ? "hidden" : ""}>
+          {sections.map((section, sectionIndex) => (
             section.items && section.items.length > 0 && (
               <MediaSection
                 key={section.title}
                 title={section.title}
                 medias={section.items}
                 onMediaClick={onMediaClick}
-                focusedItem={currentFocusedSection === idx ? currentFocusedItem : -1}
+                focusedItem={currentFocusedSection === sectionIndex ? currentFocusedItem : -1}
                 onFocusChange={(index) => {
                   setCurrentFocusedItem(index);
-                  setCurrentFocusedSection(idx);
+                  setCurrentFocusedSection(sectionIndex);
                 }}
+                sectionIndex={sectionIndex}
               />
             )
           ))}
