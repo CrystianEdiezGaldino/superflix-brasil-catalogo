@@ -204,7 +204,8 @@ serve(async (req) => {
             .update({
               user_id: userId,
               used: true,
-              status: 'validated'
+              status: 'validated',
+              validated_at: new Date().toISOString()
             })
             .eq("id", loginCode.id);
 
@@ -214,6 +215,20 @@ serve(async (req) => {
               JSON.stringify({ error: updateError.message }),
               { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
+          }
+
+          // Create a new access record for the user
+          const { error: accessError } = await supabaseClient
+            .from("device_access")
+            .insert({
+              user_id: userId,
+              device_info: loginCode.device_info,
+              created_at: new Date().toISOString()
+            });
+
+          if (accessError) {
+            log("Error creating device access record", accessError, true);
+            // Don't return error here as the code was already validated
           }
 
           log("Code validated successfully", { userId });
