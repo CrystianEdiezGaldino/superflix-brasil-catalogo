@@ -7,15 +7,20 @@ import { fetchUpcoming } from "../services/tmdb/upcoming";
 import MediaView from "../components/media/MediaView";
 import type { MediaItem } from "../types/movie";
 import { useMovies } from "../hooks/movies/useMovies";
+import { useAuth } from "@/contexts/AuthContext";
+import UnauthenticatedState from "@/components/home/UnauthenticatedState";
+import LoadingState from "@/components/home/LoadingState";
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [yearFilter, setYearFilter] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
   const [focusedSection, setFocusedSection] = useState(0);
   const [focusedItem, setFocusedItem] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const initialLoadComplete = useRef(false);
 
   const {
     movies,
@@ -38,6 +43,24 @@ const Home = () => {
     queryKey: ["upcoming"],
     queryFn: () => fetchUpcoming()
   });
+
+  // Only show loading state on initial load
+  const isLoading = (isLoadingTrending || isLoadingTopRated || isLoadingUpcoming) && !initialLoadComplete.current;
+  
+  useEffect(() => {
+    if (!isLoading && !initialLoadComplete.current) {
+      initialLoadComplete.current = true;
+    }
+  }, [isLoading]);
+
+  // Show appropriate state based on authentication
+  if (authLoading) {
+    return <LoadingState />;
+  }
+
+  if (!user && !authLoading) {
+    return <UnauthenticatedState />;
+  }
 
   const sections = [
     { key: 'trending', items: trending, title: 'Tendências' },
@@ -144,7 +167,7 @@ const Home = () => {
         trendingItems={trending}
         topRatedItems={topRated}
         recentItems={upcoming}
-        isLoading={isLoadingTrending || isLoadingTopRated || isLoadingUpcoming}
+        isLoading={isLoading}
         isLoadingMore={isLoadingMore}
         hasMore={hasMore}
         isFiltering={!!yearFilter || !!ratingFilter}

@@ -1,3 +1,4 @@
+
 import { createContext, useContext, ReactNode, useMemo } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { useAuthState } from "@/hooks/useAuthState";
@@ -71,6 +72,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register
     };
   }, [session, user, loading]);
+  
+  // Debug log to help trace auth issues
+  console.log("AuthContext state:", { 
+    hasUser: !!user, 
+    isLoading: loading, 
+    sessionExists: !!session
+  });
   
   return (
     <AuthContext.Provider value={authValues}>

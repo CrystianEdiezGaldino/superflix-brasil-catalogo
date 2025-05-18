@@ -13,6 +13,7 @@ export const useAuthState = () => {
   const [loading, setLoading] = useState(true);
   const [visibilityChanged, setVisibilityChanged] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
+  const [lastAuthEvent, setLastAuthEvent] = useState<string | null>(null);
 
   useEffect(() => {
     let isActive = true; // For cleanup/preventing state updates after unmount
@@ -23,6 +24,7 @@ export const useAuthState = () => {
         if (!isActive) return; // Don't update state if component unmounted
         
         console.log("Auth state changed:", event);
+        setLastAuthEvent(event);
         
         // Skip redundant updates and UI refreshes when just returning from tab switch
         if (visibilityChanged && event === "INITIAL_SESSION" && newSession?.user?.id === user?.id) {
@@ -48,6 +50,11 @@ export const useAuthState = () => {
             console.log("User signed out");
             toast.info("Você saiu da sua conta");
           }
+        }
+        
+        // Set loading to false regardless of whether state was updated
+        if (loading && event !== "INITIAL_SESSION") {
+          setLoading(false);
         }
       }
     );
@@ -96,5 +103,5 @@ export const useAuthState = () => {
     };
   }, [visibilityChanged]);
 
-  return { user, session, loading };
+  return { user, session, loading, lastAuthEvent };
 };
