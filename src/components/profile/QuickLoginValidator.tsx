@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const QuickLoginValidator = () => {
   const [code, setCode] = useState("");
   const [isValidating, setIsValidating] = useState(false);
+  const { session } = useAuth();
 
   const validateCode = async () => {
     if (!code) {
@@ -17,16 +19,13 @@ export const QuickLoginValidator = () => {
       return;
     }
 
+    if (!session) {
+      toast.error("Você precisa estar logado para validar um código");
+      return;
+    }
+
     setIsValidating(true);
     try {
-      // Get the current session first to use its access token
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !sessionData.session) {
-        toast.error("Você precisa estar logado para validar um código");
-        return;
-      }
-
       console.log("Attempting to validate code with session token");
       
       const { data, error } = await supabase.functions.invoke('quick-login', {
@@ -34,18 +33,18 @@ export const QuickLoginValidator = () => {
           action: 'validate',
           code
         },
-        // Explicitly pass the access token in headers
         headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
       if (error) {
         console.error("Error validating code:", error);
-        throw error;
+        throw new Error(error.message || "Erro de comunicação com o servidor");
       }
       
       if (!data?.success) {
+        console.error("Validation response without success:", data);
         throw new Error('Falha ao validar código');
       }
 
@@ -58,6 +57,22 @@ export const QuickLoginValidator = () => {
       setIsValidating(false);
     }
   };
+
+  // Format code to be more readable: XX-XXXX
+  const formatCode = (input: string): string => {
+    const cleaned = input.replace(/[^A-Z0-9]/g, '');
+    if (cleaned.length <= 2) return cleaned;
+    return `${cleaned.slice(0, 2)}-${cleaned.slice(2)}`;
+  };
+
+  const handleCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.toUpperCase();
+    // Strip all non-alphanumeric characters for internal storage
+    const cleanValue = value.replace(/[^A-Z0-9]/g, '');
+    setCode(cleanValue);
+  };
+
+  const displayCode = formatCode(code);
 
   return (
     <Card className="bg-black/75 border-gray-800 p-8">
@@ -75,17 +90,17 @@ export const QuickLoginValidator = () => {
             id="code"
             type="text"
             placeholder="Digite o código"
-            value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            value={displayCode}
+            onChange={handleCodeChange}
             disabled={isValidating}
-            className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
-            maxLength={6}
+            className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red text-center text-lg tracking-wider"
+            maxLength={7} // 6 chars plus 1 hyphen
           />
         </div>
 
         <Button
           onClick={validateCode}
-          disabled={isValidating}
+          disabled={isValidating || code.length < 6}
           className="w-full bg-netflix-red hover:bg-red-700"
         >
           {isValidating ? "Validando..." : "Validar Código"}

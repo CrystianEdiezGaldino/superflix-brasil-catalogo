@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +30,7 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
       language: navigator.language,
       screenWidth: window.screen.width,
       screenHeight: window.screen.height,
+      timestamp: new Date().toISOString(),
     };
     setDeviceInfo(info);
     
@@ -68,6 +67,8 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
               deviceInfo: info
             }
           });
+          
+          console.log("Code generation response:", response);
           
           if (response.error) throw response.error;
           responseData = response.data;
@@ -109,6 +110,8 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
     
     setIsChecking(true);
     try {
+      console.log("Checking code status:", code);
+      
       const { data, error } = await supabase.functions.invoke('quick-login', {
         body: {
           action: 'check',
@@ -121,15 +124,22 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
         throw error;
       }
       
+      console.log("Code check response:", data);
+      
       if (data.status === 'validated') {
         // Set the session
         try {
+          console.log("Setting user session", data.session);
+          
           const { error: sessionError } = await supabase.auth.setSession({
             access_token: data.session.access_token,
             refresh_token: data.session.refresh_token
           });
 
-          if (sessionError) throw sessionError;
+          if (sessionError) {
+            console.error("Error setting session:", sessionError);
+            throw sessionError;
+          }
           
           onLogin(data.session);
           toast.success("Login realizado com sucesso!");
@@ -189,6 +199,11 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
     window.location.reload();
   };
 
+  // Format code to be more readable: XX-XXXX
+  const displayCode = code ? 
+    `${code.substring(0, 2)}-${code.substring(2)}` : 
+    '';
+
   return (
     <Card className="bg-black/75 border-gray-800 p-8">
       <div className="space-y-4">
@@ -231,7 +246,7 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
           <div className="space-y-4">
             <div className="text-center">
               <div className="text-4xl font-mono font-bold text-white mb-2 tracking-wider">
-                {code}
+                {displayCode}
               </div>
               <div className="text-sm text-gray-400">
                 Expira em {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}

@@ -82,4 +82,3 @@ verify_jwt = false
 
 [experimental.functions.send-ticket-response]
 verify_jwt = false
-
