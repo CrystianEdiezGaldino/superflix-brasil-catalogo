@@ -40,7 +40,8 @@ export const useContentSections = () => {
     recentAnimes,
     isLoading,
     hasError,
-    searchResults,
+    // Renamed this to apiSearchResults to avoid conflict
+    searchResults: apiSearchResults, 
     isSearchLoading,
     handleSearch: originalHandleSearch,
   } = useHomePageData();
@@ -142,8 +143,11 @@ export const useContentSections = () => {
     }
     
     try {
-      await originalHandleSearch(query);
-      setSearchResults(searchResults || []);
+      if (originalHandleSearch) {
+        await originalHandleSearch(query);
+        // Use apiSearchResults instead of searchResults
+        setSearchResults(apiSearchResults || []);
+      }
     } catch (error) {
       console.error("Search error:", error);
       setSearchResults([]);
