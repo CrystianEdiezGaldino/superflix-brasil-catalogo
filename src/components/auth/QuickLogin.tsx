@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
   const [isExpired, setIsExpired] = useState(false);
   const [generationAttempts, setGenerationAttempts] = useState(0);
   const MAX_VALIDATION_ATTEMPTS = 12; // 2 minutes (12 * 10 seconds)
-  const MAX_GENERATION_ATTEMPTS = 3; // Máximo de tentativas de geração
+  const MAX_GENERATION_ATTEMPTS = 3; // Max generation attempts
 
   // Get device info and generate code on mount
   useEffect(() => {
@@ -67,8 +68,8 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
       setTimeLeft(300); // Reset timer
       setGenerationAttempts(0); // Reset generation attempts on success
     } catch (error: any) {
+      console.error("Error generating code:", error);
       toast.error(error.message || "Erro ao gerar código");
-      console.error(error);
       setGenerationAttempts(prev => prev + 1);
       
       if (generationAttempts + 1 >= MAX_GENERATION_ATTEMPTS) {
@@ -93,19 +94,27 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error checking code:", error);
+        throw error;
+      }
       
       if (data.status === 'validated') {
         // Set the session
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token
-        });
+        try {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: data.session.access_token,
+            refresh_token: data.session.refresh_token
+          });
 
-        if (sessionError) throw sessionError;
-        
-        onLogin(data.session);
-        toast.success("Login realizado com sucesso!");
+          if (sessionError) throw sessionError;
+          
+          onLogin(data.session);
+          toast.success("Login realizado com sucesso!");
+        } catch (sessionError: any) {
+          console.error("Error setting session:", sessionError);
+          toast.error("Erro ao configurar sessão: " + sessionError.message);
+        }
       } else if (data.status === 'expired') {
         setCode("");
         setIsExpired(true);
@@ -115,7 +124,7 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
         toast.error("Código inválido");
       }
     } catch (error: any) {
-      console.error(error);
+      console.error("Error in checkCode:", error);
     } finally {
       setIsChecking(false);
       setValidationAttempts(prev => prev + 1);
@@ -223,4 +232,4 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
       </div>
     </Card>
   );
-}; 
+};

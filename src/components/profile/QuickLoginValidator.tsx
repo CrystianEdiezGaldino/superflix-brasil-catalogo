@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,26 +19,27 @@ export const QuickLoginValidator = () => {
 
     setIsValidating(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/quick-login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({
+      // Use the Supabase client's invoke method to call the edge function
+      const { data, error } = await supabase.functions.invoke('quick-login', {
+        body: {
           action: 'validate',
           code
-        })
+        }
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to validate code');
+      if (error) {
+        console.error("Error validating code:", error);
+        throw error;
+      }
+      
+      if (!data?.success) {
+        throw new Error('Falha ao validar código');
       }
 
       toast.success("Dispositivo validado com sucesso!");
       setCode("");
     } catch (error: any) {
+      console.error("Error in validateCode:", error);
       toast.error(error.message || "Erro ao validar código");
     } finally {
       setIsValidating(false);
@@ -78,4 +80,4 @@ export const QuickLoginValidator = () => {
       </div>
     </Card>
   );
-}; 
+};
