@@ -3,6 +3,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient, ExtendedGoTrueAdminApi } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { nanoid } from "https://esm.sh/nanoid@4.0.2";
 
+// Custom alphabet for nanoid to use only alphanumeric characters
+const ALPHANUMERIC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
 // CORS headers to allow cross-origin requests from any origin
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://naflixtv.lovable.app",
@@ -61,8 +64,8 @@ serve(async (req) => {
 
     switch (action) {
       case "generate": {
-        // Generate a new login code
-        const loginCode = nanoid(6).toUpperCase();
+        // Generate a new login code using only alphanumeric characters
+        const loginCode = nanoid(6).replace(/[^A-Z0-9]/g, '');
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + 5); // 5 minutes expiration
 
