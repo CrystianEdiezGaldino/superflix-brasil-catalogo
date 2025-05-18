@@ -54,17 +54,39 @@ export const QuickLogin = ({ onLogin }: QuickLoginProps) => {
     setValidationAttempts(0);
     setIsExpired(false);
     try {
-      const { data, error } = await supabase.functions.invoke('quick-login', {
-        body: {
-          action: 'generate',
-          deviceInfo: info
+      // Add error handling with retry
+      let retries = 0;
+      const maxRetries = 3;
+      let success = false;
+      let responseData = null;
+      
+      while (retries < maxRetries && !success) {
+        try {
+          const response = await supabase.functions.invoke('quick-login', {
+            body: {
+              action: 'generate',
+              deviceInfo: info
+            }
+          });
+          
+          if (response.error) throw response.error;
+          responseData = response.data;
+          success = true;
+        } catch (err) {
+          console.error(`Attempt ${retries + 1} failed:`, err);
+          retries++;
+          // Wait a bit before retrying
+          if (retries < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+          }
         }
-      });
+      }
+      
+      if (!success || !responseData?.code) {
+        throw new Error('Failed to generate code after multiple attempts');
+      }
 
-      if (error) throw error;
-      if (!data?.code) throw new Error('Código não gerado corretamente');
-
-      setCode(data.code);
+      setCode(responseData.code);
       setTimeLeft(300); // Reset timer
       setGenerationAttempts(0); // Reset generation attempts on success
     } catch (error: any) {

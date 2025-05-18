@@ -1,4 +1,4 @@
-import { Subscription } from '@/types/admin';
+import { AnalyticsData, AdminData } from '@/types/admin';
 
 interface CacheEntry<T> {
   data: T;
@@ -49,4 +49,4 @@ class CacheManager {
   }
 }
 
-export const cacheManager = CacheManager.getInstance(); 
+export const cacheManager = CacheManager.getInstance();

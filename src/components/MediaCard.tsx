@@ -1,8 +1,8 @@
+
 import { Link } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
 import { Card } from "@/components/ui/card";
 import { Heart } from "lucide-react";
-import FavoriteButton from "./FavoriteButton";
 
 interface MediaCardProps {
   media: MediaItem;

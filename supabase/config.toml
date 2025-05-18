@@ -80,3 +80,5 @@ verify_jwt = true
 [experimental.functions.quick-login]
 verify_jwt = false
 
+[experimental.functions.send-ticket-response]
+verify_jwt = false

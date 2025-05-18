@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -19,7 +20,6 @@ export const useHomePageData = () => {
     hasTempAccess,
     hasTrialAccess,
     isLoading: subscriptionLoading, 
-    trialEnd,
     checkSubscription
   } = useSubscription();
   
@@ -48,7 +48,7 @@ export const useHomePageData = () => {
   } = usePopularContent(user?.id);
   
   // Import data from smaller hooks
-  const { handleSearch: originalHandleSearch } = useMediaSearch();
+  const { searchMedia, results, isLoading: searchLoading, hasMore, currentPage } = useMediaSearch();
   const { recommendations } = useRecommendations();
   const { 
     moviesData, 
@@ -78,7 +78,9 @@ export const useHomePageData = () => {
   );
 
   // Create a memoized search handler to prevent recreation on each render
-  const handleSearch = useCallback(originalHandleSearch, [originalHandleSearch]);
+  const handleSearch = useCallback((query: string, page: number = 1) => {
+    return searchMedia(query, page);
+  }, [searchMedia]);
 
   // Debug log to help track subscription state
   console.log("Home page data:", { 
@@ -104,7 +106,6 @@ export const useHomePageData = () => {
     isAdmin,
     hasAccess,
     hasTrialAccess,
-    trialEnd,
     featuredMedia,
     recommendations,
     moviesData,
@@ -123,5 +124,9 @@ export const useHomePageData = () => {
     isLoading,
     hasError,
     handleSearch,
+    searchResults: results,
+    isSearchLoading: searchLoading,
+    hasMoreResults: hasMore,
+    searchCurrentPage: currentPage
   };
 };

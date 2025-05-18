@@ -19,6 +19,11 @@ export const QuickLoginValidator = () => {
 
     setIsValidating(true);
     try {
+      const session = await supabase.auth.getSession();
+      if (!session.data.session) {
+        throw new Error("Você precisa estar logado para validar um código");
+      }
+
       // Use the Supabase client's invoke method to call the edge function
       const { data, error } = await supabase.functions.invoke('quick-login', {
         body: {
