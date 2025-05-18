@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { QuickLoginValidator } from "./QuickLoginValidator";
+import { X } from "lucide-react";
 
 interface ProfileTabProps {
   user: User | null;
@@ -70,7 +71,17 @@ export const ProfileTab = ({ user, profile, handleLogout }: ProfileTabProps) => 
       </Card>
 
       {showQuickLoginValidator && (
-        <QuickLoginValidator />
+        <div className="relative">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-2 z-10 text-gray-400 hover:text-white"
+            onClick={() => setShowQuickLoginValidator(false)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <QuickLoginValidator />
+        </div>
       )}
     </div>
   );

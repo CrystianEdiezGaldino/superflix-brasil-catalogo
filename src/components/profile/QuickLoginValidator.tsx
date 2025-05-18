@@ -45,7 +45,14 @@ export const QuickLoginValidator = () => {
 
       if (error) {
         console.error("[Quick Login Validator] Erro na validação:", error);
+        if (error.message?.includes("non-2xx status code")) {
+          throw new Error("Código inválido ou expirado");
+        }
         throw new Error(error.message || "Erro de comunicação com o servidor");
+      }
+
+      if (!data) {
+        throw new Error("Resposta inválida do servidor");
       }
 
       toast.success("Dispositivo validado com sucesso!");
