@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
@@ -24,7 +25,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [backgroundImage, setBackgroundImage] = useState("");
@@ -57,11 +58,11 @@ const Auth = () => {
     queryKey: ["authMoviesPreview"],
     queryFn: () => fetchPopularMovies(1, 10), // Reduzimos para apenas 10 itens
     staleTime: 1000 * 60 * 30, // 30 minutos
-    cacheTime: 1000 * 60 * 60, // 1 hora
+    gcTime: 1000 * 60 * 60, // 1 hora - replacing cacheTime which is deprecated
   });
   
   // Filter only content with images
-  const filteredMovies = moviesPreview.filter(movie => movie.poster_path || movie.backdrop_path).slice(0, 5);
+  const filteredMovies = (moviesPreview as MediaItem[]).filter(movie => movie.poster_path || movie.backdrop_path).slice(0, 5);
   const filteredSeries = getFilteredSeries().filter(serie => serie.poster_path || serie.backdrop_path).slice(0, 5);
   const filteredAnimes = getFilteredAnimes().filter(anime => anime.poster_path || anime.backdrop_path).slice(0, 5);
   
@@ -296,6 +297,47 @@ const Auth = () => {
     return <Navigate to={redirectTo} replace />;
   }
   
+  // Login and registration handlers
+  const handleLogin = async (email: string, password: string) => {
+    if (!termsAccepted) {
+      toast.error("Você precisa aceitar os termos para continuar");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await signIn(email, password);
+    } catch (error: any) {
+      toast.error(error.message || "Ocorreu um erro");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRegister = async (email: string, password: string, code: string) => {
+    if (!termsAccepted) {
+      toast.error("Você precisa aceitar os termos para continuar");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await signUp(email, password, { name: email, code });
+      // Se tinha um código de acesso, força refresh para atualizar dados da assinatura
+      if (code) {
+        // Aguardar 1 segundo antes de recarregar para garantir que o registro foi concluído
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        return;
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Ocorreu um erro");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
   return (
     <div 
       className="min-h-screen bg-netflix-background bg-cover bg-center transition-all duration-1000"
@@ -402,30 +444,10 @@ const Auth = () => {
                 <Button
                   ref={submitRef}
                   onClick={async () => {
-                    if (!termsAccepted) {
-                      toast.error("Você precisa aceitar os termos para continuar");
-                      return;
-                    }
-
-                    setIsLoading(true);
-                    try {
-                      if (isLogin) {
-                        await login(email, password);
-                      } else {
-                        await register(email, password, code);
-                        // Se tinha um código de acesso, força refresh para atualizar dados da assinatura
-                        if (code) {
-                          // Aguardar 1 segundo antes de recarregar para garantir que o registro foi concluído
-                          setTimeout(() => {
-                            window.location.reload();
-                          }, 1000);
-                          return;
-                        }
-                      }
-                    } catch (error: any) {
-                      toast.error(error.message || "Ocorreu um erro");
-                    } finally {
-                      setIsLoading(false);
+                    if (isLogin) {
+                      await handleLogin(email, password);
+                    } else {
+                      await handleRegister(email, password, code);
                     }
                   }}
                   onFocus={() => setFocusedElement("submit")}
