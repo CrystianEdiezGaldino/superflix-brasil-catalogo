@@ -61,6 +61,7 @@ const ContentPreview = ({ movies, series = [], anime = [] }: ContentPreviewProps
             setFocusedSection(sectionIndex);
             setFocusedItem(idx);
           }}
+          sectionIndex={sectionIndex}
         />
       ))}
     </div>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ export const QuickLoginValidator = () => {
         // Buscar o usuário que validou o código
         console.log("[QuickLoginValidator] Buscando dados do usuário...");
         const { data: userData, error: userError } = await supabase
-          .from('profiles')
+          .from('auth.users') // Use auth.users instead of profiles since profiles doesn't have email
           .select('email')
           .eq('id', loginCode.user_id)
           .single();

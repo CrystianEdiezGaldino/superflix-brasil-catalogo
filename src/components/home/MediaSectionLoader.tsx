@@ -1,3 +1,4 @@
+
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
 
@@ -10,6 +11,7 @@ interface MediaSectionLoaderProps {
   hasMore: boolean;
   onMediaClick?: (media: MediaItem) => void;
   mediaType?: 'movie' | 'tv' | 'anime' | 'dorama' | 'tv-channel';
+  sectionIndex?: number; // Add sectionIndex prop
 }
 
 const MediaSectionLoader = ({ 
@@ -20,7 +22,8 @@ const MediaSectionLoader = ({
   isLoading,
   hasMore,
   onMediaClick,
-  mediaType
+  mediaType,
+  sectionIndex = 0 // Default value
 }: MediaSectionLoaderProps) => {
   // Filter only content with images
   const filteredMedias = (medias || []).filter(media => media?.poster_path || media?.backdrop_path);
@@ -48,6 +51,7 @@ const MediaSectionLoader = ({
       onMediaClick={onMediaClick}
       sectionId={sectionId}
       mediaType={mediaType}
+      sectionIndex={sectionIndex}
     />
   );
 };

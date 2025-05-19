@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
@@ -46,7 +45,7 @@ const Auth = () => {
   const codeRef = useRef<HTMLInputElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-  const termsRef = useRef<HTMLButtonElement>(null);
+  const termsRef = useRef<HTMLDivElement>(null); // Changed from HTMLButtonElement to HTMLDivElement
   const forgotPasswordRef = useRef<HTMLButtonElement>(null);
   
   // Get the intended redirect path from state, or default to home page

@@ -8,6 +8,7 @@ interface RecommendationsSectionProps {
   isLoading?: boolean;
   hasMore?: boolean;
   sectionId?: string;
+  sectionIndex?: number; // Add sectionIndex prop
 }
 
 const RecommendationsSection = ({ 
@@ -15,7 +16,8 @@ const RecommendationsSection = ({
   onLoadMore = () => {},
   isLoading = false,
   hasMore = false,
-  sectionId = 'recommendations'
+  sectionId = 'recommendations',
+  sectionIndex = 0 // Default value
 }: RecommendationsSectionProps) => {
   // Filter recommendations to recent and with images
   const filteredRecommendations = recommendations
@@ -51,6 +53,7 @@ const RecommendationsSection = ({
         showLoadMore={hasMore && filteredRecommendations.length > 5}
         onLoadMore={handleLoadMoreRecommendations}
         isLoading={isLoading}
+        sectionIndex={sectionIndex}
       />
     </div>
   );

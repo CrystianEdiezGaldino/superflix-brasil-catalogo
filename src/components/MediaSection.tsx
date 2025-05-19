@@ -25,7 +25,7 @@ type MediaSectionProps = {
   focusedItem?: number;
   onFocusChange?: (index: number) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
-  sectionIndex: number;
+  sectionIndex?: number; // Make sectionIndex optional
 };
 
 const MediaSection = ({ 
@@ -40,7 +40,7 @@ const MediaSection = ({
   focusedItem = -1,
   onFocusChange,
   onKeyDown,
-  sectionIndex
+  sectionIndex = 0 // Provide a default value of 0
 }: MediaSectionProps) => {
   const navigate = useNavigate();
   const [focusedIndex, setFocusedIndex] = useState(focusedItem);
