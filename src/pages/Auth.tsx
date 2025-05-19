@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
@@ -37,7 +38,9 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(true);
   const [selectedBackground, setSelectedBackground] = useState<MediaItem | null>(null);
+  const [focusedElement, setFocusedElement] = useState<string>("email");
   
+  // Refs for focusable elements
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
@@ -136,6 +139,119 @@ const Auth = () => {
     };
   }, [user, redirecting, navigate, redirectTo, loading]);
   
+  // Handle keyboard navigation for TV remotes
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      e.preventDefault();
+      
+      console.log("Key pressed:", e.key, "Focused element:", focusedElement);
+      
+      switch (e.key) {
+        case "ArrowUp":
+          switch (focusedElement) {
+            case "email":
+              // Already at top, do nothing
+              break;
+            case "password":
+              setFocusedElement("email");
+              emailRef.current?.focus();
+              break;
+            case "code":
+              setFocusedElement("password");
+              passwordRef.current?.focus();
+              break;
+            case "terms":
+              setFocusedElement(!isLogin ? "code" : "password");
+              (!isLogin ? codeRef : passwordRef).current?.focus();
+              break;
+            case "submit":
+              setFocusedElement("terms");
+              termsRef.current?.focus();
+              break;
+            case "toggle":
+              setFocusedElement("submit");
+              submitRef.current?.focus();
+              break;
+            case "forgotPassword":
+              setFocusedElement("toggle");
+              toggleRef.current?.focus();
+              break;
+          }
+          break;
+          
+        case "ArrowDown":
+          switch (focusedElement) {
+            case "email":
+              setFocusedElement("password");
+              passwordRef.current?.focus();
+              break;
+            case "password":
+              if (!isLogin) {
+                setFocusedElement("code");
+                codeRef.current?.focus();
+              } else {
+                setFocusedElement("terms");
+                termsRef.current?.focus();
+              }
+              break;
+            case "code":
+              setFocusedElement("terms");
+              termsRef.current?.focus();
+              break;
+            case "terms":
+              setFocusedElement("submit");
+              submitRef.current?.focus();
+              break;
+            case "submit":
+              setFocusedElement("toggle");
+              toggleRef.current?.focus();
+              break;
+            case "toggle":
+              if (isLogin) {
+                setFocusedElement("forgotPassword");
+                forgotPasswordRef.current?.focus();
+              }
+              break;
+            case "forgotPassword":
+              // Already at bottom, do nothing
+              break;
+          }
+          break;
+          
+        case "Enter":
+        case " ": // Space key
+          switch (focusedElement) {
+            case "terms":
+              setTermsAccepted(!termsAccepted);
+              break;
+            case "submit":
+              submitRef.current?.click();
+              break;
+            case "toggle":
+              setIsLogin(!isLogin);
+              break;
+            case "forgotPassword":
+              forgotPasswordRef.current?.click();
+              break;
+          }
+          break;
+      }
+    };
+    
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [focusedElement, isLogin]);
+  
+  // Focus email input on component mount
+  useEffect(() => {
+    setTimeout(() => {
+      if (emailRef.current) {
+        emailRef.current.focus();
+        setFocusedElement("email");
+      }
+    }, 500);
+  }, []);
+  
   // Display loading during authentication check
   if (loading) {
     return (
@@ -195,8 +311,9 @@ const Auth = () => {
                     placeholder="Digite seu email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onFocus={() => setFocusedElement("email")}
                     disabled={isLoading}
-                    className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                    className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${focusedElement === "email" ? "ring-2 ring-netflix-red" : ""}`}
                     autoFocus
                     aria-label="Campo de email"
                   />
@@ -211,8 +328,9 @@ const Auth = () => {
                     placeholder="Digite sua senha"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setFocusedElement("password")}
                     disabled={isLoading}
-                    className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+                    className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${focusedElement === "password" ? "ring-2 ring-netflix-red" : ""}`}
                     aria-label="Campo de senha"
                   />
                 </div>
@@ -227,33 +345,47 @@ const Auth = () => {
                       placeholder="Digite o código de acesso (opcional)"
                       value={code}
                       onChange={(e) => setCode(e.target.value.toUpperCase())}
+                      onFocus={() => setFocusedElement("code")}
                       disabled={isLoading}
-                      className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red uppercase"
+                      className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red uppercase ${focusedElement === "code" ? "ring-2 ring-netflix-red" : ""}`}
                       aria-label="Campo de código de acesso (opcional)"
                     />
                   </div>
                 )}
 
                 <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="terms"
-                    checked={termsAccepted}
-                    onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-                    disabled={isLoading}
-                  />
-                  <label
-                    htmlFor="terms"
-                    className="text-sm text-gray-300"
+                  <div 
+                    onClick={() => {
+                      if (!isLoading) {
+                        setTermsAccepted(!termsAccepted);
+                      }
+                    }}
+                    onFocus={() => setFocusedElement("terms")}
+                    tabIndex={0}
+                    ref={termsRef as React.RefObject<HTMLDivElement>}
+                    className={`flex items-center space-x-2 cursor-pointer p-2 rounded ${focusedElement === "terms" ? "bg-gray-800 ring-2 ring-netflix-red" : ""}`}
                   >
-                    Eu concordo com os{" "}
-                    <Link to="/terms" className="text-netflix-red hover:underline">
-                      Termos de Uso
-                    </Link>{" "}
-                    e{" "}
-                    <Link to="/privacy" className="text-netflix-red hover:underline">
-                      Política de Privacidade
-                    </Link>
-                  </label>
+                    <Checkbox
+                      id="terms"
+                      checked={termsAccepted}
+                      onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                      disabled={isLoading}
+                      className="border-gray-600 data-[state=checked]:bg-netflix-red"
+                    />
+                    <label
+                      htmlFor="terms"
+                      className="text-sm text-gray-300 cursor-pointer"
+                    >
+                      Eu concordo com os{" "}
+                      <Link to="/terms" className="text-netflix-red hover:underline">
+                        Termos de Uso
+                      </Link>{" "}
+                      e{" "}
+                      <Link to="/privacy" className="text-netflix-red hover:underline">
+                        Política de Privacidade
+                      </Link>
+                    </label>
+                  </div>
                 </div>
 
                 <Button
@@ -282,8 +414,9 @@ const Auth = () => {
                       setIsLoading(false);
                     }
                   }}
+                  onFocus={() => setFocusedElement("submit")}
                   disabled={isLoading}
-                  className="w-full bg-netflix-red hover:bg-red-700"
+                  className={`w-full bg-netflix-red hover:bg-red-700 ${focusedElement === "submit" ? "ring-2 ring-white" : ""}`}
                 >
                   {isLoading ? "Processando..." : isLogin ? "Entrar" : "Criar Conta"}
                 </Button>
@@ -292,7 +425,8 @@ const Auth = () => {
                   ref={toggleRef}
                   variant="ghost"
                   onClick={() => setIsLogin(!isLogin)}
-                  className="w-full text-gray-400 hover:text-white"
+                  onFocus={() => setFocusedElement("toggle")}
+                  className={`w-full text-gray-400 hover:text-white ${focusedElement === "toggle" ? "ring-2 ring-netflix-red" : ""}`}
                   aria-label={isLogin ? "Botão para criar conta" : "Botão para fazer login"}
                 >
                   {isLogin ? "Criar uma conta" : "Já tenho uma conta"}
@@ -302,7 +436,8 @@ const Auth = () => {
                   <Button
                     ref={forgotPasswordRef}
                     variant="link"
-                    className="w-full text-netflix-red hover:text-red-400"
+                    onFocus={() => setFocusedElement("forgotPassword")}
+                    className={`w-full text-netflix-red hover:text-red-400 ${focusedElement === "forgotPassword" ? "ring-2 ring-netflix-red" : ""}`}
                     aria-label="Botão de esqueceu a senha"
                   >
                     Esqueceu a senha?
