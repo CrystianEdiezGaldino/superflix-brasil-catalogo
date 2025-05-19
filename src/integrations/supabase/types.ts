@@ -9,30 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      device_access: {
-        Row: {
-          created_at: string | null
-          device_info: Json | null
-          id: string
-          last_used_at: string | null
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          device_info?: Json | null
-          id?: string
-          last_used_at?: string | null
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          device_info?: Json | null
-          id?: string
-          last_used_at?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       favorites: {
         Row: {
           added_at: string
@@ -70,9 +46,9 @@ export type Database = {
           device_info: Json | null
           expires_at: string
           id: string
-          status: string
           used: boolean | null
           user_id: string | null
+          status: 'pending' | 'validated' | 'expired'
           validated_at: string | null
         }
         Insert: {
@@ -81,9 +57,9 @@ export type Database = {
           device_info?: Json | null
           expires_at: string
           id?: string
-          status?: string
           used?: boolean | null
           user_id?: string | null
+          status?: 'pending' | 'validated' | 'expired'
           validated_at?: string | null
         }
         Update: {
@@ -92,9 +68,9 @@ export type Database = {
           device_info?: Json | null
           expires_at?: string
           id?: string
-          status?: string
           used?: boolean | null
           user_id?: string | null
+          status?: 'pending' | 'validated' | 'expired'
           validated_at?: string | null
         }
         Relationships: []
@@ -106,6 +82,7 @@ export type Database = {
           id: string
           updated_at: string
           username: string | null
+          email: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -113,6 +90,7 @@ export type Database = {
           id: string
           updated_at?: string
           username?: string | null
+          email?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -120,6 +98,7 @@ export type Database = {
           id?: string
           updated_at?: string
           username?: string | null
+          email?: string | null
         }
         Relationships: []
       }
