@@ -2,15 +2,6 @@ import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { MediaItem, getMediaTitle } from '@/types/movie';
 import { useNavigate } from 'react-router-dom';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { AspectRatio } from '@/components/ui/aspect-ratio';
-import MediaCard from "./media/MediaCard";
 import { Button } from '@/components/ui/button';
 
 type MediaSectionProps = {
@@ -216,4 +207,4 @@ const MediaSection = ({
   );
 };
 
-export default MediaSection;
+export default MediaSection; 

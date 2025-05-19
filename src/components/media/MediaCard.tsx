@@ -13,9 +13,19 @@ interface MediaCardProps {
   index: number;
   isFocused: boolean;
   onFocus: (index: number) => void;
+  sectionIndex?: number;
 }
 
-const MediaCard = ({ media, onClick, className = '', tabIndex, index, isFocused, onFocus }: MediaCardProps) => {
+const MediaCard = ({ 
+  media, 
+  onClick, 
+  className = '', 
+  tabIndex, 
+  index, 
+  isFocused, 
+  onFocus,
+  sectionIndex 
+}: MediaCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -26,6 +36,11 @@ const MediaCard = ({ media, onClick, className = '', tabIndex, index, isFocused,
   }, [isFocused]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const itemsPerRow = window.innerWidth >= 1280 ? 6 : 
+                       window.innerWidth >= 1024 ? 5 : 
+                       window.innerWidth >= 768 ? 4 : 
+                       window.innerWidth >= 640 ? 3 : 2;
+
     switch (e.key) {
       case "Enter":
         e.preventDefault();
@@ -41,11 +56,11 @@ const MediaCard = ({ media, onClick, className = '', tabIndex, index, isFocused,
         break;
       case "ArrowUp":
         e.preventDefault();
-        onFocus(index - 6); // Aproximadamente 6 itens por linha
+        onFocus(index - itemsPerRow);
         break;
       case "ArrowDown":
         e.preventDefault();
-        onFocus(index + 6); // Aproximadamente 6 itens por linha
+        onFocus(index + itemsPerRow);
         break;
     }
   };
@@ -57,10 +72,8 @@ const MediaCard = ({ media, onClick, className = '', tabIndex, index, isFocused,
 
   // Determine link path based on media type
   const getLinkPath = () => {
-    // First check if media and media.id exist to avoid TypeScript errors
     if (!media) return "#";
     
-    // Use type assertion to handle the potential 'never' type
     const mediaId = (media as any).id;
     if (mediaId === undefined) return "#";
     
@@ -70,7 +83,6 @@ const MediaCard = ({ media, onClick, className = '', tabIndex, index, isFocused,
       case 'movie':
         return `/filme/${mediaId}`;
       case 'tv':
-        // Verificar se é um anime ou dorama (coreano)
         if ('original_language' in media) {
           if (media.original_language === 'ko') {
             return `/dorama/${mediaId}`;
@@ -84,22 +96,15 @@ const MediaCard = ({ media, onClick, className = '', tabIndex, index, isFocused,
     }
   };
 
-  // Handle missing poster image
   const posterUrl = media.poster_path
     ? `https://image.tmdb.org/t/p/w500${media.poster_path}`
     : null;
 
-  // Get title (handle both movie and tv show titles)
   const title = 'title' in media ? media.title : 'name' in media ? media.name : "Sem título";
-  
-  // Get vote average if available
   const rating = media.vote_average ? Math.round(media.vote_average * 10) / 10 : null;
-  
-  // Use type assertion to handle the ID for favorite button
   const mediaId = (media as any).id;
   
   const handleClick = (e: React.MouseEvent) => {
-    // If a click handler is provided, use it
     if (onClick) {
       e.preventDefault();
       onClick(media);
@@ -107,12 +112,18 @@ const MediaCard = ({ media, onClick, className = '', tabIndex, index, isFocused,
   };
   
   return (
-    <Card className={`bg-transparent border-none overflow-hidden group ${className}`}>
+    <Card 
+      ref={cardRef}
+      className={`bg-transparent border-none overflow-hidden group ${className}`}
+      data-section={sectionIndex}
+      data-item={index}
+    >
       <Link 
         to={getLinkPath()}
         className="block overflow-hidden rounded-lg transition-all duration-300 relative focus:outline-none focus:scale-105 focus:ring-4 focus:ring-netflix-red"
         onClick={handleClick}
         tabIndex={tabIndex}
+        onKeyDown={handleKeyDown}
       >
         <div className="relative aspect-[2/3] bg-gray-900 overflow-hidden">
           {posterUrl ? (
