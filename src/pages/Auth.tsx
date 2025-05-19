@@ -14,6 +14,7 @@ import AuthPreviewSection from "@/components/auth/AuthPreviewSection";
 import { MediaItem } from "@/types/movie";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
+import { FaGooglePlay } from "react-icons/fa";
 
 const Auth = () => {
   const { user, loading } = useAuth();
@@ -135,6 +136,14 @@ const Auth = () => {
           <div className="flex flex-col items-center justify-center mb-10">
             <AuthPageBanner />
             <AuthForm />
+            <a 
+              href="/naflixtv.apk"
+              download
+              className="mt-4 flex items-center gap-2 px-6 py-3 bg-netflix-red hover:bg-red-700 text-white rounded-md transition-colors duration-200"
+            >
+              <FaGooglePlay className="text-xl" />
+              <span>Baixar App</span>
+            </a>
           </div>
 
           <div className="mt-8">
