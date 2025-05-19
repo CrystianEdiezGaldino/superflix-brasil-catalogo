@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
@@ -25,7 +24,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
-  const { user, loading, signIn, signUp } = useAuth();
+  const { user, loading, login, register } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [backgroundImage, setBackgroundImage] = useState("");
@@ -38,38 +37,34 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(true);
   const [selectedBackground, setSelectedBackground] = useState<MediaItem | null>(null);
-  const [focusedElement, setFocusedElement] = useState<string>("email");
   
-  // Refs for focusable elements
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
   const codeRef = useRef<HTMLInputElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-  const termsRef = useRef<HTMLDivElement>(null);
+  const termsRef = useRef<HTMLButtonElement>(null);
   const forgotPasswordRef = useRef<HTMLButtonElement>(null);
   
   // Get the intended redirect path from state, or default to home page
   const redirectTo = location.state?.from?.pathname || "/";
   
-  // Buscamos apenas uma quantidade limitada de filmes para a pré-visualização
-  // e usamos uma chave de cache com tempo de expiração mais longo
+  // Buscar dados de filmes populares
   const { data: moviesPreview = [] } = useQuery({
     queryKey: ["authMoviesPreview"],
-    queryFn: () => fetchPopularMovies(1, 10), // Reduzimos para apenas 10 itens
-    staleTime: 1000 * 60 * 30, // 30 minutos
-    gcTime: 1000 * 60 * 60, // 1 hora - replacing cacheTime which is deprecated
+    queryFn: () => fetchPopularMovies(),
+    staleTime: 1000 * 60 * 10, // 10 minutos
   });
   
   // Filter only content with images
-  const filteredMovies = (moviesPreview as MediaItem[]).filter(movie => movie.poster_path || movie.backdrop_path).slice(0, 5);
-  const filteredSeries = getFilteredSeries().filter(serie => serie.poster_path || serie.backdrop_path).slice(0, 5);
-  const filteredAnimes = getFilteredAnimes().filter(anime => anime.poster_path || anime.backdrop_path).slice(0, 5);
+  const filteredMovies = moviesPreview.filter(movie => movie.poster_path || movie.backdrop_path);
+  const filteredSeries = getFilteredSeries().filter(serie => serie.poster_path || serie.backdrop_path);
+  const filteredAnimes = getFilteredAnimes().filter(anime => anime.poster_path || anime.backdrop_path);
   
   // Combine all content for background selection
   const allContent = [...filteredMovies, ...filteredSeries, ...filteredAnimes];
   
-  // Select random background on mount and change it periodically, mas com intervalo maior
+  // Select random background on mount and change it periodically
   useEffect(() => {
     let intervalId: number | undefined;
     
@@ -81,19 +76,21 @@ const Auth = () => {
       }
     };
 
-    // Change background less frequently
+    // Change background periodically
     const startBackgroundRotation = () => {
       intervalId = window.setInterval(() => {
         const backgroundUrl = selectRandomBackground(allContent);
         if (backgroundUrl) {
           setBackgroundImage(backgroundUrl);
         }
-      }, 30000); // Change every 30 seconds (aumentado de 15s)
+      }, 15000); // Change every 15 seconds
     };
 
+    // Set initial background and start rotation after a delay
     setInitialBackground();
-    const timeoutId = setTimeout(startBackgroundRotation, 15000); // Delay rotation start
+    const timeoutId = setTimeout(startBackgroundRotation, 10000); // Start rotation after 10 seconds
 
+    // Cleanup function
     return () => {
       if (intervalId !== undefined) {
         clearInterval(intervalId);
@@ -102,29 +99,25 @@ const Auth = () => {
     };
   }, [allContent]);
   
-  // Improved user redirection with anti-loop protection
+  // Improved user redirection with proper cleanup
   useEffect(() => {
-    // Use a redirect flag specific to auth page
-    const redirectKey = "auth_redirect_to_home";
-    const hasRedirected = sessionStorage.getItem(redirectKey);
+    let intervalId: number | undefined;
     
-    if (user && !redirecting && !loading && !hasRedirected) {
-      console.log("Usuário autenticado na página Auth, redirecionando para:", redirectTo);
-      sessionStorage.setItem(redirectKey, "true");
+    // Only redirect if user is logged in and not already redirecting
+    if (user && !redirecting && !loading) {
+      console.log("User authenticated, starting redirection process to:", redirectTo);
       setRedirecting(true);
       
-      // Limpar flag após 5 segundos
-      setTimeout(() => {
-        sessionStorage.removeItem(redirectKey);
-      }, 5000);
+      // Clear any redirect flags from session storage
+      sessionStorage.removeItem('auth_redirect_shown');
       
-      // Animar barra de progresso antes de redirecionar
-      let intervalId = window.setInterval(() => {
+      // Animate progress bar before redirecting
+      intervalId = window.setInterval(() => {
         setProgress(prev => {
           const newProgress = prev + 5;
           if (newProgress >= 100) {
-            clearInterval(intervalId);
-            // Usar setTimeout para garantir que o progresso seja concluído visualmente antes do redirecionamento
+            console.log("Progress complete, navigating to:", redirectTo);
+            // Use setTimeout to ensure the progress completes visually before redirect
             setTimeout(() => {
               navigate(redirectTo, { replace: true });
             }, 50);
@@ -133,127 +126,15 @@ const Auth = () => {
           return newProgress;
         });
       }, 50);
-      
-      return () => {
-        if (intervalId !== undefined) {
-          clearInterval(intervalId);
-        }
-      };
     }
-  }, [user, loading, redirecting, navigate, redirectTo]);
-  
-  // Handle keyboard navigation for TV remotes
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      e.preventDefault();
-      
-      console.log("Key pressed:", e.key, "Focused element:", focusedElement);
-      
-      switch (e.key) {
-        case "ArrowUp":
-          switch (focusedElement) {
-            case "email":
-              // Already at top, do nothing
-              break;
-            case "password":
-              setFocusedElement("email");
-              emailRef.current?.focus();
-              break;
-            case "code":
-              setFocusedElement("password");
-              passwordRef.current?.focus();
-              break;
-            case "terms":
-              setFocusedElement(!isLogin ? "code" : "password");
-              (!isLogin ? codeRef : passwordRef).current?.focus();
-              break;
-            case "submit":
-              setFocusedElement("terms");
-              termsRef.current?.focus();
-              break;
-            case "toggle":
-              setFocusedElement("submit");
-              submitRef.current?.focus();
-              break;
-            case "forgotPassword":
-              setFocusedElement("toggle");
-              toggleRef.current?.focus();
-              break;
-          }
-          break;
-          
-        case "ArrowDown":
-          switch (focusedElement) {
-            case "email":
-              setFocusedElement("password");
-              passwordRef.current?.focus();
-              break;
-            case "password":
-              if (!isLogin) {
-                setFocusedElement("code");
-                codeRef.current?.focus();
-              } else {
-                setFocusedElement("terms");
-                termsRef.current?.focus();
-              }
-              break;
-            case "code":
-              setFocusedElement("terms");
-              termsRef.current?.focus();
-              break;
-            case "terms":
-              setFocusedElement("submit");
-              submitRef.current?.focus();
-              break;
-            case "submit":
-              setFocusedElement("toggle");
-              toggleRef.current?.focus();
-              break;
-            case "toggle":
-              if (isLogin) {
-                setFocusedElement("forgotPassword");
-                forgotPasswordRef.current?.focus();
-              }
-              break;
-            case "forgotPassword":
-              // Already at bottom, do nothing
-              break;
-          }
-          break;
-          
-        case "Enter":
-        case " ": // Space key
-          switch (focusedElement) {
-            case "terms":
-              setTermsAccepted(!termsAccepted);
-              break;
-            case "submit":
-              submitRef.current?.click();
-              break;
-            case "toggle":
-              setIsLogin(!isLogin);
-              break;
-            case "forgotPassword":
-              forgotPasswordRef.current?.click();
-              break;
-          }
-          break;
+    
+    // Cleanup function
+    return () => {
+      if (intervalId !== undefined) {
+        clearInterval(intervalId);
       }
     };
-    
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [focusedElement, isLogin]);
-  
-  // Focus email input on component mount
-  useEffect(() => {
-    setTimeout(() => {
-      if (emailRef.current) {
-        emailRef.current.focus();
-        setFocusedElement("email");
-      }
-    }, 500);
-  }, []);
+  }, [user, redirecting, navigate, redirectTo, loading]);
   
   // Display loading during authentication check
   if (loading) {
@@ -265,7 +146,7 @@ const Auth = () => {
     );
   }
   
-  // Se estiver redirecionando, mostrar progresso
+  // If redirecting, show progress indicator
   if (redirecting) {
     return (
       <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
@@ -283,60 +164,10 @@ const Auth = () => {
     );
   }
   
-  // Verificar se usuário já está autenticado e respeitando a flag de redirecionamento
-  const authRedirectKey = "auth_direct_to_home";
-  if (user && !sessionStorage.getItem(authRedirectKey)) {
-    // Marcar que um redirecionamento já foi tentado
-    sessionStorage.setItem(authRedirectKey, "true");
-    
-    // Limpar após 5 segundos
-    setTimeout(() => {
-      sessionStorage.removeItem(authRedirectKey);
-    }, 5000);
-    
+  // Skip progress animation and redirect immediately if user is logged in
+  if (user) {
     return <Navigate to={redirectTo} replace />;
   }
-  
-  // Login and registration handlers
-  const handleLogin = async (email: string, password: string) => {
-    if (!termsAccepted) {
-      toast.error("Você precisa aceitar os termos para continuar");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await signIn(email, password);
-    } catch (error: any) {
-      toast.error(error.message || "Ocorreu um erro");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleRegister = async (email: string, password: string, code: string) => {
-    if (!termsAccepted) {
-      toast.error("Você precisa aceitar os termos para continuar");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await signUp(email, password, { name: email, code });
-      // Se tinha um código de acesso, força refresh para atualizar dados da assinatura
-      if (code) {
-        // Aguardar 1 segundo antes de recarregar para garantir que o registro foi concluído
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-        return;
-      }
-    } catch (error: any) {
-      toast.error(error.message || "Ocorreu um erro");
-    } finally {
-      setIsLoading(false);
-    }
-  };
   
   return (
     <div 
@@ -364,9 +195,8 @@ const Auth = () => {
                     placeholder="Digite seu email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    onFocus={() => setFocusedElement("email")}
                     disabled={isLoading}
-                    className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${focusedElement === "email" ? "ring-2 ring-netflix-red" : ""}`}
+                    className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
                     autoFocus
                     aria-label="Campo de email"
                   />
@@ -381,9 +211,8 @@ const Auth = () => {
                     placeholder="Digite sua senha"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    onFocus={() => setFocusedElement("password")}
                     disabled={isLoading}
-                    className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${focusedElement === "password" ? "ring-2 ring-netflix-red" : ""}`}
+                    className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
                     aria-label="Campo de senha"
                   />
                 </div>
@@ -398,61 +227,63 @@ const Auth = () => {
                       placeholder="Digite o código de acesso (opcional)"
                       value={code}
                       onChange={(e) => setCode(e.target.value.toUpperCase())}
-                      onFocus={() => setFocusedElement("code")}
                       disabled={isLoading}
-                      className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red uppercase ${focusedElement === "code" ? "ring-2 ring-netflix-red" : ""}`}
+                      className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red uppercase"
                       aria-label="Campo de código de acesso (opcional)"
                     />
                   </div>
                 )}
 
                 <div className="flex items-center space-x-2">
-                  <div 
-                    onClick={() => {
-                      if (!isLoading) {
-                        setTermsAccepted(!termsAccepted);
-                      }
-                    }}
-                    onFocus={() => setFocusedElement("terms")}
-                    tabIndex={0}
-                    ref={termsRef}
-                    className={`flex items-center space-x-2 cursor-pointer p-2 rounded ${focusedElement === "terms" ? "bg-gray-800 ring-2 ring-netflix-red" : ""}`}
+                  <Checkbox
+                    id="terms"
+                    checked={termsAccepted}
+                    onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
+                    disabled={isLoading}
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm text-gray-300"
                   >
-                    <Checkbox
-                      id="terms"
-                      checked={termsAccepted}
-                      onCheckedChange={(checked) => setTermsAccepted(checked as boolean)}
-                      disabled={isLoading}
-                      className="border-gray-600 data-[state=checked]:bg-netflix-red"
-                    />
-                    <label
-                      htmlFor="terms"
-                      className="text-sm text-gray-300 cursor-pointer"
-                    >
-                      Eu concordo com os{" "}
-                      <Link to="/terms" className="text-netflix-red hover:underline">
-                        Termos de Uso
-                      </Link>{" "}
-                      e{" "}
-                      <Link to="/privacy" className="text-netflix-red hover:underline">
-                        Política de Privacidade
-                      </Link>
-                    </label>
-                  </div>
+                    Eu concordo com os{" "}
+                    <Link to="/terms" className="text-netflix-red hover:underline">
+                      Termos de Uso
+                    </Link>{" "}
+                    e{" "}
+                    <Link to="/privacy" className="text-netflix-red hover:underline">
+                      Política de Privacidade
+                    </Link>
+                  </label>
                 </div>
 
                 <Button
                   ref={submitRef}
                   onClick={async () => {
-                    if (isLogin) {
-                      await handleLogin(email, password);
-                    } else {
-                      await handleRegister(email, password, code);
+                    if (!termsAccepted) {
+                      toast.error("Você precisa aceitar os termos para continuar");
+                      return;
+                    }
+
+                    setIsLoading(true);
+                    try {
+                      if (isLogin) {
+                        await login(email, password);
+                      } else {
+                        await register(email, password, code);
+                        // Se tinha um código de acesso, força refresh para atualizar dados da assinatura
+                        if (code) {
+                          window.location.reload();
+                          return;
+                        }
+                      }
+                    } catch (error: any) {
+                      toast.error(error.message || "Ocorreu um erro");
+                    } finally {
+                      setIsLoading(false);
                     }
                   }}
-                  onFocus={() => setFocusedElement("submit")}
                   disabled={isLoading}
-                  className={`w-full bg-netflix-red hover:bg-red-700 ${focusedElement === "submit" ? "ring-2 ring-white" : ""}`}
+                  className="w-full bg-netflix-red hover:bg-red-700"
                 >
                   {isLoading ? "Processando..." : isLogin ? "Entrar" : "Criar Conta"}
                 </Button>
@@ -461,8 +292,7 @@ const Auth = () => {
                   ref={toggleRef}
                   variant="ghost"
                   onClick={() => setIsLogin(!isLogin)}
-                  onFocus={() => setFocusedElement("toggle")}
-                  className={`w-full text-gray-400 hover:text-white ${focusedElement === "toggle" ? "ring-2 ring-netflix-red" : ""}`}
+                  className="w-full text-gray-400 hover:text-white"
                   aria-label={isLogin ? "Botão para criar conta" : "Botão para fazer login"}
                 >
                   {isLogin ? "Criar uma conta" : "Já tenho uma conta"}
@@ -472,8 +302,7 @@ const Auth = () => {
                   <Button
                     ref={forgotPasswordRef}
                     variant="link"
-                    onFocus={() => setFocusedElement("forgotPassword")}
-                    className={`w-full text-netflix-red hover:text-red-400 ${focusedElement === "forgotPassword" ? "ring-2 ring-netflix-red" : ""}`}
+                    className="w-full text-netflix-red hover:text-red-400"
                     aria-label="Botão de esqueceu a senha"
                   >
                     Esqueceu a senha?

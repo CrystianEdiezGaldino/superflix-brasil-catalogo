@@ -1,4 +1,3 @@
-
 /// <reference path="./types.d.ts" />
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -56,8 +55,6 @@ serve(async (req) => {
       throw new Error("Code is required");
     }
 
-    log(`Processing login code: ${code}`);
-
     // Check if the code exists and is valid
     const { data: loginCode, error: codeError } = await supabaseClient
       .from("login_codes")
@@ -66,13 +63,10 @@ serve(async (req) => {
       .single();
 
     if (codeError || !loginCode?.user_id) {
-      log(`Invalid code or error: ${codeError?.message || "No user_id found"}`, { loginCode }, true);
       throw new Error("Invalid code");
     }
 
-    log(`Found valid login code for user ${loginCode.user_id}`);
-
-    // Get the user's username (email) from profiles table
+    // Get the user's email
     const { data: userData, error: userError } = await supabaseClient
       .from("profiles")
       .select("username")
@@ -80,30 +74,35 @@ serve(async (req) => {
       .single();
 
     if (userError || !userData?.username) {
-      log(`User not found: ${userError?.message || "No username found"}`, { userData }, true);
       throw new Error("User not found");
     }
 
-    log(`Found user data with username: ${userData.username}`);
+    // Generate a temporary password
+    const tempPassword = `temp_${code}_${Date.now()}`;
 
-    // Generate a session for the user directly
-    const { data: sessionData, error: sessionError } = await supabaseClient.auth.admin.generateLink({
-      type: 'magiclink',
-      email: userData.username, // Use username as the email
-    });
+    // Update the user's password using admin privileges
+    const { error: updateError } = await supabaseClient.auth.admin.updateUserById(
+      loginCode.user_id,
+      { password: tempPassword }
+    );
 
-    if (sessionError || !sessionData) {
-      log(`Failed to generate session: ${sessionError?.message}`, { sessionError }, true);
-      throw new Error("Failed to generate session");
+    if (updateError) {
+      throw new Error("Failed to update password");
     }
 
-    log(`Generated session successfully`);
+    // Sign in with the temporary password
+    const { data: signInData, error: signInError } = await supabaseClient.auth.signInWithPassword({
+      email: userData.username,
+      password: tempPassword
+    });
 
-    // Return the session data for client-side use
+    if (signInError || !signInData?.session) {
+      throw new Error("Failed to sign in");
+    }
+
+    // Return the session data
     return new Response(
-      JSON.stringify({ 
-        session: sessionData.properties 
-      }),
+      JSON.stringify({ session: signInData.session }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -111,8 +110,6 @@ serve(async (req) => {
     );
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-    log(`Error in quick-login function: ${errorMessage}`, { error }, true);
-    
     return new Response(
       JSON.stringify({ error: errorMessage }),
       {

@@ -8,7 +8,9 @@ import { useRecommendations } from "./useRecommendations";
 import { useFeaturedMedia } from "./useFeaturedMedia";
 import { useAccessControl } from "./useAccessControl";
 import { usePopularContent } from "./usePopularContent";
-import { cacheManager } from "@/utils/cacheManager";
+
+// Remove the import to prevent circular dependency
+// import { useAuthRedirect } from "./useAuthRedirect";
 
 export const useHomePageData = () => {
   const { user, loading: authLoading } = useAuth();
@@ -24,27 +26,20 @@ export const useHomePageData = () => {
   // Use the access control hook to get the hasAccess flag
   const { hasAccess } = useAccessControl();
 
-  // Force a subscription check on mount to ensure we have the latest data,
-  // but only if we don't have subscription data in cache
+  // Force a subscription check on mount to ensure we have the latest data
   useEffect(() => {
-    if (!user || subscriptionLoading) {
-      return;
-    }
+    let isUnmounted = false;
     
-    // Verificar cache antes de chamar checkSubscription
-    const subscriptionCacheKey = `sub_data_${user.id}`;
-    const cachedSubscriptionData = cacheManager.get(subscriptionCacheKey);
-    
-    if (!cachedSubscriptionData) {
+    if (user && !isUnmounted) {
       checkSubscription();
-      
-      // Cache por 5 minutos
-      const subData = { isSubscribed, isAdmin, hasTrialAccess, hasTempAccess };
-      cacheManager.set(subscriptionCacheKey, subData, 5 * 60 * 1000);
     }
-  }, [user, checkSubscription, subscriptionLoading]);
+    
+    return () => {
+      isUnmounted = true;
+    };
+  }, [user, checkSubscription]);
   
-  // Get popular series and recent animes with limit to reduce API calls
+  // Get popular series and recent animes
   const { 
     popularSeries, 
     recentAnimes,
@@ -84,38 +79,23 @@ export const useHomePageData = () => {
 
   // Create a memoized search handler to prevent recreation on each render
   const handleSearch = useCallback((query: string, page: number = 1) => {
-    // Usar cache para consultas de pesquisa
-    const searchCacheKey = `search_${query.toLowerCase()}_${page}`;
-    const cachedResults = cacheManager.get(searchCacheKey);
-    
-    if (cachedResults) {
-      return Promise.resolve(cachedResults);
-    }
-    
-    return searchMedia(query, page).then(results => {
-      // Cache por 10 minutos
-      cacheManager.set(searchCacheKey, results, 10 * 60 * 1000);
-      return results;
-    });
+    return searchMedia(query, page);
   }, [searchMedia]);
 
-  // Debug log para desenvolvimento apenas
-  if (import.meta.env.DEV) {
-    console.log("Home page data:", { 
-      hasUser: !!user, 
-      isSubscribed, 
-      isAdmin, 
-      hasTrialAccess, 
-      hasTempAccess, 
-      hasAccess,
-      cacheSize: cacheManager.getCacheSize(),
-      mediaDataLoaded: {
-        movies: !!moviesData?.length,
-        series: !!seriesData?.length,
-        anime: !!animeData?.length
-      }
-    });
-  }
+  // Debug log to help track subscription state
+  console.log("Home page data:", { 
+    hasUser: !!user, 
+    isSubscribed, 
+    isAdmin, 
+    hasTrialAccess, 
+    hasTempAccess, 
+    hasAccess,
+    mediaDataLoaded: {
+      movies: !!moviesData?.length,
+      series: !!seriesData?.length,
+      anime: !!animeData?.length
+    }
+  });
 
   // Loading state
   const isLoading = authLoading || subscriptionLoading || mediaLoading || 

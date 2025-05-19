@@ -9,18 +9,9 @@ export * from './tmdb/utils';
 
 import { API_KEY, BASE_URL, DEFAULT_LANGUAGE } from './tmdb/config';
 import { MediaItem } from "@/types/movie";
-import { cacheManager } from "@/utils/cacheManager";
 
 // Fetch media item by ID - detects whether it's a movie or TV series
 export const fetchMediaById = async (id: number, mediaType?: 'movie' | 'tv'): Promise<MediaItem | null> => {
-  // Usar cache para consultas de mídia por ID
-  const cacheKey = `media_${mediaType || 'unknown'}_${id}`;
-  const cachedItem = cacheManager.get<MediaItem>(cacheKey);
-  
-  if (cachedItem) {
-    return cachedItem;
-  }
-  
   try {
     if (mediaType === 'movie') {
       const movieUrl = `${BASE_URL}/movie/${id}?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}`;
@@ -28,9 +19,7 @@ export const fetchMediaById = async (id: number, mediaType?: 'movie' | 'tv'): Pr
       
       if (response.ok) {
         const data = await response.json();
-        const result = { ...data, media_type: 'movie' };
-        cacheManager.set(cacheKey, result, 60 * 60 * 1000); // Cache por 1 hora
-        return result;
+        return { ...data, media_type: 'movie' };
       }
     } else if (mediaType === 'tv') {
       const tvUrl = `${BASE_URL}/tv/${id}?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}`;
@@ -38,9 +27,7 @@ export const fetchMediaById = async (id: number, mediaType?: 'movie' | 'tv'): Pr
       
       if (response.ok) {
         const data = await response.json();
-        const result = { ...data, media_type: 'tv' };
-        cacheManager.set(cacheKey, result, 60 * 60 * 1000); // Cache por 1 hora
-        return result;
+        return { ...data, media_type: 'tv' };
       }
     } else {
       // Try fetching as a movie first
@@ -49,9 +36,7 @@ export const fetchMediaById = async (id: number, mediaType?: 'movie' | 'tv'): Pr
       
       if (response.ok) {
         const data = await response.json();
-        const result = { ...data, media_type: 'movie' };
-        cacheManager.set(cacheKey, result, 60 * 60 * 1000); // Cache por 1 hora
-        return result;
+        return { ...data, media_type: 'movie' };
       }
       
       // If not a movie, try as a TV series
@@ -60,9 +45,7 @@ export const fetchMediaById = async (id: number, mediaType?: 'movie' | 'tv'): Pr
       
       if (response.ok) {
         const data = await response.json();
-        const result = { ...data, media_type: 'tv' };
-        cacheManager.set(cacheKey, result, 60 * 60 * 1000); // Cache por 1 hora
-        return result;
+        return { ...data, media_type: 'tv' };
       }
     }
     
@@ -70,38 +53,6 @@ export const fetchMediaById = async (id: number, mediaType?: 'movie' | 'tv'): Pr
   } catch (error) {
     console.error('Error fetching media by ID:', error);
     return null;
-  }
-};
-
-// Fetch popular movies with optional limit parameter
-export const fetchPopularMovies = async (page: number = 1, limit: number = 20): Promise<MediaItem[]> => {
-  // Usar cache com chave específica para reduzir requisições
-  const cacheKey = `popular_movies_p${page}_l${limit}`;
-  const cachedMovies = cacheManager.get<MediaItem[]>(cacheKey);
-  
-  if (cachedMovies) {
-    return cachedMovies;
-  }
-  
-  try {
-    const response = await fetch(
-      `${BASE_URL}/movie/popular?api_key=${API_KEY}&language=${DEFAULT_LANGUAGE}&page=${page}`
-    );
-    const data = await response.json();
-    
-    // Transformar resultados e limitar ao número solicitado
-    const movies = data.results.map((movie: any) => ({
-      ...movie,
-      media_type: "movie",
-    })).slice(0, limit);
-    
-    // Cache por 15 minutos
-    cacheManager.set(cacheKey, movies, 15 * 60 * 1000);
-    
-    return movies;
-  } catch (error) {
-    console.error("Error fetching popular movies:", error);
-    return [];
   }
 };
 

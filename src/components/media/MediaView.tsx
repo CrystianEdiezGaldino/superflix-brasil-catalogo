@@ -41,8 +41,6 @@ interface MediaViewProps {
   onResetFilters?: () => void;
   onMediaClick: (media: MediaItem) => void;
   children?: React.ReactNode;
-  focusedSection?: number; // Add focusedSection prop
-  focusedItem?: number;
 }
 
 const MediaView = ({
@@ -69,11 +67,9 @@ const MediaView = ({
   onResetFilters,
   onMediaClick,
   children,
-  focusedSection = 0, // Default value
-  focusedItem = 0,
 }: MediaViewProps) => {
-  const [currentFocusedSection, setCurrentFocusedSection] = useState(focusedSection);
-  const [currentFocusedItem, setCurrentFocusedItem] = useState(focusedItem);
+  const [currentFocusedSection, setCurrentFocusedSection] = useState(0);
+  const [currentFocusedItem, setCurrentFocusedItem] = useState(0);
   const [focusedElement, setFocusedElement] = useState<string | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const yearFilterRef = useRef<HTMLSelectElement>(null);
@@ -269,4 +265,4 @@ const MediaView = ({
   );
 };
 
-export default MediaView;
+export default MediaView; 

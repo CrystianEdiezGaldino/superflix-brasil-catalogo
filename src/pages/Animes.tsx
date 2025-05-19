@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useAnimes } from "@/hooks/anime/useAnimes";
 import MediaView from "@/components/media/MediaView";
@@ -79,7 +78,6 @@ const AnimesPage = () => {
       onLoadMore={loadMoreAnimes}
       onResetFilters={resetFilters}
       onMediaClick={handleMediaClick}
-      focusedSection={0} // Add default focusedSection
     >
       {/* Featured Anime Carousel */}
       {!isSearching && !isFiltering && animeSections?.featuredAnime?.length > 0 && (
@@ -101,7 +99,6 @@ const AnimesPage = () => {
               showLoadMore={true}
               onLoadMore={() => loadMoreForSection("newReleases")}
               onMediaClick={handleMediaClick}
-              sectionIndex={0}
             />
           )}
           
@@ -114,7 +111,6 @@ const AnimesPage = () => {
               showLoadMore={true}
               onLoadMore={() => loadMoreForSection("classicAnime")}
               onMediaClick={handleMediaClick}
-              sectionIndex={1}
             />
           )}
           
@@ -127,7 +123,6 @@ const AnimesPage = () => {
               showLoadMore={true}
               onLoadMore={() => loadMoreForSection("actionAnime")}
               onMediaClick={handleMediaClick}
-              sectionIndex={2}
             />
           )}
           
@@ -140,7 +135,6 @@ const AnimesPage = () => {
               showLoadMore={true}
               onLoadMore={() => loadMoreForSection("seasonalAnime")}
               onMediaClick={handleMediaClick}
-              sectionIndex={3}
             />
           )}
         </>

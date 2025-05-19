@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,84 +44,64 @@ export const QuickLoginValidator = () => {
       if (loginCode.status === 'validated' && loginCode.user_id) {
         console.log("[QuickLoginValidator] Código validado, user_id:", loginCode.user_id);
         
-        // Buscar o usuário que validou o código através da tabela profiles
+        // Buscar o usuário que validou o código
         console.log("[QuickLoginValidator] Buscando dados do usuário...");
         const { data: userData, error: userError } = await supabase
           .from('profiles')
-          .select('username')  // Usamos o username que está disponível na tabela profiles
+          .select('email')
           .eq('id', loginCode.user_id)
           .single();
 
         console.log("[QuickLoginValidator] Dados do usuário:", { userData, userError });
 
-        if (userError || !userData?.username) {
+        if (userError || !userData?.email) {
           console.error("[QuickLoginValidator] Erro ao buscar dados do usuário:", userError);
           toast.error("Erro ao buscar dados do usuário");
           return;
         }
 
-        // Call the Edge Function for login
-        try {
-          console.log("[QuickLoginValidator] Chamando o Edge Function para login...");
-          // Get current session token
-          const { data: sessionData } = await supabase.auth.getSession();
-          
-          const response = await fetch(
-            "https://juamkehykcohwufehqfv.supabase.co/functions/v1/quick-login",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                // Add Authorization header with the Supabase access token if available
-                "Authorization": `Bearer ${sessionData.session?.access_token || ''}`
-              },
-              body: JSON.stringify({ code: "MV65VP" }),
-            }
-          );
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error("[QuickLoginValidator] Erro na chamada do Edge Function:", errorData);
-            toast.error("Erro ao fazer login: " + (errorData.error || "Erro desconhecido"));
-            return;
+        // Fazer login com o email do usuário que validou
+        console.log("[QuickLoginValidator] Tentando fazer login com o email:", userData.email);
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithOtp({
+          email: userData.email,
+          options: {
+            shouldCreateUser: false
           }
+        });
 
-          const data = await response.json();
-          console.log("[QuickLoginValidator] Resposta do Edge Function:", data);
+        console.log("[QuickLoginValidator] Resposta do login:", { 
+          hasSignInData: !!signInData,
+          signInError
+        });
 
-          // Set the session directly from the returned data
-          if (data.session) {
-            await supabase.auth.setSession(data.session);
-            
-            // Atualizar o código para marcar como usado
-            console.log("[QuickLoginValidator] Atualizando status do código...");
-            const { error: updateError } = await supabase
-              .from('login_codes')
-              .update({ 
-                used: true,
-                status: 'validated',
-                validated_at: new Date().toISOString()
-              })
-              .eq('code', "MV65VP");
-
-            console.log("[QuickLoginValidator] Resposta da atualização:", { updateError });
-
-            if (updateError) {
-              console.error("[QuickLoginValidator] Erro ao atualizar código:", updateError);
-              toast.error("Erro ao atualizar código");
-              return;
-            }
-
-            console.log("[QuickLoginValidator] Login realizado com sucesso!");
-            toast.success("Login realizado com sucesso!");
-            window.location.reload();
-          } else {
-            toast.error("Erro ao obter sessão");
-          }
-        } catch (error) {
-          console.error("[QuickLoginValidator] Erro ao chamar Edge Function:", error);
+        if (signInError) {
+          console.error("[QuickLoginValidator] Erro ao fazer login:", signInError);
           toast.error("Erro ao fazer login");
+          return;
         }
+
+        // Atualizar o código para marcar como usado
+        console.log("[QuickLoginValidator] Atualizando status do código...");
+        const { error: updateError } = await supabase
+          .from('login_codes')
+          .update({ 
+            used: true,
+            status: 'validated',
+            validated_at: new Date().toISOString()
+          })
+          .eq('code', "MV65VP");
+
+        console.log("[QuickLoginValidator] Resposta da atualização:", { updateError });
+
+        if (updateError) {
+          console.error("[QuickLoginValidator] Erro ao atualizar código:", updateError);
+          toast.error("Erro ao atualizar código");
+          return;
+        }
+
+        console.log("[QuickLoginValidator] Login realizado com sucesso!");
+        toast.success("Login realizado com sucesso!");
+        window.location.reload();
       } else {
         console.log("[QuickLoginValidator] Código inválido ou expirado:", loginCode);
         toast.error("Código inválido ou expirado");

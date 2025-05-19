@@ -1,49 +1,50 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { User } from "@supabase/supabase-js";
-import { toast } from "@/hooks/use-toast"; 
+import { toast } from "@/hooks/use-toast"; // Updated import
 
 export const useAuthRedirect = (user: User | null, authLoading: boolean) => {
   const navigate = useNavigate();
   const location = useLocation();
-  
+  const redirectAttemptedRef = useRef(false);
+
   // Only redirect from pages that aren't auth pages
   useEffect(() => {
     // Don't redirect if we're still loading
+    const isAuthPage = location.pathname === "/auth";
     if (authLoading) {
       return;
     }
 
-    const isAuthPage = location.pathname === "/auth";
-    
-    // Usar uma key única para cada navegação para evitar loops
-    const redirectKey = `redirect_${Date.now()}_${location.pathname}`;
-    const hasAttemptedRedirect = sessionStorage.getItem("auth_redirect_attempt");
-    
+    // Prevent multiple redirect attempts
+    if (redirectAttemptedRef.current) {
+      return;
+    }
+
     if (user) {
-      // Usuário autenticado
-      if (isAuthPage && !hasAttemptedRedirect) {
-        console.log("Usuário autenticado em página de auth, redirecionando para: /");
-        sessionStorage.setItem("auth_redirect_attempt", "true");
+      console.log("User authenticated, starting redirection process to:", isAuthPage ? "/" : location.pathname);
+      
+      // Only redirect away from auth page if the user is logged in
+      if (isAuthPage) {
+        redirectAttemptedRef.current = true;
         const from = location.state?.from?.pathname || "/";
         navigate(from, { replace: true });
-        
-        // Limpar flag após navegação
-        setTimeout(() => {
-          sessionStorage.removeItem("auth_redirect_attempt");
-        }, 3000);
       }
-    } else if (!isAuthPage && !hasAttemptedRedirect) {
-      // Usuário não autenticado em página protegida
-      console.log("Usuário não autenticado, redirecionando para página de auth");
-      sessionStorage.setItem("auth_redirect_attempt", "true");
-      navigate("/auth", { state: { from: location }, replace: true });
+    } else if (!isAuthPage) {
+      // Only redirect to auth if not logged in and not already on the auth page
+      console.log("User not authenticated, redirecting to auth page");
+      redirectAttemptedRef.current = true;
       
-      // Limpar flag após navegação
-      setTimeout(() => {
-        sessionStorage.removeItem("auth_redirect_attempt");
-      }, 3000);
+      // Save current location for after login
+      navigate("/auth", { state: { from: location }, replace: true });
     }
+    
+    // Reset the redirect flag when the pathname changes
+    return () => {
+      if (location.pathname !== "/auth") {
+        redirectAttemptedRef.current = false;
+      }
+    };
   }, [user, authLoading, navigate, location]);
 };
