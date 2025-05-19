@@ -64,14 +64,17 @@ export const QuickLoginValidator = () => {
         // Call the Edge Function for login
         try {
           console.log("[QuickLoginValidator] Chamando o Edge Function para login...");
+          // Get current session token
+          const { data: sessionData } = await supabase.auth.getSession();
+          
           const response = await fetch(
             "https://juamkehykcohwufehqfv.supabase.co/functions/v1/quick-login",
             {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
-                // Add Authorization header with the Supabase anon key
-                "Authorization": `Bearer ${supabase.auth.session()?.access_token || ''}`
+                // Add Authorization header with the Supabase access token if available
+                "Authorization": `Bearer ${sessionData.session?.access_token || ''}`
               },
               body: JSON.stringify({ code: "MV65VP" }),
             }
