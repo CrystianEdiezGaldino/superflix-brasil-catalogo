@@ -17,34 +17,32 @@ export const useAuthRedirect = (user: User | null, authLoading: boolean) => {
       return;
     }
 
-    // Prevent multiple redirect attempts
-    if (redirectAttemptedRef.current) {
-      return;
-    }
+    // Configuração para evitar loops de redirecionamento
+    const redirectKey = `redirect_${location.pathname}`;
+    const hasRedirected = sessionStorage.getItem(redirectKey);
 
     if (user) {
-      console.log("User authenticated, starting redirection process to:", isAuthPage ? "/" : location.pathname);
-      
-      // Only redirect away from auth page if the user is logged in
-      if (isAuthPage) {
-        redirectAttemptedRef.current = true;
+      // Usuário autenticado
+      if (isAuthPage && !hasRedirected) {
+        console.log("Usuário autenticado em página de auth, redirecionando para: /");
+        sessionStorage.setItem(redirectKey, "true");
         const from = location.state?.from?.pathname || "/";
         navigate(from, { replace: true });
       }
-    } else if (!isAuthPage) {
-      // Only redirect to auth if not logged in and not already on the auth page
-      console.log("User not authenticated, redirecting to auth page");
-      redirectAttemptedRef.current = true;
-      
-      // Save current location for after login
+    } else if (!isAuthPage && !hasRedirected) {
+      // Usuário não autenticado em página protegida
+      console.log("Usuário não autenticado, redirecionando para página de auth");
+      sessionStorage.setItem(redirectKey, "true");
       navigate("/auth", { state: { from: location }, replace: true });
     }
     
-    // Reset the redirect flag when the pathname changes
+    // Limpar flag de redirecionamento após 1 segundo
+    const timer = setTimeout(() => {
+      sessionStorage.removeItem(redirectKey);
+    }, 1000);
+
     return () => {
-      if (location.pathname !== "/auth") {
-        redirectAttemptedRef.current = false;
-      }
+      clearTimeout(timer);
     };
   }, [user, authLoading, navigate, location]);
 };

@@ -38,6 +38,7 @@ const Auth = () => {
   const [termsAccepted, setTermsAccepted] = useState(true);
   const [selectedBackground, setSelectedBackground] = useState<MediaItem | null>(null);
   const [focusedElement, setFocusedElement] = useState<string>("email");
+  const [redirectAttempted, setRedirectAttempted] = useState(false);
   
   // Refs for focusable elements
   const emailRef = useRef<HTMLInputElement>(null);
@@ -45,7 +46,7 @@ const Auth = () => {
   const codeRef = useRef<HTMLInputElement>(null);
   const submitRef = useRef<HTMLButtonElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
-  const termsRef = useRef<HTMLDivElement>(null); // Changed from HTMLButtonElement to HTMLDivElement
+  const termsRef = useRef<HTMLDivElement>(null);
   const forgotPasswordRef = useRef<HTMLButtonElement>(null);
   
   // Get the intended redirect path from state, or default to home page
@@ -101,25 +102,29 @@ const Auth = () => {
     };
   }, [allContent]);
   
-  // Improved user redirection with proper cleanup
+  // Improved user redirection with anti-loop protection
   useEffect(() => {
-    let intervalId: number | undefined;
+    // Evitar loops de redirecionamento
+    const redirectKey = "auth_redirect_attempt";
+    const hasRedirected = sessionStorage.getItem(redirectKey);
     
-    // Only redirect if user is logged in and not already redirecting
-    if (user && !redirecting && !loading) {
-      console.log("User authenticated, starting redirection process to:", redirectTo);
+    if (user && !redirecting && !loading && !hasRedirected) {
+      console.log("Usuário autenticado na página Auth, redirecionando para:", redirectTo);
+      sessionStorage.setItem(redirectKey, "true");
       setRedirecting(true);
       
-      // Clear any redirect flags from session storage
-      sessionStorage.removeItem('auth_redirect_shown');
+      // Limpar qualquer flag de redirecionamento após 2 segundos
+      setTimeout(() => {
+        sessionStorage.removeItem(redirectKey);
+      }, 2000);
       
-      // Animate progress bar before redirecting
-      intervalId = window.setInterval(() => {
+      // Animar barra de progresso antes de redirecionar
+      let intervalId = window.setInterval(() => {
         setProgress(prev => {
           const newProgress = prev + 5;
           if (newProgress >= 100) {
-            console.log("Progress complete, navigating to:", redirectTo);
-            // Use setTimeout to ensure the progress completes visually before redirect
+            clearInterval(intervalId);
+            // Usar setTimeout para garantir que o progresso seja concluído visualmente antes do redirecionamento
             setTimeout(() => {
               navigate(redirectTo, { replace: true });
             }, 50);
@@ -128,15 +133,14 @@ const Auth = () => {
           return newProgress;
         });
       }, 50);
+      
+      return () => {
+        if (intervalId !== undefined) {
+          clearInterval(intervalId);
+        }
+      };
     }
-    
-    // Cleanup function
-    return () => {
-      if (intervalId !== undefined) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [user, redirecting, navigate, redirectTo, loading]);
+  }, [user, loading, redirecting, navigate, redirectTo]);
   
   // Handle keyboard navigation for TV remotes
   useEffect(() => {
@@ -281,7 +285,17 @@ const Auth = () => {
   
   // Skip progress animation and redirect immediately if user is logged in
   if (user) {
-    return <Navigate to={redirectTo} replace />;
+    // Usar a key de sessão para evitar loop
+    const redirectKey = "auth_direct_redirect";
+    if (!sessionStorage.getItem(redirectKey)) {
+      sessionStorage.setItem(redirectKey, "true");
+      // Limpar a key após 2 segundos
+      setTimeout(() => {
+        sessionStorage.removeItem(redirectKey);
+      }, 2000);
+      
+      return <Navigate to={redirectTo} replace />;
+    }
   }
   
   return (
@@ -361,7 +375,7 @@ const Auth = () => {
                     }}
                     onFocus={() => setFocusedElement("terms")}
                     tabIndex={0}
-                    ref={termsRef as React.RefObject<HTMLDivElement>}
+                    ref={termsRef}
                     className={`flex items-center space-x-2 cursor-pointer p-2 rounded ${focusedElement === "terms" ? "bg-gray-800 ring-2 ring-netflix-red" : ""}`}
                   >
                     <Checkbox
@@ -403,7 +417,10 @@ const Auth = () => {
                         await register(email, password, code);
                         // Se tinha um código de acesso, força refresh para atualizar dados da assinatura
                         if (code) {
-                          window.location.reload();
+                          // Aguardar 1 segundo antes de recarregar para garantir que o registro foi concluído
+                          setTimeout(() => {
+                            window.location.reload();
+                          }, 1000);
                           return;
                         }
                       }
