@@ -205,7 +205,7 @@ const MediaSection = ({
                 <Plus className="w-5 h-5 text-white group-hover:scale-110 transition-transform duration-300" />
               )}
               <span className="text-sm font-medium text-white">
-                {isLoading ? "Carregando..." : "Ver mais"}
+                {isLoading ? "Carregando..." : "Ver mais..."}
               </span>
             </div>
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>

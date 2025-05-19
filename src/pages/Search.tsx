@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import SearchResults from "@/components/home/SearchResults";
 import { useMediaSearch } from "@/hooks/useMediaSearch";
 import Navbar from "@/components/Navbar";
@@ -10,6 +10,7 @@ const Search = () => {
   const [page, setPage] = useState(1);
   const [focusedItem, setFocusedItem] = useState(0);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   
   const { 
     results, 
@@ -56,19 +57,8 @@ const Search = () => {
         case 'Enter':
           e.preventDefault();
           if (filteredResults[focusedItem]) {
-            // Aqui você pode adicionar a lógica para navegar para o item selecionado
             const media = filteredResults[focusedItem];
-            if (media.media_type === 'tv') {
-              if (media.original_language === 'ko') {
-                window.location.href = `/dorama/${media.id}`;
-              } else if (media.original_language === 'ja') {
-                window.location.href = `/anime/${media.id}`;
-              } else {
-                window.location.href = `/serie/${media.id}`;
-              }
-            } else {
-              window.location.href = `/filme/${media.id}`;
-            }
+            handleMediaClick(media);
           }
           break;
         case 'Backspace':
@@ -96,6 +86,20 @@ const Search = () => {
     }, 100);
   };
 
+  const handleMediaClick = (media: any) => {
+    if (media.media_type === 'movie') {
+      navigate(`/filme/${media.id}`);
+    } else if (media.media_type === 'tv') {
+      if (media.original_language === 'ko') {
+        navigate(`/dorama/${media.id}`);
+      } else if (media.original_language === 'ja') {
+        navigate(`/anime/${media.id}`);
+      } else {
+        navigate(`/serie/${media.id}`);
+      }
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -106,6 +110,7 @@ const Search = () => {
           loadMoreResults={handleLoadMore}
           hasMore={hasMore}
           focusedItem={focusedItem}
+          onMediaClick={handleMediaClick}
         />
       </div>
     </>

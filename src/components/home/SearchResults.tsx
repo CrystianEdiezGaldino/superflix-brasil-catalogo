@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import MediaCard from "@/components/media/MediaCard";
 import { Card } from "@/components/ui/card";
@@ -11,9 +10,17 @@ interface SearchResultsProps {
   loadMoreResults?: () => void;
   hasMore?: boolean;
   focusedItem?: number;
+  onMediaClick: (media: MediaItem) => void;
 }
 
-const SearchResults = ({ results, isSearching, loadMoreResults, hasMore = false, focusedItem = 0 }: SearchResultsProps) => {
+const SearchResults = ({ 
+  results, 
+  isSearching, 
+  loadMoreResults, 
+  hasMore = false, 
+  focusedItem = 0,
+  onMediaClick 
+}: SearchResultsProps) => {
   const [focusedIndex, setFocusedIndex] = useState(focusedItem);
 
   if (isSearching) {
@@ -48,7 +55,7 @@ const SearchResults = ({ results, isSearching, loadMoreResults, hasMore = false,
           >
             <MediaCard 
               media={media} 
-              onClick={() => {}} 
+              onClick={() => onMediaClick(media)} 
               index={index}
               isFocused={index === focusedIndex}
               onFocus={setFocusedIndex}
