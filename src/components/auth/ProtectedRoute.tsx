@@ -16,17 +16,19 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <LoadingState />;
   }
 
-  // If not authenticated, redirect to auth page once
+  // Se não estiver autenticado e não tiver uma flag de redirecionamento, redireciona uma vez
   if (!user) {
     const redirectKey = `protected_redirect_${location.pathname}`;
-    if (!sessionStorage.getItem(redirectKey)) {
+    const hasRedirected = sessionStorage.getItem(redirectKey);
+    
+    if (!hasRedirected) {
       console.log("Usuário não autenticado em rota protegida, redirecionando para /auth");
       sessionStorage.setItem(redirectKey, "true");
       
-      // Limpar flag após 2 segundos
+      // Limpar flag após timeout
       setTimeout(() => {
         sessionStorage.removeItem(redirectKey);
-      }, 2000);
+      }, 5000);
       
       return <Navigate to="/auth" state={{ from: location }} replace />;
     }

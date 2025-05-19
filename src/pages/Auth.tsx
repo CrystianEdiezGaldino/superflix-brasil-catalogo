@@ -24,7 +24,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 const Auth = () => {
-  const { user, loading, login, register } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [backgroundImage, setBackgroundImage] = useState("");
@@ -38,7 +38,6 @@ const Auth = () => {
   const [termsAccepted, setTermsAccepted] = useState(true);
   const [selectedBackground, setSelectedBackground] = useState<MediaItem | null>(null);
   const [focusedElement, setFocusedElement] = useState<string>("email");
-  const [redirectAttempted, setRedirectAttempted] = useState(false);
   
   // Refs for focusable elements
   const emailRef = useRef<HTMLInputElement>(null);
@@ -52,22 +51,24 @@ const Auth = () => {
   // Get the intended redirect path from state, or default to home page
   const redirectTo = location.state?.from?.pathname || "/";
   
-  // Buscar dados de filmes populares
+  // Buscamos apenas uma quantidade limitada de filmes para a pré-visualização
+  // e usamos uma chave de cache com tempo de expiração mais longo
   const { data: moviesPreview = [] } = useQuery({
     queryKey: ["authMoviesPreview"],
-    queryFn: () => fetchPopularMovies(),
-    staleTime: 1000 * 60 * 10, // 10 minutos
+    queryFn: () => fetchPopularMovies(1, 10), // Reduzimos para apenas 10 itens
+    staleTime: 1000 * 60 * 30, // 30 minutos
+    cacheTime: 1000 * 60 * 60, // 1 hora
   });
   
   // Filter only content with images
-  const filteredMovies = moviesPreview.filter(movie => movie.poster_path || movie.backdrop_path);
-  const filteredSeries = getFilteredSeries().filter(serie => serie.poster_path || serie.backdrop_path);
-  const filteredAnimes = getFilteredAnimes().filter(anime => anime.poster_path || anime.backdrop_path);
+  const filteredMovies = moviesPreview.filter(movie => movie.poster_path || movie.backdrop_path).slice(0, 5);
+  const filteredSeries = getFilteredSeries().filter(serie => serie.poster_path || serie.backdrop_path).slice(0, 5);
+  const filteredAnimes = getFilteredAnimes().filter(anime => anime.poster_path || anime.backdrop_path).slice(0, 5);
   
   // Combine all content for background selection
   const allContent = [...filteredMovies, ...filteredSeries, ...filteredAnimes];
   
-  // Select random background on mount and change it periodically
+  // Select random background on mount and change it periodically, mas com intervalo maior
   useEffect(() => {
     let intervalId: number | undefined;
     
@@ -79,21 +80,19 @@ const Auth = () => {
       }
     };
 
-    // Change background periodically
+    // Change background less frequently
     const startBackgroundRotation = () => {
       intervalId = window.setInterval(() => {
         const backgroundUrl = selectRandomBackground(allContent);
         if (backgroundUrl) {
           setBackgroundImage(backgroundUrl);
         }
-      }, 15000); // Change every 15 seconds
+      }, 30000); // Change every 30 seconds (aumentado de 15s)
     };
 
-    // Set initial background and start rotation after a delay
     setInitialBackground();
-    const timeoutId = setTimeout(startBackgroundRotation, 10000); // Start rotation after 10 seconds
+    const timeoutId = setTimeout(startBackgroundRotation, 15000); // Delay rotation start
 
-    // Cleanup function
     return () => {
       if (intervalId !== undefined) {
         clearInterval(intervalId);
@@ -104,8 +103,8 @@ const Auth = () => {
   
   // Improved user redirection with anti-loop protection
   useEffect(() => {
-    // Evitar loops de redirecionamento
-    const redirectKey = "auth_redirect_attempt";
+    // Use a redirect flag specific to auth page
+    const redirectKey = "auth_redirect_to_home";
     const hasRedirected = sessionStorage.getItem(redirectKey);
     
     if (user && !redirecting && !loading && !hasRedirected) {
@@ -113,10 +112,10 @@ const Auth = () => {
       sessionStorage.setItem(redirectKey, "true");
       setRedirecting(true);
       
-      // Limpar qualquer flag de redirecionamento após 2 segundos
+      // Limpar flag após 5 segundos
       setTimeout(() => {
         sessionStorage.removeItem(redirectKey);
-      }, 2000);
+      }, 5000);
       
       // Animar barra de progresso antes de redirecionar
       let intervalId = window.setInterval(() => {
@@ -265,7 +264,7 @@ const Auth = () => {
     );
   }
   
-  // If redirecting, show progress indicator
+  // Se estiver redirecionando, mostrar progresso
   if (redirecting) {
     return (
       <div className="min-h-screen bg-netflix-background flex flex-col items-center justify-center">
@@ -283,19 +282,18 @@ const Auth = () => {
     );
   }
   
-  // Skip progress animation and redirect immediately if user is logged in
-  if (user) {
-    // Usar a key de sessão para evitar loop
-    const redirectKey = "auth_direct_redirect";
-    if (!sessionStorage.getItem(redirectKey)) {
-      sessionStorage.setItem(redirectKey, "true");
-      // Limpar a key após 2 segundos
-      setTimeout(() => {
-        sessionStorage.removeItem(redirectKey);
-      }, 2000);
-      
-      return <Navigate to={redirectTo} replace />;
-    }
+  // Verificar se usuário já está autenticado e respeitando a flag de redirecionamento
+  const authRedirectKey = "auth_direct_to_home";
+  if (user && !sessionStorage.getItem(authRedirectKey)) {
+    // Marcar que um redirecionamento já foi tentado
+    sessionStorage.setItem(authRedirectKey, "true");
+    
+    // Limpar após 5 segundos
+    setTimeout(() => {
+      sessionStorage.removeItem(authRedirectKey);
+    }, 5000);
+    
+    return <Navigate to={redirectTo} replace />;
   }
   
   return (
