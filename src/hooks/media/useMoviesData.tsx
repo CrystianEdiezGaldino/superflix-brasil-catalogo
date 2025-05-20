@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { MediaItem } from "@/types/movie";
 import { useBaseMedia } from "./useBaseMedia";
@@ -73,12 +72,20 @@ export const useMoviesData = () => {
   const isLoading = 
     moviesQuery.isPending || 
     actionMoviesQuery.isPending || 
-    comedyMoviesQuery.isPending;
+    comedyMoviesQuery.isPending ||
+    adventureMoviesQuery.isPending ||
+    sciFiMoviesQuery.isPending ||
+    marvelMoviesQuery.isPending ||
+    dcMoviesQuery.isPending;
     
   const hasError = 
     moviesQuery.isError || 
     actionMoviesQuery.isError || 
-    comedyMoviesQuery.isError;
+    comedyMoviesQuery.isError ||
+    adventureMoviesQuery.isError ||
+    sciFiMoviesQuery.isError ||
+    marvelMoviesQuery.isError ||
+    dcMoviesQuery.isError;
 
   return {
     moviesData: moviesQuery.data || [],

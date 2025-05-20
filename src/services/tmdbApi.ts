@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import { fetchKidsAnimes, fetchKidsAnimations, fetchKidsMovies, fetchKidsSeries, fetchTrendingKidsContent } from "./tmdb/kids";
 import { 
@@ -17,7 +16,8 @@ import {
   fetchTrendingSeries,
   fetchRecentSeries,
   fetchSeriesDetails,
-  fetchSeriesSeasonDetails
+  fetchSeriesSeasonDetails,
+  fetchPopularAmericanSeries
 } from "./tmdb/series";
 import {
   fetchTVVideos,
@@ -33,6 +33,15 @@ import {
   fetchSimilarDoramas,
   fetchDoramaCast
 } from "./tmdb/doramas";
+import {
+  fetchAnime,
+  fetchTopRatedAnime,
+  fetchRecentAnime,
+  fetchTrendingAnime,
+  fetchSeasonalAnime,
+  fetchAnimeSections,
+  fetchAnimeBatch
+} from "./tmdb/anime";
 
 // Create recommendations function
 export const fetchRecommendations = async (type: string, id: string): Promise<MediaItem[]> => {
@@ -110,6 +119,7 @@ export {
   fetchRecentSeries,
   fetchSeriesDetails,
   fetchSeriesSeasonDetails,
+  fetchPopularAmericanSeries,
   
   // Video exports
   fetchTVVideos,
@@ -132,7 +142,16 @@ export {
   fetchKoreanMovies,
   fetchDoramaDetails,
   fetchSimilarDoramas,
-  fetchDoramaCast
+  fetchDoramaCast,
+
+  // Anime exports
+  fetchAnime,
+  fetchTopRatedAnime,
+  fetchRecentAnime,
+  fetchTrendingAnime,
+  fetchSeasonalAnime,
+  fetchAnimeSections,
+  fetchAnimeBatch
 };
 
 // Utility function for components needing to fetch media by ID

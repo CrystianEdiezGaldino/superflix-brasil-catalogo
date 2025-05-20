@@ -1,11 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 export const useAccessControl = () => {
   const { user, loading: authLoading } = useAuth();
   const [hasAccess, setHasAccess] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const lastAccessCheck = useRef<number>(0);
   
   // Use the subscription context if available, otherwise fall back to a default value
   let subscriptionData = { isSubscribed: false, isAdmin: false, hasTempAccess: false, hasTrialAccess: false, isLoading: true };
@@ -16,7 +17,6 @@ export const useAccessControl = () => {
     subscriptionData = subscription;
   } catch (error) {
     console.warn("useSubscription unavailable, using default values");
-    // We already set default values above, so no need to do anything here
   }
   
   const { 
@@ -27,28 +27,42 @@ export const useAccessControl = () => {
     isLoading: subLoading 
   } = subscriptionData;
 
+  // Memoize the access calculation
+  const userHasAccess = useMemo(() => {
+    return Boolean(isSubscribed || isAdmin || hasTempAccess || hasTrialAccess);
+  }, [isSubscribed, isAdmin, hasTempAccess, hasTrialAccess]);
+
+  // Only update access state when necessary
   useEffect(() => {
-    // Update loading state
-    setSubscriptionLoading(subLoading);
+    const now = Date.now();
+    const timeSinceLastCheck = now - lastAccessCheck.current;
     
-    // Calculate access - Make sure to include "trialing" status as valid access
-    const userHasAccess = Boolean(isSubscribed || isAdmin || hasTempAccess || hasTrialAccess);
-    console.log("Access control status:", { 
-      isSubscribed, 
-      isAdmin, 
-      hasTempAccess, 
-      hasTrialAccess,
-      userHasAccess 
-    });
-    
-    setHasAccess(userHasAccess);
-  }, [isSubscribed, isAdmin, hasTempAccess, hasTrialAccess, subLoading]);
+    // Only update if more than 5 seconds have passed or if loading state changed
+    if (timeSinceLastCheck > 5000 || subscriptionLoading !== subLoading) {
+      setSubscriptionLoading(subLoading);
+      
+      // Only log if access status actually changed
+      if (hasAccess !== userHasAccess) {
+        console.log("Access control status:", { 
+          isSubscribed, 
+          isAdmin, 
+          hasTempAccess, 
+          hasTrialAccess,
+          userHasAccess 
+        });
+        
+        setHasAccess(userHasAccess);
+        lastAccessCheck.current = now;
+      }
+    }
+  }, [userHasAccess, subLoading, isSubscribed, isAdmin, hasTempAccess, hasTrialAccess, hasAccess]);
   
-  return {
+  // Memoize the return value
+  return useMemo(() => ({
     user,
     authLoading,
     subscriptionLoading,
     hasAccess,
     isLoading: authLoading || subscriptionLoading
-  };
+  }), [user, authLoading, subscriptionLoading, hasAccess]);
 };

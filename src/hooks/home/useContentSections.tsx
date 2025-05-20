@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useHomePageData } from "../useHomePageData";
 import { useMovies } from "../movies/useMovies";
@@ -56,68 +55,30 @@ export const useContentSections = () => {
 
   // Initialize section data
   useEffect(() => {
-    if (moviesData) {
-      setSectionData(prev => ({
-        ...prev,
-        movies: { items: moviesData, page: 1, hasMore: true, isLoading: false }
-      }));
-    }
-    
-    if (seriesData) {
-      setSectionData(prev => ({
-        ...prev,
-        series: { items: seriesData, page: 1, hasMore: true, isLoading: false }
-      }));
-    }
-    
-    if (animeData) {
-      setSectionData(prev => ({
-        ...prev,
-        anime: { items: animeData, page: 1, hasMore: true, isLoading: false }
-      }));
-    }
-    
-    if (topRatedAnimeData) {
-      setSectionData(prev => ({
-        ...prev,
-        topRatedAnime: { items: topRatedAnimeData, page: 1, hasMore: true, isLoading: false }
-      }));
-    }
-    
-    if (doramasData) {
-      setSectionData(prev => ({
-        ...prev,
-        doramas: { items: doramasData, page: 1, hasMore: true, isLoading: false }
-      }));
-    }
-    
-    if (actionMoviesData) {
-      setSectionData(prev => ({
-        ...prev,
-        actionMovies: { items: actionMoviesData, page: 1, hasMore: true, isLoading: false }
-      }));
-    }
-    
-    if (comedyMoviesData) {
-      setSectionData(prev => ({
-        ...prev,
-        comedyMovies: { items: comedyMoviesData, page: 1, hasMore: true, isLoading: false }
-      }));
-    }
-    
-    if (adventureMoviesData) {
-      setSectionData(prev => ({
-        ...prev,
-        adventureMovies: { items: adventureMoviesData, page: 1, hasMore: true, isLoading: false }
-      }));
-    }
-    
-    if (sciFiMoviesData) {
-      setSectionData(prev => ({
-        ...prev,
-        sciFiMovies: { items: sciFiMoviesData, page: 1, hasMore: true, isLoading: false }
-      }));
-    }
+    const updateSectionData = (key: string, data: MediaItem[] | undefined) => {
+      if (data && data.length > 0) {
+        setSectionData(prev => {
+          // Only update if the data is different
+          if (JSON.stringify(prev[key]?.items) === JSON.stringify(data)) {
+            return prev;
+          }
+          return {
+            ...prev,
+            [key]: { items: data, page: 1, hasMore: true, isLoading: false }
+          };
+        });
+      }
+    };
+
+    updateSectionData('movies', moviesData);
+    updateSectionData('series', seriesData);
+    updateSectionData('anime', animeData);
+    updateSectionData('topRatedAnime', topRatedAnimeData);
+    updateSectionData('doramas', doramasData);
+    updateSectionData('actionMovies', actionMoviesData);
+    updateSectionData('comedyMovies', comedyMoviesData);
+    updateSectionData('adventureMovies', adventureMoviesData);
+    updateSectionData('sciFiMovies', sciFiMoviesData);
   }, [
     moviesData,
     seriesData,

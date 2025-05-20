@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useKidsFilters } from "./useKidsFilters";
 import { useKidsPagination } from "./useKidsPagination";
-import { MediaItem, Movie, Series } from "@/types/movie";
+import { MediaItem } from "@/types/movie";
 import { 
   fetchKidsMovies, 
   fetchKidsAnimations, 
@@ -34,6 +33,7 @@ export const useKidsContent = () => {
   } = useKidsPagination();
 
   const [kidsContent, setKidsContent] = useState<MediaItem[]>([]);
+  const [allContent, setAllContent] = useState<MediaItem[]>([]);
 
   // Query for animations (movies)
   const animationsQuery = useQuery({
@@ -66,18 +66,28 @@ export const useKidsContent = () => {
     const kidsSeries = kidsSeriesQuery.data || [];
     const kidsAnimes = kidsAnimesQuery.data || [];
     
-    let allContent = [...animations, ...kidsMovies, ...kidsSeries, ...kidsAnimes];
+    const newContent = [...animations, ...kidsMovies, ...kidsSeries, ...kidsAnimes];
+    
+    // Update all content
+    setAllContent(prev => {
+      if (page === 1) {
+        return newContent;
+      }
+      return [...prev, ...newContent];
+    });
     
     // Filter content based on search and filters
+    let filteredContent = newContent;
+    
     if (searchQuery) {
-      allContent = allContent.filter((item) => {
+      filteredContent = filteredContent.filter((item) => {
         const title = 'title' in item ? item.title : item.name;
         return title?.toLowerCase().includes(searchQuery.toLowerCase());
       });
     }
     
     if (yearFilter) {
-      allContent = allContent.filter((item) => {
+      filteredContent = filteredContent.filter((item) => {
         const date = 'release_date' in item ? item.release_date : item.first_air_date;
         return date?.includes(yearFilter);
       });
@@ -85,11 +95,22 @@ export const useKidsContent = () => {
 
     if (ratingFilter) {
       const minRating = parseFloat(ratingFilter);
-      allContent = allContent.filter((item) => item.vote_average >= minRating);
+      filteredContent = filteredContent.filter((item) => item.vote_average >= minRating);
     }
     
-    setKidsContent(allContent);
-    setHasMore(animations.length === 20 || kidsMovies.length === 20 || kidsSeries.length === 20);
+    setKidsContent(prev => {
+      if (page === 1) {
+        return filteredContent;
+      }
+      return [...prev, ...filteredContent];
+    });
+
+    setHasMore(
+      animations.length === 20 || 
+      kidsMovies.length === 20 || 
+      kidsSeries.length === 20 ||
+      kidsAnimes.length === 20
+    );
   }, [
     animationsQuery.data,
     kidsMoviesQuery.data, 
@@ -98,14 +119,15 @@ export const useKidsContent = () => {
     searchQuery,
     yearFilter,
     ratingFilter,
-    setHasMore
+    setHasMore,
+    page
   ]);
 
   // Separate content for featured sections
-  const trendingAnimations = animationsQuery.data?.slice(0, 6) || [];
-  const recentAnimations = animationsQuery.data?.slice(6, 12) || [];
-  const popularKidsMovies = kidsMoviesQuery.data?.slice(0, 6) || [];
-  const popularKidsSeries = kidsSeriesQuery.data?.slice(0, 6) || [];
+  const trendingContent = allContent.slice(0, 6);
+  const topRatedContent = allContent.slice(6, 12);
+  const recentContent = allContent.slice(12, 18);
+  const popularContent = allContent.slice(18, 24);
 
   const isLoading = 
     animationsQuery.isLoading || 
@@ -113,35 +135,12 @@ export const useKidsContent = () => {
     kidsSeriesQuery.isLoading ||
     kidsAnimesQuery.isLoading;
 
-  // Load more data
-  useEffect(() => {
-    if (page > 1) {
-      setIsLoadingMore(true);
-      
-      Promise.all([
-        fetchKidsAnimations(page),
-        fetchKidsMovies(page),
-        fetchKidsSeries(page),
-        fetchKidsAnimes(page)
-      ]).then(([newAnimations, newMovies, newSeries, newAnimes]) => {
-        setKidsContent(prev => [...prev, ...newAnimations, ...newMovies, ...newSeries, ...newAnimes]);
-        setIsLoadingMore(false);
-        setHasMore(
-          newAnimations.length > 0 || 
-          newMovies.length > 0 || 
-          newSeries.length > 0 || 
-          newAnimes.length > 0
-        );
-      });
-    }
-  }, [page, setIsLoadingMore, setHasMore]);
-
   return {
     kidsContent,
-    trendingContent: trendingAnimations,
-    topRatedContent: recentAnimations,
-    recentContent: popularKidsSeries,
-    popularContent: popularKidsMovies,
+    trendingContent,
+    topRatedContent,
+    recentContent,
+    popularContent,
     isLoading,
     isLoadingMore,
     hasMore,

@@ -41,6 +41,7 @@ interface MediaViewProps {
   onResetFilters?: () => void;
   onMediaClick: (media: MediaItem) => void;
   children?: React.ReactNode;
+  hideNavbar?: boolean;
 }
 
 const MediaView = ({
@@ -67,6 +68,7 @@ const MediaView = ({
   onResetFilters,
   onMediaClick,
   children,
+  hideNavbar = false,
 }: MediaViewProps) => {
   const [currentFocusedSection, setCurrentFocusedSection] = useState(0);
   const [currentFocusedItem, setCurrentFocusedItem] = useState(0);
@@ -217,9 +219,9 @@ const MediaView = ({
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      <Navbar />
+      {!hideNavbar && <Navbar />}
       
-      <div className="container mx-auto px-4 py-8 pt-24">
+      <div className={`container mx-auto px-4 ${!hideNavbar ? 'pt-24' : ''}`}>
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">{title}</h1>
         
         {/* Conteúdo de destaque (renderizado condicionalmente) */}
