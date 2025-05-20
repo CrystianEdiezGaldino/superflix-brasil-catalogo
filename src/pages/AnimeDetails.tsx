@@ -199,6 +199,14 @@ const AnimeDetails = () => {
     }
   };
 
+  // Efeito para voltar ao topo quando a página carregar
+  useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, [id]); // Executa quando o ID do anime mudar
+
   if (isLoading || !anime) {
     return <AnimeLoadingState isLoading={true} hasUser={!!user} hasError={false} />;
   }

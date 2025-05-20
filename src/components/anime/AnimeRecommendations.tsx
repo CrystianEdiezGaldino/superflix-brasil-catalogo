@@ -14,7 +14,7 @@ const AnimeRecommendations: React.FC<AnimeRecommendationsProps> = ({ anime, isLo
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-white mb-4">Recomendações</h2>
+      <h2 className="text-2xl font-bold text-white mb-4"></h2>
       <MediaSection
         title="Recomendações"
         medias={anime.recommendations.results}

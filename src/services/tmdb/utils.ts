@@ -11,15 +11,19 @@ export async function fetchFromApi<T>(url: string, signal?: AbortSignal): Promis
     const response = await fetch(url, { signal });
     if (!response.ok) {
       console.error(`API Error: ${response.status} for URL: ${url}`);
-      return {} as T;
+      throw new Error(`API Error: ${response.status}`);
     }
-    return await response.json();
+    const data = await response.json();
+    if (!data) {
+      throw new Error('Resposta vazia da API');
+    }
+    return data;
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       throw error;
     }
     console.error("Fetch error:", error);
-    return {} as T;
+    throw error;
   }
 }
 
@@ -28,13 +32,15 @@ export function addMediaTypeToResults<T extends { media_type?: string }>(
   results: T[] | undefined, 
   type: "movie" | "tv"
 ): T[] {
-  return results?.map((item) => ({
+  if (!results) return [];
+  return results.map((item) => ({
     ...item,
     media_type: type
-  })) || [];
+  }));
 }
 
 // Helper to limit results based on pagination
 export function limitResults<T>(results: T[], itemsPerPage: number = 20): T[] {
+  if (!results) return [];
   return results.slice(0, itemsPerPage);
 }
