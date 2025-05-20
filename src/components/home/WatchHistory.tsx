@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { MediaItem } from "@/types/movie";
 import MediaSectionLoader from "./MediaSectionLoader";
 import { useNavigate } from "react-router-dom";
+import { fetchMediaById } from "@/services/tmdbApi";
 
 interface WatchHistoryProps {
   limit?: number;
@@ -16,11 +17,12 @@ const WatchHistory: React.FC<WatchHistoryProps> = ({ limit = 10 }) => {
   const watchHistoryItems: MediaItem[] = [];
   
   const handleMediaClick = (media: MediaItem) => {
-    if (media.media_type === 'movie') {
+    // Use optional chaining to safely access media_type
+    if (media?.media_type === 'movie') {
       navigate(`/filme/${media.id}`);
-    } else if (media.media_type === 'tv') {
+    } else if (media?.media_type === 'tv') {
       navigate(`/serie/${media.id}`);
-    } else if (media.media_type === 'anime') {
+    } else if (media?.media_type === 'anime') {
       navigate(`/anime/${media.id}`);
     }
   };

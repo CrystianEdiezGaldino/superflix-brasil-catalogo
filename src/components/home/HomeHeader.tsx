@@ -29,8 +29,7 @@ const HomeHeader = ({
       {/* Show Banner only when not searching */}
       {!searchQuery && featuredMedia && (
         <Banner 
-          media={featuredMedia} 
-          showFullContent={showFullContent} 
+          media={featuredMedia}
           onButtonClick={onButtonClick}
         />
       )}
