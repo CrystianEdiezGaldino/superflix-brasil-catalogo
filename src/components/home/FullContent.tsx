@@ -1,14 +1,13 @@
 
+import React from "react";
 import { MediaItem } from "@/types/movie";
-import { useNavigate } from "react-router-dom";
-import MoviesSections from "@/components/home/sections/MoviesSections";
-import SeriesSections from "@/components/home/sections/SeriesSections";
-import AnimeSections from "@/components/home/sections/AnimeSections";
-import DoramaSections from "@/components/home/sections/DoramaSections";
-import RecommendationsSection from "@/components/home/sections/RecommendationsSection";
+import MoviesSections from "./sections/MoviesSections";
+import SeriesSections from "./sections/SeriesSections";
+import AnimeSections from "./sections/AnimeSections";
+import DoramaSections from "./sections/DoramaSections";
+import RecommendationsSection from "./sections/RecommendationsSection";
 
-interface FullContentProps {
-  recommendations: MediaItem[];
+export interface FullContentProps {
   moviesData: MediaItem[];
   actionMoviesData: MediaItem[];
   comedyMoviesData: MediaItem[];
@@ -22,14 +21,15 @@ interface FullContentProps {
   topRatedAnimeData: MediaItem[];
   recentAnimesData: MediaItem[];
   doramasData: MediaItem[];
-  topRatedDoramasData?: MediaItem[];
-  popularDoramasData?: MediaItem[];
-  koreanMoviesData?: MediaItem[];
+  recommendations: MediaItem[];
+  popularContent: MediaItem[];
   isLoading: boolean;
+  hasMore: boolean;
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick: (media: MediaItem) => void;
 }
 
-export const FullContent = ({
-  recommendations,
+const FullContent: React.FC<FullContentProps> = ({
   moviesData,
   actionMoviesData,
   comedyMoviesData,
@@ -43,49 +43,17 @@ export const FullContent = ({
   topRatedAnimeData,
   recentAnimesData,
   doramasData,
-  topRatedDoramasData = [],
-  popularDoramasData = [],
-  koreanMoviesData = [],
+  recommendations,
+  popularContent,
   isLoading,
-}: FullContentProps) => {
-  const navigate = useNavigate();
-
-  const handleMediaClick = (media: MediaItem) => {
-    if (!media || !media.id) return;
-    
-    const mediaId = media.id.toString();
-    
-    switch (media.media_type) {
-      case 'movie':
-        navigate(`/filme/${mediaId}`);
-        break;
-      case 'tv':
-        navigate(`/serie/${mediaId}`);
-        break;
-      case 'anime':
-        navigate(`/anime/${mediaId}`);
-        break;
-      default:
-        console.warn(`Unknown media type: ${media.media_type}`);
-    }
-  };
-
-  const handleLoadMore = (sectionId: string) => {
-    console.log(`Load more for section: ${sectionId}`);
-    // Implementation for loading more content
-  };
-
+  hasMore,
+  onLoadMore,
+  onMediaClick,
+}) => {
   return (
-    <div className="space-y-12 pb-16">
-      {recommendations.length > 0 && (
-        <RecommendationsSection
-          recommendations={recommendations}
-          isLoading={isLoading}
-          onMediaClick={handleMediaClick}
-        />
-      )}
-      
-      <MoviesSections
+    <div className="pt-4">
+      {/* Movies Sections */}
+      <MoviesSections 
         movies={moviesData}
         actionMovies={actionMoviesData}
         comedyMovies={comedyMoviesData}
@@ -94,39 +62,46 @@ export const FullContent = ({
         marvelMovies={marvelMoviesData}
         dcMovies={dcMoviesData}
         isLoading={isLoading}
-        hasMore={false}
-        onLoadMore={handleLoadMore}
-        onMediaClick={handleMediaClick}
+        hasMore={hasMore}
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
       />
       
+      {/* Series Sections */}
       <SeriesSections
         series={seriesData}
         popularSeries={popularSeriesData}
         isLoading={isLoading}
-        hasMore={false}
-        onLoadMore={handleLoadMore}
-        onMediaClick={handleMediaClick}
+        hasMore={hasMore}
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
       />
       
+      {/* Anime Sections */}
       <AnimeSections
         anime={animeData}
         topRatedAnime={topRatedAnimeData}
         recentAnimes={recentAnimesData}
         isLoading={isLoading}
-        hasMore={false}
-        onLoadMore={handleLoadMore}
-        onMediaClick={handleMediaClick}
+        hasMore={hasMore}
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
       />
       
+      {/* Dorama Sections */}
       <DoramaSections
         doramas={doramasData}
-        topRatedDoramas={topRatedDoramasData}
-        popularDoramas={popularDoramasData}
-        koreanMovies={koreanMoviesData}
         isLoading={isLoading}
-        hasMore={false}
-        onLoadMore={handleLoadMore}
-        onMediaClick={handleMediaClick}
+        hasMore={hasMore} 
+        onLoadMore={onLoadMore}
+        onMediaClick={onMediaClick}
+      />
+      
+      {/* Recommendations Section */}
+      <RecommendationsSection
+        recommendations={recommendations}
+        isLoading={isLoading}
+        onMediaClick={onMediaClick}
       />
     </div>
   );

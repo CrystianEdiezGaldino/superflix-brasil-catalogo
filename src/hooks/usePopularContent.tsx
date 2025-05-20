@@ -2,20 +2,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchPopularMovies, fetchPopularSeries } from "@/services/tmdbApi";
 import { MediaItem } from "@/types/movie";
-import { fetchPopularAmericanSeries, fetchRecentAnime } from "./media/useAnimeData"; // Importando as funções do nosso arquivo local
+import { fetchPopularAmericanSeries } from "@/services/tmdb/series";
+import { fetchRecentAnime } from "@/services/tmdb/anime";
 
 export const usePopularContent = () => {
   // Query para filmes populares
   const { data: popularMovies, isLoading: isLoadingMovies } = useQuery({
     queryKey: ["popularMovies"],
-    queryFn: fetchPopularMovies,
+    queryFn: () => fetchPopularMovies(),
     staleTime: 1000 * 60 * 10, // 10 minutos
   });
 
   // Query para séries populares
   const { data: popularSeries, isLoading: isLoadingSeries } = useQuery({
     queryKey: ["popularSeries"],
-    queryFn: fetchPopularSeries,
+    queryFn: () => fetchPopularSeries(),
     staleTime: 1000 * 60 * 10,
   });
 
@@ -23,16 +24,14 @@ export const usePopularContent = () => {
   const { data: popularAmericanSeries, isLoading: isLoadingAmericanSeries } = 
     useQuery({
       queryKey: ["popularAmericanSeries"],
-      // @ts-ignore - A função foi definida em outro arquivo, mas o TypeScript não reconhece
-      queryFn: fetchPopularAmericanSeries,
+      queryFn: () => fetchPopularAmericanSeries(),
       staleTime: 1000 * 60 * 10,
     });
 
   // Query para animes recentes
   const { data: recentAnimes, isLoading: isLoadingAnimes } = useQuery({
     queryKey: ["recentAnimes"],
-    // @ts-ignore - A função foi definida em outro arquivo, mas o TypeScript não reconhece
-    queryFn: fetchRecentAnime,
+    queryFn: () => fetchRecentAnime(),
     staleTime: 1000 * 60 * 10,
   });
 

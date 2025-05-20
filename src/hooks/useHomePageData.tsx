@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useMemo, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -7,12 +8,6 @@ import { useRecommendations } from "./useRecommendations";
 import { useFeaturedMedia } from "./useFeaturedMedia";
 import { useAccessControl } from "./useAccessControl";
 import { usePopularContent } from "./usePopularContent";
-import { useMoviesData } from "@/hooks/media/useMoviesData";
-import { useSeriesData } from "@/hooks/media/useSeriesData";
-import { useAnimeData } from "@/hooks/media/useAnimeData";
-
-// Remove the import to prevent circular dependency
-// import { useAuthRedirect } from "./useAuthRedirect";
 
 export const useHomePageData = () => {
   const startTimeRef = useRef(Date.now());
@@ -32,38 +27,6 @@ export const useHomePageData = () => {
   
   const { hasAccess } = useAccessControl();
 
-  const {
-    popularMovies,
-    recentMovies,
-    isLoadingPopularMovies,
-    isLoadingRecentMovies,
-    isLoading: moviesLoading
-  } = useMoviesData();
-
-  const {
-    popularSeries,
-    recentSeries,
-    isLoadingPopularSeries,
-    isLoadingRecentSeries,
-    isLoading: seriesLoading
-  } = useSeriesData();
-
-  const {
-    popularAnimes,
-    recentAnimes,
-    isLoadingPopularAnimes,
-    isLoadingRecentAnimes,
-    isLoading: animesLoading
-  } = useAnimeData();
-
-  // Get popular series and recent animes
-  const { 
-    popularSeries: popularSeriesFromContent, 
-    recentAnimes: recentAnimesFromContent,
-    isLoadingPopularSeries: isLoadingPopularSeriesFromContent,
-    isLoadingRecentAnimes: isLoadingRecentAnimesFromContent
-  } = usePopularContent(user?.id);
-  
   // Import data from smaller hooks
   const { searchMedia, results, isLoading: searchLoading, hasMore, currentPage } = useMediaSearch();
   const { recommendations } = useRecommendations();
@@ -82,6 +45,12 @@ export const useHomePageData = () => {
     isLoading: mediaLoading,
     hasError
   } = useMediaData();
+  
+  // Get popular content
+  const { 
+    popularContent,
+    isLoading: isLoadingPopularContent
+  } = usePopularContent();
   
   const { featuredMedia } = useFeaturedMedia(
     hasAccess,
@@ -145,20 +114,18 @@ export const useHomePageData = () => {
     authLoading,
     subscriptionLoading,
     mediaLoading,
-    isLoadingPopularSeries,
-    isLoadingRecentAnimes
+    isLoadingPopularContent
   }), [
     authLoading,
     subscriptionLoading,
     mediaLoading,
-    isLoadingPopularSeries,
-    isLoadingRecentAnimes
+    isLoadingPopularContent
   ]);
 
   // Loading state with timeout protection
   const isLoading = useMemo(() => {
     const isStillLoading = authLoading || subscriptionLoading || mediaLoading || 
-                          isLoadingPopularSeries || isLoadingRecentAnimes;
+                           isLoadingPopularContent;
     
     if (isStillLoading && Date.now() - startTimeRef.current > 10000) {
       console.warn('Loading timeout reached - forcing completion');
@@ -166,8 +133,7 @@ export const useHomePageData = () => {
     }
     
     return isStillLoading;
-  }, [authLoading, subscriptionLoading, mediaLoading, 
-      isLoadingPopularSeries, isLoadingRecentAnimes]);
+  }, [authLoading, subscriptionLoading, mediaLoading, isLoadingPopularContent]);
 
   // Memoize the return value with deep comparison
   return useMemo(() => {
@@ -189,8 +155,7 @@ export const useHomePageData = () => {
       sciFiMoviesData,
       marvelMoviesData,
       dcMoviesData,
-      popularSeries,
-      recentAnimes,
+      popularContent,
       isLoading,
       hasError,
       handleSearch,
@@ -226,8 +191,7 @@ export const useHomePageData = () => {
     sciFiMoviesData,
     marvelMoviesData,
     dcMoviesData,
-    popularSeries,
-    recentAnimes,
+    popularContent,
     isLoading,
     hasError,
     handleSearch,

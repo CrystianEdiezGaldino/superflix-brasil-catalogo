@@ -1,95 +1,105 @@
 
+import React from "react";
 import { MediaItem } from "@/types/movie";
 import FullContent from "./FullContent";
-import ContentPreview from "./ContentPreview";
-import LargeSubscriptionUpsell from "./LargeSubscriptionUpsell";
+import LoadingState from "./LoadingState";
+import ErrorState from "./ErrorState";
+import UnauthenticatedState from "./UnauthenticatedState";
+import SubscriptionUpsell from "./SubscriptionUpsell";
 
 interface MainContentProps {
+  user: any;
   hasAccess: boolean;
-  movies: MediaItem[];
-  series: MediaItem[];
-  anime: MediaItem[];
+  isLoading: boolean;
+  hasError: boolean;
+  moviesData: MediaItem[];
+  actionMoviesData: MediaItem[];
+  comedyMoviesData: MediaItem[];
+  adventureMoviesData: MediaItem[];
+  sciFiMoviesData: MediaItem[];
+  marvelMoviesData: MediaItem[];
+  dcMoviesData: MediaItem[];
+  seriesData: MediaItem[];
+  popularSeriesData: MediaItem[];
+  animeData: MediaItem[];
+  topRatedAnimeData: MediaItem[];
+  recentAnimesData: MediaItem[];
+  doramasData: MediaItem[];
   recommendations: MediaItem[];
-  topRatedAnime: MediaItem[];
-  doramas: MediaItem[];
-  actionMovies: MediaItem[];
-  comedyMovies: MediaItem[];
-  adventureMovies: MediaItem[];
-  sciFiMovies: MediaItem[];
-  marvelMovies: MediaItem[];
-  dcMovies: MediaItem[];
-  popularSeries?: MediaItem[];
-  recentAnimes?: MediaItem[];
-  isLoadingMore: boolean;
-  hasMore: boolean;
-  onLoadMoreSection: (sectionId: string) => void;
+  popularContent: MediaItem[];
   onMediaClick: (media: MediaItem) => void;
 }
 
-const MainContent = ({
+const MainContent: React.FC<MainContentProps> = ({
+  user,
   hasAccess,
-  movies,
-  series,
-  anime,
+  isLoading,
+  hasError,
+  moviesData,
+  actionMoviesData,
+  comedyMoviesData,
+  adventureMoviesData,
+  sciFiMoviesData,
+  marvelMoviesData,
+  dcMoviesData,
+  seriesData,
+  popularSeriesData,
+  animeData,
+  topRatedAnimeData,
+  recentAnimesData,
+  doramasData,
   recommendations,
-  topRatedAnime,
-  doramas,
-  actionMovies,
-  comedyMovies,
-  adventureMovies,
-  sciFiMovies,
-  marvelMovies,
-  dcMovies,
-  popularSeries = [],
-  recentAnimes = [],
-  isLoadingMore,
-  hasMore,
-  onLoadMoreSection,
-  onMediaClick
-}: MainContentProps) => {
-  if (!hasAccess) {
-    return (
-      <>
-        <ContentPreview 
-          movies={movies} 
-          series={series} 
-          anime={anime} 
-        />
-        <LargeSubscriptionUpsell />
-      </>
-    );
+  popularContent,
+  onMediaClick,
+}) => {
+  
+  // If loading, show loading state
+  if (isLoading) {
+    return <LoadingState />;
   }
 
+  // If error, show error state
+  if (hasError) {
+    return <ErrorState />;
+  }
+
+  // If no user, show unauthenticated state
+  if (!user) {
+    return <UnauthenticatedState />;
+  }
+
+  // If user doesn't have access, show subscription upsell
+  if (!hasAccess) {
+    return <SubscriptionUpsell />;
+  }
+
+  // Handle load more sections
+  const handleLoadMore = (sectionId: string) => {
+    console.log(`Loading more for section: ${sectionId}`);
+    // Implementation for loading more content
+  };
+
   return (
-    <FullContent 
-      movies={movies}
-      actionMovies={actionMovies}
-      comedyMovies={comedyMovies}
-      adventureMovies={adventureMovies}
-      sciFiMovies={sciFiMovies}
-      marvelMovies={marvelMovies}
-      dcMovies={dcMovies}
-      horrorMovies={[]}
-      romanceMovies={[]}
-      dramaMovies={[]}
-      thrillerMovies={[]}
-      familyMovies={[]}
-      animationMovies={[]}
-      documentaryMovies={[]}
-      awardWinningMovies={[]}
-      popularMovies={[]}
-      trendingMovies={[]}
-      series={series}
-      anime={anime}
-      topRatedAnime={topRatedAnime}
+    <FullContent
+      moviesData={moviesData}
+      actionMoviesData={actionMoviesData}
+      comedyMoviesData={comedyMoviesData}
+      adventureMoviesData={adventureMoviesData}
+      sciFiMoviesData={sciFiMoviesData}
+      marvelMoviesData={marvelMoviesData}
+      dcMoviesData={dcMoviesData}
+      seriesData={seriesData}
+      popularSeriesData={popularSeriesData}
+      animeData={animeData}
+      topRatedAnimeData={topRatedAnimeData}
+      recentAnimesData={recentAnimesData}
+      doramasData={doramasData}
       recommendations={recommendations}
-      doramas={doramas}
-      popularSeries={popularSeries}
-      recentAnimes={recentAnimes}
-      onLoadMore={onLoadMoreSection}
+      popularContent={popularContent}
+      isLoading={isLoading}
+      hasMore={true}
+      onLoadMore={handleLoadMore}
       onMediaClick={onMediaClick}
-      isLoading={isLoadingMore}
-      hasMore={hasMore}
     />
   );
 };

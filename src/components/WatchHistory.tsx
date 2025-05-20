@@ -1,79 +1,133 @@
 
-import { useEffect, useState } from 'react';
-import { watchHistoryService, WatchHistoryItem } from '@/services/watchHistoryService';
-import { useQuery } from '@tanstack/react-query';
-import { fetchMediaById } from '@/services/tmdbApi';
-import { MediaItem } from '@/types/movie';
-import { useNavigate } from 'react-router-dom';
-import MediaCard from '@/components/media/MediaCard';
+import { useState, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { History } from "lucide-react";
+import { getMediaTitle } from "@/types/movie";
 
-export function WatchHistory() {
-  const { data: history, isLoading } = useQuery({
-    queryKey: ['watchHistory'],
-    queryFn: () => watchHistoryService.getWatchHistory(),
-  });
+interface WatchHistoryProps {
+  userId?: string;
+  limit?: number;
+}
 
-  const [mediaDetails, setMediaDetails] = useState<MediaItem[]>([]);
-  const [focusedIndex, setFocusedIndex] = useState(-1);
-  const navigate = useNavigate();
+interface HistoryItem {
+  id: string;
+  media_id: number;
+  title: string;
+  poster: string;
+  type: "movie" | "tv";
+  watched_at: string;
+  progress?: number;
+}
+
+const WatchHistory = ({ userId, limit = 6 }: WatchHistoryProps) => {
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMediaDetails = async () => {
-      if (!history) return;
-
-      const details = await Promise.all(
-        history.map(async (item) => {
-          const details = await fetchMediaById(item.tmdb_id, item.media_type);
-          if (!details) return null;
-          return {
-            ...details,
-            media_type: item.media_type,
-          } as MediaItem;
-        })
-      );
-
-      setMediaDetails(details.filter((item): item is MediaItem => item !== null));
+    const fetchHistory = async () => {
+      try {
+        // Convert limit to string for the API call
+        const limitStr = String(limit);
+        const response = await fetch(`/api/watch-history?user_id=${userId}&limit=${limitStr}`);
+        if (!response.ok) throw new Error('Failed to fetch watch history');
+        const data = await response.json();
+        setHistory(data);
+      } catch (error) {
+        console.error("Error fetching watch history:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    fetchMediaDetails();
-  }, [history]);
-
-  const handleMediaClick = (media: MediaItem) => {
-    if (media.media_type === 'movie') {
-      navigate(`/filme/${media.id}`);
-    } else {
-      navigate(`/serie/${media.id}`);
+    if (userId) {
+      fetchHistory();
     }
-  };
-
-  const handleFocus = (index: number) => {
-    setFocusedIndex(index);
-  };
+  }, [userId, limit]);
 
   if (isLoading) {
-    return <div>Carregando histórico...</div>;
+    return <div className="p-4">Loading watch history...</div>;
   }
 
-  if (!mediaDetails.length) {
+  if (!history.length) {
     return null;
   }
 
   return (
     <div className="mb-8">
-      <h2 className="text-2xl font-bold mb-4">Continuar Assistindo</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-        {mediaDetails.map((media, idx) => (
-          <div key={media.id} className="w-full">
-            <MediaCard
-              media={media}
-              onClick={() => handleMediaClick(media)}
-              index={idx}
-              isFocused={focusedIndex === idx}
-              onFocus={() => handleFocus(idx)}
-            />
-          </div>
-        ))}
+      <div className="flex items-center gap-2 mb-4">
+        <History className="h-5 w-5" />
+        <h2 className="text-xl font-semibold">Continue Assistindo</h2>
       </div>
+
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">Tudo</TabsTrigger>
+          <TabsTrigger value="movies">Filmes</TabsTrigger>
+          <TabsTrigger value="series">Séries</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {history.map((item) => (
+            <div key={item.id} className="relative">
+              <img 
+                src={`https://image.tmdb.org/t/p/w500${item.poster}`} 
+                alt={item.title}
+                className="w-full h-auto rounded-md"
+              />
+              {item.progress && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
+                  <div 
+                    className="h-full bg-primary" 
+                    style={{ width: `${item.progress}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="movies" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {history.filter(item => item.type === "movie").map((item) => (
+            <div key={item.id} className="relative">
+              <img 
+                src={`https://image.tmdb.org/t/p/w500${item.poster}`} 
+                alt={item.title}
+                className="w-full h-auto rounded-md"
+              />
+              {item.progress && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
+                  <div 
+                    className="h-full bg-primary" 
+                    style={{ width: `${item.progress}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="series" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          {history.filter(item => item.type === "tv").map((item) => (
+            <div key={item.id} className="relative">
+              <img 
+                src={`https://image.tmdb.org/t/p/w500${item.poster}`} 
+                alt={item.title}
+                className="w-full h-auto rounded-md"
+              />
+              {item.progress && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
+                  <div 
+                    className="h-full bg-primary" 
+                    style={{ width: `${item.progress}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </TabsContent>
+      </Tabs>
     </div>
   );
-}
+};
+
+export default WatchHistory;

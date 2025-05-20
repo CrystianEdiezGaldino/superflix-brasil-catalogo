@@ -1,93 +1,103 @@
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { fetchDoramas } from "@/services/tmdbApi";
 import { MediaItem } from "@/types/movie";
-import { useDoramaFilters } from "./dorama/useDoramaFilters";
 import { useDoramaLoader } from "./dorama/useDoramaLoader";
 import { useDoramaPagination } from "./dorama/useDoramaPagination";
-import { useDoramaSearch } from "./dorama/useDoramaSearch";
 import { useDoramaFiltering } from "./dorama/useDoramaFiltering";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAccessControl } from "./useAccessControl";
 
 export const useDoramas = () => {
-  const [allDoramas, setAllDoramas] = useState<MediaItem[]>([]);
+  const { user } = useAuth();
+  const { hasAccess } = useAccessControl();
   
-  // Get dorama filters
-  const { filterDoramas } = useDoramaFilters();
+  const [doramas, setDoramas] = useState<MediaItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   
-  // Load initial doramas
-  const { 
-    doramas, 
-    setDoramas,
-    popularDoramas, 
-    topRatedDoramas,
-    koreanMovies,
-    isLoadingInitial, 
-    isLoadingPopular, 
-    isLoadingTopRated, 
-    isLoadingMovies,
-    hasMore,
-    reloadDoramas
+  const {
+    isLoading, 
+    error, 
+    loadingState, 
+    setLoadingState
   } = useDoramaLoader();
   
-  // Setup pagination
-  const { 
-    page, 
-    isLoadingMore,
-    loadMoreDoramas, 
-    resetPagination 
-  } = useDoramaPagination({ 
-    filterDoramas,
-    setDoramas: setAllDoramas
-  });
+  const {
+    currentPage,
+    totalPages,
+    hasMorePages,
+    setTotalPages,
+    loadNextPage
+  } = useDoramaPagination();
   
-  // Setup search
-  const { 
-    searchQuery, 
-    isSearching, 
-    handleSearch 
-  } = useDoramaSearch({ 
-    filterDoramas,
-    setDoramas: setAllDoramas,
-    resetPagination
-  });
-  
-  // Setup filtering
-  const { 
-    yearFilter, 
-    genreFilter,
+  const {
+    filters,
+    filteredDoramas,
     isFiltering,
-    setYearFilter, 
-    setGenreFilter, 
-    resetFilters 
-  } = useDoramaFiltering();
-  
-  // Helper function for loading more doramas
-  const handleLoadMoreDoramas = () => {
-    loadMoreDoramas(isSearching, isFiltering);
-  };
+    updateFilters,
+    resetFilters
+  } = useDoramaFiltering(doramas);
+
+  const loadDoramas = useCallback(async (page: number = 1) => {
+    if (!hasAccess) return;
+    
+    setLoadingState(page === 1 ? 'loading' : 'loadingMore');
+    
+    try {
+      const data = await fetchDoramas(page);
+      
+      if (page === 1) {
+        setDoramas(data);
+      } else {
+        setDoramas(prev => [...prev, ...data]);
+      }
+      
+      // Assuming each page has 20 items, calculate total pages
+      // This is an estimate since we don't have actual total_pages info
+      setTotalPages(Math.ceil(data.length > 0 ? 100 : 0));
+      setLoadingState('loaded');
+      
+    } catch (err) {
+      console.error("Error loading doramas:", err);
+      setLoadingState('error');
+    }
+  }, [hasAccess, setLoadingState, setTotalPages]);
+
+  useEffect(() => {
+    if (user && hasAccess) {
+      loadDoramas(1);
+    }
+  }, [user, hasAccess, loadDoramas]);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleLoadMore = useCallback(() => {
+    if (hasMorePages && !isLoading) {
+      loadNextPage();
+      loadDoramas(currentPage + 1);
+    }
+  }, [hasMorePages, isLoading, loadNextPage, currentPage, loadDoramas]);
+
+  const handleFilterChange = useCallback((filterType: string, value: string | string[] | number[]) => {
+    updateFilters({ [filterType]: value });
+  }, [updateFilters]);
 
   return {
-    doramas,
-    topRatedDoramas,
-    popularDoramas,
-    koreanMovies,
-    page,
-    hasMore,
-    isLoadingMore,
+    doramas: isFiltering ? filteredDoramas : doramas,
+    filters,
+    isLoading,
+    error,
+    loadingState,
+    currentPage,
+    totalPages,
+    hasMorePages,
     searchQuery,
-    yearFilter,
-    genreFilter,
-    isSearching,
-    isFiltering,
-    isLoadingInitial,
-    isLoadingPopular,
-    isLoadingTopRated,
-    isLoadingMovies,
     handleSearch,
-    loadMoreDoramas: handleLoadMoreDoramas,
-    setYearFilter,
-    setGenreFilter,
-    resetFilters
+    handleLoadMore,
+    handleFilterChange,
+    resetFilters,
+    isFiltering
   };
 };
-
-export default useDoramas;

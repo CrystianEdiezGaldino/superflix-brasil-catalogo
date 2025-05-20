@@ -1,154 +1,167 @@
 
-import { useState, useCallback, useEffect } from "react";
-import { MediaItem, Series } from "@/types/movie";
+import { useState, useMemo } from "react";
+import { MediaItem, isSeries } from "@/types/movie";
 
-export type DoramaFilters = {
-  year?: string;
-  rating?: string;
-  sortBy?: string;
-  country?: string;
-  searchQuery?: string;
-};
+export interface DoramaFilters {
+  year: string;
+  genre: string;
+  country: string;
+  sort: string;
+  yearRange: number[];
+}
 
-export type DoramaFilterState = {
-  filters: DoramaFilters;
-  filteredDoramas: MediaItem[];
-  isFiltering: boolean;
-  originalDoramas: MediaItem[];
+const defaultFilters: DoramaFilters = {
+  year: "all",
+  genre: "all",
+  country: "all",
+  sort: "popularity",
+  yearRange: [1990, new Date().getFullYear()]
 };
 
 export const useDoramaFiltering = (doramas: MediaItem[]) => {
-  const [filterState, setFilterState] = useState<DoramaFilterState>({
-    filters: {},
-    filteredDoramas: [],
-    isFiltering: false,
-    originalDoramas: [],
-  });
+  const [filters, setFilters] = useState<DoramaFilters>(defaultFilters);
+  
+  const updateFilters = (newFilters: Partial<DoramaFilters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters }));
+  };
+  
+  const resetFilters = () => {
+    setFilters(defaultFilters);
+  };
 
-  useEffect(() => {
-    setFilterState((prev) => ({
-      ...prev,
-      filteredDoramas: doramas,
-      originalDoramas: doramas,
-    }));
+  // Extract available genres from doramas
+  const availableGenres = useMemo(() => {
+    const genresSet = new Set<string>();
+    
+    doramas.forEach(dorama => {
+      (dorama.genres || dorama.genre_ids || []).forEach((genre: any) => {
+        if (typeof genre === 'object' && genre.name) {
+          genresSet.add(genre.name);
+        }
+      });
+    });
+    
+    return Array.from(genresSet).sort();
   }, [doramas]);
 
-  const updateFilters = useCallback(
-    (newFilters: Partial<DoramaFilters>) => {
-      setFilterState((prev) => {
-        const updatedFilters = {
-          ...prev.filters,
-          ...newFilters,
-        };
+  // Extract available countries from doramas
+  const availableCountries = useMemo(() => {
+    const countriesSet = new Set<string>();
+    
+    doramas.forEach(dorama => {
+      if (isSeries(dorama) && dorama.origin_country) {
+        dorama.origin_country.forEach(country => {
+          countriesSet.add(country);
+        });
+      }
+    });
+    
+    return Array.from(countriesSet).sort();
+  }, [doramas]);
 
-        // Check if any filter is active
-        const isFiltering = Boolean(
-          updatedFilters.year ||
-          updatedFilters.rating ||
-          updatedFilters.sortBy ||
-          updatedFilters.country ||
-          updatedFilters.searchQuery
+  // Extract available years from doramas
+  const availableYears = useMemo(() => {
+    const yearsSet = new Set<number>();
+    
+    doramas.forEach(dorama => {
+      const releaseDate = isSeries(dorama) ? dorama.first_air_date : dorama.release_date;
+      if (releaseDate) {
+        const year = new Date(releaseDate).getFullYear();
+        if (!isNaN(year)) {
+          yearsSet.add(year);
+        }
+      }
+    });
+    
+    return Array.from(yearsSet).sort((a, b) => b - a); // Descending order
+  }, [doramas]);
+
+  // Filter doramas based on current filters
+  const filteredDoramas = useMemo(() => {
+    return doramas.filter(dorama => {
+      // Filter by year
+      const releaseDate = isSeries(dorama) ? dorama.first_air_date : dorama.release_date;
+      
+      if (filters.year !== "all" && releaseDate) {
+        const year = new Date(releaseDate).getFullYear();
+        if (year.toString() !== filters.year) {
+          return false;
+        }
+      }
+      
+      // Filter by year range
+      if (releaseDate) {
+        const year = new Date(releaseDate).getFullYear();
+        if (year < filters.yearRange[0] || year > filters.yearRange[1]) {
+          return false;
+        }
+      }
+      
+      // Filter by genre
+      if (filters.genre !== "all") {
+        const doramaGenres = dorama.genres || [];
+        const hasGenre = doramaGenres.some((genre: any) => 
+          genre.name === filters.genre
         );
-
-        // Apply filters
-        let filtered = [...prev.originalDoramas];
-
-        // Filter by year
-        if (updatedFilters.year) {
-          filtered = filtered.filter((dorama) => {
-            const date = 'first_air_date' in dorama ? dorama.first_air_date : '';
-            return date?.includes(updatedFilters.year || '');
-          });
+        
+        if (!hasGenre) {
+          return false;
         }
-
-        // Filter by rating
-        if (updatedFilters.rating) {
-          const minRating = parseFloat(updatedFilters.rating);
-          filtered = filtered.filter(
-            (dorama) => dorama.vote_average >= minRating
-          );
+      }
+      
+      // Filter by country
+      if (filters.country !== "all" && isSeries(dorama)) {
+        if (!dorama.origin_country?.includes(filters.country)) {
+          return false;
         }
+      }
+      
+      return true;
+    }).sort((a, b) => {
+      // Sort by selected sort option
+      if (filters.sort === "popularity") {
+        return b.popularity - a.popularity;
+      } else if (filters.sort === "rating") {
+        return b.vote_average - a.vote_average;
+      } else if (filters.sort === "recent") {
+        const dateA = isSeries(a) ? a.first_air_date : a.release_date;
+        const dateB = isSeries(b) ? b.first_air_date : b.release_date;
+        
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        
+        return new Date(dateB).getTime() - new Date(dateA).getTime();
+      } else if (filters.sort === "oldest") {
+        const dateA = isSeries(a) ? a.first_air_date : a.release_date;
+        const dateB = isSeries(b) ? b.first_air_date : b.release_date;
+        
+        if (!dateA) return 1;
+        if (!dateB) return -1;
+        
+        return new Date(dateA).getTime() - new Date(dateB).getTime();
+      }
+      
+      return 0;
+    });
+  }, [doramas, filters]);
 
-        // Filter by country
-        if (updatedFilters.country) {
-          filtered = filtered.filter((dorama) => {
-            // Corrigido para verificar se a propriedade origin_country existe antes de usá-la
-            const origins = (dorama as Series).origin_country || [];
-            return origins.includes(updatedFilters.country || '');
-          });
-        }
-
-        // Filter by search query
-        if (updatedFilters.searchQuery) {
-          const query = updatedFilters.searchQuery.toLowerCase();
-          filtered = filtered.filter(
-            (dorama) =>
-              dorama.name?.toLowerCase().includes(query) ||
-              dorama.title?.toLowerCase().includes(query) ||
-              dorama.original_name?.toLowerCase().includes(query) ||
-              dorama.overview?.toLowerCase().includes(query)
-          );
-        }
-
-        // Sort
-        if (updatedFilters.sortBy) {
-          switch (updatedFilters.sortBy) {
-            case "popularity.desc":
-              filtered.sort((a, b) => b.popularity - a.popularity);
-              break;
-            case "popularity.asc":
-              filtered.sort((a, b) => a.popularity - b.popularity);
-              break;
-            case "vote_average.desc":
-              filtered.sort((a, b) => b.vote_average - a.vote_average);
-              break;
-            case "vote_average.asc":
-              filtered.sort((a, b) => a.vote_average - b.vote_average);
-              break;
-            case "first_air_date.desc":
-              filtered.sort((a, b) => {
-                const dateA = a.first_air_date || a.release_date || "";
-                const dateB = b.first_air_date || b.release_date || "";
-                return dateB.localeCompare(dateA);
-              });
-              break;
-            case "first_air_date.asc":
-              filtered.sort((a, b) => {
-                const dateA = a.first_air_date || a.release_date || "";
-                const dateB = b.first_air_date || b.release_date || "";
-                return dateA.localeCompare(dateB);
-              });
-              break;
-            default:
-              break;
-          }
-        }
-
-        return {
-          ...prev,
-          filters: updatedFilters,
-          filteredDoramas: filtered,
-          isFiltering,
-        };
-      });
-    },
-    []
-  );
-
-  const resetFilters = useCallback(() => {
-    setFilterState((prev) => ({
-      ...prev,
-      filters: {},
-      filteredDoramas: prev.originalDoramas,
-      isFiltering: false,
-    }));
-  }, []);
+  const isFiltering = useMemo(() => {
+    return filters.year !== "all" || 
+           filters.genre !== "all" || 
+           filters.country !== "all" ||
+           filters.sort !== "popularity" ||
+           filters.yearRange[0] !== defaultFilters.yearRange[0] ||
+           filters.yearRange[1] !== defaultFilters.yearRange[1];
+  }, [filters]);
 
   return {
-    filters: filterState.filters,
-    filteredDoramas: filterState.filteredDoramas,
-    isFiltering: filterState.isFiltering,
+    filters,
+    filteredDoramas,
+    isFiltering,
+    availableGenres,
+    availableCountries,
+    availableYears,
     updateFilters,
-    resetFilters,
+    resetFilters
   };
 };

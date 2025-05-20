@@ -40,7 +40,7 @@ const AnimeSections = ({
           isLoading={isLoading}
           onMediaClick={onMediaClick}
           sectionId="anime"
-          mediaType="anime"
+          mediaType="tv"
           sectionIndex={0}
         />
       )}
@@ -54,7 +54,7 @@ const AnimeSections = ({
           isLoading={isLoading}
           onMediaClick={onMediaClick}
           sectionId="topRatedAnime" 
-          mediaType="anime"
+          mediaType="tv"
           sectionIndex={1}
         />
       )}
@@ -68,7 +68,7 @@ const AnimeSections = ({
           isLoading={isLoading}
           onMediaClick={onMediaClick}
           sectionId="recentAnimes"
-          mediaType="anime"
+          mediaType="tv"
           sectionIndex={2}
         />
       )}
