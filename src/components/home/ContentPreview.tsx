@@ -1,69 +1,95 @@
 
+import { useState } from "react";
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
-import { useState } from "react";
+import { motion } from "framer-motion";
 
 interface ContentPreviewProps {
   movies: MediaItem[];
-  series?: MediaItem[];
-  anime?: MediaItem[];
+  series: MediaItem[];
+  anime: MediaItem[];
 }
 
-const ContentPreview = ({ movies, series = [], anime = [] }: ContentPreviewProps) => {
-  const [focusedSection, setFocusedSection] = useState(0);
+const ContentPreview = ({ movies, series, anime }: ContentPreviewProps) => {
   const [focusedItem, setFocusedItem] = useState(0);
 
-  // Filtrar apenas conteúdos com imagens
-  const filteredMovies = movies.filter(movie => movie.poster_path || movie.backdrop_path);
-  const filteredSeries = series.filter(serie => serie.poster_path || serie.backdrop_path);
-  const filteredAnime = anime.filter(item => item.poster_path || item.backdrop_path);
+  // Only show sections with content
+  const hasMovies = movies.length > 0;
+  const hasSeries = series.length > 0;
+  const hasAnime = anime.length > 0;
 
-  const sections = [
-    { title: "Filmes Populares (Prévia)", items: filteredMovies },
-    { title: "Séries Populares (Prévia)", items: filteredSeries },
-    { title: "Anime em Alta (Prévia)", items: filteredAnime }
-  ].filter(section => section.items.length > 0);
-  
-  const handleKeyNavigation = (sectionIndex: number, e: React.KeyboardEvent) => {
-    if (sectionIndex === focusedSection) {
-      switch (e.key) {
-        case 'ArrowRight':
-          e.preventDefault();
-          setFocusedItem(prev => Math.min(prev + 1, sections[sectionIndex].items.length - 1));
-          break;
-        case 'ArrowLeft':
-          e.preventDefault();
-          setFocusedItem(prev => Math.max(prev - 1, 0));
-          break;
-        case 'ArrowDown':
-          e.preventDefault();
-          setFocusedSection(prev => Math.min(prev + 1, sections.length - 1));
-          setFocusedItem(0);
-          break;
-        case 'ArrowUp':
-          e.preventDefault();
-          setFocusedSection(prev => Math.max(prev - 1, 0));
-          setFocusedItem(0);
-          break;
+  // If no content at all, don't render
+  if (!hasMovies && !hasSeries && !hasAnime) {
+    return null;
+  }
+
+  const handleFocusChange = (idx: number) => {
+    setFocusedItem(idx);
+  };
+
+  // Animation variants for the container
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
       }
     }
   };
-  
+
+  // Animation variants for each item
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
+
   return (
-    <div className="space-y-8">
-      {sections.map((section, sectionIndex) => (
-        <MediaSection 
-          key={section.title}
-          title={section.title}
-          medias={section.items.slice(0, 10)}
-          focusedItem={sectionIndex === focusedSection ? focusedItem : -1}
-          onFocusChange={(idx) => {
-            setFocusedSection(sectionIndex);
-            setFocusedItem(idx);
-          }}
-        />
-      ))}
-    </div>
+    <motion.div 
+      className="space-y-12"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      {hasMovies && (
+        <motion.div variants={itemVariants}>
+          <MediaSection
+            key="movies-preview"
+            title="Filmes"
+            medias={movies}
+            focusedItem={focusedItem}
+            onFocusChange={handleFocusChange}
+            sectionIndex={0}
+          />
+        </motion.div>
+      )}
+
+      {hasSeries && (
+        <motion.div variants={itemVariants}>
+          <MediaSection
+            key="series-preview"
+            title="Séries"
+            medias={series}
+            focusedItem={focusedItem}
+            onFocusChange={handleFocusChange}
+            sectionIndex={1}
+          />
+        </motion.div>
+      )}
+
+      {hasAnime && (
+        <motion.div variants={itemVariants}>
+          <MediaSection
+            key="anime-preview"
+            title="Anime"
+            medias={anime}
+            focusedItem={focusedItem}
+            onFocusChange={handleFocusChange}
+            sectionIndex={2}
+          />
+        </motion.div>
+      )}
+    </motion.div>
   );
 };
 

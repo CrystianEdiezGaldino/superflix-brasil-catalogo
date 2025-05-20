@@ -51,6 +51,7 @@ const RecommendationsSection = ({
         showLoadMore={hasMore && filteredRecommendations.length > 5}
         onLoadMore={handleLoadMoreRecommendations}
         isLoading={isLoading}
+        sectionIndex={0}
       />
     </div>
   );

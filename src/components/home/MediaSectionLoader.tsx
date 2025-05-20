@@ -1,53 +1,63 @@
+
+import React from "react";
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MediaSectionLoaderProps {
-  title: string;
-  medias?: MediaItem[];
-  sectionId: string;
-  onLoadMore: (sectionId: string) => void;
   isLoading: boolean;
-  hasMore: boolean;
+  title: string;
+  medias: MediaItem[];
+  showLoadMore: boolean;
+  onLoadMore: () => void;
   onMediaClick?: (media: MediaItem) => void;
-  mediaType?: 'movie' | 'tv' | 'anime' | 'dorama' | 'tv-channel';
+  sectionId?: string;
+  mediaType?: "movie" | "tv" | "anime" | "dorama" | "tv-channel";
 }
 
-const MediaSectionLoader = ({ 
-  title, 
-  medias = [], 
-  sectionId, 
-  onLoadMore,
+const MediaSectionLoader: React.FC<MediaSectionLoaderProps> = ({
   isLoading,
-  hasMore,
+  title,
+  medias,
+  showLoadMore,
+  onLoadMore,
   onMediaClick,
-  mediaType
-}: MediaSectionLoaderProps) => {
-  // Filter only content with images
-  const filteredMedias = (medias || []).filter(media => media?.poster_path || media?.backdrop_path);
+  sectionId = "section",
+  mediaType = "movie"
+}) => {
+  // If loading and no medias, show skeleton loader
+  if (isLoading && medias.length === 0) {
+    return (
+      <div className="mb-10">
+        <div className="flex justify-between items-center mb-4">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-8 w-28" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {[...Array(5)].map((_, idx) => (
+            <Skeleton key={idx} className="h-72 w-full rounded-md" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-  // Don't render if there's no content
-  if (!filteredMedias.length) {
+  // If no medias, don't render
+  if (medias.length === 0) {
     return null;
   }
 
-  // Function to handle loading more for this specific section
-  const handleSectionLoadMore = () => {
-    if (!mediaType) {
-      console.log(`Loading more for section: ${sectionId}`);
-      onLoadMore(sectionId);
-    }
-  };
-
   return (
-    <MediaSection 
-      title={title} 
-      medias={filteredMedias}
-      showLoadMore={hasMore}
-      onLoadMore={handleSectionLoadMore}
+    <MediaSection
+      title={title}
+      medias={medias}
+      showLoadMore={showLoadMore}
+      onLoadMore={onLoadMore}
       isLoading={isLoading}
       onMediaClick={onMediaClick}
       sectionId={sectionId}
       mediaType={mediaType}
+      sectionIndex={0}
     />
   );
 };

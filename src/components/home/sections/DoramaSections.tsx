@@ -46,6 +46,7 @@ const DoramaSections = ({
           onMediaClick={onMediaClick}
           sectionId="doramas"
           mediaType="dorama"
+          sectionIndex={0}
         />
       )}
 
@@ -59,6 +60,7 @@ const DoramaSections = ({
           onMediaClick={onMediaClick}
           sectionId="topRatedDoramas"
           mediaType="dorama"
+          sectionIndex={1}
         />
       )}
 
@@ -72,6 +74,7 @@ const DoramaSections = ({
           onMediaClick={onMediaClick}
           sectionId="popularDoramas"
           mediaType="dorama"
+          sectionIndex={2}
         />
       )}
 
@@ -85,6 +88,7 @@ const DoramaSections = ({
           onMediaClick={onMediaClick}
           sectionId="romanceDoramas"
           mediaType="dorama"
+          sectionIndex={3}
         />
       )}
 
@@ -98,6 +102,7 @@ const DoramaSections = ({
           onMediaClick={onMediaClick}
           sectionId="koreanMovies"
           mediaType="movie"
+          sectionIndex={4}
         />
       )}
     </div>

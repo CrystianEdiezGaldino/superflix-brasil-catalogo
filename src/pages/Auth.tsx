@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
@@ -7,25 +8,33 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPopularMovies } from "@/services/tmdbApi";
 import { getFilteredSeries } from "@/data/series";
 import { getFilteredAnimes } from "@/data/animes";
-import { selectRandomBackground } from "@/utils/backgroundSelector";
-import AuthPageBanner from "@/components/auth/AuthPageBanner";
-import AuthLegalSection from "@/components/auth/AuthLegalSection";
-import AuthPreviewSection from "@/components/auth/AuthPreviewSection";
 import { MediaItem } from "@/types/movie";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
 import { FaGooglePlay } from "react-icons/fa";
+import AuthPageBanner from "@/components/auth/AuthPageBanner";
+import AuthLegalSection from "@/components/auth/AuthLegalSection";
+import AuthPreviewSection from "@/components/auth/AuthPreviewSection";
 
 const Auth = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
   const [redirecting, setRedirecting] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [selectedBackground, setSelectedBackground] = useState<MediaItem | null>(null);
-  const hasSelectedBackground = useRef(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
   // Get the intended redirect path from state, or default to home page
   const redirectTo = location.state?.from?.pathname || "/";
+  
+  // Check for mobile screen size
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Buscar dados de filmes populares
   const { data: moviesPreview = [] } = useQuery({
@@ -38,20 +47,6 @@ const Auth = () => {
   const filteredMovies = moviesPreview.filter(movie => movie.poster_path || movie.backdrop_path);
   const filteredSeries = getFilteredSeries().filter(serie => serie.poster_path || serie.backdrop_path);
   const filteredAnimes = getFilteredAnimes().filter(anime => anime.poster_path || anime.backdrop_path);
-  
-  // Combine all content for background selection
-  const allContent = [...filteredMovies, ...filteredSeries, ...filteredAnimes];
-
-  // Select random background only once when content is loaded
-  useEffect(() => {
-    if (!hasSelectedBackground.current && allContent.length > 0) {
-      const background = selectRandomBackground(allContent);
-      if (background) {
-        setSelectedBackground(background);
-        hasSelectedBackground.current = true;
-      }
-    }
-  }, [allContent]);
 
   // Improved user redirection with proper cleanup
   useEffect(() => {
@@ -107,19 +102,20 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      {/* Background Image */}
-      {selectedBackground?.backdrop_path && (
-        <div 
-          className="fixed inset-0 z-0"
-          style={{
-            backgroundImage: `url(https://image.tmdb.org/t/p/original${selectedBackground.backdrop_path})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            filter: 'blur(2px)',
-            transform: 'scale(1.02)',
-          }}
+      {/* Background Image - Desktop and Mobile */}
+      <div className="fixed inset-0 z-0">
+        <img 
+          src="/lovable-uploads/0173c088-feb1-4e22-92e7-40b5449b6501.png"
+          alt="Background"
+          className="hidden md:block w-full h-full object-cover"
         />
-      )}
+        <img 
+          src="/lovable-uploads/9ea7cbed-ec65-4b2b-93c2-ea1d25d7e1cc.png"
+          alt="Background Mobile"
+          className="block md:hidden w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+      </div>
 
       {/* Content */}
       <div className="relative z-10">
