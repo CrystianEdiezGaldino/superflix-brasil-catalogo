@@ -1,3 +1,4 @@
+
 import { MediaItem } from "@/types/movie";
 import MediaCard from "@/components/media/MediaCard";
 import { Card } from "@/components/ui/card";
@@ -6,20 +7,28 @@ import { useState } from "react";
 
 interface SearchResultsProps {
   results: MediaItem[];
-  isSearching: boolean;
+  isSearching?: boolean;
   loadMoreResults?: () => void;
   hasMore?: boolean;
   focusedItem?: number;
-  onMediaClick: (media: MediaItem) => void;
+  onMediaClick?: (media: MediaItem) => void;
+  query?: string;
+  onMovieClick?: (movie: MediaItem) => void;
+  onSeriesClick?: (series: MediaItem) => void;
+  onAnimeClick?: (anime: MediaItem) => void;
 }
 
 const SearchResults = ({ 
   results, 
-  isSearching, 
+  isSearching = false, 
   loadMoreResults, 
   hasMore = false, 
   focusedItem = 0,
-  onMediaClick 
+  onMediaClick,
+  query = "",
+  onMovieClick,
+  onSeriesClick,
+  onAnimeClick
 }: SearchResultsProps) => {
   const [focusedIndex, setFocusedIndex] = useState(focusedItem);
 
@@ -38,10 +47,22 @@ const SearchResults = ({
     return null;
   }
 
+  const handleClick = (media: MediaItem) => {
+    if (onMediaClick) {
+      onMediaClick(media);
+    } else if (media.media_type === 'movie' && onMovieClick) {
+      onMovieClick(media);
+    } else if (media.media_type === 'tv' && onSeriesClick) {
+      onSeriesClick(media);
+    } else if ((media.media_type === 'tv' && media.original_language === 'ja') && onAnimeClick) {
+      onAnimeClick(media);
+    }
+  };
+
   return (
     <Card className="bg-black/60 border-netflix-red/20 backdrop-blur-sm p-6 mt-4 mb-8 mx-4 animate-fade-in">
       <h1 className="text-2xl font-bold text-white mb-6 border-b border-netflix-red/30 pb-2">
-        Resultados da Pesquisa
+        Resultados da Pesquisa {query ? `para "${query}"` : ''}
       </h1>
       
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
@@ -55,7 +76,7 @@ const SearchResults = ({
           >
             <MediaCard 
               media={media} 
-              onClick={() => onMediaClick(media)} 
+              onClick={() => handleClick(media)} 
               index={index}
               isFocused={index === focusedIndex}
               onFocus={setFocusedIndex}

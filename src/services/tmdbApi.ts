@@ -8,7 +8,8 @@ import {
   fetchRecentMovies,
   fetchMovieDetails,
   searchMovies,
-  fetchMoviesByGenre
+  fetchMoviesByGenre,
+  fetchMoviesByKeyword
 } from "./tmdb/movies";
 import {
   fetchPopularSeries,
@@ -54,6 +55,7 @@ export {
   fetchTrendingMovies,
   fetchRecentMovies,
   fetchMoviesByGenre,
+  fetchMoviesByKeyword,
   fetchMovieDetails,
   searchMovies,
   

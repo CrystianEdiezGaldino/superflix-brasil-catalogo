@@ -1,30 +1,28 @@
 
-import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { InfoIcon } from 'lucide-react';
+import { format, parseISO, isValid } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
-interface TrialNotificationProps {
-  trialEnd: string | null;
+export interface TrialNotificationProps {
+  trialEnd?: string | null;
 }
 
-const TrialNotification = ({ trialEnd }: TrialNotificationProps) => {
+const TrialNotification = ({ trialEnd = null }: TrialNotificationProps) => {
+  // Format the trial end date if provided
+  const formattedDate = trialEnd && isValid(parseISO(trialEnd))
+    ? format(parseISO(trialEnd), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })
+    : 'em breve';
+
   return (
-    <div className="bg-gradient-to-r from-green-600 to-green-800 py-6 px-4 mb-6">
-      <div className="container mx-auto flex flex-col md:flex-row items-center justify-between">
-        <div className="mb-4 md:mb-0">
-          <h3 className="text-xl font-bold text-white">Você está no período de avaliação gratuito!</h3>
-          <p className="text-white/90 mb-1">
-            Aproveite acesso a todo o conteúdo até {new Date(trialEnd || "").toLocaleDateString('pt-BR')}
-          </p>
-          <p className="text-white/90 text-sm">
-            Assine agora e o tempo restante do seu período de teste será adicionado à sua assinatura!
-          </p>
-        </div>
-        <Link to="/subscribe">
-          <Button className="bg-white text-green-700 hover:bg-gray-100">
-            Ver Planos
-          </Button>
-        </Link>
-      </div>
+    <div className="bg-gradient-to-r from-yellow-600 to-yellow-500 text-black px-4 py-2 flex items-center justify-center text-sm">
+      <InfoIcon className="h-4 w-4 mr-2 flex-shrink-0" />
+      <span>
+        Você está em um período de avaliação gratuito que termina {formattedDate}.
+        <a href="/subscribe" className="font-bold underline ml-2 hover:text-black/80 transition-colors">
+          Assine agora
+        </a>
+      </span>
     </div>
   );
 };

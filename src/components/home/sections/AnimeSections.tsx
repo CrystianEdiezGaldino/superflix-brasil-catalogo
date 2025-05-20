@@ -1,93 +1,78 @@
 
+import React from "react";
 import { MediaItem } from "@/types/movie";
-import MediaSectionLoader from "../MediaSectionLoader";
+import MediaSection from "@/components/MediaSection";
+import { Button } from "@/components/ui/button";
 
 interface AnimeSectionsProps {
   anime: MediaItem[];
   topRatedAnime: MediaItem[];
-  recentAnimes?: MediaItem[];
-  trendingAnime?: MediaItem[];
+  recentAnimes: MediaItem[];
+  popularAnime?: MediaItem[];
+  onMediaClick: (anime: MediaItem) => void;
   onLoadMore?: (sectionId: string) => void;
   isLoading?: boolean;
   hasMore?: boolean;
-  onMediaClick?: (media: MediaItem) => void;
 }
 
-const AnimeSections = ({
+const AnimeSections: React.FC<AnimeSectionsProps> = ({
   anime,
   topRatedAnime,
-  recentAnimes = [],
-  trendingAnime = [],
+  recentAnimes,
+  popularAnime = [],
+  onMediaClick,
   onLoadMore,
   isLoading = false,
-  hasMore = false,
-  onMediaClick
-}: AnimeSectionsProps) => {
-  // Funções específicas para cada seção
-  const handleLoadMoreAnime = () => {
-    if (onLoadMore) onLoadMore("anime");
-  };
-  
-  const handleLoadMoreTopRatedAnime = () => {
-    if (onLoadMore) onLoadMore("topRatedAnime");
-  };
-  
-  const handleLoadMoreRecentAnimes = () => {
-    if (onLoadMore) onLoadMore("recentAnimes");
-  };
-  
-  const handleLoadMoreTrendingAnime = () => {
-    if (onLoadMore) onLoadMore("trendingAnime");
-  };
-  
+  hasMore = false
+}) => {
   return (
-    <div className="anime-sections-container">
-      {recentAnimes.length > 0 && (
-        <MediaSectionLoader 
-          title="Anime em Alta" 
-          medias={recentAnimes}
-          sectionId="recentAnimes"
-          onLoadMore={handleLoadMoreRecentAnimes}
-          isLoading={isLoading}
-          showLoadMore={hasMore}
-          onMediaClick={onMediaClick}
-          mediaType="anime"
+    <div className="space-y-8">
+      {anime.length > 0 && (
+        <MediaSection
+          title="Animes"
+          items={anime}
+          onItemClick={onMediaClick}
         />
       )}
       
-      <MediaSectionLoader 
-        title="Animes Populares" 
-        medias={anime}
-        sectionId="anime"
-        onLoadMore={handleLoadMoreAnime}
-        isLoading={isLoading}
-        showLoadMore={hasMore}
-        onMediaClick={onMediaClick}
-        mediaType="anime"
-      />
-      
-      <MediaSectionLoader 
-        title="Animes Bem Avaliados" 
-        medias={topRatedAnime}
-        sectionId="topRatedAnime"
-        onLoadMore={handleLoadMoreTopRatedAnime}
-        isLoading={isLoading}
-        showLoadMore={hasMore}
-        onMediaClick={onMediaClick}
-        mediaType="anime"
-      />
-      
-      {trendingAnime && trendingAnime.length > 0 && (
-        <MediaSectionLoader 
-          title="Animes em Alta no Brasil" 
-          medias={trendingAnime}
-          sectionId="trendingAnime"
-          onLoadMore={handleLoadMoreTrendingAnime}
-          isLoading={isLoading}
-          showLoadMore={hasMore}
-          onMediaClick={onMediaClick}
-          mediaType="anime"
+      {topRatedAnime.length > 0 && (
+        <MediaSection
+          title="Animes Mais Bem Avaliados"
+          items={topRatedAnime}
+          onItemClick={onMediaClick}
         />
+      )}
+      
+      {recentAnimes.length > 0 && (
+        <MediaSection
+          title="Animes Recentes"
+          items={recentAnimes}
+          onItemClick={onMediaClick}
+        />
+      )}
+      
+      {popularAnime && popularAnime.length > 0 && (
+        <MediaSection
+          title="Animes Populares"
+          items={popularAnime}
+          onItemClick={onMediaClick}
+        />
+      )}
+      
+      {hasMore && onLoadMore && (
+        <div className="flex justify-center pt-4 pb-8">
+          <Button
+            onClick={() => onLoadMore('anime')}
+            disabled={isLoading}
+            variant="outline"
+            className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white"
+          >
+            {isLoading ? (
+              <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin mr-2"></div>
+            ) : null}
+            Carregar Mais Animes
+          </Button>
+        </div>
       )}
     </div>
   );
