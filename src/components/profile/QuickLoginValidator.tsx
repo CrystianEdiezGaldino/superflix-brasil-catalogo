@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,24 +47,22 @@ export const QuickLoginValidator = () => {
         
         // Buscar o usuário que validou o código
         console.log("[QuickLoginValidator] Buscando dados do usuário...");
-        const { data: userData, error: userError } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('id', loginCode.user_id)
-          .single();
+        const { data: userData, error: userError } = await supabase.auth
+          .admin
+          .getUserById(loginCode.user_id);
 
         console.log("[QuickLoginValidator] Dados do usuário:", { userData, userError });
 
-        if (userError || !userData?.email) {
+        if (userError || !userData?.user?.email) {
           console.error("[QuickLoginValidator] Erro ao buscar dados do usuário:", userError);
           toast.error("Erro ao buscar dados do usuário");
           return;
         }
 
         // Fazer login com o email do usuário que validou
-        console.log("[QuickLoginValidator] Tentando fazer login com o email:", userData.email);
+        console.log("[QuickLoginValidator] Tentando fazer login com o email:", userData.user.email);
         const { data: signInData, error: signInError } = await supabase.auth.signInWithOtp({
-          email: userData.email,
+          email: userData.user.email,
           options: {
             shouldCreateUser: false
           }
