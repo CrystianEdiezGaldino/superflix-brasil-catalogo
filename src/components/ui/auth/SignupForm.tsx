@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +15,7 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [code, setCode] = useState("");
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,14 +33,34 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
     setIsLoading(true);
     
     try {
+      // Criar conta
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
       
       if (error) throw error;
+
+      // Se tiver código promocional, tentar resgatar
+      if (code.trim()) {
+        const { error: redeemError } = await supabase.rpc('redeem_promo_code', {
+          code_text: code.trim()
+        });
+
+        if (redeemError) {
+          console.error("Erro ao resgatar código promocional:", redeemError);
+          // Não interrompe o fluxo, apenas loga o erro
+        }
+      }
       
       toast.success("Conta criada com sucesso! Verifique seu e-mail.");
+      
+      // Se tinha um código de acesso, força refresh para atualizar dados da assinatura
+      if (code.trim()) {
+        window.location.reload();
+        return;
+      }
+      
       onSuccess();
     } catch (error: any) {
       console.error("Erro ao criar conta:", error);
@@ -96,6 +116,19 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
           disabled={isLoading}
           className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
           required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="code" className="text-gray-300">Código de Acesso (Opcional)</Label>
+        <Input
+          id="code"
+          type="text"
+          placeholder="Digite o código de acesso (opcional)"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          disabled={isLoading}
+          className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red uppercase"
         />
       </div>
       
