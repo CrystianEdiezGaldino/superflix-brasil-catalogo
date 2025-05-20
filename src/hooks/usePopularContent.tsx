@@ -1,57 +1,63 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { fetchPopularMovies, fetchPopularSeries } from "@/services/tmdbApi";
 import { MediaItem } from "@/types/movie";
 import { fetchPopularAmericanSeries } from "@/services/tmdb/series";
 import { fetchRecentAnime } from "@/services/tmdb/anime";
+import { useMemo } from "react";
+
+interface ApiResponse {
+  results: MediaItem[];
+}
 
 export const usePopularContent = () => {
-  // Query para filmes populares
-  const { data: popularMovies, isLoading: isLoadingMovies } = useQuery({
+  const { data: popularMovies } = useQuery<ApiResponse>({
     queryKey: ["popularMovies"],
-    queryFn: () => fetchPopularMovies(),
-    staleTime: 1000 * 60 * 10, // 10 minutos
+    queryFn: async () => {
+      const response = await fetchPopularMovies(1);
+      return { results: response };
+    },
   });
 
-  // Query para séries populares
-  const { data: popularSeries, isLoading: isLoadingSeries } = useQuery({
+  const { data: popularSeries } = useQuery<ApiResponse>({
     queryKey: ["popularSeries"],
-    queryFn: () => fetchPopularSeries(),
-    staleTime: 1000 * 60 * 10,
+    queryFn: async () => {
+      const response = await fetchPopularSeries(1);
+      return { results: response };
+    },
   });
 
-  // Query para séries americanas populares
-  const { data: popularAmericanSeries, isLoading: isLoadingAmericanSeries } = 
-    useQuery({
-      queryKey: ["popularAmericanSeries"],
-      queryFn: () => fetchPopularAmericanSeries(),
-      staleTime: 1000 * 60 * 10,
-    });
+  const { data: americanSeries } = useQuery<ApiResponse>({
+    queryKey: ["americanSeries"],
+    queryFn: async () => {
+      const response = await fetchPopularAmericanSeries(1);
+      return { results: response };
+    },
+  });
 
-  // Query para animes recentes
-  const { data: recentAnimes, isLoading: isLoadingAnimes } = useQuery({
+  const { data: recentAnimes } = useQuery<MediaItem[]>({
     queryKey: ["recentAnimes"],
-    queryFn: () => fetchRecentAnime(),
-    staleTime: 1000 * 60 * 10,
+    queryFn: () => fetchRecentAnime(1),
   });
 
-  // Combine os resultados e filtre itens sem posters
-  const popularContent: MediaItem[] = [
-    ...(popularMovies || []),
-    ...(popularSeries || []),
-    ...(popularAmericanSeries || []),
-    ...(recentAnimes || []),
-  ].filter((item) => item.poster_path);
-
-  // Ordene por popularidade
-  popularContent.sort((a, b) => b.popularity - a.popularity);
+  // Combine todos os conteúdos populares
+  const popularContent = useMemo(() => {
+    const movies = popularMovies?.results || [];
+    const series = popularSeries?.results || [];
+    const american = americanSeries?.results || [];
+    
+    return [...movies, ...series, ...american];
+  }, [popularMovies, popularSeries, americanSeries]);
 
   // Limite a 20 itens
   const limitedPopularContent = popularContent.slice(0, 20);
 
+  const recentAnimesMemo = useMemo(() => {
+    if (!recentAnimes) return [];
+    return Array.isArray(recentAnimes) ? recentAnimes : [];
+  }, [recentAnimes]);
+
   return {
     popularContent: limitedPopularContent,
-    isLoading:
-      isLoadingMovies || isLoadingSeries || isLoadingAmericanSeries || isLoadingAnimes,
+    recentAnimes: recentAnimesMemo,
   };
 };

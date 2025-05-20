@@ -251,6 +251,21 @@ export const useContentSections = () => {
     setSearchQuery,
     setSearchResults,
     setIsSearching,
-    sectionData
+    sectionData,
+    fetchNextPage: {
+      anime: () => handleLoadMoreSection('anime'),
+      topRated: () => handleLoadMoreSection('topRatedAnime'),
+      recent: () => handleLoadMoreSection('recentAnimes')
+    },
+    hasNextPage: {
+      anime: sectionData.anime?.hasMore || false,
+      topRated: sectionData.topRatedAnime?.hasMore || false,
+      recent: sectionData.recentAnimes?.hasMore || false
+    },
+    isFetchingNextPage: {
+      anime: sectionData.anime?.isLoading || false,
+      topRated: sectionData.topRatedAnime?.isLoading || false,
+      recent: sectionData.recentAnimes?.isLoading || false
+    }
   };
 };

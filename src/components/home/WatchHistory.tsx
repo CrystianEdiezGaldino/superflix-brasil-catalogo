@@ -1,31 +1,51 @@
-
 import { useState, useEffect } from "react";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, Movie, Series } from "@/types/movie";
 import { Button } from "@/components/ui/button";
 import { History } from "lucide-react"; 
 import { useNavigate } from "react-router-dom";
-import { useSubscription } from "@/contexts/SubscriptionContext";
 import { toast } from "sonner";
 import MediaCard from "@/components/MediaCard";
+import { getWatchHistory } from "@/services/supabase/watchHistory";
+import { useAuth } from "@/contexts/AuthContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Mock data for watch history items
-const watchHistoryData: MediaItem[] = [];
+interface WatchHistoryProps {
+  onMediaClick?: (media: MediaItem) => void;
+}
 
-export default function WatchHistory() {
+export default function WatchHistory({ onMediaClick }: WatchHistoryProps) {
   const [watchHistory, setWatchHistory] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const { isAdmin } = useSubscription();
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Simulate fetching watch history
-    setTimeout(() => {
-      setWatchHistory(watchHistoryData);
-      setLoading(false);
-    }, 1000);
-  }, []);
+    const loadHistory = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const history = await getWatchHistory(user.id);
+        setWatchHistory(history);
+      } catch (error) {
+        console.error('Error loading watch history:', error);
+        toast.error('Erro ao carregar histórico');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadHistory();
+  }, [user]);
 
   const handleMediaClick = (media: MediaItem) => {
+    if (onMediaClick) {
+      onMediaClick(media);
+      return;
+    }
+
     if (!media.id) {
       toast.error("Não foi possível reproduzir este conteúdo");
       return;
@@ -37,8 +57,6 @@ export default function WatchHistory() {
       navigate(`/filme/${mediaId}`);
     } else if (media.media_type === 'tv') {
       navigate(`/serie/${mediaId}`);
-    } else if (media.media_type === 'anime') {
-      navigate(`/anime/${mediaId}`);
     }
   };
 
@@ -62,7 +80,20 @@ export default function WatchHistory() {
   }
 
   if (watchHistory.length === 0) {
-    return null;
+    return (
+      <div className="pt-8 pb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-white">Continue Assistindo</h2>
+          <Button variant="ghost" className="text-gray-400 hover:text-white">
+            <History className="mr-2 h-4 w-4" />
+            Ver Histórico
+          </Button>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-gray-400">Nenhum conteúdo no histórico de visualização</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -74,18 +105,57 @@ export default function WatchHistory() {
           Ver Histórico
         </Button>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {watchHistory.map((media) => (
-          <MediaCard 
-            key={`${media.id}-${media.media_type}`}
-            media={media}
-            onClick={() => handleMediaClick(media)}
-            index={0}
-            isFocused={false}
-            onFocus={() => {}}
-          />
-        ))}
-      </div>
+
+      <Tabs defaultValue="all" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="all">Tudo</TabsTrigger>
+          <TabsTrigger value="movies">Filmes</TabsTrigger>
+          <TabsTrigger value="series">Séries</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {watchHistory.map((media) => (
+            <MediaCard 
+              key={`${media.id}-${media.media_type}`}
+              media={media}
+              onClick={() => handleMediaClick(media)}
+              index={0}
+              isFocused={false}
+              onFocus={() => {}}
+            />
+          ))}
+        </TabsContent>
+
+        <TabsContent value="movies" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {watchHistory
+            .filter((media): media is Movie => media.media_type === 'movie')
+            .map((media) => (
+              <MediaCard 
+                key={`${media.id}-${media.media_type}`}
+                media={media}
+                onClick={() => handleMediaClick(media)}
+                index={0}
+                isFocused={false}
+                onFocus={() => {}}
+              />
+            ))}
+        </TabsContent>
+
+        <TabsContent value="series" className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {watchHistory
+            .filter((media): media is Series => media.media_type === 'tv')
+            .map((media) => (
+              <MediaCard 
+                key={`${media.id}-${media.media_type}`}
+                media={media}
+                onClick={() => handleMediaClick(media)}
+                index={0}
+                isFocused={false}
+                onFocus={() => {}}
+              />
+            ))}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

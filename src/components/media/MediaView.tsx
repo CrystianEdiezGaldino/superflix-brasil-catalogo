@@ -24,6 +24,7 @@ interface MediaViewProps {
   trendingItems?: MediaItem[];
   topRatedItems?: MediaItem[];
   recentItems?: MediaItem[];
+  top100Items?: MediaItem[];
   popularItems?: MediaItem[];
   isLoading: boolean;
   isLoadingMore: boolean;
@@ -51,6 +52,7 @@ const MediaView = ({
   trendingItems = [],
   topRatedItems = [],
   recentItems = [],
+  top100Items = [],
   popularItems = [],
   isLoading,
   isLoadingMore,
@@ -93,6 +95,7 @@ const MediaView = ({
   // Array de sessões para navegação por foco
   const sections = [
     { items: trendingItems, title: `Tendências em ${getContentTypeTitle(type)}` },
+    { items: top100Items, title: `TOP ANIMES` },
     { items: topRatedItems, title: `${getContentTypeTitle(type)} Mais Bem Avaliados` },
     { items: recentItems, title: `${getContentTypeTitle(type)} Recentes` }
   ];

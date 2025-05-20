@@ -1,4 +1,3 @@
-
 import React from "react";
 import { MediaItem } from "@/types/movie";
 import MediaSectionLoader from "./MediaSectionLoader";
@@ -65,7 +64,7 @@ const MediaView: React.FC<MediaViewProps> = ({
             onLoadMore={onLoadMoreTrending}
             isLoading={sectionLoading}
             onMediaClick={onMediaClick}
-            sectionId={`trending-${type}`}
+            sectionId={`trending-${type}-${Date.now()}`}
             mediaType={type}
             hasMore={hasMoreTrending}
           />
@@ -81,7 +80,7 @@ const MediaView: React.FC<MediaViewProps> = ({
             onLoadMore={onLoadMoreTopRated}
             isLoading={sectionLoading}
             onMediaClick={onMediaClick}
-            sectionId={`top-rated-${type}`}
+            sectionId={`top-rated-${type}-${Date.now()}`}
             mediaType={type}
             hasMore={hasMoreTopRated}
           />
@@ -97,7 +96,7 @@ const MediaView: React.FC<MediaViewProps> = ({
             onLoadMore={onLoadMoreRecent}
             isLoading={sectionLoading}
             onMediaClick={onMediaClick}
-            sectionId={`recent-${type}`}
+            sectionId={`recent-${type}-${Date.now()}`}
             mediaType={type}
             hasMore={hasMoreRecent}
           />

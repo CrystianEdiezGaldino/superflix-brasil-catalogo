@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { fetchSeriesDetails, fetchSeasonDetails } from "@/services/tmdb/series";
@@ -24,6 +24,10 @@ const AnimeDetails = () => {
   const [selectedSeason, setSelectedSeason] = useState(1);
   const [selectedEpisode, setSelectedEpisode] = useState(1);
   const [isContentAvailable, setIsContentAvailable] = useState(true);
+  const [recommendationsPage, setRecommendationsPage] = useState(1);
+  const [isLoadingMoreRecommendations, setIsLoadingMoreRecommendations] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -44,14 +48,6 @@ const AnimeDetails = () => {
     noEpList: true
   }), []);
 
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (!authLoading && !user) {
-      toast.error("É necessário fazer login para acessar este conteúdo");
-      navigate("/auth");
-    }
-  }, [user, authLoading, navigate]);
-
   const { data: anime, isLoading, error } = useQuery({
     queryKey: ["anime", id],
     queryFn: () => fetchSeriesDetails(id as string, 'pt-BR'),
@@ -62,6 +58,42 @@ const AnimeDetails = () => {
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
+
+  // Configurar o Intersection Observer para carregamento automático de recomendações
+  useEffect(() => {
+    if (!anime) return;
+
+    const options = {
+      root: null,
+      rootMargin: "0px",
+      threshold: 0.1,
+    };
+
+    observerRef.current = new IntersectionObserver((entries) => {
+      const [entry] = entries;
+      if (entry.isIntersecting && !isLoadingMoreRecommendations && anime.recommendations?.results.length) {
+        handleLoadMoreRecommendations();
+      }
+    }, options);
+
+    if (loadMoreRef.current) {
+      observerRef.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [isLoadingMoreRecommendations, anime]);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error("É necessário fazer login para acessar este conteúdo");
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
 
   // Fetch season data
   const { data: seasonData, isLoading: isSeasonLoading } = useQuery({
@@ -74,6 +106,30 @@ const AnimeDetails = () => {
     refetchOnMount: false,
     refetchOnReconnect: false,
   });
+
+  // Carregar mais recomendações
+  const handleLoadMoreRecommendations = async () => {
+    if (isLoadingMoreRecommendations || !anime) return;
+
+    setIsLoadingMoreRecommendations(true);
+    try {
+      // Simular carregamento de mais recomendações
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const newRecommendations = await fetchSeriesDetails(id as string, 'pt-BR');
+      if (newRecommendations?.recommendations?.results) {
+        anime.recommendations.results = [
+          ...anime.recommendations.results,
+          ...newRecommendations.recommendations.results
+        ];
+        setRecommendationsPage(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar mais recomendações:", error);
+      toast.error("Erro ao carregar mais recomendações");
+    } finally {
+      setIsLoadingMoreRecommendations(false);
+    }
+  };
 
   // Verify if content is available
   useEffect(() => {
@@ -199,11 +255,7 @@ const AnimeDetails = () => {
                         imdb={anime.id.toString()}
                         season={selectedSeason}
                         episode={selectedEpisode}
-                        options={{
-                          transparent: true,
-                          noLink: true,
-                          noEpList: true
-                        }}
+                        options={playerOptions}
                       />
                     </div>
                   </div>
@@ -244,6 +296,7 @@ const AnimeDetails = () => {
           </div>
         )}
       </div>
+      <div ref={loadMoreRef} className="h-10" />
     </div>
   );
 };

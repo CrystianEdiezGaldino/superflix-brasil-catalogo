@@ -1,4 +1,3 @@
-
 import React from "react";
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
@@ -9,10 +8,10 @@ interface MediaSectionLoaderProps {
   title: string;
   medias: MediaItem[];
   showLoadMore?: boolean;
-  onLoadMore: () => void;
+  onLoadMore?: () => void;
   onMediaClick?: (media: MediaItem) => void;
   sectionId?: string;
-  mediaType?: "movie" | "tv" | "anime" | "dorama" | "tv-channel";
+  mediaType?: 'movie' | 'tv' | 'anime' | 'dorama' | 'tv-channel';
   hasMore?: boolean;
 }
 
@@ -37,7 +36,7 @@ const MediaSectionLoader: React.FC<MediaSectionLoaderProps> = ({
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {[...Array(5)].map((_, idx) => (
-            <Skeleton key={idx} className="h-72 w-full rounded-md" />
+            <Skeleton key={`skeleton-${sectionId}-${idx}-${Date.now()}`} className="h-72 w-full rounded-md" />
           ))}
         </div>
       </div>

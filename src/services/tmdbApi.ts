@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import { fetchKidsAnimes, fetchKidsAnimations, fetchKidsMovies, fetchKidsSeries, fetchTrendingKidsContent } from "./tmdb/kids";
 import { 
@@ -55,18 +54,31 @@ export const fetchMoviesByKeyword = async (keywordId: number): Promise<MediaItem
 // Create recommendations function
 export const fetchRecommendations = async (type: string, id: string): Promise<MediaItem[]> => {
   try {
-    // Basic implementation that can be expanded
-    const url = `${type}/${id}/recommendations`;
-    const params = `&language=pt-BR`;
-    const apiUrl = `/api/${url}?${params}`;
+    const url = `/api/${type}/${id}/recommendations?language=pt-BR`;
+    const response = await fetch(url);
     
-    const response = await fetch(apiUrl);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.error(`HTTP error! status: ${response.status}`);
+      return [];
     }
     
-    const data = await response.json();
-    return data.results || [];
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      console.error("Erro ao fazer parse do JSON:", e);
+      return [];
+    }
+    
+    if (!data || !Array.isArray(data.results)) {
+      console.error("Dados inválidos na resposta:", data);
+      return [];
+    }
+    
+    return data.results.map((item: any) => ({
+      ...item,
+      media_type: type
+    }));
   } catch (error) {
     console.error("Error fetching recommendations:", error);
     return [];

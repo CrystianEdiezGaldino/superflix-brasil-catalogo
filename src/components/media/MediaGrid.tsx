@@ -159,7 +159,7 @@ const MediaGrid = ({
     >
       {mediaItems.map((item, index) => (
         <div
-          key={`grid-media-${item.id}`}
+          key={`grid-media-${item.id}-${index}`}
           data-item={index}
           className={`relative group cursor-pointer transition-all duration-300 ${
             index === focusedIndex ? 'ring-2 ring-netflix-red scale-105' : ''
@@ -181,7 +181,7 @@ const MediaGrid = ({
               {item.media_type === 'movie' ? 'Filme' : 
                item.media_type === 'tv' ? 
                  item.original_language === 'ko' ? 'Dorama' : 'Série' : 
-               'Anime'}
+                 'Anime'}
             </p>
           </div>
         </div>

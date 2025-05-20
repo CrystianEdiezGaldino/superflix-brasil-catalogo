@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
 
@@ -7,8 +6,21 @@ interface AnimeSectionsProps {
   topRatedAnime: MediaItem[];
   recentAnimes: MediaItem[];
   isLoading: boolean;
-  hasMore: boolean;
-  onLoadMore: (sectionId: string) => void;
+  hasMore: {
+    anime: boolean;
+    topRated: boolean;
+    recent: boolean;
+  };
+  isFetchingNextPage: {
+    anime: boolean;
+    topRated: boolean;
+    recent: boolean;
+  };
+  onLoadMore: {
+    anime: () => void;
+    topRated: () => void;
+    recent: () => void;
+  };
   onMediaClick: (media: MediaItem) => void;
 }
 
@@ -18,6 +30,7 @@ const AnimeSections = ({
   recentAnimes,
   isLoading,
   hasMore,
+  isFetchingNextPage,
   onLoadMore,
   onMediaClick,
 }: AnimeSectionsProps) => {
@@ -35,9 +48,9 @@ const AnimeSections = ({
         <MediaSection
           title="Animes em Alta"
           medias={anime}
-          showLoadMore={hasMore}
-          onLoadMore={() => onLoadMore('anime')}
-          isLoading={isLoading}
+          showLoadMore={hasMore.anime}
+          onLoadMore={onLoadMore.anime}
+          isLoading={isFetchingNextPage.anime}
           onMediaClick={onMediaClick}
           sectionId="anime"
           mediaType="tv"
@@ -49,9 +62,9 @@ const AnimeSections = ({
         <MediaSection
           title="Animes Mais Bem Avaliados"
           medias={topRatedAnime}
-          showLoadMore={hasMore}
-          onLoadMore={() => onLoadMore('topRatedAnime')}
-          isLoading={isLoading}
+          showLoadMore={hasMore.topRated}
+          onLoadMore={onLoadMore.topRated}
+          isLoading={isFetchingNextPage.topRated}
           onMediaClick={onMediaClick}
           sectionId="topRatedAnime" 
           mediaType="tv"
@@ -63,9 +76,9 @@ const AnimeSections = ({
         <MediaSection
           title="Animes Recentes"
           medias={recentAnimes}
-          showLoadMore={hasMore}
-          onLoadMore={() => onLoadMore('recentAnimes')}
-          isLoading={isLoading}
+          showLoadMore={hasMore.recent}
+          onLoadMore={onLoadMore.recent}
+          isLoading={isFetchingNextPage.recent}
           onMediaClick={onMediaClick}
           sectionId="recentAnimes"
           mediaType="tv"

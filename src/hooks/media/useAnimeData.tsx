@@ -1,5 +1,4 @@
-
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { MediaItem } from "@/types/movie";
 import { useBaseMedia } from "./useBaseMedia";
 import { fetchAnime, fetchTopRatedAnime, fetchRecentAnime } from "@/services/tmdb/anime";
@@ -7,26 +6,38 @@ import { fetchAnime, fetchTopRatedAnime, fetchRecentAnime } from "@/services/tmd
 export const useAnimeData = () => {
   const { user, hasAccess, isUserAuthenticated } = useBaseMedia();
   
-  // Fetch anime data
-  const animeQuery = useQuery({
+  // Fetch anime data with infinite query
+  const animeQuery = useInfiniteQuery<MediaItem[]>({
     queryKey: ["anime"],
-    queryFn: () => fetchAnime(),
+    queryFn: ({ pageParam = 1 }) => fetchAnime(pageParam as number),
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.length === 20 ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5 // 5 minutes
   });
 
-  // Fetch top rated anime
-  const topRatedAnimeQuery = useQuery({
+  // Fetch top rated anime with infinite query
+  const topRatedAnimeQuery = useInfiniteQuery<MediaItem[]>({
     queryKey: ["topRatedAnime"],
-    queryFn: () => fetchTopRatedAnime(),
+    queryFn: ({ pageParam = 1 }) => fetchTopRatedAnime(pageParam as number),
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.length === 20 ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5
   });
 
-  // Fetch recent anime
-  const recentAnimesQuery = useQuery({
+  // Fetch recent anime with infinite query
+  const recentAnimesQuery = useInfiniteQuery<MediaItem[]>({
     queryKey: ["recentAnime"],
-    queryFn: () => fetchRecentAnime(),
+    queryFn: ({ pageParam = 1 }) => fetchRecentAnime(pageParam as number),
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.length === 20 ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
     enabled: isUserAuthenticated && hasAccess,
     staleTime: 1000 * 60 * 5
   });
@@ -41,11 +52,48 @@ export const useAnimeData = () => {
     topRatedAnimeQuery.isError || 
     recentAnimesQuery.isError;
 
+  // Flatten pages into single arrays and ensure unique IDs
+  const animeData = animeQuery.data?.pages.flat().reduce((acc, curr) => {
+    if (!acc.find(item => item.id === curr.id)) {
+      acc.push(curr);
+    }
+    return acc;
+  }, [] as MediaItem[]) || [];
+
+  const topRatedAnimeData = topRatedAnimeQuery.data?.pages.flat().reduce((acc, curr) => {
+    if (!acc.find(item => item.id === curr.id)) {
+      acc.push(curr);
+    }
+    return acc;
+  }, [] as MediaItem[]) || [];
+
+  const recentAnimesData = recentAnimesQuery.data?.pages.flat().reduce((acc, curr) => {
+    if (!acc.find(item => item.id === curr.id)) {
+      acc.push(curr);
+    }
+    return acc;
+  }, [] as MediaItem[]) || [];
+
   return {
-    animeData: animeQuery.data || [],
-    topRatedAnimeData: topRatedAnimeQuery.data || [],
-    recentAnimesData: recentAnimesQuery.data || [],
+    animeData,
+    topRatedAnimeData,
+    recentAnimesData,
     isLoading,
-    hasError
+    hasError,
+    fetchNextPage: {
+      anime: animeQuery.fetchNextPage,
+      topRated: topRatedAnimeQuery.fetchNextPage,
+      recent: recentAnimesQuery.fetchNextPage
+    },
+    hasNextPage: {
+      anime: animeQuery.hasNextPage,
+      topRated: topRatedAnimeQuery.hasNextPage,
+      recent: recentAnimesQuery.hasNextPage
+    },
+    isFetchingNextPage: {
+      anime: animeQuery.isFetchingNextPage,
+      topRated: topRatedAnimeQuery.isFetchingNextPage,
+      recent: recentAnimesQuery.isFetchingNextPage
+    }
   };
 };

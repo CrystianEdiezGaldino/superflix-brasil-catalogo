@@ -14,7 +14,6 @@ import UnauthenticatedState from "@/components/home/UnauthenticatedState";
 import LargeSubscriptionUpsell from "@/components/home/LargeSubscriptionUpsell";
 import SearchResults from "@/components/home/SearchResults";
 import WatchHistory from "@/components/home/WatchHistory";
-import AdminIndicator from "@/components/home/AdminIndicator";
 import TrialNotification from "@/components/home/TrialNotification";
 import MediaSection from "@/components/MediaSection";
 
@@ -26,27 +25,27 @@ const Home = () => {
     hasAccess,
     hasTrialAccess,
     featuredMedia,
-    recommendations,
-    moviesData,
-    seriesData,
-    animeData,
-    topRatedAnimeData,
-    doramasData,
-    actionMoviesData,
-    comedyMoviesData,
-    adventureMoviesData,
-    sciFiMoviesData,
-    marvelMoviesData,
-    dcMoviesData,
-    popularSeries,
-    recentAnimes,
-    movies,
+    recommendations = [],
+    moviesData = [],
+    seriesData = [],
+    animeData = [],
+    topRatedAnimeData = [],
+    doramasData = [],
+    actionMoviesData = [],
+    comedyMoviesData = [],
+    adventureMoviesData = [],
+    sciFiMoviesData = [],
+    marvelMoviesData = [],
+    dcMoviesData = [],
+    popularSeries = [],
+    recentAnimes = [],
+    movies = [],
     isLoading,
     isLoadingMore,
     hasMore,
     hasError,
     searchQuery,
-    searchResults,
+    searchResults = [],
     isSearching,
     currentSection,
     handleSearch,
@@ -54,7 +53,10 @@ const Home = () => {
     setSearchQuery,
     setSearchResults,
     setIsSearching,
-    sectionData: allSectionData
+    sectionData: allSectionData = {},
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
   } = useContentSections();
 
   const handleMovieClick = useCallback((movie: MediaItem) => {
@@ -108,8 +110,6 @@ const Home = () => {
     <div className="bg-netflix-background min-h-screen">
       <Navbar />
       
-      {isAdmin && <AdminIndicator />}
-      
       {hasTrialAccess && <TrialNotification />}
       
       <HomeHeader 
@@ -154,7 +154,6 @@ const Home = () => {
             )}
             
             <section className="mb-12">
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Continue Assistindo</h2>
               <WatchHistory 
                 history={movies?.slice(0, 5) || []}
                 onMediaClick={handleMovieClick}
@@ -186,10 +185,10 @@ const Home = () => {
             <MediaView
               title="Séries"
               type="tv"
-              mediaItems={seriesData || []}
-              trendingItems={seriesData || []}
-              topRatedItems={popularSeries || []}
-              recentItems={seriesData?.slice(10, 20) || []}
+              mediaItems={Array.isArray(seriesData) ? seriesData : []}
+              trendingItems={Array.isArray(seriesData) ? seriesData : []}
+              topRatedItems={Array.isArray(popularSeries) ? popularSeries : []}
+              recentItems={Array.isArray(seriesData) ? seriesData.slice(10, 20) : []}
               sectionLoading={currentSection === 'series' && isLoadingMore}
               onMediaClick={handleSeriesClick}
               onLoadMoreTrending={() => handleLoadMoreSection('series')}
@@ -209,12 +208,24 @@ const Home = () => {
               <AnimeSections 
                 anime={animeData || []}
                 topRatedAnime={topRatedAnimeData || []}
-                popularAnime={animeData?.slice(5, 10) || []}
                 recentAnimes={recentAnimes || []}
                 onMediaClick={handleAnimeClick}
-                onLoadMore={handleLoadMoreSection}
-                isLoading={currentSection.includes('anime') && isLoadingMore}
-                hasMore={true}
+                onLoadMore={{
+                  anime: () => fetchNextPage.anime(),
+                  topRated: () => fetchNextPage.topRated(),
+                  recent: () => fetchNextPage.recent()
+                }}
+                isLoading={isLoading}
+                hasMore={{
+                  anime: hasNextPage.anime,
+                  topRated: hasNextPage.topRated,
+                  recent: hasNextPage.recent
+                }}
+                isFetchingNextPage={{
+                  anime: isFetchingNextPage.anime,
+                  topRated: isFetchingNextPage.topRated,
+                  recent: isFetchingNextPage.recent
+                }}
               />
             </div>
             

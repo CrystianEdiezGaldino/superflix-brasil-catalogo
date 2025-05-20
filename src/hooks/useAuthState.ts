@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,23 +15,20 @@ export const useAuthState = () => {
   const [lastAuthEvent, setLastAuthEvent] = useState<string | null>(null);
 
   useEffect(() => {
-    let isActive = true; // For cleanup/preventing state updates after unmount
+    let isActive = true;
 
-    // Set up auth state listener first - IMPORTANT: this sets up the listener before anything else
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
-        if (!isActive) return; // Don't update state if component unmounted
+        if (!isActive) return;
         
         console.log("Auth state changed:", event);
         setLastAuthEvent(event);
         
-        // Skip redundant updates and UI refreshes when just returning from tab switch
         if (visibilityChanged && event === "INITIAL_SESSION" && newSession?.user?.id === user?.id) {
           console.log("Skipping redundant auth update after tab switch");
           return;
         }
         
-        // Only update state if actually changed to prevent unnecessary re-renders
         const userChanged = newSession?.user?.id !== user?.id;
         const sessionChanged = newSession?.access_token !== session?.access_token;
         
@@ -40,7 +36,6 @@ export const useAuthState = () => {
           setSession(newSession);
           setUser(newSession?.user ?? null);
           
-          // Only show toast for actual login events, not restoration of session
           if (event === "SIGNED_IN" && !sessionChecked) {
             console.log("User signed in:", newSession?.user?.email);
             toast.success("Login realizado com sucesso!");
@@ -52,16 +47,14 @@ export const useAuthState = () => {
           }
         }
         
-        // Set loading to false regardless of whether state was updated
         if (loading && event !== "INITIAL_SESSION") {
           setLoading(false);
         }
       }
     );
 
-    // Get initial session state - do this after setting up the listener
     supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
-      if (!isActive) return; // Don't update state if component unmounted
+      if (!isActive) return;
       
       if (error) {
         console.error("Error getting session:", error);
@@ -77,20 +70,17 @@ export const useAuthState = () => {
     });
 
     return () => {
-      isActive = false; // Mark as inactive
+      isActive = false;
       subscription.unsubscribe();
     };
-  }, []);  // Remove dependencies to prevent loop
+  }, [user?.id, session?.access_token, visibilityChanged, sessionChecked, loading]);
 
-  // Handle tab visibility changes
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && visibilityChanged) {
-        // Tab became visible again - flag that we're returning from a tab switch
         setVisibilityChanged(false);
         console.log("Tab visible again, maintaining session state");
       } else if (document.visibilityState === 'hidden') {
-        // Tab hidden - store this fact but don't refresh
         setVisibilityChanged(true);
         console.log("Tab hidden, maintaining session state");
       }

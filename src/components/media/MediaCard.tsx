@@ -1,9 +1,13 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import { MediaItem, getMediaTitle } from "@/types/movie";
 import { Card } from "@/components/ui/card";
-import { Heart, Play } from "lucide-react";
+import { Heart, Play, Star } from "lucide-react";
 import FavoriteButton from "./FavoriteButton";
 import { useState, useEffect, useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { addToWatchHistory } from "@/services/supabase/watchHistory";
+import { toast } from "sonner";
 
 interface MediaCardProps {
   media: MediaItem;
@@ -14,6 +18,7 @@ interface MediaCardProps {
   isFocused: boolean;
   onFocus: (index: number) => void;
   sectionIndex?: number;
+  itemIndex?: number;
 }
 
 const MediaCard = ({ 
@@ -24,10 +29,12 @@ const MediaCard = ({
   index, 
   isFocused, 
   onFocus,
-  sectionIndex 
+  sectionIndex,
+  itemIndex
 }: MediaCardProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (isFocused && cardRef.current) {
@@ -44,7 +51,7 @@ const MediaCard = ({
     switch (e.key) {
       case "Enter":
         e.preventDefault();
-        onClick && onClick(media);
+        handleClick(e);
         break;
       case "ArrowRight":
         e.preventDefault();
@@ -104,19 +111,39 @@ const MediaCard = ({
   const rating = media.vote_average ? Math.round(media.vote_average * 10) / 10 : null;
   const mediaId = (media as any).id;
   
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = async (e: React.MouseEvent | React.KeyboardEvent) => {
     if (onClick) {
       e.preventDefault();
       onClick(media);
     }
+
+    if (user) {
+      try {
+        await addToWatchHistory(media, user.id);
+      } catch (error) {
+        console.error('Error adding to watch history:', error);
+        toast.error('Erro ao adicionar ao histórico de visualização');
+      }
+    }
   };
   
+  // Função para determinar a classificação indicativa
+  const getRating = (voteAverage: number) => {
+    if (voteAverage >= 8) return "L";
+    if (voteAverage >= 7) return "10";
+    if (voteAverage >= 6) return "12";
+    if (voteAverage >= 5) return "14";
+    return "16";
+  };
+
   return (
     <Card 
       ref={cardRef}
-      className={`bg-transparent border-none overflow-hidden group ${className}`}
+      className={`bg-transparent border-none overflow-hidden group ${className} ${
+        isFocused ? "scale-105 z-10" : "hover:scale-105"
+      }`}
       data-section={sectionIndex}
-      data-item={index}
+      data-item={itemIndex}
     >
       <Link 
         to={getLinkPath()}
@@ -146,13 +173,16 @@ const MediaCard = ({
             <div className="text-white font-medium group-focus-within:text-netflix-red transition-colors duration-200">{title}</div>
             
             {rating && (
-              <div className="flex items-center mt-1">
+              <div className="flex items-center gap-2 mt-1">
                 <div className={`text-xs px-1.5 py-0.5 rounded ${
                   rating >= 7 ? 'bg-green-600' : 
                   rating >= 5 ? 'bg-yellow-600' : 
                   'bg-red-600'
                 }`}>
                   {rating}
+                </div>
+                <div className="text-xs px-1.5 py-0.5 rounded bg-gray-700">
+                  {getRating(rating)}
                 </div>
               </div>
             )}
