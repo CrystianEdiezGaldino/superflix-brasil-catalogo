@@ -1,3 +1,4 @@
+
 import { MediaItem } from "@/types/movie";
 import MediaSectionLoader from "../MediaSectionLoader";
 
@@ -48,7 +49,7 @@ const AnimeSections = ({
           sectionId="recentAnimes"
           onLoadMore={handleLoadMoreRecentAnimes}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
           mediaType="anime"
         />
@@ -60,7 +61,7 @@ const AnimeSections = ({
         sectionId="anime"
         onLoadMore={handleLoadMoreAnime}
         isLoading={isLoading}
-        hasMore={hasMore}
+        showLoadMore={hasMore}
         onMediaClick={onMediaClick}
         mediaType="anime"
       />
@@ -71,7 +72,7 @@ const AnimeSections = ({
         sectionId="topRatedAnime"
         onLoadMore={handleLoadMoreTopRatedAnime}
         isLoading={isLoading}
-        hasMore={hasMore}
+        showLoadMore={hasMore}
         onMediaClick={onMediaClick}
         mediaType="anime"
       />
@@ -83,7 +84,7 @@ const AnimeSections = ({
           sectionId="trendingAnime"
           onLoadMore={handleLoadMoreTrendingAnime}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
           mediaType="anime"
         />

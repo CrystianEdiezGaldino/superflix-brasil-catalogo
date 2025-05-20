@@ -8,22 +8,24 @@ interface MediaSectionLoaderProps {
   isLoading: boolean;
   title: string;
   medias: MediaItem[];
-  showLoadMore: boolean;
+  showLoadMore?: boolean;
   onLoadMore: () => void;
   onMediaClick?: (media: MediaItem) => void;
   sectionId?: string;
   mediaType?: "movie" | "tv" | "anime" | "dorama" | "tv-channel";
+  hasMore?: boolean;
 }
 
 const MediaSectionLoader: React.FC<MediaSectionLoaderProps> = ({
   isLoading,
   title,
   medias,
-  showLoadMore,
+  showLoadMore = false,
   onLoadMore,
   onMediaClick,
   sectionId = "section",
-  mediaType = "movie"
+  mediaType = "movie",
+  hasMore = false
 }) => {
   // If loading and no medias, show skeleton loader
   if (isLoading && medias.length === 0) {
@@ -51,7 +53,7 @@ const MediaSectionLoader: React.FC<MediaSectionLoaderProps> = ({
     <MediaSection
       title={title}
       medias={medias}
-      showLoadMore={showLoadMore}
+      showLoadMore={showLoadMore || hasMore}
       onLoadMore={onLoadMore}
       isLoading={isLoading}
       onMediaClick={onMediaClick}

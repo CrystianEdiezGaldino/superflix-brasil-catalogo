@@ -1,3 +1,4 @@
+
 import { MediaItem } from "@/types/movie";
 import MediaSectionLoader from "../MediaSectionLoader";
 
@@ -116,14 +117,18 @@ const PopularMovies = ({
   isLoading: boolean;
   hasMore: boolean;
 }) => {
+  const handleLoadMore = () => {
+    onLoadMore("movies");
+  };
+
   return (
     <MediaSectionLoader 
       title="Filmes Populares" 
       medias={movies}
       sectionId="movies"
-      onLoadMore={onLoadMore}
+      onLoadMore={handleLoadMore}
       isLoading={isLoading}
-      hasMore={hasMore}
+      showLoadMore={hasMore}
       onMediaClick={onMediaClick}
       mediaType="movie"
     />
@@ -164,15 +169,59 @@ const GenreBasedMovies = ({
   isLoading: boolean;
   hasMore: boolean;
 }) => {
+  const handleLoadMoreAction = () => {
+    onLoadMore("actionMovies");
+  };
+  
+  const handleLoadMoreComedy = () => {
+    onLoadMore("comedyMovies");
+  };
+  
+  const handleLoadMoreAdventure = () => {
+    onLoadMore("adventureMovies");
+  };
+  
+  const handleLoadMoreSciFi = () => {
+    onLoadMore("sciFiMovies");
+  };
+  
+  const handleLoadMoreHorror = () => {
+    onLoadMore("horrorMovies");
+  };
+  
+  const handleLoadMoreRomance = () => {
+    onLoadMore("romanceMovies");
+  };
+  
+  const handleLoadMoreDrama = () => {
+    onLoadMore("dramaMovies");
+  };
+  
+  const handleLoadMoreThriller = () => {
+    onLoadMore("thrillerMovies");
+  };
+  
+  const handleLoadMoreFamily = () => {
+    onLoadMore("familyMovies");
+  };
+  
+  const handleLoadMoreAnimation = () => {
+    onLoadMore("animationMovies");
+  };
+  
+  const handleLoadMoreDocumentary = () => {
+    onLoadMore("documentaryMovies");
+  };
+
   return (
     <>
       <MediaSectionLoader 
         title="Filmes de Ação" 
         medias={actionMovies}
         sectionId="actionMovies"
-        onLoadMore={onLoadMore}
+        onLoadMore={handleLoadMoreAction}
         isLoading={isLoading}
-        hasMore={hasMore}
+        showLoadMore={hasMore}
         onMediaClick={onMediaClick}
         mediaType="movie"
       />
@@ -181,9 +230,9 @@ const GenreBasedMovies = ({
         title="Comédias" 
         medias={comedyMovies}
         sectionId="comedyMovies"
-        onLoadMore={onLoadMore}
+        onLoadMore={handleLoadMoreComedy}
         isLoading={isLoading}
-        hasMore={hasMore}
+        showLoadMore={hasMore}
         onMediaClick={onMediaClick}
         mediaType="movie"
       />
@@ -192,9 +241,9 @@ const GenreBasedMovies = ({
         title="Filmes de Aventura" 
         medias={adventureMovies}
         sectionId="adventureMovies"
-        onLoadMore={onLoadMore}
+        onLoadMore={handleLoadMoreAdventure}
         isLoading={isLoading}
-        hasMore={hasMore}
+        showLoadMore={hasMore}
         onMediaClick={onMediaClick}
         mediaType="movie"
       />
@@ -203,9 +252,9 @@ const GenreBasedMovies = ({
         title="Ficção Científica" 
         medias={sciFiMovies}
         sectionId="sciFiMovies"
-        onLoadMore={onLoadMore}
+        onLoadMore={handleLoadMoreSciFi}
         isLoading={isLoading}
-        hasMore={hasMore}
+        showLoadMore={hasMore}
         onMediaClick={onMediaClick}
       />
 
@@ -214,9 +263,9 @@ const GenreBasedMovies = ({
           title="Filmes de Terror" 
           medias={horrorMovies}
           sectionId="horrorMovies"
-          onLoadMore={onLoadMore}
+          onLoadMore={handleLoadMoreHorror}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
@@ -226,9 +275,9 @@ const GenreBasedMovies = ({
           title="Filmes de Romance" 
           medias={romanceMovies}
           sectionId="romanceMovies"
-          onLoadMore={onLoadMore}
+          onLoadMore={handleLoadMoreRomance}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
@@ -238,9 +287,9 @@ const GenreBasedMovies = ({
           title="Filmes de Drama" 
           medias={dramaMovies}
           sectionId="dramaMovies"
-          onLoadMore={onLoadMore}
+          onLoadMore={handleLoadMoreDrama}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
@@ -250,9 +299,9 @@ const GenreBasedMovies = ({
           title="Filmes de Suspense" 
           medias={thrillerMovies}
           sectionId="thrillerMovies"
-          onLoadMore={onLoadMore}
+          onLoadMore={handleLoadMoreThriller}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
@@ -262,9 +311,9 @@ const GenreBasedMovies = ({
           title="Filmes para a Família" 
           medias={familyMovies}
           sectionId="familyMovies"
-          onLoadMore={onLoadMore}
+          onLoadMore={handleLoadMoreFamily}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
@@ -274,9 +323,9 @@ const GenreBasedMovies = ({
           title="Filmes de Animação" 
           medias={animationMovies}
           sectionId="animationMovies"
-          onLoadMore={onLoadMore}
+          onLoadMore={handleLoadMoreAnimation}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
@@ -286,9 +335,9 @@ const GenreBasedMovies = ({
           title="Documentários" 
           medias={documentaryMovies}
           sectionId="documentaryMovies"
-          onLoadMore={onLoadMore}
+          onLoadMore={handleLoadMoreDocumentary}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
@@ -312,15 +361,23 @@ const FranchiseMovies = ({
   isLoading: boolean;
   hasMore: boolean;
 }) => {
+  const handleLoadMoreMarvel = () => {
+    onLoadMore("marvelMovies");
+  };
+  
+  const handleLoadMoreDC = () => {
+    onLoadMore("dcMovies");
+  };
+
   return (
     <>
       <MediaSectionLoader 
         title="Universo Marvel" 
         medias={marvelMovies}
         sectionId="marvelMovies"
-        onLoadMore={onLoadMore}
+        onLoadMore={handleLoadMoreMarvel}
         isLoading={isLoading}
-        hasMore={hasMore}
+        showLoadMore={hasMore}
         onMediaClick={onMediaClick}
       />
       
@@ -328,9 +385,9 @@ const FranchiseMovies = ({
         title="DC Comics" 
         medias={dcMovies}
         sectionId="dcMovies"
-        onLoadMore={onLoadMore}
+        onLoadMore={handleLoadMoreDC}
         isLoading={isLoading}
-        hasMore={hasMore}
+        showLoadMore={hasMore}
         onMediaClick={onMediaClick}
       />
     </>
@@ -355,6 +412,18 @@ const SpecialCategories = ({
   isLoading: boolean;
   hasMore: boolean;
 }) => {
+  const handleLoadMoreAwards = () => {
+    onLoadMore("awardWinningMovies");
+  };
+  
+  const handleLoadMorePopular = () => {
+    onLoadMore("popularMovies");
+  };
+  
+  const handleLoadMoreTrending = () => {
+    onLoadMore("trendingMovies");
+  };
+
   return (
     <>
       {awardWinningMovies.length > 0 && (
@@ -362,9 +431,9 @@ const SpecialCategories = ({
           title="Filmes Premiados" 
           medias={awardWinningMovies}
           sectionId="awardWinningMovies"
-          onLoadMore={onLoadMore}
+          onLoadMore={handleLoadMoreAwards}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
@@ -374,9 +443,9 @@ const SpecialCategories = ({
           title="Mais Populares" 
           medias={popularMovies}
           sectionId="popularMovies"
-          onLoadMore={onLoadMore}
+          onLoadMore={handleLoadMorePopular}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
@@ -386,9 +455,9 @@ const SpecialCategories = ({
           title="Em Alta" 
           medias={trendingMovies}
           sectionId="trendingMovies"
-          onLoadMore={onLoadMore}
+          onLoadMore={handleLoadMoreTrending}
           isLoading={isLoading}
-          hasMore={hasMore}
+          showLoadMore={hasMore}
           onMediaClick={onMediaClick}
         />
       )}
