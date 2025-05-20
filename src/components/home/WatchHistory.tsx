@@ -2,7 +2,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ClockRewind } from "lucide-react";
+import { History } from "lucide-react";
 import MediaCard from "../media/MediaCard";
 import { MediaItem } from "@/types/movie";
 
@@ -33,7 +33,7 @@ const WatchHistory = ({
     <Card className="bg-black/60 border-netflix-red/20 backdrop-blur-sm p-6 mb-8">
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center">
-          <ClockRewind className="h-5 w-5 text-netflix-red mr-2" />
+          <History className="h-5 w-5 text-netflix-red mr-2" />
           <h2 className="text-xl font-bold text-white">{title}</h2>
         </div>
         {onViewAll && (
@@ -53,8 +53,6 @@ const WatchHistory = ({
             <MediaCard 
               media={item}
               onClick={() => handleMediaClick(item)}
-              showProgress
-              progress={Math.floor(Math.random() * 90) + 10} // Example progress
             />
           </div>
         ))}

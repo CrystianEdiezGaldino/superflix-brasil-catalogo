@@ -69,7 +69,7 @@ export function WatchHistory() {
               onClick={() => handleMediaClick(media)}
               index={idx}
               isFocused={focusedIndex === idx}
-              onFocus={handleFocus}
+              onFocus={() => handleFocus(idx)}
             />
           </div>
         ))}

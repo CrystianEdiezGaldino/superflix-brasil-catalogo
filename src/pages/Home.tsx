@@ -1,4 +1,3 @@
-
 import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useContentSections } from "@/hooks/home/useContentSections";
@@ -17,7 +16,7 @@ import SearchResults from "@/components/home/SearchResults";
 import WatchHistory from "@/components/home/WatchHistory";
 import AdminIndicator from "@/components/home/AdminIndicator";
 import TrialNotification from "@/components/home/TrialNotification";
-import { MediaSection } from "@/components/MediaSection";
+import MediaSection from "@/components/MediaSection";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -156,7 +155,10 @@ const Home = () => {
             
             <section className="mb-12">
               <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Continue Assistindo</h2>
-              <WatchHistory limit={5} />
+              <WatchHistory 
+                history={movies?.slice(0, 5) || []}
+                onMediaClick={handleMovieClick}
+              />
             </section>
 
             <MediaView

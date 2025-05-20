@@ -1,64 +1,57 @@
 
-import { useState } from "react";
-import { toast } from "sonner";
-import { MediaItem } from "@/types/movie";
-import { searchMedia, fetchKoreanDramas } from "@/services/tmdbApi";
+import { useState, useCallback, useEffect } from 'react';
+import { MediaItem } from '@/types/movie';
+import { searchDoramas } from '@/services/tmdbApi';
 
-interface UseDoramaSearchProps {
-  filterDoramas: (contentList: MediaItem[]) => MediaItem[];
-  setDoramas: React.Dispatch<React.SetStateAction<MediaItem[]>>;
-  resetPagination: () => void;
-}
-
-export const useDoramaSearch = ({ filterDoramas, setDoramas, resetPagination }: UseDoramaSearchProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+export const useDoramaSearch = () => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<MediaItem[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  
-  // Search function
-  const handleSearch = async (query: string) => {
+  const [error, setError] = useState<string | null>(null);
+
+  const performSearch = useCallback(async () => {
     if (!query.trim()) {
-      // If search is empty, return to initial doramas
-      if (isSearching) {
-        // Reset to initial state only if we were previously searching
-        fetchKoreanDramas(1, 50).then(initialContent => {
-          const filteredContent = filterDoramas(initialContent);
-          setDoramas(filteredContent);
-          resetPagination();
-          setSearchQuery("");
-          setIsSearching(false);
-        });
-      }
+      setResults([]);
       return;
     }
 
-    setIsSearching(true);
     try {
-      const results = await searchMedia(query);
-      
-      // Filtra resultados da pesquisa para conteúdo coreano com imagens
-      const koreanContent = filterDoramas(results);
-      
-      setDoramas(koreanContent);
-      resetPagination();
-      setSearchQuery(query);
-      
-      if (koreanContent.length === 0) {
-        toast.info("Nenhum conteúdo encontrado para sua pesquisa.");
-      } else {
-        toast.success(`Encontramos ${koreanContent.length} resultados para "${query}"`);
-      }
-    } catch (error) {
-      console.error("Erro na pesquisa:", error);
-      toast.error("Ocorreu um erro durante a pesquisa.");
+      setIsSearching(true);
+      setError(null);
+
+      const searchResults = await searchDoramas(query);
+      setResults(searchResults);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Search failed');
+      console.error('Error searching doramas:', err);
     } finally {
       setIsSearching(false);
     }
+  }, [query]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (query.trim()) {
+        performSearch();
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [query, performSearch]);
+
+  const clearSearch = () => {
+    setQuery('');
+    setResults([]);
   };
 
   return {
-    searchQuery,
+    query,
+    setQuery,
+    results,
     isSearching,
-    handleSearch,
-    setSearchQuery
+    error,
+    clearSearch
   };
 };
+
+export default useDoramaSearch;

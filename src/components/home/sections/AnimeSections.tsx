@@ -28,34 +28,34 @@ const AnimeSections: React.FC<AnimeSectionsProps> = ({
   return (
     <div className="space-y-8">
       {anime.length > 0 && (
-        <MediaSection
+        <MediaSection 
           title="Animes"
-          items={anime}
-          onItemClick={onMediaClick}
+          medias={anime}
+          onMediaClick={onMediaClick}
         />
       )}
       
       {topRatedAnime.length > 0 && (
         <MediaSection
           title="Animes Mais Bem Avaliados"
-          items={topRatedAnime}
-          onItemClick={onMediaClick}
+          medias={topRatedAnime}
+          onMediaClick={onMediaClick}
         />
       )}
       
       {recentAnimes.length > 0 && (
         <MediaSection
           title="Animes Recentes"
-          items={recentAnimes}
-          onItemClick={onMediaClick}
+          medias={recentAnimes}
+          onMediaClick={onMediaClick}
         />
       )}
       
       {popularAnime && popularAnime.length > 0 && (
         <MediaSection
           title="Animes Populares"
-          items={popularAnime}
-          onItemClick={onMediaClick}
+          medias={popularAnime}
+          onMediaClick={onMediaClick}
         />
       )}
       

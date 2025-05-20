@@ -1,66 +1,63 @@
 
-import { useState } from "react";
-import { toast } from "sonner";
-import { MediaItem } from "@/types/movie";
-import { fetchKoreanDramas } from "@/services/tmdbApi";
+import { useState, useEffect, useCallback } from 'react';
+import { MediaItem } from '@/types/movie';
+import { fetchDoramas } from '@/services/tmdbApi';
 
-interface UseDoramaPaginationProps {
-  filterDoramas: (contentList: MediaItem[]) => MediaItem[];
-  setDoramas: React.Dispatch<React.SetStateAction<MediaItem[]>>;
-}
-
-export const useDoramaPagination = ({ filterDoramas, setDoramas }: UseDoramaPaginationProps) => {
+export const useDoramaPagination = () => {
+  const [doramas, setDoramas] = useState<MediaItem[]>([]);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  
-  // Load more doramas and Korean movies
-  const loadMoreDoramas = async (isSearching: boolean, isFiltering: boolean) => {
-    if (isSearching || isFiltering || !hasMore || isLoadingMore) return;
-    
-    setIsLoadingMore(true);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadPage = useCallback(async () => {
+    if (isLoading) return;
     
     try {
-      const nextPage = page + 1;
-      // Carrega 30 conteúdos por vez (doramas e filmes coreanos)
-      const newContent = await fetchKoreanDramas(nextPage, 30);
-      
-      // Filtra para garantir apenas conteúdo coreano com imagens
-      const filteredContent = filterDoramas(newContent);
-      
-      if (filteredContent.length === 0) {
-        setHasMore(false);
-        toast.info("Não há mais conteúdo para carregar.");
-        return;
-      }
-      
-      setDoramas((prevContent) => [...prevContent, ...filteredContent]);
-      setPage(nextPage);
-      
-      // Verifica se ainda existem mais conteúdos para carregar
-      if (filteredContent.length >150) {
-        setHasMore(false);
-        toast.info("Você chegou ao fim da lista de doramas e filmes coreanos.");
-      }
-      
-    } catch (error) {
-      console.error("Erro ao carregar mais conteúdo:", error);
-      toast.error("Erro ao carregar mais conteúdo coreano.");
+      setIsLoading(true);
+      const response = await fetchDoramas();
+      setDoramas(response);
+      setTotalPages(10); // Assuming we have 10 pages max for doramas
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load doramas');
+      console.error('Error loading doramas:', err);
     } finally {
-      setIsLoadingMore(false);
+      setIsLoading(false);
     }
-  };
-  
-  const resetPagination = () => {
-    setPage(1);
-    setHasMore(true);
-  };
+  }, [page, isLoading]);
+
+  useEffect(() => {
+    loadPage();
+  }, [page, loadPage]);
+
+  const nextPage = useCallback(() => {
+    if (page < totalPages) {
+      setPage(prevPage => prevPage + 1);
+    }
+  }, [page, totalPages]);
+
+  const prevPage = useCallback(() => {
+    if (page > 1) {
+      setPage(prevPage => prevPage - 1);
+    }
+  }, [page]);
+
+  const goToPage = useCallback((pageNum: number) => {
+    if (pageNum >= 1 && pageNum <= totalPages) {
+      setPage(pageNum);
+    }
+  }, [totalPages]);
 
   return {
+    doramas,
     page,
-    hasMore,
-    isLoadingMore,
-    loadMoreDoramas,
-    resetPagination
+    totalPages,
+    isLoading,
+    error,
+    nextPage,
+    prevPage,
+    goToPage
   };
 };
+
+export default useDoramaPagination;

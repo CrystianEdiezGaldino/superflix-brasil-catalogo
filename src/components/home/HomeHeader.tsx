@@ -30,7 +30,6 @@ const HomeHeader = ({
       {!searchQuery && featuredMedia && (
         <Banner 
           media={featuredMedia}
-          onButtonClick={onButtonClick}
         />
       )}
     </div>

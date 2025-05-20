@@ -1,28 +1,35 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { MediaItem } from "@/types/movie";
-import { useBaseMedia } from "./useBaseMedia";
-import { 
-  fetchKoreanDramas
-} from "@/services/tmdbApi";
+import { useState, useEffect } from 'react';
+import { MediaItem } from '@/types/movie';
+import { fetchDoramas } from '@/services/tmdbApi';
 
 export const useDoramaData = () => {
-  const { user, hasAccess, isUserAuthenticated } = useBaseMedia();
-  
-  // Fetch Korean dramas
-  const doramasQuery = useQuery({
-    queryKey: ["koreanDramas"],
-    queryFn: () => fetchKoreanDramas(1, 60),
-    enabled: isUserAuthenticated && hasAccess,
-    staleTime: 1000 * 60 * 5 // 5 minutes
-  });
+  const [doramas, setDoramas] = useState<MediaItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const isLoading = doramasQuery.isPending;
-  const hasError = doramasQuery.isError;
+  useEffect(() => {
+    const loadDoramas = async () => {
+      try {
+        setIsLoading(true);
+        const data = await fetchDoramas();
+        setDoramas(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load doramas');
+        console.error('Error loading doramas:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadDoramas();
+  }, []);
 
   return {
-    doramasData: doramasQuery.data || [],
+    doramas,
     isLoading,
-    hasError
+    error
   };
 };
+
+export default useDoramaData;

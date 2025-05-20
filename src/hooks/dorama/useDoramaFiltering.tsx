@@ -1,100 +1,95 @@
 
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { MediaItem } from "@/types/movie";
-import { fetchKoreanDramas } from "@/services/tmdbApi";
+import { useState, useEffect, useCallback } from 'react';
+import { MediaItem } from '@/types/movie';
+import { fetchDoramas } from '@/services/tmdbApi';
 
-interface UseDoramaFilteringProps {
-  applyFilters: (contentList: MediaItem[], yearFilter: string, genreFilter: string) => MediaItem[];
-  setDoramas: React.Dispatch<React.SetStateAction<MediaItem[]>>;
-  resetPagination: () => void;
-  isSearching: boolean;
-  isLoadingInitial: boolean;
-}
+export const useDoramaFiltering = (initialDoramas: MediaItem[] = []) => {
+  const [doramas, setDoramas] = useState<MediaItem[]>(initialDoramas);
+  const [filteredDoramas, setFilteredDoramas] = useState<MediaItem[]>(initialDoramas);
+  const [filterOptions, setFilterOptions] = useState({
+    genre: '',
+    year: '',
+    rating: '',
+    country: ''
+  });
 
-export const useDoramaFiltering = ({ 
-  applyFilters, 
-  setDoramas, 
-  resetPagination,
-  isSearching,
-  isLoadingInitial
-}: UseDoramaFilteringProps) => {
-  const [yearFilter, setYearFilter] = useState<string>("all");
-  const [genreFilter, setGenreFilter] = useState<string>("all");
-  const [isFiltering, setIsFiltering] = useState(false);
-  const [cachedContent, setCachedContent] = useState<MediaItem[]>([]);
-  
-  // Carregar e armazenar em cache o conteúdo inicial
-  useEffect(() => {
-    const loadInitialContent = async () => {
-      try {
-        const initialContent = await fetchKoreanDramas(1, 50);
-        setCachedContent(initialContent);
-      } catch (error) {
-        console.error("Erro ao armazenar conteúdo em cache:", error);
-      }
-    };
-    
-    if (!isLoadingInitial && cachedContent.length === 0) {
-      loadInitialContent();
+  const loadDoramas = useCallback(async () => {
+    try {
+      const doramaData = await fetchDoramas();
+      setDoramas(doramaData);
+      setFilteredDoramas(doramaData);
+    } catch (error) {
+      console.error("Error loading doramas:", error);
     }
-  }, [isLoadingInitial, cachedContent.length]);
-  
-  // Aplicar filtros quando eles mudarem
+  }, []);
+
   useEffect(() => {
-    const filterContentWithCriteria = async () => {
-      if (cachedContent.length === 0) return;
-      
-      setIsFiltering(true);
-      try {
-        // Usar dados em cache para filtrar, o que torna a filtragem mais rápida
-        const filtered = applyFilters(cachedContent, yearFilter, genreFilter);
-        setDoramas(filtered);
-        resetPagination();
+    if (initialDoramas.length === 0) {
+      loadDoramas();
+    }
+  }, [initialDoramas, loadDoramas]);
+
+  const applyFilters = useCallback(() => {
+    let results = [...doramas];
+
+    if (filterOptions.genre) {
+      results = results.filter(dorama => 
+        dorama.genres?.some(genre => genre.name === filterOptions.genre)
+      );
+    }
+
+    if (filterOptions.year) {
+      const year = parseInt(filterOptions.year);
+      results = results.filter(dorama => {
+        const releaseYear = dorama.release_date 
+          ? new Date(dorama.release_date).getFullYear() 
+          : dorama.first_air_date 
+            ? new Date(dorama.first_air_date).getFullYear()
+            : null;
         
-        if (filtered.length === 0) {
-          toast.info("Nenhum conteúdo encontrado com estes filtros.");
-        }
-      } catch (error) {
-        console.error("Erro ao filtrar conteúdo:", error);
-        toast.error("Erro ao aplicar filtros");
-      } finally {
-        setIsFiltering(false);
-      }
-    };
-    
-    // Aplicar filtros apenas se não estivermos em estado de busca e tivermos dados em cache
-    if (!isSearching && !isLoadingInitial && cachedContent.length > 0 && 
-        (yearFilter !== "all" || genreFilter !== "all")) {
-      filterContentWithCriteria();
-    }
-  }, [yearFilter, genreFilter, applyFilters, isSearching, isLoadingInitial, cachedContent, resetPagination, setDoramas]);
-
-  // Resetar todos os filtros
-  const resetFilters = () => {
-    setYearFilter("all");
-    setGenreFilter("all");
-    
-    // Resetar para os conteúdos iniciais sem filtros
-    if (cachedContent.length > 0) {
-      const filtered = applyFilters(cachedContent, "all", "all");
-      setDoramas(filtered);
-      resetPagination();
-    } else {
-      fetchKoreanDramas(1, 50).then(initialContent => {
-        const filtered = applyFilters(initialContent, "all", "all");
-        setDoramas(filtered);
-        resetPagination();
+        return releaseYear === year;
       });
     }
+
+    if (filterOptions.rating) {
+      const minRating = parseFloat(filterOptions.rating);
+      results = results.filter(dorama => dorama.vote_average >= minRating);
+    }
+
+    if (filterOptions.country) {
+      results = results.filter(dorama => 
+        dorama.origin_country?.includes(filterOptions.country)
+      );
+    }
+
+    setFilteredDoramas(results);
+  }, [doramas, filterOptions]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [filterOptions, applyFilters]);
+
+  const updateFilter = (filterType: keyof typeof filterOptions, value: string) => {
+    setFilterOptions(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const resetFilters = () => {
+    setFilterOptions({
+      genre: '',
+      year: '',
+      rating: '',
+      country: ''
+    });
+    setFilteredDoramas(doramas);
   };
 
   return {
-    yearFilter,
-    genreFilter,
-    isFiltering,
-    setYearFilter,
-    setGenreFilter,
+    doramas: filteredDoramas,
+    filterOptions,
+    updateFilter,
     resetFilters
   };
 };
