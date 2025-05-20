@@ -8,7 +8,7 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 
 const Kids = () => {
   const { user, loading } = useAuth();
-  const { isSubscribed, isAdmin, hasTempAccess, hasTrialAccess, trialEnd } = useSubscription();
+  const { isSubscribed, isAdmin, hasTempAccess, hasTrialAccess } = useSubscription();
 
   // Check if user has access
   const hasAccess = isSubscribed || isAdmin || hasTempAccess;

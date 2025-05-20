@@ -78,8 +78,8 @@ export const usePopularContent = (userId: string | undefined) => {
       
       setIsLoadingRecentAnimes(true);
       try {
-        // Fetch 60 items for initial load
-        const animes = await fetchRecentAnime(1, 60);
+        // Fetch recent anime
+        const animes = await fetchRecentAnime();
         setRecentAnimes(animes);
       } catch (error) {
         console.error("Error loading recent animes:", error);

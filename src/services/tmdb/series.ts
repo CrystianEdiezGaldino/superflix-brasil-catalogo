@@ -17,6 +17,20 @@ export const fetchPopularSeries = async (page = 1, itemsPerPage = 20) => {
   }
 };
 
+// Fetch popular American series - New function
+export const fetchPopularAmericanSeries = async (page = 1, itemsPerPage = 20) => {
+  try {
+    // Using the discover endpoint with origin_country=US filter
+    const url = buildApiUrl("/discover/tv", `&page=${page}&with_origin_country=US&sort_by=popularity.desc&language=pt-BR`);
+    const data = await fetchFromApi<{results?: any[]}>(url);
+    const seriesWithType = addMediaTypeToResults(data.results, "tv");
+    return limitResults(seriesWithType, itemsPerPage);
+  } catch (error) {
+    console.error("Error fetching popular American series:", error);
+    return [];
+  }
+};
+
 // Fetch top rated series
 export const fetchTopRatedSeries = async (limit = 12) => {
   try {

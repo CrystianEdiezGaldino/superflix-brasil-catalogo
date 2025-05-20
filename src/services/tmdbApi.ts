@@ -6,10 +6,9 @@ import {
   fetchTopRatedMovies, 
   fetchTrendingMovies,
   fetchRecentMovies,
-  fetchMoviesByGenre,
-  fetchMoviesByKeyword,
   fetchMovieDetails,
-  searchMovies
+  searchMovies,
+  fetchMoviesByGenre
 } from "./tmdb/movies";
 import {
   fetchPopularSeries,
@@ -24,10 +23,28 @@ import {
   fetchTVVideos,
   getBestTVVideoKey
 } from "./tmdb/videos";
-import {
-  fetchRecommendations
-} from "./tmdb/trending";
 import { searchMedia } from "./tmdb/search";
+
+// Create recommendations function
+export const fetchRecommendations = async (type: string, id: string): Promise<MediaItem[]> => {
+  try {
+    // Basic implementation that can be expanded
+    const url = `${type}/${id}/recommendations`;
+    const params = `&language=pt-BR`;
+    const apiUrl = `/api/${url}?${params}`;
+    
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.results || [];
+  } catch (error) {
+    console.error("Error fetching recommendations:", error);
+    return [];
+  }
+};
 
 // Export everything for external use
 export {
@@ -37,7 +54,6 @@ export {
   fetchTrendingMovies,
   fetchRecentMovies,
   fetchMoviesByGenre,
-  fetchMoviesByKeyword,
   fetchMovieDetails,
   searchMovies,
   
@@ -57,8 +73,12 @@ export {
   // Search exports
   searchMedia,
   
-  // Trending/recommendations exports
-  fetchRecommendations
+  // Kids exports
+  fetchKidsAnimes,
+  fetchKidsAnimations,
+  fetchKidsMovies,
+  fetchKidsSeries,
+  fetchTrendingKidsContent
 };
 
 // Create placeholder functions for missing exports that are being imported
@@ -140,4 +160,4 @@ export const fetchKidsContent = async (): Promise<MediaItem[]> => {
     console.error("Error fetching kids content:", error);
     return [];
   }
-}
+};
