@@ -45,11 +45,9 @@ export const QuickLoginValidator = () => {
       if (loginCode.status === 'validated' && loginCode.user_id) {
         console.log("[QuickLoginValidator] Código validado, user_id:", loginCode.user_id);
         
-        // Buscar o usuário que validou o código
+        // Buscar o usuário diretamente pela API do Supabase Auth
         console.log("[QuickLoginValidator] Buscando dados do usuário...");
-        const { data: userData, error: userError } = await supabase.auth
-          .admin
-          .getUserById(loginCode.user_id);
+        const { data: userData, error: userError } = await supabase.auth.getUser(loginCode.user_id);
 
         console.log("[QuickLoginValidator] Dados do usuário:", { userData, userError });
 

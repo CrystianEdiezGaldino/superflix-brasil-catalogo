@@ -96,14 +96,6 @@ const MainSeriesCategories = ({
   isLoading: boolean;
   hasMore: boolean;
 }) => {
-  const handleLoadMoreSeries = () => {
-    onLoadMore("series");
-  };
-  
-  const handleLoadMorePopularSeries = () => {
-    onLoadMore("popularSeries");
-  };
-
   return (
     <>
       {popularSeries.length > 0 && (
@@ -111,7 +103,7 @@ const MainSeriesCategories = ({
           title="Séries Populares" 
           medias={series}
           sectionId="series"
-          onLoadMore={handleLoadMoreSeries}
+          onLoadMore={() => onLoadMore("series")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -123,7 +115,7 @@ const MainSeriesCategories = ({
         title="Séries e Programas de TV" 
         medias={series}
         sectionId="series"
-        onLoadMore={handleLoadMoreSeries}
+        onLoadMore={() => onLoadMore("series")}
         isLoading={isLoading}
         hasMore={hasMore}
         onMediaClick={onMediaClick}
@@ -153,22 +145,6 @@ const StreamingPlatformsSeries = ({
   isLoading: boolean;
   hasMore: boolean;
 }) => {
-  const handleLoadMoreNetflix = () => {
-    onLoadMore("netflixOriginals");
-  };
-  
-  const handleLoadMorePrime = () => {
-    onLoadMore("primeOriginals");
-  };
-  
-  const handleLoadMoreHBO = () => {
-    onLoadMore("hboOriginals");
-  };
-  
-  const handleLoadMoreDisney = () => {
-    onLoadMore("disneyOriginals");
-  };
-
   return (
     <>
       {netflixOriginals.length > 0 && (
@@ -176,7 +152,7 @@ const StreamingPlatformsSeries = ({
           title="Netflix Originals" 
           medias={netflixOriginals}
           sectionId="netflixOriginals"
-          onLoadMore={handleLoadMoreNetflix}
+          onLoadMore={() => onLoadMore("netflixOriginals")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -189,7 +165,7 @@ const StreamingPlatformsSeries = ({
           title="Amazon Prime Originals" 
           medias={primeOriginals}
           sectionId="primeOriginals"
-          onLoadMore={handleLoadMorePrime}
+          onLoadMore={() => onLoadMore("primeOriginals")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -202,7 +178,7 @@ const StreamingPlatformsSeries = ({
           title="HBO Max Originals" 
           medias={hboOriginals}
           sectionId="hboOriginals"
-          onLoadMore={handleLoadMoreHBO}
+          onLoadMore={() => onLoadMore("hboOriginals")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -215,7 +191,7 @@ const StreamingPlatformsSeries = ({
           title="Disney+ Originals" 
           medias={disneyOriginals}
           sectionId="disneyOriginals"
-          onLoadMore={handleLoadMoreDisney}
+          onLoadMore={() => onLoadMore("disneyOriginals")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
@@ -250,30 +226,6 @@ const SpecialSeriesCategories = ({
   isLoading: boolean;
   hasMore: boolean;
 }) => {
-  const handleLoadMoreAwards = () => {
-    onLoadMore("awardWinningSeries");
-  };
-  
-  const handleLoadMoreDocumentary = () => {
-    onLoadMore("documentarySeries");
-  };
-  
-  const handleLoadMoreCrime = () => {
-    onLoadMore("crimeSeries");
-  };
-  
-  const handleLoadMoreMystery = () => {
-    onLoadMore("mysterySeries");
-  };
-  
-  const handleLoadMoreReality = () => {
-    onLoadMore("realitySeries");
-  };
-  
-  const handleLoadMoreTalkShows = () => {
-    onLoadMore("talkShows");
-  };
-
   return (
     <>
       {awardWinningSeries.length > 0 && (
@@ -281,10 +233,11 @@ const SpecialSeriesCategories = ({
           title="Séries Premiadas" 
           medias={awardWinningSeries}
           sectionId="awardWinningSeries"
-          onLoadMore={handleLoadMoreAwards}
+          onLoadMore={() => onLoadMore("awardWinningSeries")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
       
@@ -293,10 +246,11 @@ const SpecialSeriesCategories = ({
           title="Séries Documentais" 
           medias={documentarySeries}
           sectionId="documentarySeries"
-          onLoadMore={handleLoadMoreDocumentary}
+          onLoadMore={() => onLoadMore("documentarySeries")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
       
@@ -305,10 +259,11 @@ const SpecialSeriesCategories = ({
           title="Séries de Crime" 
           medias={crimeSeries}
           sectionId="crimeSeries"
-          onLoadMore={handleLoadMoreCrime}
+          onLoadMore={() => onLoadMore("crimeSeries")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
       
@@ -317,10 +272,11 @@ const SpecialSeriesCategories = ({
           title="Séries de Mistério" 
           medias={mysterySeries}
           sectionId="mysterySeries"
-          onLoadMore={handleLoadMoreMystery}
+          onLoadMore={() => onLoadMore("mysterySeries")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
       
@@ -329,10 +285,11 @@ const SpecialSeriesCategories = ({
           title="Reality Shows" 
           medias={realitySeries}
           sectionId="realitySeries"
-          onLoadMore={handleLoadMoreReality}
+          onLoadMore={() => onLoadMore("realitySeries")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
       
@@ -341,10 +298,11 @@ const SpecialSeriesCategories = ({
           title="Talk Shows" 
           medias={talkShows}
           sectionId="talkShows"
-          onLoadMore={handleLoadMoreTalkShows}
+          onLoadMore={() => onLoadMore("talkShows")}
           isLoading={isLoading}
           hasMore={hasMore}
           onMediaClick={onMediaClick}
+          mediaType="tv"
         />
       )}
     </>

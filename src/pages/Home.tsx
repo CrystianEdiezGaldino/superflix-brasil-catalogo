@@ -1,3 +1,4 @@
+
 import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useContentSections } from "@/hooks/home/useContentSections";
@@ -16,7 +17,7 @@ import SearchResults from "@/components/home/SearchResults";
 import WatchHistory from "@/components/home/WatchHistory";
 import AdminIndicator from "@/components/home/AdminIndicator";
 import TrialNotification from "@/components/home/TrialNotification";
-import { sectionData } from "autoprefixer";
+import { MediaSection } from "@/components/MediaSection";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -88,7 +89,7 @@ const Home = () => {
   }
 
   if (hasError) {
-    return <ErrorState message={hasError} />;
+    return <ErrorState message={hasError.toString()} />;
   }
 
   if (!user) {
@@ -113,7 +114,12 @@ const Home = () => {
       {hasTrialAccess && <TrialNotification />}
       
       <HomeHeader 
-        featuredMedia={featuredMedia} 
+        featuredMedia={featuredMedia}
+        isAdmin={isAdmin}
+        hasAccess={hasAccess}
+        hasTrialAccess={hasTrialAccess}
+        trialEnd={null}
+        searchQuery={searchQuery}
         showFullContent={false}
         onButtonClick={handlePlayFeatured}
       />
@@ -128,8 +134,7 @@ const Home = () => {
         
         {searchQuery && !isSearching && (
           <SearchResults 
-            results={searchResults} 
-            query={searchQuery}
+            results={searchResults}
             onMovieClick={handleMovieClick}
             onSeriesClick={handleSeriesClick}
             onAnimeClick={handleAnimeClick}
@@ -166,9 +171,9 @@ const Home = () => {
               onLoadMoreTrending={() => handleLoadMoreSection('movies')}
               onLoadMoreTopRated={() => handleLoadMoreSection('actionMovies')}
               onLoadMoreRecent={() => handleLoadMoreSection('comedyMovies')}
-              hasMoreTrending={allSectionData.movies?.hasMore || true}
-              hasMoreTopRated={allSectionData.actionMovies?.hasMore || true}
-              hasMoreRecent={allSectionData.comedyMovies?.hasMore || true}
+              hasMoreTrending={allSectionData?.movies?.hasMore || true}
+              hasMoreTopRated={allSectionData?.actionMovies?.hasMore || true}
+              hasMoreRecent={allSectionData?.comedyMovies?.hasMore || true}
               trendingTitle="Em Alta"
               topRatedTitle="Ação e Aventura"
               recentTitle="Comédia"
@@ -188,7 +193,7 @@ const Home = () => {
               onLoadMoreTrending={() => handleLoadMoreSection('series')}
               onLoadMoreTopRated={() => {}}
               onLoadMoreRecent={() => {}}
-              hasMoreTrending={allSectionData.series?.hasMore || true}
+              hasMoreTrending={allSectionData?.series?.hasMore || true}
               hasMoreTopRated={false}
               hasMoreRecent={false}
               trendingTitle="Séries Populares"
@@ -200,9 +205,9 @@ const Home = () => {
             
             <div className="mb-16">
               <AnimeSections 
-                animes={animeData || []}
-                topRatedAnimes={topRatedAnimeData || []}
-                popularAnimes={animeData?.slice(5, 10) || []}
+                anime={animeData || []}
+                topRatedAnime={topRatedAnimeData || []}
+                popularAnime={animeData?.slice(5, 10) || []}
                 recentAnimes={recentAnimes || []}
                 onMediaClick={handleAnimeClick}
                 onLoadMore={handleLoadMoreSection}
