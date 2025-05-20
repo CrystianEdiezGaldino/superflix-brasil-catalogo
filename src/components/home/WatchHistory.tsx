@@ -1,64 +1,91 @@
 
-import React from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { History } from "lucide-react";
-import MediaCard from "../media/MediaCard";
+import { useState, useEffect } from "react";
 import { MediaItem } from "@/types/movie";
+import { Button } from "@/components/ui/button";
+import { History } from "lucide-react"; 
+import { useNavigate } from "react-router-dom";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { toast } from "sonner";
+import MediaCard from "@/components/MediaCard";
 
-interface WatchHistoryProps {
-  history: MediaItem[];
-  title?: string;
-  onViewAll?: () => void;
-  onMediaClick: (media: MediaItem) => void;
-}
+// Mock data for watch history items
+const watchHistoryData: MediaItem[] = [];
 
-const WatchHistory = ({
-  history,
-  title = "Continue Assistindo",
-  onViewAll,
-  onMediaClick
-}: WatchHistoryProps) => {
-  if (!history || history.length === 0) {
-    return null;
-  }
+export default function WatchHistory() {
+  const [watchHistory, setWatchHistory] = useState<MediaItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { isAdmin } = useSubscription();
 
-  const handleMediaClick = (item: MediaItem) => {
-    if (onMediaClick) {
-      onMediaClick(item);
+  useEffect(() => {
+    // Simulate fetching watch history
+    setTimeout(() => {
+      setWatchHistory(watchHistoryData);
+      setLoading(false);
+    }, 1000);
+  }, []);
+
+  const handleMediaClick = (media: MediaItem) => {
+    if (!media.id) {
+      toast.error("Não foi possível reproduzir este conteúdo");
+      return;
+    }
+
+    const mediaId = media.id.toString();
+    
+    if (media.media_type === 'movie') {
+      navigate(`/filme/${mediaId}`);
+    } else if (media.media_type === 'tv') {
+      navigate(`/serie/${mediaId}`);
+    } else if (media.media_type === 'anime') {
+      navigate(`/anime/${mediaId}`);
     }
   };
 
-  return (
-    <Card className="bg-black/60 border-netflix-red/20 backdrop-blur-sm p-6 mb-8">
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center">
-          <History className="h-5 w-5 text-netflix-red mr-2" />
-          <h2 className="text-xl font-bold text-white">{title}</h2>
-        </div>
-        {onViewAll && (
-          <Button 
-            variant="link" 
-            onClick={onViewAll}
-            className="text-netflix-red hover:text-red-400"
-          >
-            Ver tudo
+  if (loading) {
+    return (
+      <div className="pt-8 pb-4">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-white">Continue Assistindo</h2>
+          <Button variant="ghost" className="text-gray-400 hover:text-white">
+            <History className="mr-2 h-4 w-4" />
+            Ver Histórico
           </Button>
-        )}
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-gray-800 rounded-lg aspect-video h-32" />
+          ))}
+        </div>
       </div>
-      
+    );
+  }
+
+  if (watchHistory.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="pt-8 pb-4">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl md:text-2xl font-bold text-white">Continue Assistindo</h2>
+        <Button variant="ghost" className="text-gray-400 hover:text-white">
+          <History className="mr-2 h-4 w-4" />
+          Ver Histórico
+        </Button>
+      </div>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-        {history.slice(0, 6).map((item, index) => (
-          <div key={`history-${item.id}-${index}`}>
-            <MediaCard 
-              media={item}
-              onClick={() => handleMediaClick(item)}
-            />
-          </div>
+        {watchHistory.map((media) => (
+          <MediaCard 
+            key={`${media.id}-${media.media_type}`}
+            media={media}
+            onClick={() => handleMediaClick(media)}
+            index={0}
+            isFocused={false}
+            onFocus={() => {}}
+          />
         ))}
       </div>
-    </Card>
+    </div>
   );
-};
-
-export default WatchHistory;
+}

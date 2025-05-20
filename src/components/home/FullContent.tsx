@@ -1,172 +1,132 @@
 
 import { MediaItem } from "@/types/movie";
-import RecommendationsSection from "./sections/RecommendationsSection";
-import MoviesSections from "./sections/MoviesSections";
-import SeriesSections from "./sections/SeriesSections";
-import AnimeSections from "./sections/AnimeSections";
-import DoramaSections from "./sections/DoramaSections";
+import { useNavigate } from "react-router-dom";
+import MoviesSections from "@/components/home/sections/MoviesSections";
+import SeriesSections from "@/components/home/sections/SeriesSections";
+import AnimeSections from "@/components/home/sections/AnimeSections";
+import DoramaSections from "@/components/home/sections/DoramaSections";
+import RecommendationsSection from "@/components/home/sections/RecommendationsSection";
 
 interface FullContentProps {
-  movies: MediaItem[];
-  series: MediaItem[];
-  anime: MediaItem[];
-  topRatedAnime: MediaItem[];
   recommendations: MediaItem[];
-  doramas: MediaItem[];
-  actionMovies: MediaItem[];
-  comedyMovies: MediaItem[];
-  adventureMovies: MediaItem[];
-  sciFiMovies: MediaItem[];
-  marvelMovies: MediaItem[];
-  dcMovies: MediaItem[];
-  popularSeries?: MediaItem[];
-  recentAnimes?: MediaItem[];
-  netflixOriginals?: MediaItem[];
-  primeOriginals?: MediaItem[];
-  hboOriginals?: MediaItem[];
-  disneyOriginals?: MediaItem[];
-  netflixDoramas?: MediaItem[];
-  trendingAnime?: MediaItem[];
-  koreanDramas?: MediaItem[];
-  japaneseDramas?: MediaItem[];
-  chineseDramas?: MediaItem[];
-  popularMovies?: MediaItem[];
-  trendingMovies?: MediaItem[];
-  awardWinningMovies?: MediaItem[];
-  awardWinningSeries?: MediaItem[];
-  documentaryMovies?: MediaItem[];
-  documentarySeries?: MediaItem[];
-  horrorMovies?: MediaItem[];
-  romanceMovies?: MediaItem[];
-  dramaMovies?: MediaItem[];
-  thrillerMovies?: MediaItem[];
-  familyMovies?: MediaItem[];
-  animationMovies?: MediaItem[];
-  crimeSeries?: MediaItem[];
-  mysterySeries?: MediaItem[];
-  realitySeries?: MediaItem[];
-  talkShows?: MediaItem[];
-  onLoadMore: (sectionId: string) => void;
-  onMediaClick?: (media: MediaItem) => void;
+  moviesData: MediaItem[];
+  actionMoviesData: MediaItem[];
+  comedyMoviesData: MediaItem[];
+  adventureMoviesData: MediaItem[];
+  sciFiMoviesData: MediaItem[];
+  marvelMoviesData: MediaItem[];
+  dcMoviesData: MediaItem[];
+  seriesData: MediaItem[];
+  popularSeriesData: MediaItem[];
+  animeData: MediaItem[];
+  topRatedAnimeData: MediaItem[];
+  recentAnimesData: MediaItem[];
+  doramasData: MediaItem[];
+  topRatedDoramasData?: MediaItem[];
+  popularDoramasData?: MediaItem[];
+  koreanMoviesData?: MediaItem[];
   isLoading: boolean;
-  hasMore: boolean;
 }
 
-const FullContent = ({
-  movies,
-  series,
-  anime,
-  topRatedAnime,
+export const FullContent = ({
   recommendations,
-  doramas,
-  actionMovies,
-  comedyMovies,
-  adventureMovies,
-  sciFiMovies,
-  marvelMovies,
-  dcMovies,
-  popularSeries,
-  recentAnimes,
-  netflixOriginals,
-  primeOriginals,
-  hboOriginals,
-  disneyOriginals,
-  netflixDoramas,
-  trendingAnime,
-  koreanDramas,
-  japaneseDramas,
-  chineseDramas,
-  popularMovies,
-  trendingMovies,
-  awardWinningMovies,
-  awardWinningSeries,
-  documentaryMovies,
-  documentarySeries,
-  horrorMovies,
-  romanceMovies,
-  dramaMovies,
-  thrillerMovies,
-  familyMovies,
-  animationMovies,
-  crimeSeries,
-  mysterySeries,
-  realitySeries,
-  talkShows,
-  onLoadMore,
-  onMediaClick,
+  moviesData,
+  actionMoviesData,
+  comedyMoviesData,
+  adventureMoviesData,
+  sciFiMoviesData,
+  marvelMoviesData,
+  dcMoviesData,
+  seriesData,
+  popularSeriesData,
+  animeData,
+  topRatedAnimeData,
+  recentAnimesData,
+  doramasData,
+  topRatedDoramasData = [],
+  popularDoramasData = [],
+  koreanMoviesData = [],
   isLoading,
-  hasMore
 }: FullContentProps) => {
+  const navigate = useNavigate();
+
+  const handleMediaClick = (media: MediaItem) => {
+    if (!media || !media.id) return;
+    
+    const mediaId = media.id.toString();
+    
+    switch (media.media_type) {
+      case 'movie':
+        navigate(`/filme/${mediaId}`);
+        break;
+      case 'tv':
+        navigate(`/serie/${mediaId}`);
+        break;
+      case 'anime':
+        navigate(`/anime/${mediaId}`);
+        break;
+      default:
+        console.warn(`Unknown media type: ${media.media_type}`);
+    }
+  };
+
+  const handleLoadMore = (sectionId: string) => {
+    console.log(`Load more for section: ${sectionId}`);
+    // Implementation for loading more content
+  };
+
   return (
-    <div className="space-y-8">
-      <RecommendationsSection
-        recommendations={recommendations}
-        isLoading={isLoading}
-      />
-
+    <div className="space-y-12 pb-16">
+      {recommendations.length > 0 && (
+        <RecommendationsSection
+          recommendations={recommendations}
+          isLoading={isLoading}
+          onMediaClick={handleMediaClick}
+        />
+      )}
+      
       <MoviesSections
-        movies={movies}
-        actionMovies={actionMovies}
-        comedyMovies={comedyMovies}
-        adventureMovies={adventureMovies}
-        sciFiMovies={sciFiMovies}
-        marvelMovies={marvelMovies}
-        dcMovies={dcMovies}
-        popularMovies={popularMovies}
-        trendingMovies={trendingMovies}
-        awardWinningMovies={awardWinningMovies}
-        documentaryMovies={documentaryMovies}
-        horrorMovies={horrorMovies}
-        romanceMovies={romanceMovies}
-        dramaMovies={dramaMovies}
-        thrillerMovies={thrillerMovies}
-        familyMovies={familyMovies}
-        animationMovies={animationMovies}
+        movies={moviesData}
+        actionMovies={actionMoviesData}
+        comedyMovies={comedyMoviesData}
+        adventureMovies={adventureMoviesData}
+        sciFiMovies={sciFiMoviesData}
+        marvelMovies={marvelMoviesData}
+        dcMovies={dcMoviesData}
         isLoading={isLoading}
-        hasMore={hasMore}
-        onLoadMore={onLoadMore}
-        onMediaClick={onMediaClick}
+        hasMore={false}
+        onLoadMore={handleLoadMore}
+        onMediaClick={handleMediaClick}
       />
-
+      
       <SeriesSections
-        series={series}
-        popularSeries={popularSeries}
-        awardWinningSeries={awardWinningSeries}
-        documentarySeries={documentarySeries}
-        crimeSeries={crimeSeries}
-        mysterySeries={mysterySeries}
-        realitySeries={realitySeries}
-        talkShows={talkShows}
-        netflixOriginals={netflixOriginals}
-        primeOriginals={primeOriginals}
-        hboOriginals={hboOriginals}
-        disneyOriginals={disneyOriginals}
+        series={seriesData}
+        popularSeries={popularSeriesData}
         isLoading={isLoading}
-        hasMore={hasMore}
-        onLoadMore={onLoadMore}
-        onMediaClick={onMediaClick}
+        hasMore={false}
+        onLoadMore={handleLoadMore}
+        onMediaClick={handleMediaClick}
       />
-
+      
       <AnimeSections
-        anime={anime}
-        topRatedAnime={topRatedAnime}
-        recentAnimes={recentAnimes}
-        trendingAnime={trendingAnime}
+        anime={animeData}
+        topRatedAnime={topRatedAnimeData}
+        recentAnimes={recentAnimesData}
         isLoading={isLoading}
-        hasMore={hasMore}
-        onLoadMore={onLoadMore}
-        onMediaClick={onMediaClick}
+        hasMore={false}
+        onLoadMore={handleLoadMore}
+        onMediaClick={handleMediaClick}
       />
-
+      
       <DoramaSections
-        doramas={doramas}
-        topRatedDoramas={koreanDramas || []}
-        popularDoramas={japaneseDramas || []}
-        koreanMovies={chineseDramas || []}
-        onMediaClick={onMediaClick}
-        onLoadMore={onLoadMore}
+        doramas={doramasData}
+        topRatedDoramas={topRatedDoramasData}
+        popularDoramas={popularDoramasData}
+        koreanMovies={koreanMoviesData}
         isLoading={isLoading}
-        hasMore={hasMore}
+        hasMore={false}
+        onLoadMore={handleLoadMore}
+        onMediaClick={handleMediaClick}
       />
     </div>
   );

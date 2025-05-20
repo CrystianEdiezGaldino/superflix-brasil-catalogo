@@ -17,14 +17,22 @@ import {
   fetchTrendingSeries,
   fetchRecentSeries,
   fetchSeriesDetails,
-  fetchSeriesSeasonDetails,
-  fetchPopularAmericanSeries
+  fetchSeriesSeasonDetails
 } from "./tmdb/series";
 import {
   fetchTVVideos,
   getBestTVVideoKey
 } from "./tmdb/videos";
 import { searchMedia } from "./tmdb/search";
+import {
+  fetchKoreanDramas,
+  fetchPopularKoreanDramas,
+  fetchTopRatedKoreanDramas,
+  fetchKoreanMovies,
+  fetchDoramaDetails,
+  fetchSimilarDoramas,
+  fetchDoramaCast
+} from "./tmdb/doramas";
 
 // Create recommendations function
 export const fetchRecommendations = async (type: string, id: string): Promise<MediaItem[]> => {
@@ -43,6 +51,42 @@ export const fetchRecommendations = async (type: string, id: string): Promise<Me
     return data.results || [];
   } catch (error) {
     console.error("Error fetching recommendations:", error);
+    return [];
+  }
+};
+
+// Main fetchDoramas function that will be used throughout the app
+export const fetchDoramas = async (page = 1, limit = 20): Promise<MediaItem[]> => {
+  try {
+    return await fetchKoreanDramas(page, limit);
+  } catch (error) {
+    console.error("Error in fetchDoramas:", error);
+    return [];
+  }
+};
+
+// Search doramas by name
+export const searchDoramas = async (query: string): Promise<MediaItem[]> => {
+  try {
+    const url = `/api/search/tv?query=${encodeURIComponent(query)}&language=pt-BR&include_adult=false&with_original_language=ko`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const results = data.results || [];
+    
+    // Filter to only Korean shows
+    const koreanResults = results.filter((item: any) => item.original_language === 'ko');
+    
+    // Add media_type property
+    return koreanResults.map((item: any) => ({
+      ...item,
+      media_type: "tv"
+    }));
+  } catch (error) {
+    console.error("Error searching doramas:", error);
     return [];
   }
 };
@@ -66,7 +110,6 @@ export {
   fetchRecentSeries,
   fetchSeriesDetails,
   fetchSeriesSeasonDetails,
-  fetchPopularAmericanSeries,
   
   // Video exports
   fetchTVVideos,
@@ -80,63 +123,40 @@ export {
   fetchKidsAnimations,
   fetchKidsMovies,
   fetchKidsSeries,
-  fetchTrendingKidsContent
-};
-
-// Create placeholder functions for missing exports that are being imported
-// These will prevent build errors while we implement the actual functionality later
-
-// Anime placeholder exports
-export const fetchAnime = async (): Promise<MediaItem[]> => {
-  console.warn("fetchAnime not fully implemented");
-  return [];
-};
-
-export const fetchTopRatedAnime = async (): Promise<MediaItem[]> => {
-  console.warn("fetchTopRatedAnime not fully implemented");
-  return [];
-};
-
-export const fetchRecentAnime = async (): Promise<MediaItem[]> => {
-  console.warn("fetchRecentAnime not fully implemented");
-  return [];
-};
-
-// Dorama placeholder exports
-export const fetchKoreanDramas = async (): Promise<MediaItem[]> => {
-  console.warn("fetchKoreanDramas not fully implemented");
-  return [];
-};
-
-export const fetchPopularKoreanDramas = async (): Promise<MediaItem[]> => {
-  console.warn("fetchPopularKoreanDramas not fully implemented");
-  return [];
-};
-
-export const fetchTopRatedKoreanDramas = async (): Promise<MediaItem[]> => {
-  console.warn("fetchTopRatedKoreanDramas not fully implemented");
-  return [];
-};
-
-export const fetchKoreanMovies = async (): Promise<MediaItem[]> => {
-  console.warn("fetchKoreanMovies not fully implemented");
-  return [];
-};
-
-export const fetchDoramaDetails = async (id: string): Promise<any> => {
-  console.warn("fetchDoramaDetails not fully implemented");
-  return {};
-};
-
-export const fetchSimilarDoramas = async (id: string): Promise<MediaItem[]> => {
-  console.warn("fetchSimilarDoramas not fully implemented");
-  return [];
+  fetchTrendingKidsContent,
+  
+  // Dorama exports
+  fetchKoreanDramas,
+  fetchPopularKoreanDramas,
+  fetchTopRatedKoreanDramas,
+  fetchKoreanMovies,
+  fetchDoramaDetails,
+  fetchSimilarDoramas,
+  fetchDoramaCast
 };
 
 // Utility function for components needing to fetch media by ID
 export const fetchMediaById = async (id: string, type: string): Promise<MediaItem | null> => {
-  console.warn("fetchMediaById not fully implemented");
-  return null;
+  if (!id || !type) return null;
+  
+  try {
+    const endpoint = type === 'movie' ? `/movie/${id}` : `/tv/${id}`;
+    const url = `/api${endpoint}?language=pt-BR&append_to_response=videos,credits`;
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return {
+      ...data,
+      media_type: type
+    };
+  } catch (error) {
+    console.error(`Error fetching media details for ID ${id}:`, error);
+    return null;
+  }
 };
 
 // Original function for kids content

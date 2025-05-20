@@ -1,78 +1,76 @@
 
-import React from "react";
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
-import { Button } from "@/components/ui/button";
 
 interface AnimeSectionsProps {
   anime: MediaItem[];
   topRatedAnime: MediaItem[];
   recentAnimes: MediaItem[];
-  popularAnime?: MediaItem[];
-  onMediaClick: (anime: MediaItem) => void;
-  onLoadMore?: (sectionId: string) => void;
-  isLoading?: boolean;
-  hasMore?: boolean;
+  isLoading: boolean;
+  hasMore: boolean;
+  onLoadMore: (sectionId: string) => void;
+  onMediaClick: (media: MediaItem) => void;
 }
 
-const AnimeSections: React.FC<AnimeSectionsProps> = ({
+const AnimeSections = ({
   anime,
   topRatedAnime,
   recentAnimes,
-  popularAnime = [],
-  onMediaClick,
+  isLoading,
+  hasMore,
   onLoadMore,
-  isLoading = false,
-  hasMore = false
-}) => {
+  onMediaClick,
+}: AnimeSectionsProps) => {
+  if (!anime.length && 
+      !topRatedAnime.length && 
+      !recentAnimes.length) {
+    return null;
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 mb-16">
+      <h2 className="text-2xl md:text-3xl font-bold text-white">Animes</h2>
+
       {anime.length > 0 && (
-        <MediaSection 
-          title="Animes"
+        <MediaSection
+          title="Animes em Alta"
           medias={anime}
+          showLoadMore={hasMore}
+          onLoadMore={() => onLoadMore('anime')}
+          isLoading={isLoading}
           onMediaClick={onMediaClick}
+          sectionId="anime"
+          mediaType="anime"
+          sectionIndex={0}
         />
       )}
-      
+
       {topRatedAnime.length > 0 && (
         <MediaSection
           title="Animes Mais Bem Avaliados"
           medias={topRatedAnime}
+          showLoadMore={hasMore}
+          onLoadMore={() => onLoadMore('topRatedAnime')}
+          isLoading={isLoading}
           onMediaClick={onMediaClick}
+          sectionId="topRatedAnime" 
+          mediaType="anime"
+          sectionIndex={1}
         />
       )}
-      
+
       {recentAnimes.length > 0 && (
         <MediaSection
           title="Animes Recentes"
           medias={recentAnimes}
+          showLoadMore={hasMore}
+          onLoadMore={() => onLoadMore('recentAnimes')}
+          isLoading={isLoading}
           onMediaClick={onMediaClick}
+          sectionId="recentAnimes"
+          mediaType="anime"
+          sectionIndex={2}
         />
-      )}
-      
-      {popularAnime && popularAnime.length > 0 && (
-        <MediaSection
-          title="Animes Populares"
-          medias={popularAnime}
-          onMediaClick={onMediaClick}
-        />
-      )}
-      
-      {hasMore && onLoadMore && (
-        <div className="flex justify-center pt-4 pb-8">
-          <Button
-            onClick={() => onLoadMore('anime')}
-            disabled={isLoading}
-            variant="outline"
-            className="border-netflix-red text-netflix-red hover:bg-netflix-red hover:text-white"
-          >
-            {isLoading ? (
-              <div className="w-4 h-4 border-2 border-t-transparent border-current rounded-full animate-spin mr-2"></div>
-            ) : null}
-            Carregar Mais Animes
-          </Button>
-        </div>
       )}
     </div>
   );

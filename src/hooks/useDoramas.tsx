@@ -1,4 +1,6 @@
 
+import { useState } from "react";
+import { MediaItem } from "@/types/movie";
 import { useDoramaFilters } from "./dorama/useDoramaFilters";
 import { useDoramaLoader } from "./dorama/useDoramaLoader";
 import { useDoramaPagination } from "./dorama/useDoramaPagination";
@@ -6,55 +8,59 @@ import { useDoramaSearch } from "./dorama/useDoramaSearch";
 import { useDoramaFiltering } from "./dorama/useDoramaFiltering";
 
 export const useDoramas = () => {
-  // Get dorama filters
-  const { filterDoramas, applyFilters } = useDoramaFilters();
+  const [allDoramas, setAllDoramas] = useState<MediaItem[]>([]);
   
-  // Load initial, popular, top rated doramas and Korean movies
+  // Get dorama filters
+  const { filterDoramas } = useDoramaFilters();
+  
+  // Load initial doramas
   const { 
     doramas, 
-    setDoramas, 
-    topRatedDoramas, 
+    setDoramas,
     popularDoramas, 
+    topRatedDoramas,
     koreanMovies,
     isLoadingInitial, 
     isLoadingPopular, 
     isLoadingTopRated, 
-    isLoadingMovies
-  } = useDoramaLoader({ filterDoramas });
+    isLoadingMovies,
+    hasMore,
+    reloadDoramas
+  } = useDoramaLoader();
   
   // Setup pagination
   const { 
     page, 
-    hasMore, 
     isLoadingMore,
     loadMoreDoramas, 
     resetPagination 
-  } = useDoramaPagination({ filterDoramas, setDoramas });
+  } = useDoramaPagination({ 
+    filterDoramas,
+    setDoramas: setAllDoramas
+  });
   
   // Setup search
   const { 
     searchQuery, 
     isSearching, 
     handleSearch 
-  } = useDoramaSearch({ filterDoramas, setDoramas, resetPagination });
+  } = useDoramaSearch({ 
+    filterDoramas,
+    setDoramas: setAllDoramas,
+    resetPagination
+  });
   
   // Setup filtering
   const { 
     yearFilter, 
-    genreFilter, 
-    isFiltering, 
+    genreFilter,
+    isFiltering,
     setYearFilter, 
     setGenreFilter, 
     resetFilters 
-  } = useDoramaFiltering({ 
-    applyFilters, 
-    setDoramas, 
-    resetPagination, 
-    isSearching, 
-    isLoadingInitial 
-  });
+  } = useDoramaFiltering();
   
-  // Helper function for loading more doramas (to encapsulate parameters)
+  // Helper function for loading more doramas
   const handleLoadMoreDoramas = () => {
     loadMoreDoramas(isSearching, isFiltering);
   };
@@ -83,3 +89,5 @@ export const useDoramas = () => {
     resetFilters
   };
 };
+
+export default useDoramas;
