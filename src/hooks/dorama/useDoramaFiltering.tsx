@@ -1,167 +1,117 @@
 
-import { useState, useMemo } from "react";
-import { MediaItem, isSeries } from "@/types/movie";
+import { useState, useCallback, useEffect } from "react";
+import { MediaItem, Series } from "@/types/movie";
 
-export interface DoramaFilters {
-  year: string;
-  genre: string;
-  country: string;
-  sort: string;
-  yearRange: number[];
+interface DoramaFiltering {
+  filteredDoramas: MediaItem[];
+  yearFilter: string;
+  ratingFilter: string;
+  countryFilter: string;
+  isFiltering: boolean;
+  setYearFilter: (year: string) => void;
+  setRatingFilter: (rating: string) => void;
+  setCountryFilter: (country: string) => void;
+  resetFilters: () => void;
 }
 
-const defaultFilters: DoramaFilters = {
-  year: "all",
-  genre: "all",
-  country: "all",
-  sort: "popularity",
-  yearRange: [1990, new Date().getFullYear()]
-};
+export const useDoramaFiltering = (doramas: MediaItem[]): DoramaFiltering => {
+  const [yearFilter, setYearFilter] = useState("");
+  const [ratingFilter, setRatingFilter] = useState("");
+  const [countryFilter, setCountryFilter] = useState("");
+  const [filteredDoramas, setFilteredDoramas] = useState<MediaItem[]>(doramas || []);
+  const [isFiltering, setIsFiltering] = useState(false);
 
-export const useDoramaFiltering = (doramas: MediaItem[]) => {
-  const [filters, setFilters] = useState<DoramaFilters>(defaultFilters);
-  
-  const updateFilters = (newFilters: Partial<DoramaFilters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters }));
-  };
-  
-  const resetFilters = () => {
-    setFilters(defaultFilters);
-  };
+  // Reset filters
+  const resetFilters = useCallback(() => {
+    setYearFilter("");
+    setRatingFilter("");
+    setCountryFilter("");
+    setIsFiltering(false);
+  }, []);
 
-  // Extract available genres from doramas
-  const availableGenres = useMemo(() => {
-    const genresSet = new Set<string>();
+  // Apply filters
+  useEffect(() => {
+    // If no doramas or no filters, reset to original doramas
+    if (!doramas.length || (!yearFilter && !ratingFilter && !countryFilter)) {
+      setFilteredDoramas(doramas);
+      setIsFiltering(false);
+      return;
+    }
+
+    setIsFiltering(true);
+
+    const filtered = doramas.filter((dorama) => {
+      // Ensure dorama has the necessary properties
+      if (!dorama) return false;
+
+      // Year filter
+      if (yearFilter && dorama.first_air_date) {
+        const year = dorama.first_air_date.split("-")[0];
+        if (year !== yearFilter) return false;
+      }
+
+      // Rating filter
+      if (ratingFilter && typeof dorama.vote_average === 'number') {
+        const rating = parseFloat(ratingFilter);
+        if (dorama.vote_average < rating) return false;
+      }
+
+      // Country filter
+      if (countryFilter && (dorama as any).origin_country) {
+        if (!((dorama as any).origin_country as string[]).includes(countryFilter)) return false;
+      }
+
+      return true;
+    });
+
+    setFilteredDoramas(filtered);
+  }, [doramas, yearFilter, ratingFilter, countryFilter]);
+
+  // Extract available filter values from doramas
+  const getAvailableYears = useCallback((): string[] => {
+    if (!doramas.length) return [];
+
+    const years = new Set<string>();
     
-    doramas.forEach(dorama => {
-      (dorama.genres || dorama.genre_ids || []).forEach((genre: any) => {
-        if (typeof genre === 'object' && genre.name) {
-          genresSet.add(genre.name);
-        }
-      });
+    doramas.forEach((dorama) => {
+      if (dorama.first_air_date) {
+        const year = dorama.first_air_date.split("-")[0];
+        years.add(year);
+      }
     });
     
-    return Array.from(genresSet).sort();
+    return Array.from(years).sort((a, b) => b.localeCompare(a)); // Sort descending
   }, [doramas]);
 
-  // Extract available countries from doramas
-  const availableCountries = useMemo(() => {
-    const countriesSet = new Set<string>();
+  const getAvailableRatings = useCallback((): string[] => {
+    return ["9", "8", "7", "6", "5", "4", "3", "2", "1"];
+  }, []);
+
+  const getAvailableCountries = useCallback((): string[] => {
+    if (!doramas.length) return [];
+
+    const countries = new Set<string>();
     
-    doramas.forEach(dorama => {
-      if (isSeries(dorama) && dorama.origin_country) {
-        dorama.origin_country.forEach(country => {
-          countriesSet.add(country);
+    doramas.forEach((dorama) => {
+      if ((dorama as any).origin_country && Array.isArray((dorama as any).origin_country)) {
+        (dorama as any).origin_country.forEach((country: string) => {
+          if (country) countries.add(country);
         });
       }
     });
     
-    return Array.from(countriesSet).sort();
+    return Array.from(countries).sort();
   }, [doramas]);
-
-  // Extract available years from doramas
-  const availableYears = useMemo(() => {
-    const yearsSet = new Set<number>();
-    
-    doramas.forEach(dorama => {
-      const releaseDate = isSeries(dorama) ? dorama.first_air_date : dorama.release_date;
-      if (releaseDate) {
-        const year = new Date(releaseDate).getFullYear();
-        if (!isNaN(year)) {
-          yearsSet.add(year);
-        }
-      }
-    });
-    
-    return Array.from(yearsSet).sort((a, b) => b - a); // Descending order
-  }, [doramas]);
-
-  // Filter doramas based on current filters
-  const filteredDoramas = useMemo(() => {
-    return doramas.filter(dorama => {
-      // Filter by year
-      const releaseDate = isSeries(dorama) ? dorama.first_air_date : dorama.release_date;
-      
-      if (filters.year !== "all" && releaseDate) {
-        const year = new Date(releaseDate).getFullYear();
-        if (year.toString() !== filters.year) {
-          return false;
-        }
-      }
-      
-      // Filter by year range
-      if (releaseDate) {
-        const year = new Date(releaseDate).getFullYear();
-        if (year < filters.yearRange[0] || year > filters.yearRange[1]) {
-          return false;
-        }
-      }
-      
-      // Filter by genre
-      if (filters.genre !== "all") {
-        const doramaGenres = dorama.genres || [];
-        const hasGenre = doramaGenres.some((genre: any) => 
-          genre.name === filters.genre
-        );
-        
-        if (!hasGenre) {
-          return false;
-        }
-      }
-      
-      // Filter by country
-      if (filters.country !== "all" && isSeries(dorama)) {
-        if (!dorama.origin_country?.includes(filters.country)) {
-          return false;
-        }
-      }
-      
-      return true;
-    }).sort((a, b) => {
-      // Sort by selected sort option
-      if (filters.sort === "popularity") {
-        return b.popularity - a.popularity;
-      } else if (filters.sort === "rating") {
-        return b.vote_average - a.vote_average;
-      } else if (filters.sort === "recent") {
-        const dateA = isSeries(a) ? a.first_air_date : a.release_date;
-        const dateB = isSeries(b) ? b.first_air_date : b.release_date;
-        
-        if (!dateA) return 1;
-        if (!dateB) return -1;
-        
-        return new Date(dateB).getTime() - new Date(dateA).getTime();
-      } else if (filters.sort === "oldest") {
-        const dateA = isSeries(a) ? a.first_air_date : a.release_date;
-        const dateB = isSeries(b) ? b.first_air_date : b.release_date;
-        
-        if (!dateA) return 1;
-        if (!dateB) return -1;
-        
-        return new Date(dateA).getTime() - new Date(dateB).getTime();
-      }
-      
-      return 0;
-    });
-  }, [doramas, filters]);
-
-  const isFiltering = useMemo(() => {
-    return filters.year !== "all" || 
-           filters.genre !== "all" || 
-           filters.country !== "all" ||
-           filters.sort !== "popularity" ||
-           filters.yearRange[0] !== defaultFilters.yearRange[0] ||
-           filters.yearRange[1] !== defaultFilters.yearRange[1];
-  }, [filters]);
 
   return {
-    filters,
     filteredDoramas,
+    yearFilter,
+    ratingFilter,
+    countryFilter,
     isFiltering,
-    availableGenres,
-    availableCountries,
-    availableYears,
-    updateFilters,
+    setYearFilter,
+    setRatingFilter,
+    setCountryFilter,
     resetFilters
   };
 };
