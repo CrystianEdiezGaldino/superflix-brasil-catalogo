@@ -1,3 +1,4 @@
+
 import { MediaItem } from "@/types/movie";
 import { fetchKidsAnimes, fetchKidsAnimations, fetchKidsMovies, fetchKidsSeries, fetchTrendingKidsContent } from "./tmdb/kids";
 import { 
@@ -7,8 +8,7 @@ import {
   fetchRecentMovies,
   fetchMovieDetails,
   searchMovies,
-  fetchMoviesByGenre,
-  fetchMoviesByKeyword
+  fetchMoviesByGenre
 } from "./tmdb/movies";
 import {
   fetchPopularSeries,
@@ -16,8 +16,7 @@ import {
   fetchTrendingSeries,
   fetchRecentSeries,
   fetchSeriesDetails,
-  fetchSeriesSeasonDetails,
-  fetchPopularAmericanSeries
+  fetchSeriesSeasonDetails
 } from "./tmdb/series";
 import {
   fetchTVVideos,
@@ -33,15 +32,25 @@ import {
   fetchSimilarDoramas,
   fetchDoramaCast
 } from "./tmdb/doramas";
-import {
-  fetchAnime,
-  fetchTopRatedAnime,
-  fetchRecentAnime,
-  fetchTrendingAnime,
-  fetchSeasonalAnime,
-  fetchAnimeSections,
-  fetchAnimeBatch
-} from "./tmdb/anime";
+
+// Implementação da função fetchMoviesByKeyword que estava faltando
+export const fetchMoviesByKeyword = async (keywordId: number): Promise<MediaItem[]> => {
+  try {
+    const url = `/api/discover/movie?with_keywords=${keywordId}&language=pt-BR`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.results.map((item: any) => ({
+      ...item,
+      media_type: "movie"
+    }));
+  } catch (error) {
+    console.error(`Error fetching movies for keyword ${keywordId}:`, error);
+    return [];
+  }
+};
 
 // Create recommendations function
 export const fetchRecommendations = async (type: string, id: string): Promise<MediaItem[]> => {
@@ -64,7 +73,7 @@ export const fetchRecommendations = async (type: string, id: string): Promise<Me
   }
 };
 
-// Main fetchDoramas function that will be used throughout the app
+// Adicionar a implementação de fetchDoramas
 export const fetchDoramas = async (page = 1, limit = 20): Promise<MediaItem[]> => {
   try {
     return await fetchKoreanDramas(page, limit);
@@ -108,7 +117,6 @@ export {
   fetchTrendingMovies,
   fetchRecentMovies,
   fetchMoviesByGenre,
-  fetchMoviesByKeyword,
   fetchMovieDetails,
   searchMovies,
   
@@ -119,7 +127,6 @@ export {
   fetchRecentSeries,
   fetchSeriesDetails,
   fetchSeriesSeasonDetails,
-  fetchPopularAmericanSeries,
   
   // Video exports
   fetchTVVideos,
@@ -142,16 +149,7 @@ export {
   fetchKoreanMovies,
   fetchDoramaDetails,
   fetchSimilarDoramas,
-  fetchDoramaCast,
-
-  // Anime exports
-  fetchAnime,
-  fetchTopRatedAnime,
-  fetchRecentAnime,
-  fetchTrendingAnime,
-  fetchSeasonalAnime,
-  fetchAnimeSections,
-  fetchAnimeBatch
+  fetchDoramaCast
 };
 
 // Utility function for components needing to fetch media by ID

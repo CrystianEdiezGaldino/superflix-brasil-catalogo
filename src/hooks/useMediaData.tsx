@@ -36,10 +36,11 @@ export const useMediaData = () => {
     hasError: animeError 
   } = useAnimeData();
   
+  // Ajustado para usar o tipo de retorno correto
   const { 
-    doramasData, 
+    doramas, 
     isLoading: doramasLoading, 
-    hasError: doramasError 
+    error: doramasError 
   } = useDoramaData();
 
   // Combined loading and error states
@@ -54,7 +55,7 @@ export const useMediaData = () => {
     moviesError || 
     seriesError || 
     animeError ||
-    doramasError;
+    !!doramasError;
 
   // Return all data in a structured format
   return {
@@ -62,7 +63,7 @@ export const useMediaData = () => {
     seriesData,
     animeData,
     topRatedAnimeData,
-    doramasData,
+    doramasData: doramas, // Corrigido para usar o nome correto
     actionMoviesData,
     comedyMoviesData,
     adventureMoviesData,

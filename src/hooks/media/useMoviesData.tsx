@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { MediaItem } from "@/types/movie";
 import { useBaseMedia } from "./useBaseMedia";
@@ -6,9 +7,27 @@ import {
   fetchTopRatedMovies,
   fetchTrendingMovies,
   fetchRecentMovies,
-  fetchMoviesByGenre,
-  fetchMoviesByKeyword
+  fetchMoviesByGenre
 } from "@/services/tmdbApi";
+
+// Implementação do fetchMoviesByKeyword
+const fetchMoviesByKeyword = async (keywordId: number): Promise<MediaItem[]> => {
+  try {
+    const url = `/api/discover/movie?with_keywords=${keywordId}&language=pt-BR`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const data = await response.json();
+    return data.results.map((item: any) => ({
+      ...item,
+      media_type: "movie"
+    }));
+  } catch (error) {
+    console.error(`Error fetching movies for keyword ${keywordId}:`, error);
+    return [];
+  }
+};
 
 export const useMoviesData = () => {
   const { user, hasAccess, isUserAuthenticated } = useBaseMedia();
