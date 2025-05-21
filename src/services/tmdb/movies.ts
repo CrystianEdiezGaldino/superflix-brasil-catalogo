@@ -174,3 +174,85 @@ export const searchMovies = async (query: string, page = 1) => {
     return [];
   }
 };
+
+// Buscar filmes de ação
+export const fetchActionMovies = async (limit: number = 30): Promise<MediaItem[]> => {
+  try {
+    // Busca filmes de ação populares
+    const popularUrl = buildApiUrl('/discover/movie', '&with_genres=28&sort_by=popularity.desc&vote_count.gte=1000&include_adult=false&language=pt-BR');
+    const popularMovies = await fetchFromApi<{results: any[]}>(popularUrl);
+
+    // Busca filmes de aventura populares
+    const adventureUrl = buildApiUrl('/discover/movie', '&with_genres=12&sort_by=popularity.desc&vote_count.gte=1000&include_adult=false&language=pt-BR');
+    const adventureMovies = await fetchFromApi<{results: any[]}>(adventureUrl);
+
+    // Combina os resultados
+    const allMovies = [
+      ...(popularMovies.results || []),
+      ...(adventureMovies.results || [])
+    ];
+
+    // Remove duplicatas
+    const uniqueMovies = allMovies.filter((movie, index, self) =>
+      index === self.findIndex((m) => m.id === movie.id)
+    );
+
+    // Filtra apenas filmes com poster
+    const moviesWithPoster = uniqueMovies.filter(movie => movie.poster_path);
+
+    // Adiciona o tipo de mídia
+    const moviesWithType = addMediaTypeToResults(moviesWithPoster, 'movie');
+
+    // Ordena por popularidade
+    const sortedMovies = moviesWithType.sort((a, b) => 
+      (b.popularity || 0) - (a.popularity || 0)
+    );
+
+    // Limita o número de resultados
+    return limitResults(sortedMovies, limit);
+  } catch (error) {
+    console.error('Erro ao buscar filmes de ação:', error);
+    return [];
+  }
+};
+
+// Buscar filmes de comédia
+export const fetchComedyMovies = async (limit: number = 30): Promise<MediaItem[]> => {
+  try {
+    // Busca filmes de comédia populares
+    const popularUrl = buildApiUrl('/discover/movie', '&with_genres=35&sort_by=popularity.desc&vote_count.gte=1000&include_adult=false&language=pt-BR');
+    const popularMovies = await fetchFromApi<{results: any[]}>(popularUrl);
+
+    // Busca filmes de comédia bem avaliados
+    const topRatedUrl = buildApiUrl('/discover/movie', '&with_genres=35&sort_by=vote_average.desc&vote_count.gte=1000&include_adult=false&language=pt-BR');
+    const topRatedMovies = await fetchFromApi<{results: any[]}>(topRatedUrl);
+
+    // Combina os resultados
+    const allMovies = [
+      ...(popularMovies.results || []),
+      ...(topRatedMovies.results || [])
+    ];
+
+    // Remove duplicatas
+    const uniqueMovies = allMovies.filter((movie, index, self) =>
+      index === self.findIndex((m) => m.id === movie.id)
+    );
+
+    // Filtra apenas filmes com poster
+    const moviesWithPoster = uniqueMovies.filter(movie => movie.poster_path);
+
+    // Adiciona o tipo de mídia
+    const moviesWithType = addMediaTypeToResults(moviesWithPoster, 'movie');
+
+    // Ordena por popularidade
+    const sortedMovies = moviesWithType.sort((a, b) => 
+      (b.popularity || 0) - (a.popularity || 0)
+    );
+
+    // Limita o número de resultados
+    return limitResults(sortedMovies, limit);
+  } catch (error) {
+    console.error('Erro ao buscar filmes de comédia:', error);
+    return [];
+  }
+};

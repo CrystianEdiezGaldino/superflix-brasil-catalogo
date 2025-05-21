@@ -15,7 +15,9 @@ import {
   fetchTopRatedKoreanDramas,
   fetchMarvelMovies,
   fetchDCMovies,
-  fetchTrilogies
+  fetchTrilogies,
+  fetchActionMovies,
+  fetchComedyMovies
 } from "@/services/tmdbApi";
 import { MediaItem } from "@/types/movie";
 
@@ -124,6 +126,26 @@ const useHomePageData = () => {
     refetchOnWindowFocus: false
   });
 
+  // Fetch action movies
+  const { data: actionMoviesData = [], isLoading: actionMoviesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeActionMovies'],
+    queryFn: () => fetchActionMovies(30),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    retry: 3,
+    refetchOnWindowFocus: false
+  });
+
+  // Fetch comedy movies
+  const { data: comedyMoviesData = [], isLoading: comedyMoviesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeComedyMovies'],
+    queryFn: () => fetchComedyMovies(30),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    retry: 3,
+    refetchOnWindowFocus: false
+  });
+
   // Memoize loading state
   const isLoading = useMemo(() => {
     return moviesLoading || 
@@ -138,7 +160,9 @@ const useHomePageData = () => {
            popularDoramasLoading ||
            marvelMoviesLoading ||
            dcMoviesLoading ||
-           trilogiesLoading;
+           trilogiesLoading ||
+           actionMoviesLoading ||
+           comedyMoviesLoading;
   }, [
     moviesLoading,
     trendingMoviesLoading,
@@ -152,7 +176,9 @@ const useHomePageData = () => {
     popularDoramasLoading,
     marvelMoviesLoading,
     dcMoviesLoading,
-    trilogiesLoading
+    trilogiesLoading,
+    actionMoviesLoading,
+    comedyMoviesLoading
   ]);
 
   // Memoize section data
@@ -178,8 +204,8 @@ const useHomePageData = () => {
     moviesData,
     seriesData,
     doramasData,
-    actionMoviesData: topRatedMovies,
-    comedyMoviesData: recentMovies,
+    actionMoviesData,
+    comedyMoviesData,
     adventureMoviesData: trendingMovies,
     sciFiMoviesData: topRatedMovies,
     marvelMoviesData,
