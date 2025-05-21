@@ -2,11 +2,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { fetchDoramas } from "@/services/tmdbApi";
 import { MediaItem } from "@/types/movie";
-import { useDoramaLoader } from "./dorama/useDoramaLoader";
-import { useDoramaPagination } from "./dorama/useDoramaPagination";
-import { useDoramaFiltering } from "./dorama/useDoramaFiltering";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAccessControl } from "./useAccessControl";
+
+// Define simpler interfaces to match our implementation
+interface DoramaLoaderState {
+  isLoading: boolean;
+  error: string | null;
+}
+
+interface DoramaPaginationState {
+  page: number;
+  totalPages: number;
+  hasMore: boolean;
+}
 
 export const useDoramas = () => {
   const { user } = useAuth();
@@ -15,33 +24,29 @@ export const useDoramas = () => {
   const [doramas, setDoramas] = useState<MediaItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   
-  const {
-    isLoading, 
-    error, 
-    loadingState, 
-    setLoadingState
-  } = useDoramaLoader();
+  // Simplified states that match our actual needs
+  const [loading, setLoading] = useState<{isLoading: boolean, loadingState: string}>({
+    isLoading: false,
+    loadingState: 'idle'
+  });
   
-  const {
-    currentPage,
-    totalPages,
-    hasMorePages,
-    setTotalPages,
-    loadNextPage
-  } = useDoramaPagination();
+  const [pagination, setPagination] = useState<DoramaPaginationState>({
+    page: 1,
+    totalPages: 1,
+    hasMore: true
+  });
   
-  const {
-    filters,
-    filteredDoramas,
-    isFiltering,
-    updateFilters,
-    resetFilters
-  } = useDoramaFiltering(doramas);
+  const [filters, setFilters] = useState<Record<string, any>>({});
+  const [filteredDoramas, setFilteredDoramas] = useState<MediaItem[]>([]);
+  const [isFiltering, setIsFiltering] = useState(false);
 
   const loadDoramas = useCallback(async (page: number = 1) => {
     if (!hasAccess) return;
     
-    setLoadingState(page === 1 ? 'loading' : 'loadingMore');
+    setLoading({
+      isLoading: true,
+      loadingState: page === 1 ? 'loading' : 'loadingMore'
+    });
     
     try {
       const data = await fetchDoramas(page);
@@ -54,14 +59,26 @@ export const useDoramas = () => {
       
       // Assuming each page has 20 items, calculate total pages
       // This is an estimate since we don't have actual total_pages info
-      setTotalPages(Math.ceil(data.length > 0 ? 100 : 0));
-      setLoadingState('loaded');
+      setPagination(prev => ({
+        ...prev,
+        page,
+        totalPages: Math.ceil(data.length > 0 ? 100 : 0),
+        hasMore: data.length > 0
+      }));
+      
+      setLoading({
+        isLoading: false,
+        loadingState: 'loaded'
+      });
       
     } catch (err) {
       console.error("Error loading doramas:", err);
-      setLoadingState('error');
+      setLoading({
+        isLoading: false,
+        loadingState: 'error'
+      });
     }
-  }, [hasAccess, setLoadingState, setTotalPages]);
+  }, [hasAccess]);
 
   useEffect(() => {
     if (user && hasAccess) {
@@ -74,29 +91,37 @@ export const useDoramas = () => {
   }, []);
 
   const handleLoadMore = useCallback(() => {
-    if (hasMorePages && !isLoading) {
-      loadNextPage();
-      loadDoramas(currentPage + 1);
+    if (pagination.hasMore && !loading.isLoading) {
+      const nextPage = pagination.page + 1;
+      setPagination(prev => ({...prev, page: nextPage}));
+      loadDoramas(nextPage);
     }
-  }, [hasMorePages, isLoading, loadNextPage, currentPage, loadDoramas]);
+  }, [pagination.hasMore, loading.isLoading, pagination.page, loadDoramas]);
 
-  const handleFilterChange = useCallback((filterType: string, value: string | string[] | number[]) => {
-    updateFilters({ [filterType]: value });
-  }, [updateFilters]);
+  const updateFilters = useCallback((newFilters: Record<string, any>) => {
+    setFilters(prev => ({...prev, ...newFilters}));
+    setIsFiltering(true);
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setFilters({});
+    setIsFiltering(false);
+    setFilteredDoramas([]);
+  }, []);
 
   return {
     doramas: isFiltering ? filteredDoramas : doramas,
     filters,
-    isLoading,
-    error,
-    loadingState,
-    currentPage,
-    totalPages,
-    hasMorePages,
+    isLoading: loading.isLoading,
+    error: loading.loadingState === 'error' ? 'Failed to load doramas' : null,
+    loadingState: loading.loadingState,
+    currentPage: pagination.page,
+    totalPages: pagination.totalPages,
+    hasMorePages: pagination.hasMore,
     searchQuery,
     handleSearch,
     handleLoadMore,
-    handleFilterChange,
+    handleFilterChange: updateFilters,
     resetFilters,
     isFiltering
   };

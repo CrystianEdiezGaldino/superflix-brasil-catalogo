@@ -1,6 +1,6 @@
 
 import { useState, useCallback, useEffect } from "react";
-import { MediaItem, Series } from "@/types/movie";
+import { MediaItem, Series, isSeries } from "@/types/movie";
 
 interface DoramaFiltering {
   filteredDoramas: MediaItem[];
@@ -45,7 +45,7 @@ export const useDoramaFiltering = (doramas: MediaItem[]): DoramaFiltering => {
       if (!dorama) return false;
 
       // Year filter
-      if (yearFilter && dorama.first_air_date) {
+      if (yearFilter && isSeries(dorama) && dorama.first_air_date) {
         const year = dorama.first_air_date.split("-")[0];
         if (year !== yearFilter) return false;
       }
@@ -57,8 +57,8 @@ export const useDoramaFiltering = (doramas: MediaItem[]): DoramaFiltering => {
       }
 
       // Country filter
-      if (countryFilter && (dorama as any).origin_country) {
-        if (!((dorama as any).origin_country as string[]).includes(countryFilter)) return false;
+      if (countryFilter && isSeries(dorama) && dorama.origin_country) {
+        if (!(dorama.origin_country as string[]).includes(countryFilter)) return false;
       }
 
       return true;
@@ -74,7 +74,7 @@ export const useDoramaFiltering = (doramas: MediaItem[]): DoramaFiltering => {
     const years = new Set<string>();
     
     doramas.forEach((dorama) => {
-      if (dorama.first_air_date) {
+      if (isSeries(dorama) && dorama.first_air_date) {
         const year = dorama.first_air_date.split("-")[0];
         years.add(year);
       }
@@ -93,8 +93,8 @@ export const useDoramaFiltering = (doramas: MediaItem[]): DoramaFiltering => {
     const countries = new Set<string>();
     
     doramas.forEach((dorama) => {
-      if ((dorama as any).origin_country && Array.isArray((dorama as any).origin_country)) {
-        (dorama as any).origin_country.forEach((country: string) => {
+      if (isSeries(dorama) && dorama.origin_country) {
+        dorama.origin_country.forEach((country: string) => {
           if (country) countries.add(country);
         });
       }

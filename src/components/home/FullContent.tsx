@@ -83,14 +83,30 @@ const FullContent: React.FC<FullContentProps> = ({
         topRatedAnime={topRatedAnimeData}
         recentAnimes={recentAnimesData}
         isLoading={isLoading}
-        hasMore={hasMore}
-        onLoadMore={onLoadMore}
+        hasMore={{
+          anime: hasMore,
+          topRated: hasMore,
+          recent: hasMore
+        }}
+        onLoadMore={{
+          anime: () => onLoadMore('anime'),
+          topRated: () => onLoadMore('topRatedAnime'),
+          recent: () => onLoadMore('recentAnimes')
+        }}
         onMediaClick={onMediaClick}
+        isFetchingNextPage={{
+          anime: false,
+          topRated: false,
+          recent: false
+        }}
       />
       
       {/* Dorama Sections */}
       <DoramaSections
         doramas={doramasData}
+        topRatedDoramas={doramasData.slice(0, 5)}
+        popularDoramas={doramasData.slice(5, 10)}
+        koreanMovies={doramasData.slice(10, 15)}
         isLoading={isLoading}
         hasMore={hasMore} 
         onLoadMore={onLoadMore}
@@ -101,7 +117,8 @@ const FullContent: React.FC<FullContentProps> = ({
       <RecommendationsSection
         recommendations={recommendations}
         isLoading={isLoading}
-        onMediaClick={onMediaClick}
+        hasMore={hasMore}
+        onLoadMore={() => onLoadMore('recommendations')}
       />
     </div>
   );

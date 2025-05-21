@@ -12,6 +12,10 @@ interface SubscriptionContextType {
   subscriptionTier: string | null;
   subscriptionEnd: string | null;
   trialEnd: string | null;
+  subscription: { 
+    plan_type: string | null;
+    current_period_end: string | null;
+  } | null;
   checkSubscription: () => Promise<void>;
 }
 
@@ -24,6 +28,7 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   subscriptionTier: null,
   subscriptionEnd: null,
   trialEnd: null,
+  subscription: null,
   checkSubscription: async () => {}
 });
 
@@ -48,6 +53,12 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
     trialEnd,
     refreshSubscription 
   } = useSubscriptionState(user, session);
+
+  // Create subscription object for Profile page
+  const subscription = subscriptionTier ? {
+    plan_type: subscriptionTier,
+    current_period_end: subscriptionEnd
+  } : null;
 
   const checkSubscription = useCallback(async () => {
     console.log("Manual subscription check requested");
@@ -91,6 +102,7 @@ export const SubscriptionProvider = ({ children }: { children: React.ReactNode }
         subscriptionTier,
         subscriptionEnd,
         trialEnd,
+        subscription,
         checkSubscription
       }}
     >

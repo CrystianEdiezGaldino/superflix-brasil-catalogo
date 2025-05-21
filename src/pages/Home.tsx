@@ -155,7 +155,7 @@ const Home = () => {
             
             <section className="mb-12">
               <WatchHistory 
-                history={movies?.slice(0, 5) || []}
+                watchHistory={movies?.slice(0, 5) || []} 
                 onMediaClick={handleMovieClick}
               />
             </section>

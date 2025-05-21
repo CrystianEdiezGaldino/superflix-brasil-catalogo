@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useHomePageData } from "../useHomePageData";
 import { useMovies } from "../movies/useMovies";
@@ -35,8 +36,8 @@ export const useContentSections = () => {
     sciFiMoviesData,
     marvelMoviesData,
     dcMoviesData,
-    popularSeries,
-    recentAnimes,
+    popularSeriesData, // Fixed property name to match useHomePageData
+    recentAnimesData, // Fixed property name to match useHomePageData
     isLoading,
     hasError,
     // Renamed this to apiSearchResults to avoid conflict
@@ -235,8 +236,8 @@ export const useContentSections = () => {
     sciFiMoviesData: sectionData.sciFiMovies?.items || sciFiMoviesData || [],
     marvelMoviesData,
     dcMoviesData,
-    popularSeries,
-    recentAnimes,
+    popularSeries: popularSeriesData || [], // Fixed to use data from useHomePageData
+    recentAnimes: recentAnimesData || [], // Fixed to use data from useHomePageData
     movies,
     isLoading,
     isLoadingMore: Object.values(sectionData).some(section => section.isLoading),

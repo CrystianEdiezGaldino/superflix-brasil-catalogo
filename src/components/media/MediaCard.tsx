@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { MediaItem, getMediaTitle } from "@/types/movie";
@@ -119,7 +120,11 @@ const MediaCard = ({
 
     if (user) {
       try {
-        await addToWatchHistory(media, user.id);
+        // Fixed: Pass the numeric mediaId instead of the media object
+        await addToWatchHistory({ 
+          mediaId: mediaId,
+          mediaType: media.media_type || 'movie'
+        }, user.id);
       } catch (error) {
         console.error('Error adding to watch history:', error);
         toast.error('Erro ao adicionar ao histórico de visualização');

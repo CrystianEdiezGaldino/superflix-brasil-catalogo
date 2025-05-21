@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { fetchPopularMovies, fetchPopularSeries } from "@/services/tmdbApi";
 import { MediaItem } from "@/types/movie";
@@ -10,7 +11,7 @@ interface ApiResponse {
 }
 
 export const usePopularContent = () => {
-  const { data: popularMovies } = useQuery<ApiResponse>({
+  const { data: popularMovies, isLoading: isLoadingMovies } = useQuery<ApiResponse>({
     queryKey: ["popularMovies"],
     queryFn: async () => {
       const response = await fetchPopularMovies(1);
@@ -18,7 +19,7 @@ export const usePopularContent = () => {
     },
   });
 
-  const { data: popularSeries } = useQuery<ApiResponse>({
+  const { data: popularSeries, isLoading: isLoadingSeries } = useQuery<ApiResponse>({
     queryKey: ["popularSeries"],
     queryFn: async () => {
       const response = await fetchPopularSeries(1);
@@ -26,7 +27,7 @@ export const usePopularContent = () => {
     },
   });
 
-  const { data: americanSeries } = useQuery<ApiResponse>({
+  const { data: americanSeries, isLoading: isLoadingAmericanSeries } = useQuery<ApiResponse>({
     queryKey: ["americanSeries"],
     queryFn: async () => {
       const response = await fetchPopularAmericanSeries(1);
@@ -34,7 +35,7 @@ export const usePopularContent = () => {
     },
   });
 
-  const { data: recentAnimes } = useQuery<MediaItem[]>({
+  const { data: recentAnimes, isLoading: isLoadingAnimes } = useQuery<MediaItem[]>({
     queryKey: ["recentAnimes"],
     queryFn: () => fetchRecentAnime(1),
   });
@@ -56,8 +57,12 @@ export const usePopularContent = () => {
     return Array.isArray(recentAnimes) ? recentAnimes : [];
   }, [recentAnimes]);
 
+  // Add isLoading property
+  const isLoading = isLoadingMovies || isLoadingSeries || isLoadingAmericanSeries || isLoadingAnimes;
+
   return {
     popularContent: limitedPopularContent,
     recentAnimes: recentAnimesMemo,
+    isLoading
   };
 };
