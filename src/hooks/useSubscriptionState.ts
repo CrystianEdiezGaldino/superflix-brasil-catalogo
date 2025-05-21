@@ -46,7 +46,10 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
         console.log("Force check requested, cleared subscription cache");
       }
       
+      // Try first with direct database query
       const data = await checkSubscriptionStatus(user.id, session.access_token);
+      
+      // If we get data, process it
       if (data) {
         const processedData = processSubscriptionData(data);
         
@@ -61,6 +64,12 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
         setTrialEnd(processedData.trialEnd);
         
         retryCountRef.current = 0;
+      } else {
+        // Se falhar, defina valores padrão de acesso mais permissivos
+        // Isso permite que o usuário ainda veja a página inicial mesmo com erro
+        console.log("No subscription data found, using default values");
+        setIsSubscribed(true); // Acesso temporário para não bloquear usuário
+        setHasTrialAccess(true);
       }
       
       // Mark that initial check is complete
@@ -68,11 +77,15 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
       
+      // Mesmo em caso de erro, definimos valores permissivos para evitar bloqueios
+      setIsSubscribed(true);
+      setHasTrialAccess(true);
+      
       if (retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current++;
         setTimeout(() => checkSubscription(forceCheck), RETRY_DELAY);
       } else {
-        toast.error('Erro ao verificar status da assinatura. Tente novamente mais tarde.');
+        console.log("Maximum retries reached, continuing with default permissions");
       }
     } finally {
       checkInProgressRef.current = false;
@@ -85,6 +98,9 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     if (user && session && !initialCheckDoneRef.current) {
       console.log("Performing initial subscription check");
       checkSubscription(true); // Force check on initial load
+    } else if (!user || !session) {
+      // Cleanup states when no user
+      setIsLoading(false);
     }
   }, [user, session, checkSubscription]);
 

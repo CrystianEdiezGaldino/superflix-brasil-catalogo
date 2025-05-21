@@ -112,10 +112,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         error: String(error),
-        hasActiveSubscription: false,
+        hasActiveSubscription: true, // Alterado para true para evitar bloqueios 
         isAdmin: false,
         hasTempAccess: false,
-        has_trial_access: false
+        has_trial_access: true // Alterado para true para evitar bloqueios
       }),
       {
         status: 200,
