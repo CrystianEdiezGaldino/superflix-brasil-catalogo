@@ -47,8 +47,10 @@ export const useContentSections = () => {
   } = useHomePageData();
 
   // Define popularSeriesData and recentAnimesData with fallbacks
-  const popularSeriesData = seriesData?.slice(0, 5) || [];
-  const recentAnimesData = animeData?.slice(0, 5) || [];
+  // Ensure seriesData is an array before using slice
+  const popularSeriesData = Array.isArray(seriesData) ? seriesData.slice(0, 5) : [];
+  // Ensure animeData is an array before using slice
+  const recentAnimesData = Array.isArray(animeData) ? animeData.slice(0, 5) : [];
 
   // Add hook for loading more content
   const {
@@ -75,15 +77,16 @@ export const useContentSections = () => {
       }
     };
 
-    updateSectionData('movies', moviesData);
-    updateSectionData('series', seriesData);
-    updateSectionData('anime', animeData);
-    updateSectionData('topRatedAnime', topRatedAnimeData);
-    updateSectionData('doramas', doramasData);
-    updateSectionData('actionMovies', actionMoviesData);
-    updateSectionData('comedyMovies', comedyMoviesData);
-    updateSectionData('adventureMovies', adventureMoviesData);
-    updateSectionData('sciFiMovies', sciFiMoviesData);
+    // Ensure all data is in array format before updating sections
+    updateSectionData('movies', Array.isArray(moviesData) ? moviesData : []);
+    updateSectionData('series', Array.isArray(seriesData) ? seriesData : []);
+    updateSectionData('anime', Array.isArray(animeData) ? animeData : []);
+    updateSectionData('topRatedAnime', Array.isArray(topRatedAnimeData) ? topRatedAnimeData : []);
+    updateSectionData('doramas', Array.isArray(doramasData) ? doramasData : []);
+    updateSectionData('actionMovies', Array.isArray(actionMoviesData) ? actionMoviesData : []);
+    updateSectionData('comedyMovies', Array.isArray(comedyMoviesData) ? comedyMoviesData : []);
+    updateSectionData('adventureMovies', Array.isArray(adventureMoviesData) ? adventureMoviesData : []);
+    updateSectionData('sciFiMovies', Array.isArray(sciFiMoviesData) ? sciFiMoviesData : []);
     // Add new sections for popularSeries and recentAnimes
     updateSectionData('popularSeries', popularSeriesData);
     updateSectionData('recentAnimes', recentAnimesData);
@@ -240,20 +243,20 @@ export const useContentSections = () => {
     hasTrialAccess,
     featuredMedia,
     recommendations,
-    moviesData: sectionData.movies?.items || moviesData || [],
-    seriesData: sectionData.series?.items || seriesData || [],
-    animeData: sectionData.anime?.items || animeData || [],
-    topRatedAnimeData: sectionData.topRatedAnime?.items || topRatedAnimeData || [],
-    doramasData: sectionData.doramas?.items || doramasData || [],
-    actionMoviesData: sectionData.actionMovies?.items || actionMoviesData || [],
-    comedyMoviesData: sectionData.comedyMovies?.items || comedyMoviesData || [],
-    adventureMoviesData: sectionData.adventureMovies?.items || adventureMoviesData || [],
-    sciFiMoviesData: sectionData.sciFiMovies?.items || sciFiMoviesData || [],
-    marvelMoviesData,
-    dcMoviesData,
+    moviesData: sectionData.movies?.items || (Array.isArray(moviesData) ? moviesData : []),
+    seriesData: sectionData.series?.items || (Array.isArray(seriesData) ? seriesData : []),
+    animeData: sectionData.anime?.items || (Array.isArray(animeData) ? animeData : []),
+    topRatedAnimeData: sectionData.topRatedAnime?.items || (Array.isArray(topRatedAnimeData) ? topRatedAnimeData : []),
+    doramasData: sectionData.doramas?.items || (Array.isArray(doramasData) ? doramasData : []),
+    actionMoviesData: sectionData.actionMovies?.items || (Array.isArray(actionMoviesData) ? actionMoviesData : []),
+    comedyMoviesData: sectionData.comedyMovies?.items || (Array.isArray(comedyMoviesData) ? comedyMoviesData : []),
+    adventureMoviesData: sectionData.adventureMovies?.items || (Array.isArray(adventureMoviesData) ? adventureMoviesData : []),
+    sciFiMoviesData: sectionData.sciFiMovies?.items || (Array.isArray(sciFiMoviesData) ? sciFiMoviesData : []),
+    marvelMoviesData: Array.isArray(marvelMoviesData) ? marvelMoviesData : [],
+    dcMoviesData: Array.isArray(dcMoviesData) ? dcMoviesData : [],
     popularSeries: sectionData.popularSeries?.items || popularSeriesData || [], 
     recentAnimes: sectionData.recentAnimes?.items || recentAnimesData || [], 
-    movies,
+    movies: Array.isArray(movies) ? movies : [],
     isLoading,
     isLoadingMore: Object.values(sectionData).some(section => section.isLoading),
     hasMore,

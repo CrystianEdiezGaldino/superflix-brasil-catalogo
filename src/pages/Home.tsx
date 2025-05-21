@@ -106,6 +106,10 @@ const Home = () => {
     );
   }
 
+  // Make sure all provided data is array
+  const safeMovies = Array.isArray(movies) ? movies : [];
+  const safeSeriesData = Array.isArray(seriesData) ? seriesData : [];
+
   return (
     <div className="bg-netflix-background min-h-screen">
       <Navbar />
@@ -155,7 +159,7 @@ const Home = () => {
             
             <section className="mb-12">
               <WatchHistory 
-                watchHistory={movies?.slice(0, 5) || []} 
+                watchHistory={safeMovies.slice(0, 5) || []} 
                 onMediaClick={handleMovieClick}
               />
             </section>
@@ -163,7 +167,7 @@ const Home = () => {
             <MediaView
               title="Filmes"
               type="movie"
-              mediaItems={movies || []}
+              mediaItems={safeMovies || []}
               trendingItems={moviesData || []}
               topRatedItems={actionMoviesData || []}
               recentItems={comedyMoviesData || []}
@@ -185,8 +189,8 @@ const Home = () => {
             <MediaView
               title="Séries"
               type="tv"
-              mediaItems={Array.isArray(seriesData) ? seriesData : []}
-              trendingItems={Array.isArray(seriesData) ? seriesData : []}
+              mediaItems={safeSeriesData || []}
+              trendingItems={safeSeriesData || []}
               topRatedItems={Array.isArray(popularSeries) ? popularSeries : []}
               recentItems={Array.isArray(seriesData) ? seriesData.slice(10, 20) : []}
               sectionLoading={currentSection === 'series' && isLoadingMore}
