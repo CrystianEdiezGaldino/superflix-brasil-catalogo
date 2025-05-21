@@ -9,7 +9,7 @@ const AuthPageBanner = () => {
   }} transition={{
     duration: 0.5
   }} className="text-center mb-12">
-      <div className="inline-flex items-center justify-center p-4 mb-8 ">
+      <div className="inline-flex items-center justify-center p-4 mb-8 px-[5px] py-[5px]w-[250px] h-[150px]">
         <img src="/lovable-uploads/efa84daa-353c-4a55-836f-0baef660aba2.png" alt="NaflixTV Logo" className="h-[120px] transition-transform duration-300 hover:scale-105" />
       </div>
       <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
