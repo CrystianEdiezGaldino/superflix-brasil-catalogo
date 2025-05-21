@@ -114,7 +114,7 @@ const LoginForm = ({
         <Download className="text-xl transform group-hover:scale-110 transition-transform duration-300" />
         <div className="flex flex-col items-start">
           <span className="text-sm font-normal group-hover:text-green-100 transition-colors duration-300">A nova versão do app está disponível.</span>
-          <span className="text-xs opacity-80 group-hover:opacity-100 transition-opacity duration-300">Acesso mais rápido e sem anúncios!</span>
+          <span className="text-xs opacity-80 group-hover:opacity-100 transition-opacity duration-300">Acesso mais rápido e sem anúncios! 21/05/2025 </span>
         </div>
       </a>
       
