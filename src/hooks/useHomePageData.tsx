@@ -1,73 +1,122 @@
-import { useEffect, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
+import { 
+  fetchPopularMovies, 
+  fetchTopRatedMovies, 
+  fetchTrendingMovies, 
+  fetchRecentMovies,
+  fetchPopularSeries,
+  fetchTopRatedSeries,
+  fetchTrendingSeries,
+  fetchKoreanDramas,
+  fetchPopularKoreanDramas,
+  fetchTopRatedKoreanDramas
+} from "@/services/tmdbApi";
 import { MediaItem } from "@/types/movie";
-import { useMediaData } from "./useMediaData";
-import { useMediaSearch } from "./useMediaSearch";
-import { useRecommendations } from "./useRecommendations";
-import { useFeaturedMedia } from "./useFeaturedMedia";
-import { useAccessControl } from "./useAccessControl";
-import { usePopularContent } from "./usePopularContent";
 
 const useHomePageData = () => {
-  // Use accessControl hook
-  const { user, hasAccess, isLoading: accessLoading, hasTrialAccess } = useAccessControl();
-  const isAdmin = user?.role === 'admin' || false;
+  const { user } = useAuth();
+  const { isAdmin, isSubscribed, hasTrialAccess } = useSubscription();
 
-  // Get media data
-  const { 
-    moviesData = [], 
-    seriesData = [], 
-    animeData = [], 
-    topRatedAnimeData = [], 
-    doramasData = [],
-    actionMoviesData = [],
-    comedyMoviesData = [],
-    adventureMoviesData = [],
-    sciFiMoviesData = [],
-    marvelMoviesData = [],
-    dcMoviesData = [],
-    isLoading: mediaLoading,
-    hasError
-  } = useMediaData();
+  // Fetch movies data
+  const { data: moviesData = [], isLoading: moviesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeMovies'],
+    queryFn: () => fetchPopularMovies(),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  });
 
-  // Get search functionality
-  const { 
-    searchMedia, 
-    results = [], 
-    isLoading: searchLoading, 
-    hasMore, 
-    currentPage 
-  } = useMediaSearch();
+  const { data: trendingMovies = [], isLoading: trendingMoviesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeTrendingMovies'],
+    queryFn: () => fetchTrendingMovies(),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5
+  });
 
-  // Get recommendations
-  const { recommendations = [] } = useRecommendations();
+  const { data: topRatedMovies = [], isLoading: topRatedMoviesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeTopRatedMovies'],
+    queryFn: () => fetchTopRatedMovies(),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5
+  });
 
-  // Get popular content
-  const { 
-    popularContent = [],
-    isLoading: isLoadingPopularContent
-  } = usePopularContent();
+  const { data: recentMovies = [], isLoading: recentMoviesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeRecentMovies'],
+    queryFn: () => fetchRecentMovies(),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5
+  });
 
-  // Get featured media
-  const { featuredMedia } = useFeaturedMedia(
-    hasAccess,
-    user,
-    moviesData,
-    seriesData,
-    animeData,
-    topRatedAnimeData,
-    doramasData,
-    recommendations
-  );
+  // Fetch series data
+  const { data: seriesData = [], isLoading: seriesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeSeries'],
+    queryFn: () => fetchPopularSeries(),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5
+  });
 
-  // Create a memoized search handler
-  const handleSearch = useCallback((query: string, page: number = 1) => {
-    return searchMedia(query, page);
-  }, [searchMedia]);
+  const { data: trendingSeries = [], isLoading: trendingSeriesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeTrendingSeries'],
+    queryFn: () => fetchTrendingSeries(),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5
+  });
+
+  const { data: topRatedSeries = [], isLoading: topRatedSeriesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeTopRatedSeries'],
+    queryFn: () => fetchTopRatedSeries(),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5
+  });
+
+  // Fetch doramas data
+  const { data: doramasData = [], isLoading: doramasLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeDoramas'],
+    queryFn: () => fetchKoreanDramas(),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5
+  });
+
+  const { data: topRatedDoramasData = [], isLoading: topRatedDoramasLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeTopRatedDoramas'],
+    queryFn: () => fetchTopRatedKoreanDramas(),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5
+  });
+
+  const { data: popularDoramasData = [], isLoading: popularDoramasLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homePopularDoramas'],
+    queryFn: () => fetchPopularKoreanDramas(),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5
+  });
 
   // Memoize loading state
   const isLoading = useMemo(() => {
-    return accessLoading || mediaLoading || isLoadingPopularContent;
-  }, [accessLoading, mediaLoading, isLoadingPopularContent]);
+    return moviesLoading || 
+           trendingMoviesLoading || 
+           topRatedMoviesLoading || 
+           recentMoviesLoading ||
+           seriesLoading ||
+           trendingSeriesLoading ||
+           topRatedSeriesLoading ||
+           doramasLoading ||
+           topRatedDoramasLoading ||
+           popularDoramasLoading;
+  }, [
+    moviesLoading,
+    trendingMoviesLoading,
+    topRatedMoviesLoading,
+    recentMoviesLoading,
+    seriesLoading,
+    trendingSeriesLoading,
+    topRatedSeriesLoading,
+    doramasLoading,
+    topRatedDoramasLoading,
+    popularDoramasLoading
+  ]);
 
   // Memoize section data
   const sectionData = useMemo(() => ({
@@ -85,29 +134,24 @@ const useHomePageData = () => {
   return {
     user,
     isAdmin,
-    hasAccess,
+    hasAccess: isSubscribed,
     hasTrialAccess,
-    featuredMedia,
-    recommendations,
+    featuredMedia: trendingMovies[0] || null,
+    recommendations: trendingMovies.slice(0, 10),
     moviesData,
     seriesData,
-    animeData,
-    topRatedAnimeData,
     doramasData,
-    actionMoviesData,
-    comedyMoviesData,
-    adventureMoviesData,
-    sciFiMoviesData,
-    marvelMoviesData,
-    dcMoviesData,
-    popularContent,
+    actionMoviesData: topRatedMovies,
+    comedyMoviesData: recentMovies,
+    adventureMoviesData: trendingMovies,
+    sciFiMoviesData: topRatedMovies,
+    marvelMoviesData: topRatedMovies,
+    dcMoviesData: topRatedMovies,
+    popularContent: trendingSeries,
     isLoading,
-    hasError,
-    handleSearch,
-    searchResults: results,
-    isSearchLoading: searchLoading,
-    hasMoreResults: hasMore,
-    searchCurrentPage: currentPage,
+    hasError: null,
+    searchResults: [],
+    isSearchLoading: false,
     sectionData,
     handleLoadMoreSection
   };

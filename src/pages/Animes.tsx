@@ -49,7 +49,8 @@ const Animes: React.FC = () => {
       }
     },
     getNextPageParam: (lastPage) => {
-      if (!lastPage?.results?.length) return undefined;
+      if (!lastPage) return undefined;
+      if (!lastPage.results || lastPage.results.length === 0) return undefined;
       if (lastPage.page >= lastPage.total_pages) return undefined;
       return lastPage.page + 1;
     },
@@ -87,7 +88,8 @@ const Animes: React.FC = () => {
       }
     },
     getNextPageParam: (lastPage) => {
-      if (!lastPage?.results?.length) return undefined;
+      if (!lastPage) return undefined;
+      if (!lastPage.results || lastPage.results.length === 0) return undefined;
       if (lastPage.page >= lastPage.total_pages) return undefined;
       return lastPage.page + 1;
     },
@@ -164,7 +166,8 @@ const Animes: React.FC = () => {
       }
     },
     getNextPageParam: (lastPage) => {
-      if (!lastPage?.results?.length) return undefined;
+      if (!lastPage) return undefined;
+      if (!lastPage.results || lastPage.results.length === 0) return undefined;
       if (lastPage.page >= lastPage.total_pages) return undefined;
       return lastPage.page + 1;
     },
@@ -248,27 +251,11 @@ const Animes: React.FC = () => {
           <h2 className="text-2xl font-bold mb-4">Erro ao carregar animes</h2>
           <p>Tente novamente mais tarde</p>
           <button 
-            onClick={() => {
-              refetchAnimes();
-              refetchTop100();
-              refetchTopRated();
-              refetchRecent();
-            }}
-            className="mt-4 px-4 py-2 bg-netflix-red text-white rounded hover:bg-red-700 transition-colors"
+            onClick={() => refetchAnimes()}
+            className="mt-4 px-4 py-2 bg-netflix-red text-white rounded hover:bg-red-700"
           >
-            Tentar novamente
+            Tentar Novamente
           </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-netflix-background flex items-center justify-center">
-        <div className="text-white text-center">
-          <h2 className="text-2xl font-bold mb-4">Acesso não autorizado</h2>
-          <p>Por favor, faça login para acessar esta página</p>
         </div>
       </div>
     );
@@ -276,32 +263,30 @@ const Animes: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
-      <div className="container mx-auto px-4 py-8">
-        <MediaView
-          title="Animes"
-          type="anime"
-          mediaItems={allAnimes}
-          trendingItems={trendingItems}
-          topRatedItems={topRatedItems}
-          recentItems={recentAnimes}
-          top100Items={top100Animes}
-          isLoading={isLoading}
-          isLoadingMore={isFetchingNextPage}
-          hasMore={hasNextPage}
-          isFiltering={isFiltering}
-          isSearching={isSearching}
-          page={animePages?.pages?.length || 1}
-          yearFilter={yearFilter}
-          ratingFilter={ratingFilter}
-          searchQuery={searchQuery}
-          onSearch={handleSearch}
-          onYearFilterChange={handleYearFilterChange}
-          onRatingFilterChange={handleRatingFilterChange}
-          onLoadMore={fetchNextPage}
-          onResetFilters={handleResetFilters}
-          onMediaClick={handleMediaClick}
-        />
-      </div>
+      <MediaView
+        title="Animes"
+        type="anime"
+        mediaItems={allAnimes}
+        trendingItems={trendingItems}
+        topRatedItems={topRatedItems}
+        recentItems={recentAnimes}
+        top100Items={top100Animes}
+        isLoading={isLoading}
+        isLoadingMore={isFetchingNextPage}
+        hasMore={hasNextPage}
+        isFiltering={isFiltering}
+        isSearching={isSearching}
+        page={animePages?.pages?.length || 1}
+        yearFilter={yearFilter}
+        ratingFilter={ratingFilter}
+        searchQuery={searchQuery}
+        onSearch={handleSearch}
+        onYearFilterChange={handleYearFilterChange}
+        onRatingFilterChange={handleRatingFilterChange}
+        onLoadMore={fetchNextPage}
+        onResetFilters={handleResetFilters}
+        onMediaClick={handleMediaClick}
+      />
     </div>
   );
 };

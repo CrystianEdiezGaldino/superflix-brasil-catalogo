@@ -5,7 +5,6 @@ import Navbar from "@/components/Navbar";
 import HomeHeader from "@/components/home/HomeHeader";
 import RecommendationsSection from "@/components/home/sections/RecommendationsSection";
 import MediaView from "@/components/home/MediaView";
-import AnimeSections from "@/components/home/sections/AnimeSections";
 import DoramaSections from "@/components/home/sections/DoramaSections";
 import LoadingState from "@/components/home/LoadingState";
 import ErrorState from "@/components/home/ErrorState";
@@ -30,8 +29,6 @@ const Home = () => {
     recommendations = [],
     moviesData = [],
     seriesData = [],
-    animeData = [],
-    topRatedAnimeData = [],
     doramasData = [],
     actionMoviesData = [],
     comedyMoviesData = [],
@@ -58,10 +55,6 @@ const Home = () => {
 
   const handleSeriesClick = useCallback((series: MediaItem) => {
     navigate(`/serie/${series.id}`);
-  }, [navigate]);
-
-  const handleAnimeClick = useCallback((anime: MediaItem) => {
-    navigate(`/anime/${anime.id}`);
   }, [navigate]);
 
   const handleDoramaClick = useCallback((dorama: MediaItem) => {
@@ -105,7 +98,6 @@ const Home = () => {
 
   return (
     <div className="bg-netflix-background min-h-screen">
-
       <div className={hasTrialAccess ? "pt-10" : ""}>
         <Navbar />
         
@@ -133,7 +125,6 @@ const Home = () => {
               results={searchResults}
               onMovieClick={handleMovieClick}
               onSeriesClick={handleSeriesClick}
-              onAnimeClick={handleAnimeClick}
             />
           )}
           
@@ -201,31 +192,6 @@ const Home = () => {
                 focusedItem={0}
               />
               
-              <div className="mb-16">
-                <AnimeSections 
-                  anime={animeData || []}
-                  topRatedAnime={topRatedAnimeData || []}
-                  recentAnimes={animeData?.slice(10, 20) || []}
-                  onMediaClick={handleAnimeClick}
-                  onLoadMore={{
-                    anime: () => {},
-                    topRated: () => {},
-                    recent: () => {}
-                  }}
-                  isLoading={false}
-                  hasMore={{
-                    anime: false,
-                    topRated: false,
-                    recent: false
-                  }}
-                  isFetchingNextPage={{
-                    anime: false,
-                    topRated: false,
-                    recent: false
-                  }}
-                />
-              </div>
-              
               <DoramaSections 
                 doramas={doramasData || []}
                 topRatedDoramas={doramasData?.slice(5, 10) || []}
@@ -248,26 +214,18 @@ const Home = () => {
                         medias={marvelMoviesData}
                         showLoadMore={false}
                         onLoadMore={() => {}}
-                        isLoading={false}
-                        onMediaClick={handleMovieClick}
-                        sectionId="marvel"
-                        mediaType="movie"
                         sectionIndex={0}
                       />
                     </div>
                   )}
                   
                   {dcMoviesData?.length > 0 && (
-                    <div>
+                    <div className="mb-10">
                       <MediaSection 
                         title="DC"
                         medias={dcMoviesData}
                         showLoadMore={false}
                         onLoadMore={() => {}}
-                        isLoading={false}
-                        onMediaClick={handleMovieClick}
-                        sectionId="dc"
-                        mediaType="movie"
                         sectionIndex={1}
                       />
                     </div>

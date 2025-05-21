@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,82 +7,32 @@ import { toast } from "sonner";
  * Custom hook to manage authentication state
  */
 export const useAuthState = () => {
-  const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [visibilityChanged, setVisibilityChanged] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [lastAuthEvent, setLastAuthEvent] = useState<string | null>(null);
 
   useEffect(() => {
-    let isActive = true;
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        if (!isActive) return;
-        
-        console.log("Auth state changed:", event);
-        setLastAuthEvent(event);
-        
-        if (visibilityChanged && event === "INITIAL_SESSION" && newSession?.user?.id === user?.id) {
-          console.log("Skipping redundant auth update after tab switch");
-          return;
-        }
-        
-        const userChanged = newSession?.user?.id !== user?.id;
-        const sessionChanged = newSession?.access_token !== session?.access_token;
-        
-        if (userChanged || sessionChanged) {
-          setSession(newSession);
-          setUser(newSession?.user ?? null);
-          
-          if (event === "SIGNED_IN" && !sessionChecked) {
-            console.log("User signed in:", newSession?.user?.email);
-            toast.success("Login realizado com sucesso!");
-            
-            // Force a reload if this is a new sign-in to ensure subscription data is fresh
-            if (newSession && window.location.pathname === "/" || window.location.pathname === "/auth") {
-              console.log("Refreshing page after new sign-in to update subscription data");
-              // Small delay to allow toast to be visible
-              setTimeout(() => {
-                window.location.href = "/";
-              }, 500);
-            }
-          }
-          
-          if (event === "SIGNED_OUT") {
-            console.log("User signed out");
-            toast.info("Você saiu da sua conta");
-          }
-        }
-        
-        if (loading && event !== "INITIAL_SESSION") {
-          setLoading(false);
-        }
-      }
-    );
-
-    supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
-      if (!isActive) return;
-      
-      if (error) {
-        console.error("Error getting session:", error);
-        setLoading(false);
-        return;
-      }
-      
-      console.log("Initial session check:", currentSession?.user?.email);
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setSessionChecked(true);
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
     return () => {
-      isActive = false;
       subscription.unsubscribe();
     };
-  }, [user?.id, session?.access_token, visibilityChanged, sessionChecked, loading]);
+  }, []);
 
   useEffect(() => {
     const handleVisibilityChange = () => {

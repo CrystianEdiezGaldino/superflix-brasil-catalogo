@@ -86,12 +86,17 @@ const Admin = () => {
           .select('id, username, created_at')
           .in('id', adminRoles.map(role => role.user_id));
 
-        if (usersError) throw usersError;
+        if (usersError) {
+          console.error("Erro ao buscar perfis:", usersError);
+          // Continue with empty array if profiles table is not accessible
+          setAdmins([]);
+          return;
+        }
 
         // Transformar os dados para o formato que queremos
-        const formattedAdmins = adminUsers.map(admin => ({
+        const formattedAdmins = (adminUsers || []).map(admin => ({
           id: admin.id,
-          email: admin.username, // Usando o username como email
+          email: admin.username || admin.id, // Fallback to ID if username is not set
           name: admin.id, // Usando o ID como nome
           created_at: admin.created_at
         }));
@@ -116,21 +121,29 @@ const Admin = () => {
         .select('id, username, avatar_url, created_at')
         .order('created_at', { ascending: false });
 
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error("Erro ao buscar perfis:", profilesError);
+        // Continue with empty array if profiles table is not accessible
+        setUsers([]);
+        return;
+      }
 
       // Buscar todas as assinaturas
       const { data: subscriptions, error: subscriptionsError } = await supabase
         .from('subscriptions')
         .select('*');
 
-      if (subscriptionsError) throw subscriptionsError;
+      if (subscriptionsError) {
+        console.error("Erro ao buscar assinaturas:", subscriptionsError);
+        // Continue without subscription data
+      }
 
       // Mapear as assinaturas para os usuários
-      const formattedUsers = profiles.map(profile => {
+      const formattedUsers = (profiles || []).map(profile => {
         const subscription = subscriptions?.find(sub => sub.user_id === profile.id);
         return {
           id: profile.id,
-          email: profile.username, // Usando o username como email
+          email: profile.username || profile.id, // Fallback to ID if username is not set
           created_at: profile.created_at,
           avatar_url: profile.avatar_url,
           subscription: subscription || undefined

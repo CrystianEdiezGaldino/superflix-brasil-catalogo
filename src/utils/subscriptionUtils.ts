@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { cacheManager } from "./cacheManager";
 
@@ -27,6 +26,29 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
       return cachedData;
     }
 
+    // First check if user is admin
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .single();
+
+    const isAdmin = roleData?.role === 'admin';
+    console.log("Admin check result:", { isAdmin, roleData, roleError });
+
+    // If user is admin, return admin state immediately
+    if (isAdmin) {
+      const adminState = {
+        hasActiveSubscription: true,
+        has_trial_access: true,
+        subscription_tier: 'admin',
+        isAdmin: true,
+        hasTempAccess: false
+      };
+      cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), adminState, 300000); // 5 min cache
+      return adminState;
+    }
+
     // Optimized query to fetch only the needed fields
     const { data: directData, error: directError } = await supabase
       .from('subscriptions')
@@ -53,6 +75,7 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
         subscription_tier: directData.plan_type || 'trial',
         trial_end: directData.trial_end,
         subscription_end: directData.current_period_end,
+        isAdmin: false // Explicitly set to false for non-admin users
       };
 
       // Save to cache with shorter TTL for trial
@@ -76,13 +99,19 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
         return getDefaultSubscriptionState();
       }
       
+      // Add admin status to the data
+      const result = {
+        ...data,
+        isAdmin: false // Explicitly set to false for non-admin users
+      };
+      
       // Cache the result
-      if (data) {
-        const cacheTime = data?.has_trial_access ? 60000 : 300000;
-        cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), data, cacheTime);
+      if (result) {
+        const cacheTime = result?.has_trial_access ? 60000 : 300000;
+        cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), result, cacheTime);
       }
       
-      return data;
+      return result;
     } catch (edgeError) {
       console.error('Falha ao verificar assinatura via Edge Function:', edgeError);
       return getDefaultSubscriptionState();
@@ -111,10 +140,13 @@ export const processSubscriptionData = (data: any) => {
 
   const hasTrialAccess = Boolean(data?.has_trial_access);
   const isActive = Boolean(data?.hasActiveSubscription);
+  const isAdmin = Boolean(data?.isAdmin);
+
+  console.log("Processing subscription data:", { data, isAdmin });
 
   return {
     isSubscribed: isActive || hasTrialAccess || true, // Always allow access to avoid blank screen
-    isAdmin: Boolean(data?.isAdmin),
+    isAdmin: isAdmin,
     hasTempAccess: Boolean(data?.hasTempAccess),
     hasTrialAccess: hasTrialAccess || true, // Always allow access to avoid blank screen
     subscriptionTier: data?.subscription_tier || 'trial',
