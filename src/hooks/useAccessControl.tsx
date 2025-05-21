@@ -1,22 +1,37 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useState, useEffect, useMemo, useRef } from "react";
 
 export const useAccessControl = () => {
-  const { user, loading: authLoading } = useAuth();
+  // Use safe defaults in case contexts aren't available
+  let authData = { user: null, loading: true };
+  let subscriptionData = { 
+    isSubscribed: false, 
+    isAdmin: false, 
+    hasTempAccess: false, 
+    hasTrialAccess: false, 
+    isLoading: true 
+  };
+  
+  try {
+    authData = useAuth();
+  } catch (error) {
+    console.error("useAuth unavailable in useAccessControl:", error);
+  }
+  
+  const { user, loading: authLoading } = authData;
+  
   const [hasAccess, setHasAccess] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const lastAccessCheck = useRef<number>(0);
   
-  // Use the subscription context if available, otherwise fall back to a default value
-  let subscriptionData = { isSubscribed: false, isAdmin: false, hasTempAccess: false, hasTrialAccess: false, isLoading: true };
-  
+  // Use the subscription context if available, otherwise fall back to default values
   try {
     // This will throw if not within SubscriptionProvider
-    const subscription = useSubscription();
-    subscriptionData = subscription;
+    subscriptionData = useSubscription();
   } catch (error) {
-    console.warn("useSubscription unavailable, using default values");
+    console.warn("useSubscription unavailable in useAccessControl, using default values");
   }
   
   const { 

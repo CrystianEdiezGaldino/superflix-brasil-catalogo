@@ -16,7 +16,46 @@ export const useHomePageData = () => {
   const lastDataRef = useRef<any>(null);
   const dataUpdateCount = useRef(0);
   
-  const { user, loading: authLoading } = useAuth();
+  // Wrap useAuth in a try-catch to handle case where AuthProvider doesn't exist
+  let authData = { 
+    user: null, 
+    loading: true,
+    session: null,
+    signUp: async () => {},
+    signIn: async () => {},
+    signOut: async () => {},
+    resetPassword: async () => {},
+    login: async () => {},
+    register: async () => {},
+    refreshSession: async () => {}
+  };
+  
+  try {
+    authData = useAuth();
+  } catch (error) {
+    console.error("Error using AuthContext:", error);
+    // Use default values defined above
+  }
+  
+  const { user, loading: authLoading } = authData;
+  
+  // Same for subscription
+  let subscriptionData = {
+    isSubscribed: false,
+    isAdmin: false,
+    hasTempAccess: false,
+    hasTrialAccess: false,
+    isLoading: true,
+    checkSubscription: () => {}
+  };
+  
+  try {
+    subscriptionData = useSubscription();
+  } catch (error) {
+    console.error("Error using SubscriptionContext:", error);
+    // Use default values defined above
+  }
+  
   const { 
     isSubscribed, 
     isAdmin, 
@@ -24,13 +63,73 @@ export const useHomePageData = () => {
     hasTrialAccess,
     isLoading: subscriptionLoading, 
     checkSubscription
-  } = useSubscription();
+  } = subscriptionData;
   
-  const { hasAccess } = useAccessControl();
+  // Use accessControl with safe defaults
+  let accessControlData = { 
+    user: null, 
+    hasAccess: false, 
+    isLoading: true 
+  };
+  
+  try {
+    accessControlData = useAccessControl();
+  } catch (error) {
+    console.error("Error using AccessControl:", error);
+    // Use default values defined above
+  }
+  
+  const { hasAccess } = accessControlData;
 
-  // Import data from smaller hooks
-  const { searchMedia, results, isLoading: searchLoading, hasMore, currentPage } = useMediaSearch();
-  const { recommendations } = useRecommendations();
+  // Import data from smaller hooks - wrap in try-catch for safety
+  let searchData = { 
+    searchMedia: () => Promise.resolve([]),
+    results: [],
+    isLoading: false,
+    hasMore: false,
+    currentPage: 1
+  };
+  
+  try {
+    searchData = useMediaSearch();
+  } catch (error) {
+    console.error("Error using MediaSearch:", error);
+  }
+  
+  const { searchMedia, results, isLoading: searchLoading, hasMore, currentPage } = searchData;
+  
+  // Get recommendations safely
+  let recommendationsData = { recommendations: [] };
+  try {
+    recommendationsData = useRecommendations();
+  } catch (error) {
+    console.error("Error loading recommendations:", error);
+  }
+  const { recommendations } = recommendationsData;
+  
+  // Get media data safely
+  let mediaData = {
+    moviesData: [],
+    seriesData: [],
+    animeData: [],
+    topRatedAnimeData: [],
+    doramasData: [],
+    actionMoviesData: [],
+    comedyMoviesData: [],
+    adventureMoviesData: [],
+    sciFiMoviesData: [],
+    marvelMoviesData: [],
+    dcMoviesData: [],
+    isLoading: false,
+    hasError: null
+  };
+  
+  try {
+    mediaData = useMediaData();
+  } catch (error) {
+    console.error("Error loading media data:", error);
+  }
+  
   const { 
     moviesData, 
     seriesData, 
@@ -45,24 +144,44 @@ export const useHomePageData = () => {
     dcMoviesData,
     isLoading: mediaLoading,
     hasError
-  } = useMediaData();
+  } = mediaData;
   
-  // Get popular content
+  // Get popular content safely
+  let popularContentData = { 
+    popularContent: [],
+    isLoading: false
+  };
+  
+  try {
+    popularContentData = usePopularContent();
+  } catch (error) {
+    console.error("Error loading popular content:", error);
+  }
+  
   const { 
     popularContent,
     isLoading: isLoadingPopularContent
-  } = usePopularContent();
+  } = popularContentData;
   
-  const { featuredMedia } = useFeaturedMedia(
-    hasAccess,
-    user,
-    moviesData,
-    seriesData,
-    animeData,
-    topRatedAnimeData,
-    doramasData,
-    recommendations
-  );
+  // Get featured media safely
+  let featuredMediaData = { featuredMedia: undefined };
+  
+  try {
+    featuredMediaData = useFeaturedMedia(
+      hasAccess,
+      user,
+      moviesData,
+      seriesData,
+      animeData,
+      topRatedAnimeData,
+      doramasData,
+      recommendations
+    );
+  } catch (error) {
+    console.error("Error loading featured media:", error);
+  }
+  
+  const { featuredMedia } = featuredMediaData;
 
   // Create a memoized search handler
   const handleSearch = useCallback((query: string, page: number = 1) => {
@@ -73,10 +192,10 @@ export const useHomePageData = () => {
   const shouldCheckSubscription = useMemo(() => {
     const now = Date.now();
     const timeSinceLastCheck = now - lastCheckTime.current;
-    return timeSinceLastCheck > 300000; // Aumentado para 5 minutos (300000ms) para evitar verificações excessivas
+    return timeSinceLastCheck > 300000; // 5 minutes (300000ms) to avoid excessive checks
   }, []);
 
-  // Optimize subscription check effect - CORRIGIDO para reduzir frequência de chamadas
+  // Optimize subscription check effect - reduced frequency of calls
   useEffect(() => {
     if (!user || !shouldCheckSubscription) return;
 
@@ -99,9 +218,12 @@ export const useHomePageData = () => {
         isLoading: subscriptionLoading
       });
       
-      checkSubscription();
+      if (typeof checkSubscription === 'function') {
+        checkSubscription();
+      }
+      
       lastCheckTime.current = Date.now();
-    }, 5000); // Aumentado para 5 segundos
+    }, 5000); // 5 seconds
 
     return () => {
       if (checkTimeoutRef.current) {
@@ -167,9 +289,8 @@ export const useHomePageData = () => {
       ...loadingStates
     };
 
-    // Reduzir o número de logs e comparações profundas para evitar rerenderizações excessivas
-    // Considerar apenas mudanças reais e limitar a frequência dos logs
-    const dataUpdateThrottle = 10; // Apenas log a cada 10 atualizações
+    // Reduce the number of logs and deep comparisons to avoid excessive re-renders
+    const dataUpdateThrottle = 10; // Log only every 10 updates
     dataUpdateCount.current = (dataUpdateCount.current + 1) % dataUpdateThrottle;
     
     if (dataUpdateCount.current === 0) {

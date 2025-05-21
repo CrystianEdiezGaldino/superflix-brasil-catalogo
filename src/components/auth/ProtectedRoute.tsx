@@ -8,8 +8,20 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
   const location = useLocation();
+  
+  // Handle case when AuthProvider isn't available
+  let authData = { user: null, loading: true };
+  
+  try {
+    authData = useAuth();
+  } catch (error) {
+    console.error("Error in ProtectedRoute:", error);
+    // If AuthProvider is not available, redirect to auth page
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+  
+  const { user, loading } = authData;
 
   // Show loading state while checking auth
   if (loading) {

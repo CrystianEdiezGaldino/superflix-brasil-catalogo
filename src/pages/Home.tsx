@@ -1,6 +1,6 @@
+
 import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useContentSections } from "@/hooks/home/useContentSections";
 import { MediaItem } from "@/types/movie";
 import Navbar from "@/components/Navbar";
 import HomeHeader from "@/components/home/HomeHeader";
@@ -19,6 +19,69 @@ import MediaSection from "@/components/MediaSection";
 
 const Home = () => {
   const navigate = useNavigate();
+  
+  // Handle cases when useContentSections might throw
+  let contentData = {
+    user: null,
+    isAdmin: false,
+    hasAccess: false,
+    hasTrialAccess: false,
+    featuredMedia: undefined,
+    recommendations: [],
+    moviesData: [],
+    seriesData: [],
+    animeData: [],
+    topRatedAnimeData: [],
+    doramasData: [],
+    actionMoviesData: [],
+    comedyMoviesData: [],
+    adventureMoviesData: [],
+    sciFiMoviesData: [],
+    marvelMoviesData: [],
+    dcMoviesData: [],
+    popularSeries: [],
+    recentAnimes: [],
+    movies: [],
+    isLoading: true,
+    isLoadingMore: false,
+    hasMore: false,
+    hasError: null,
+    searchQuery: "",
+    searchResults: [],
+    isSearching: false,
+    currentSection: "",
+    handleSearch: () => Promise.resolve(),
+    handleLoadMoreSection: () => {},
+    setSearchQuery: () => {},
+    setSearchResults: () => {},
+    setIsSearching: () => {},
+    sectionData: {},
+    fetchNextPage: {
+      anime: () => {},
+      topRated: () => {},
+      recent: () => {}
+    },
+    hasNextPage: {
+      anime: false,
+      topRated: false,
+      recent: false
+    },
+    isFetchingNextPage: {
+      anime: false,
+      topRated: false,
+      recent: false
+    }
+  };
+  
+  try {
+    // Dynamic import to prevent import errors
+    const { useContentSections } = require("@/hooks/home/useContentSections");
+    contentData = useContentSections();
+  } catch (error) {
+    console.error("Error loading content sections:", error);
+    return <LoadingState />;
+  }
+  
   const {
     user,
     isAdmin,
@@ -57,7 +120,7 @@ const Home = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
-  } = useContentSections();
+  } = contentData;
 
   const handleMovieClick = useCallback((movie: MediaItem) => {
     navigate(`/filme/${movie.id}`);
