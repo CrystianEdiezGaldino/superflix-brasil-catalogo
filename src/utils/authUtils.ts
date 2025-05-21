@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -95,6 +96,7 @@ export const signInUser = async (email: string, password: string) => {
     }
     
     console.log("Login successful for:", email, "User data:", data.user);
+    
     return data;
   } catch (error: any) {
     console.error("Error during login:", error);

@@ -51,6 +51,7 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
       console.log("Conta criada com sucesso:", data.user.id);
       
       // Se tiver código promocional, tentar resgatar
+      let codeRedeemed = false;
       if (code.trim()) {
         console.log("Tentando resgatar código promocional:", code.trim());
         
@@ -64,19 +65,41 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
         } else {
           console.log("Resposta do resgate do código:", redeemData);
           
-          if (redeemData.success) {
-            toast.success(`${redeemData.message} Você ganhou ${redeemData.days_valid} dias de acesso!`);
-          } else {
-            toast.error(redeemData.message || "Código inválido ou expirado");
+          // Processar dados do código resgatado - garantir que a verificação do tipo é feita corretamente
+          if (typeof redeemData === 'object' && redeemData !== null) {
+            const redeemResponse = redeemData as any;
+            
+            if (redeemResponse.success) {
+              toast.success(`${redeemResponse.message} Você ganhou ${redeemResponse.days_valid} dias de acesso!`);
+              codeRedeemed = true;
+            } else {
+              toast.error(redeemResponse.message || "Código inválido ou expirado");
+            }
           }
         }
       }
       
       toast.success("Conta criada com sucesso! Verifique seu e-mail.");
       
-      // Se tinha um código de acesso, força refresh para atualizar dados da assinatura
-      if (code.trim()) {
-        window.location.reload();
+      // Se tinha um código de acesso, força login para atualizar dados da assinatura
+      if (codeRedeemed) {
+        try {
+          // Fazer login automaticamente após resgatar código
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          });
+          
+          if (signInError) {
+            console.warn("Erro ao fazer login automático:", signInError);
+          } else {
+            console.log("Login automático realizado com sucesso!");
+            // Não redirecionar aqui, o sistema de autenticação cuidará disso
+          }
+        } catch (loginError) {
+          console.error("Erro ao fazer login automático:", loginError);
+        }
+        
         return;
       }
       

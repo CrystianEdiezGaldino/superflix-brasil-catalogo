@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Session } from "@supabase/supabase-js";
 import { checkSubscriptionStatus, processSubscriptionData } from '@/utils/subscriptionUtils';
@@ -21,12 +22,13 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
   const retryCountRef = useRef(0);
   const lastCheckTimeRef = useRef(0);
   const checkInProgressRef = useRef(false);
+  const initialCheckDoneRef = useRef(false);
 
-  const checkSubscription = useCallback(async () => {
-    if (!user || !session || checkInProgressRef.current) return;
+  const checkSubscription = useCallback(async (forceCheck = false) => {
+    if (!user || !session || (checkInProgressRef.current && !forceCheck)) return;
     
     const now = Date.now();
-    if (now - lastCheckTimeRef.current < CHECK_INTERVAL) {
+    if (!forceCheck && now - lastCheckTimeRef.current < CHECK_INTERVAL) {
       return;
     }
 
@@ -34,9 +36,21 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     lastCheckTimeRef.current = now;
 
     try {
+      console.log("Checking subscription status for user:", user.id);
+      setIsLoading(true);
+      
+      // Clear cache when forcing check to ensure fresh data
+      if (forceCheck) {
+        const cacheKey = `subscription_${user.id}`;
+        cacheManager.remove(cacheKey);
+        console.log("Force check requested, cleared subscription cache");
+      }
+      
       const data = await checkSubscriptionStatus(user.id, session.access_token);
       if (data) {
         const processedData = processSubscriptionData(data);
+        
+        console.log("Subscription status:", processedData);
         
         setIsSubscribed(processedData.isSubscribed);
         setIsAdmin(processedData.isAdmin);
@@ -48,12 +62,15 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
         
         retryCountRef.current = 0;
       }
+      
+      // Mark that initial check is complete
+      initialCheckDoneRef.current = true;
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
       
       if (retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current++;
-        setTimeout(checkSubscription, RETRY_DELAY);
+        setTimeout(() => checkSubscription(forceCheck), RETRY_DELAY);
       } else {
         toast.error('Erro ao verificar status da assinatura. Tente novamente mais tarde.');
       }
@@ -63,17 +80,30 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     }
   }, [user, session]);
 
+  // Initial check effect
+  useEffect(() => {
+    if (user && session && !initialCheckDoneRef.current) {
+      console.log("Performing initial subscription check");
+      checkSubscription(true); // Force check on initial load
+    }
+  }, [user, session, checkSubscription]);
+
+  // Regular interval check effect
   useEffect(() => {
     if (user && session) {
-      checkSubscription();
-      
-      const interval = setInterval(checkSubscription, CHECK_INTERVAL);
+      const interval = setInterval(() => checkSubscription(), CHECK_INTERVAL);
       return () => {
         clearInterval(interval);
-        cacheManager.clear(); // Limpar cache ao desmontar
       };
     }
   }, [user, session, checkSubscription]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cacheManager.clear(); // Limpar cache ao desmontar
+    };
+  }, []);
 
   return {
     isSubscribed,
@@ -84,6 +114,6 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     subscriptionTier,
     subscriptionEnd,
     trialEnd,
-    refreshSubscription: checkSubscription
+    refreshSubscription: () => checkSubscription(true) // Exported function always forces a check
   };
 };

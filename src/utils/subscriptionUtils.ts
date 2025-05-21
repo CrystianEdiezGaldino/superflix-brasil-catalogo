@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { cacheManager } from "./cacheManager";
 
@@ -54,8 +55,9 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
         subscription_end: directData.current_period_end,
       };
 
-      // Salvar no cache
-      cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), result);
+      // Salvar no cache com tempo de expiração mais curto para trial
+      const cacheTime = isTrialing ? 60000 : 300000; // 1 min para trial, 5 min para outros
+      cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), result, cacheTime);
       
       return result;
     }
@@ -75,7 +77,9 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
     
     // Salvar resultado no cache
     if (data) {
-      cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), data);
+      // Tempo de cache mais curto para contas com trial
+      const cacheTime = data?.has_trial_access ? 60000 : 300000;
+      cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), data, cacheTime);
     }
     
     return data;

@@ -17,7 +17,7 @@ import AuthPreviewSection from "@/components/auth/AuthPreviewSection";
 import { ShieldCheck, Star, TicketCheck } from "lucide-react";
 
 const Auth = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshSession } = useAuth();
   const location = useLocation();
   const [redirecting, setRedirecting] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -49,6 +49,9 @@ const Auth = () => {
       // Clear any redirect flags from session storage
       sessionStorage.removeItem('auth_redirect_shown');
       
+      // Refresh session to ensure we have the most updated tokens
+      refreshSession().catch(console.error);
+      
       // Animate progress bar before redirecting
       intervalId = window.setInterval(() => {
         setProgress(prev => {
@@ -72,7 +75,7 @@ const Auth = () => {
         clearInterval(intervalId);
       }
     };
-  }, [user, redirecting, redirectTo, loading]);
+  }, [user, redirecting, redirectTo, loading, refreshSession]);
 
   // Display loading during authentication check
   if (loading) {

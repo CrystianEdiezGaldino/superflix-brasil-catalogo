@@ -1,51 +1,82 @@
 
-interface CacheEntry<T> {
-  data: T;
-  timestamp: number;
+interface CachedItem<T> {
+  value: T;
+  expires: number | null;
 }
 
 class CacheManager {
-  private static instance: CacheManager;
-  private cache: Map<string, CacheEntry<any>>;
-  private readonly DEFAULT_DURATION = 5 * 60 * 1000; // 5 minutos
+  private cache: Map<string, CachedItem<any>> = new Map();
 
-  private constructor() {
-    this.cache = new Map();
+  /**
+   * Store a value in the cache
+   * @param key - Cache key
+   * @param value - Value to cache
+   * @param ttlMs - Time to live in milliseconds (optional)
+   */
+  set<T>(key: string, value: T, ttlMs?: number): void {
+    const expires = ttlMs ? Date.now() + ttlMs : null;
+    this.cache.set(key, { value, expires });
   }
 
-  public static getInstance(): CacheManager {
-    if (!CacheManager.instance) {
-      CacheManager.instance = new CacheManager();
-    }
-    return CacheManager.instance;
-  }
-
-  public set<T>(key: string, data: T, duration: number = this.DEFAULT_DURATION): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now() + duration
-    });
-  }
-
-  public get<T>(key: string): T | null {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
-
-    if (Date.now() > entry.timestamp) {
+  /**
+   * Get a value from the cache
+   * @param key - Cache key
+   * @returns The cached value or undefined if expired or not found
+   */
+  get<T>(key: string): T | undefined {
+    const item = this.cache.get(key);
+    
+    if (!item) return undefined;
+    
+    // Check if item has expired
+    if (item.expires && item.expires < Date.now()) {
       this.cache.delete(key);
-      return null;
+      return undefined;
     }
-
-    return entry.data as T;
+    
+    return item.value;
   }
 
-  public clear(): void {
+  /**
+   * Remove a specific item from the cache
+   * @param key - Cache key to remove
+   */
+  remove(key: string): void {
+    this.cache.delete(key);
+  }
+
+  /**
+   * Clear all cached items
+   */
+  clear(): void {
     this.cache.clear();
   }
 
-  public remove(key: string): void {
-    this.cache.delete(key);
+  /**
+   * Clear expired items from the cache
+   */
+  clearExpired(): void {
+    const now = Date.now();
+    for (const [key, item] of this.cache.entries()) {
+      if (item.expires && item.expires < now) {
+        this.cache.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Get all cache keys
+   * @returns Array of cache keys
+   */
+  keys(): string[] {
+    return Array.from(this.cache.keys());
   }
 }
 
-export const cacheManager = CacheManager.getInstance();
+// Create and export a singleton instance
+export const cacheManager = new CacheManager();
+
+// Set up automatic clearing of expired items every minute
+setInterval(() => {
+  cacheManager.clearExpired();
+}, 60000);

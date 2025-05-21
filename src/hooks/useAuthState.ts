@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +19,7 @@ export const useAuthState = () => {
     let isActive = true;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         if (!isActive) return;
         
         console.log("Auth state changed:", event);
@@ -39,6 +40,15 @@ export const useAuthState = () => {
           if (event === "SIGNED_IN" && !sessionChecked) {
             console.log("User signed in:", newSession?.user?.email);
             toast.success("Login realizado com sucesso!");
+            
+            // Force a reload if this is a new sign-in to ensure subscription data is fresh
+            if (newSession && window.location.pathname === "/" || window.location.pathname === "/auth") {
+              console.log("Refreshing page after new sign-in to update subscription data");
+              // Small delay to allow toast to be visible
+              setTimeout(() => {
+                window.location.href = "/";
+              }, 500);
+            }
           }
           
           if (event === "SIGNED_OUT") {

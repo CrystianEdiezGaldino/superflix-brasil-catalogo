@@ -15,6 +15,7 @@ interface AuthContextProps {
   loading: boolean;
   login: (email: string, password: string) => Promise<any>;
   register: (email: string, password: string, name: string) => Promise<void>;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -60,6 +61,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await signUpUser(email, password, { name });
     };
     
+    const refreshSession = async () => {
+      try {
+        const { error } = await supabase.auth.refreshSession();
+        if (error) {
+          console.error("Erro ao atualizar sessão:", error);
+          throw error;
+        }
+        console.log("Sessão atualizada com sucesso");
+      } catch (err) {
+        console.error("Erro ao atualizar sessão:", err);
+        throw err;
+      }
+    };
+    
     return {
       session,
       user,
@@ -69,7 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       resetPassword,
       loading,
       login,
-      register
+      register,
+      refreshSession
     };
   }, [session, user, loading]);
   
