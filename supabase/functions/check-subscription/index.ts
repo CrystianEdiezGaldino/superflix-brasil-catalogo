@@ -11,6 +11,14 @@ import {
   checkTempAccess 
 } from "./subscription-queries.ts";
 
+// Atualiza os headers CORS para aceitar qualquer origem
+const updatedCorsHeaders = {
+  'Access-Control-Allow-Origin': '*',  // Permite qualquer origem
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+};
+
 // Objeto para armazenar em cache verificações recentes
 const verificationCache = new Map();
 const CACHE_TTL = 60000; // 1 minuto de TTL para cache
@@ -21,7 +29,7 @@ console.log("[CHECK-SUBSCRIPTION] Function started");
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { headers: updatedCorsHeaders });
   }
 
   try {
@@ -51,7 +59,7 @@ serve(async (req) => {
     
     if (cachedResult && (now - cachedResult.timestamp < CACHE_TTL)) {
       console.log("[CHECK-SUBSCRIPTION] Returning cached result for user:", user.id);
-      return createSuccessResponse(cachedResult.data);
+      return createSuccessResponse(cachedResult.data, updatedCorsHeaders);
     }
 
     // Verificar status do usuário
@@ -104,7 +112,7 @@ serve(async (req) => {
     });
 
     // Retornar resposta de sucesso
-    return createSuccessResponse(responseData);
+    return createSuccessResponse(responseData, updatedCorsHeaders);
     
   } catch (error) {
     console.error('[CHECK-SUBSCRIPTION] Error:', error);
@@ -119,7 +127,7 @@ serve(async (req) => {
       }),
       {
         status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
+        headers: { ...updatedCorsHeaders, "Content-Type": "application/json" }
       }
     );
   }

@@ -112,24 +112,45 @@ export const signOutUser = async () => {
   try {
     console.log("Attempting to sign out");
     
-    // First, get the current session
+    // Primeiro, tente obter a sessão atual
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
       console.log("No active session found, proceeding with sign out");
     }
     
-    // Sign out
-    const { error } = await supabase.auth.signOut();
+    // Sign out do Supabase
+    const { error } = await supabase.auth.signOut({
+      scope: 'local' // Primeiro tenta apenas local para ser mais rápido
+    });
+    
     if (error) {
       console.error("Sign out error:", error);
-      throw error;
+      // Se falhar com local, tenta global
+      const { error: globalError } = await supabase.auth.signOut({
+        scope: 'global'
+      });
+      
+      if (globalError) {
+        console.error("Global sign out error:", globalError);
+        throw globalError;
+      }
     }
     
-    // Clear any local storage items that might be related to the session
+    // Limpar dados de sessão no local/sessionStorage
     localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('supabase.auth.refreshToken');
+    sessionStorage.removeItem('supabase.auth.token');
+    
+    // Limpar todos os itens relacionados ao Supabase
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('supabase.auth.')) {
+        localStorage.removeItem(key);
+      }
+    });
     
     console.log("Sign out successful");
+    return true;
   } catch (error: any) {
     console.error("Error during sign out:", error);
     toast.error(error.message || "Erro ao sair");

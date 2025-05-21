@@ -14,6 +14,7 @@ export const useHomePageData = () => {
   const lastCheckTime = useRef<number>(0);
   const checkTimeoutRef = useRef<NodeJS.Timeout>();
   const lastDataRef = useRef<any>(null);
+  const dataUpdateCount = useRef(0);
   
   const { user, loading: authLoading } = useAuth();
   const { 
@@ -72,10 +73,10 @@ export const useHomePageData = () => {
   const shouldCheckSubscription = useMemo(() => {
     const now = Date.now();
     const timeSinceLastCheck = now - lastCheckTime.current;
-    return timeSinceLastCheck > 30000; // 30 seconds
+    return timeSinceLastCheck > 300000; // Aumentado para 5 minutos (300000ms) para evitar verificações excessivas
   }, []);
 
-  // Optimize subscription check effect
+  // Optimize subscription check effect - CORRIGIDO para reduzir frequência de chamadas
   useEffect(() => {
     if (!user || !shouldCheckSubscription) return;
 
@@ -100,7 +101,7 @@ export const useHomePageData = () => {
       
       checkSubscription();
       lastCheckTime.current = Date.now();
-    }, 1000);
+    }, 5000); // Aumentado para 5 segundos
 
     return () => {
       if (checkTimeoutRef.current) {
@@ -136,7 +137,7 @@ export const useHomePageData = () => {
   }, [authLoading, subscriptionLoading, mediaLoading, isLoadingPopularContent]);
 
   // Memoize the return value with deep comparison
-  return useMemo(() => {
+  const result = useMemo(() => {
     const newData = {
       user,
       isAdmin,
@@ -166,10 +167,19 @@ export const useHomePageData = () => {
       ...loadingStates
     };
 
-    // Only log if data actually changed
-    if (JSON.stringify(newData) !== JSON.stringify(lastDataRef.current)) {
-      console.log("Home page data:", newData);
-      lastDataRef.current = newData;
+    // Reduzir o número de logs e comparações profundas para evitar rerenderizações excessivas
+    // Considerar apenas mudanças reais e limitar a frequência dos logs
+    const dataUpdateThrottle = 10; // Apenas log a cada 10 atualizações
+    dataUpdateCount.current = (dataUpdateCount.current + 1) % dataUpdateThrottle;
+    
+    if (dataUpdateCount.current === 0) {
+      const oldDataString = JSON.stringify(lastDataRef.current || {});
+      const newDataString = JSON.stringify(newData);
+      
+      if (oldDataString !== newDataString) {
+        console.log("Home page data:", newData);
+        lastDataRef.current = JSON.parse(newDataString);
+      }
     }
 
     return newData;
@@ -201,4 +211,6 @@ export const useHomePageData = () => {
     currentPage,
     loadingStates
   ]);
+  
+  return result;
 };

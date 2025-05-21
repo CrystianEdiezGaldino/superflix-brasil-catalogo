@@ -1,3 +1,4 @@
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { signOutUser } from "@/utils/authUtils";
 
 interface UserActionProps {
   isAuthenticated?: boolean;
@@ -29,14 +31,39 @@ const UserAction = ({ isAuthenticated = false }: UserActionProps) => {
 
   const handleSignOut = async () => {
     try {
-      await signOut();
-      // Clear any session-related data
+      // Primeiro, tente usar a função signOut do contexto de autenticação
+      if (typeof signOut === 'function') {
+        await signOut();
+      } else {
+        // Se não estiver disponível, use signOutUser do authUtils
+        await signOutUser();
+      }
+      
+      // Limpar dados de sessão no localStorage
       localStorage.removeItem('supabase.auth.token');
-      // Use window.location.href instead of reload to ensure a fresh state
-      window.location.href = '/';
+      localStorage.removeItem('supabase.auth.refreshToken');
+      sessionStorage.clear();
+      
+      // Mostrar toast antes de recarregar
+      toast.success("Logout realizado com sucesso!");
+      
+      // Pequeno atraso para o toast ser visível
+      setTimeout(() => {
+        // Usar window.location.href para garantir um reload completo
+        window.location.href = '/';
+      }, 500);
     } catch (error) {
       console.error('Erro ao fazer logout:', error);
-      toast.error('Erro ao fazer logout');
+      toast.error('Erro ao fazer logout. Tentando novamente...');
+      
+      // Tentar método alternativo de logout em caso de falha
+      try {
+        await signOutUser();
+        window.location.href = '/';
+      } catch (secondError) {
+        console.error('Falha no segundo método de logout:', secondError);
+        toast.error('Erro ao fazer logout. Por favor, tente novamente.');
+      }
     }
   };
   
