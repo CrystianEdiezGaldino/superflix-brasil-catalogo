@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import AuthForm from "@/components/ui/auth/AuthForm";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,33 +8,22 @@ import { useQuery } from "@tanstack/react-query";
 import { fetchPopularMovies } from "@/services/tmdbApi";
 import { getFilteredSeries } from "@/data/series";
 import { getFilteredAnimes } from "@/data/animes";
-import { MediaItem } from "@/types/movie";
 import { Progress } from "@/components/ui/progress";
 import { motion } from "framer-motion";
-import { FaGooglePlay } from "react-icons/fa";
+import { FaGooglePlay, FaStar } from "react-icons/fa";
 import AuthPageBanner from "@/components/auth/AuthPageBanner";
 import AuthLegalSection from "@/components/auth/AuthLegalSection";
 import AuthPreviewSection from "@/components/auth/AuthPreviewSection";
+import { ShieldCheck, Star, TicketCheck } from "lucide-react";
 
 const Auth = () => {
   const { user, loading } = useAuth();
   const location = useLocation();
   const [redirecting, setRedirecting] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   
   // Get the intended redirect path from state, or default to home page
   const redirectTo = location.state?.from?.pathname || "/";
-  
-  // Check for mobile screen size
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
   
   // Buscar dados de filmes populares
   const { data: moviesPreview = [] } = useQuery({
@@ -132,13 +121,45 @@ const Auth = () => {
           <div className="flex flex-col items-center justify-center mb-10">
             <AuthPageBanner />
             <AuthForm />
+            
+            {/* VIP Membership Benefits */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-8 bg-gradient-to-r from-gray-900 to-gray-800 border border-gray-700 p-4 rounded-lg w-full max-w-md"
+            >
+              <h3 className="text-lg font-medium text-white flex items-center gap-2 mb-3">
+                <Star className="h-5 w-5 text-yellow-400" fill="#FBBF24" />
+                <span>Benefícios de Membro VIP</span>
+              </h3>
+              <ul className="space-y-2 text-sm text-gray-300">
+                <li className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-green-500" />
+                  <span>Acesso antecipado a novos conteúdos</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <TicketCheck className="h-4 w-4 text-blue-500" />
+                  <span>Desconto especial quando a assinatura for lançada</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <FaStar className="h-4 w-4 text-yellow-400" />
+                  <span>Suporte prioritário e recursos exclusivos</span>
+                </li>
+              </ul>
+              <p className="mt-3 text-xs text-gray-400 italic">Criando sua conta hoje você automaticamente entra para nossa lista VIP!</p>
+            </motion.div>
+            
             <a 
               href="/naflixtv.apk"
               download
-              className="mt-4 flex items-center gap-2 px-6 py-3 bg-netflix-red hover:bg-red-700 text-white rounded-md transition-colors duration-200"
+              className="mt-6 flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-md shadow-lg hover:shadow-xl transition-all duration-200 font-medium animate-pulse"
             >
-              <FaGooglePlay className="text-xl" />
-              <span>Baixar App</span>
+              <FaGooglePlay className="text-2xl" />
+              <div className="flex flex-col items-start">
+                <span className="font-bold">Baixar App Android</span>
+                <span className="text-xs opacity-90">Acesso mais rápido e sem anúncios!</span>
+              </div>
             </a>
           </div>
 
