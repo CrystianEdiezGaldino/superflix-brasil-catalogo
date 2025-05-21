@@ -1,55 +1,59 @@
-
 import { Series, MediaItem } from "@/types/movie";
 import { buildApiUrl, fetchFromApi, addMediaTypeToResults, limitResults } from "./utils";
 
-// Fetch Korean dramas (doramas)
-export const fetchKoreanDramas = async (page = 1, limit = 20): Promise<MediaItem[]> => {
-  const baseFetchAndProcess = async (url: string): Promise<MediaItem[]> => {
-    const data = await fetchFromApi<{results?: any[]}>(url);
-    const seriesWithType = addMediaTypeToResults(data.results || [], "tv");
-    return seriesWithType;
-  };
+// Função base para buscar doramas
+const fetchDoramasBase = async (url: string): Promise<MediaItem[]> => {
+  const data = await fetchFromApi<{results?: any[]}>(url);
+  const seriesWithType = addMediaTypeToResults(data.results || [], "tv");
+  return seriesWithType.filter(drama => 
+    drama && 
+    'original_language' in drama && 
+    drama.original_language === 'ko' &&
+    drama.poster_path
+  );
+};
 
+// Buscar lista completa de doramas
+export const fetchKoreanDramas = async (page = 1, limit = 30): Promise<MediaItem[]> => {
   try {
-    const koreaUrl = buildApiUrl("/discover/tv", `&with_original_language=ko&sort_by=popularity.desc&page=${page}`);
-    const koreanDramas = await baseFetchAndProcess(koreaUrl);
+    // Buscar doramas populares
+    const popularUrl = buildApiUrl("/discover/tv", `&with_original_language=ko&sort_by=popularity.desc&vote_count.gte=50&page=${page}`);
+    const popularDramas = await fetchDoramasBase(popularUrl);
     
-    // Filter to get only Korean dramas (you could add more specific filters here)
-    const filteredDramas = koreanDramas.filter(drama => {
-      return drama && 'original_language' in drama && drama.original_language === 'ko';
-    });
+    // Buscar doramas bem avaliados
+    const topRatedUrl = buildApiUrl("/discover/tv", `&with_original_language=ko&sort_by=vote_average.desc&vote_count.gte=50&page=${page}`);
+    const topRatedDramas = await fetchDoramasBase(topRatedUrl);
     
-    return limitResults(filteredDramas, limit);
+    // Combinar e remover duplicatas
+    const allDramas = [...popularDramas, ...topRatedDramas];
+    const uniqueDramas = allDramas.filter((drama, index, self) =>
+      index === self.findIndex((d) => d.id === drama.id)
+    );
+    
+    return limitResults(uniqueDramas, limit);
   } catch (error) {
     console.error("Error fetching Korean dramas:", error);
     return [];
   }
 };
 
-// Fetch popular doramas
-export const fetchPopularKoreanDramas = async (limit = 12): Promise<MediaItem[]> => {
+// Distribuir doramas para cada seção
+export const fetchPopularKoreanDramas = async (limit = 10): Promise<MediaItem[]> => {
   try {
-    const url = buildApiUrl("/discover/tv", "&with_original_language=ko&sort_by=popularity.desc");
-    const data = await fetchFromApi<{results?: any[]}>(url);
-    if (!data.results) return [];
-    
-    const dramasWithType = addMediaTypeToResults(data.results, "tv");
-    return limitResults(dramasWithType, limit);
+    const allDoramas = await fetchKoreanDramas(1, 30);
+    // Pegar os primeiros 10 doramas (mais populares)
+    return allDoramas.slice(0, limit);
   } catch (error) {
     console.error("Error fetching popular Korean dramas:", error);
     return [];
   }
 };
 
-// Fetch top-rated doramas
-export const fetchTopRatedKoreanDramas = async (limit = 12): Promise<MediaItem[]> => {
+export const fetchTopRatedKoreanDramas = async (limit = 10): Promise<MediaItem[]> => {
   try {
-    const url = buildApiUrl("/discover/tv", "&with_original_language=ko&sort_by=vote_average.desc&vote_count.gte=100");
-    const data = await fetchFromApi<{results?: any[]}>(url);
-    if (!data.results) return [];
-    
-    const dramasWithType = addMediaTypeToResults(data.results, "tv");
-    return limitResults(dramasWithType, limit);
+    const allDoramas = await fetchKoreanDramas(1, 30);
+    // Pegar os próximos 10 doramas (bem avaliados)
+    return allDoramas.slice(10, 20);
   } catch (error) {
     console.error("Error fetching top rated Korean dramas:", error);
     return [];
@@ -57,18 +61,11 @@ export const fetchTopRatedKoreanDramas = async (limit = 12): Promise<MediaItem[]
 };
 
 // Fetch Korean movies
-export const fetchKoreanMovies = async (limit = 12): Promise<MediaItem[]> => {
+export const fetchKoreanMovies = async (limit = 10): Promise<MediaItem[]> => {
   try {
-    const url = buildApiUrl("/discover/movie", "&with_original_language=ko&sort_by=popularity.desc");
-    const data = await fetchFromApi<{results?: any[]}>(url);
-    if (!data.results) return [];
-    
-    const moviesWithType = data.results.map(item => ({
-      ...item,
-      media_type: "movie"
-    }));
-    
-    return limitResults(moviesWithType, limit);
+    const allDoramas = await fetchKoreanDramas(1, 30);
+    // Pegar os últimos 10 doramas
+    return allDoramas.slice(20, 30);
   } catch (error) {
     console.error("Error fetching Korean movies:", error);
     return [];

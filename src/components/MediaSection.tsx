@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { MediaItem, getMediaTitle } from '@/types/movie';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Carousel,
   CarouselContent,
@@ -44,6 +44,8 @@ const MediaSection = ({
 }: MediaSectionProps) => {
   const [focusedIndex, setFocusedIndex] = useState(focusedItem);
   const navigate = useNavigate();
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
 
   useEffect(() => {
     setFocusedIndex(focusedItem);
@@ -137,7 +139,7 @@ const MediaSection = ({
         ))}
       </div>
 
-      {showLoadMore && onLoadMore && (
+      {showLoadMore && onLoadMore && !isHomePage && (
         <div className="flex justify-center mt-4">
           <Button
             onClick={onLoadMore}

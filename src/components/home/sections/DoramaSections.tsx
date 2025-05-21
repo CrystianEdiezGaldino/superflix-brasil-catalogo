@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
 

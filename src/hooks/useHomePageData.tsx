@@ -12,7 +12,10 @@ import {
   fetchTrendingSeries,
   fetchKoreanDramas,
   fetchPopularKoreanDramas,
-  fetchTopRatedKoreanDramas
+  fetchTopRatedKoreanDramas,
+  fetchMarvelMovies,
+  fetchDCMovies,
+  fetchTrilogies
 } from "@/services/tmdbApi";
 import { MediaItem } from "@/types/movie";
 
@@ -93,6 +96,34 @@ const useHomePageData = () => {
     staleTime: 1000 * 60 * 5
   });
 
+  // Fetch Marvel movies
+  const { data: marvelMoviesData = [], isLoading: marvelMoviesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeMarvelMovies'],
+    queryFn: () => fetchMarvelMovies(30),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5
+  });
+
+  // Fetch DC movies
+  const { data: dcMoviesData, isLoading: dcMoviesLoading } = useQuery({
+    queryKey: ['homeDCMovies'],
+    queryFn: () => fetchDCMovies(30),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    retry: 3,
+    refetchOnWindowFocus: false
+  });
+
+  // Fetch trilogies
+  const { data: trilogiesData = [], isLoading: trilogiesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeTrilogies'],
+    queryFn: () => fetchTrilogies(30),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    retry: 3,
+    refetchOnWindowFocus: false
+  });
+
   // Memoize loading state
   const isLoading = useMemo(() => {
     return moviesLoading || 
@@ -104,7 +135,10 @@ const useHomePageData = () => {
            topRatedSeriesLoading ||
            doramasLoading ||
            topRatedDoramasLoading ||
-           popularDoramasLoading;
+           popularDoramasLoading ||
+           marvelMoviesLoading ||
+           dcMoviesLoading ||
+           trilogiesLoading;
   }, [
     moviesLoading,
     trendingMoviesLoading,
@@ -115,7 +149,10 @@ const useHomePageData = () => {
     topRatedSeriesLoading,
     doramasLoading,
     topRatedDoramasLoading,
-    popularDoramasLoading
+    popularDoramasLoading,
+    marvelMoviesLoading,
+    dcMoviesLoading,
+    trilogiesLoading
   ]);
 
   // Memoize section data
@@ -145,8 +182,9 @@ const useHomePageData = () => {
     comedyMoviesData: recentMovies,
     adventureMoviesData: trendingMovies,
     sciFiMoviesData: topRatedMovies,
-    marvelMoviesData: topRatedMovies,
-    dcMoviesData: topRatedMovies,
+    marvelMoviesData,
+    dcMoviesData,
+    trilogiesData,
     popularContent: trendingSeries,
     isLoading,
     hasError: null,

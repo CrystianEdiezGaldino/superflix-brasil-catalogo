@@ -76,10 +76,7 @@ export default function WatchHistory({ watchHistory: externalWatchHistory, onMed
       <div className="pt-8 pb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl md:text-2xl font-bold text-white">Continue Assistindo</h2>
-          <Button variant="ghost" className="text-gray-400 hover:text-white">
-            <History className="mr-2 h-4 w-4" />
-            Ver Histórico
-          </Button>
+          
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {[...Array(6)].map((_, i) => (
@@ -95,10 +92,7 @@ export default function WatchHistory({ watchHistory: externalWatchHistory, onMed
       <div className="pt-8 pb-4">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl md:text-2xl font-bold text-white">Continue Assistindo</h2>
-          <Button variant="ghost" className="text-gray-400 hover:text-white">
-            <History className="mr-2 h-4 w-4" />
-            Ver Histórico
-          </Button>
+          
         </div>
         <div className="text-center py-8">
           <p className="text-gray-400">Nenhum conteúdo no histórico de visualização</p>
@@ -111,10 +105,7 @@ export default function WatchHistory({ watchHistory: externalWatchHistory, onMed
     <div className="pt-8 pb-4">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl md:text-2xl font-bold text-white">Continue Assistindo</h2>
-        <Button variant="ghost" className="text-gray-400 hover:text-white">
-          <History className="mr-2 h-4 w-4" />
-          Ver Histórico
-        </Button>
+       
       </div>
 
       <Tabs defaultValue="all" className="w-full">

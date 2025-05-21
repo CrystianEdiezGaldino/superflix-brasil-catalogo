@@ -1,4 +1,3 @@
-
 export interface Genre {
   id: number;
   name: string;
@@ -27,15 +26,16 @@ export interface BaseMedia {
   vote_average: number;
   genres: Genre[];
   genre_ids: number[];
+  first_air_date?: string;
+  release_date?: string;
+  popularity?: number;
 }
 
 export interface Movie extends BaseMedia {
   title: string;
-  release_date: string;
   media_type: "movie";
   original_title: string;
   vote_count?: number;
-  popularity?: number;
   runtime: number;
   status: string;
   imdb_id?: string;
@@ -53,7 +53,6 @@ export interface Movie extends BaseMedia {
 
 export interface Series extends BaseMedia {
   name: string;
-  first_air_date: string;
   media_type: "tv";
   original_name: string;
   original_language: string;
@@ -62,9 +61,7 @@ export interface Series extends BaseMedia {
   status: string;
   title?: string;
   imdb_id?: string;
-  release_date?: string;
   vote_count?: number;
-  popularity?: number;
   external_ids?: {
     imdb_id: string;
   };

@@ -43,6 +43,7 @@ const Home = () => {
     isSearchLoading,
     sectionData = {},
     handleLoadMoreSection,
+    trilogiesData = [],
   } = useHomePageData();
 
   // State for search functionality
@@ -193,43 +194,71 @@ const Home = () => {
               />
               
               <DoramaSections 
-                doramas={doramasData || []}
-                topRatedDoramas={doramasData?.slice(5, 10) || []}
-                popularDoramas={doramasData?.slice(10, 15) || []}
-                koreanMovies={doramasData?.slice(15, 20) || []}
+                doramas={doramasData?.filter(d => {
+                  const year = new Date(d.first_air_date || d.release_date || '').getFullYear();
+                  return year >= new Date().getFullYear() - 5 && d.poster_path;
+                }).slice(0, 10) || []}
+                topRatedDoramas={doramasData?.filter(d => {
+                  const year = new Date(d.first_air_date || d.release_date || '').getFullYear();
+                  return year >= new Date().getFullYear() - 5 && d.poster_path && d.vote_average >= 7.0;
+                }).sort((a, b) => (b.vote_average || 0) - (a.vote_average || 0)).slice(0, 10) || []}
+                popularDoramas={doramasData?.filter(d => {
+                  const year = new Date(d.first_air_date || d.release_date || '').getFullYear();
+                  return year >= new Date().getFullYear() - 5 && d.poster_path && d.popularity > 50;
+                }).sort((a, b) => (b.popularity || 0) - (a.popularity || 0)).slice(0, 10) || []}
+                koreanMovies={[]}
                 onMediaClick={handleDoramaClick}
                 onLoadMore={() => {}}
                 isLoading={false}
                 hasMore={false}
               />
               
-              {(marvelMoviesData?.length > 0 || dcMoviesData?.length > 0) && (
-                <div className="mb-16">
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Universos</h2>
-                  
-                  {marvelMoviesData?.length > 0 && (
-                    <div className="mb-10">
-                      <MediaSection 
-                        title="Marvel"
-                        medias={marvelMoviesData}
-                        showLoadMore={false}
-                        onLoadMore={() => {}}
-                        sectionIndex={0}
-                      />
-                    </div>
-                  )}
-                  
-                  {dcMoviesData?.length > 0 && (
-                    <div className="mb-10">
-                      <MediaSection 
-                        title="DC"
-                        medias={dcMoviesData}
-                        showLoadMore={false}
-                        onLoadMore={() => {}}
-                        sectionIndex={1}
-                      />
-                    </div>
-                  )}
+              {/* Seção de Filmes Populares */}
+              <div className="mb-10">
+                <MediaSection 
+                  title="Filmes Populares"
+                  medias={moviesData}
+                  showLoadMore={true}
+                  onLoadMore={() => handleLoadMoreSection('movies')}
+                  sectionIndex={0}
+                />
+              </div>
+
+              {/* Seção da Marvel */}
+              {marvelMoviesData?.length > 0 && (
+                <div className="mb-10">
+                  <MediaSection 
+                    title="Marvel"
+                    medias={marvelMoviesData}
+                    showLoadMore={false}
+                    sectionIndex={1}
+                  />
+                </div>
+              )}
+
+              {/* Seção da DC */}
+              {dcMoviesData?.length > 0 && (
+                <div className="mb-10">
+                  <MediaSection 
+                    title="DC Comics"
+                    medias={dcMoviesData}
+                    showLoadMore={false}
+                    onLoadMore={() => {}}
+                    sectionIndex={2}
+                  />
+                </div>
+              )}
+
+              {/* Seção de Trilogias */}
+              {trilogiesData?.length > 0 && (
+                <div className="mb-10">
+                  <MediaSection 
+                    title="Trilogias e Franquias"
+                    medias={trilogiesData}
+                    showLoadMore={false}
+                    onLoadMore={() => {}}
+                    sectionIndex={3}
+                  />
                 </div>
               )}
             </>
