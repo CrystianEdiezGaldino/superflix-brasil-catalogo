@@ -1,4 +1,3 @@
-
 // Import required modules
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
@@ -47,14 +46,14 @@ serve(async (req) => {
     } catch (error) {
       console.error("[CHECK-SUBSCRIPTION] Auth error:", error);
       
-      // Return default values with status 200 to avoid breaking the UI
+      // Retornar valores não permissivos em caso de erro de autenticação
       return new Response(
         JSON.stringify({
-          hasActiveSubscription: true,
+          hasActiveSubscription: false,
           isAdmin: false,
           hasTempAccess: false,
-          has_trial_access: true,
-          subscription_tier: 'trial',
+          has_trial_access: false,
+          subscription_tier: 'none',
           user: { id: 'unknown', email: 'unknown' }
         }),
         {
@@ -107,9 +106,9 @@ serve(async (req) => {
 
     // Prepare response data
     const responseData = {
-      hasActiveSubscription: hasActiveSubscription || true, // Default to true to prevent blocking
+      hasActiveSubscription: hasActiveSubscription,
       hasTempAccess,
-      has_trial_access: hasTrialAccess || true, // Default to true to prevent blocking
+      has_trial_access: hasTrialAccess,
       isAdmin: !!isAdmin,
       user: { id: user.id, email: user.email },
       subscription_tier: subscription?.plan_type || (hasTrialAccess ? 'trial' : 'free'),
@@ -129,15 +128,15 @@ serve(async (req) => {
   } catch (error) {
     console.error('[CHECK-SUBSCRIPTION] Error:', error);
     
-    // Always return 200 with permissive default values to prevent UI blocking
+    // Retornar valores não permissivos em caso de erro
     return new Response(
       JSON.stringify({
         error: String(error),
-        hasActiveSubscription: true,
+        hasActiveSubscription: false,
         isAdmin: false,
         hasTempAccess: false,
-        has_trial_access: true,
-        subscription_tier: 'trial'
+        has_trial_access: false,
+        subscription_tier: 'none'
       }),
       {
         status: 200,

@@ -70,12 +70,12 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
                       new Date(directData.current_period_end) > now;
       
       const result = {
-        hasActiveSubscription: isActive || true, // Default to true if verification fails
-        has_trial_access: isTrialing || true, // Default to true if verification fails
-        subscription_tier: directData.plan_type || 'trial',
+        hasActiveSubscription: isActive,
+        has_trial_access: isTrialing,
+        subscription_tier: directData.plan_type || 'none',
         trial_end: directData.trial_end,
         subscription_end: directData.current_period_end,
-        isAdmin: false // Explicitly set to false for non-admin users
+        isAdmin: false
       };
 
       // Save to cache with shorter TTL for trial
@@ -127,11 +127,11 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
  */
 export const processSubscriptionData = (data: any) => {
   const defaults = {
-    isSubscribed: true,  // Default to true to avoid blocking
+    isSubscribed: false,
     isAdmin: false,
     hasTempAccess: false,
-    hasTrialAccess: true, // Default to true to avoid blocking
-    subscriptionTier: 'trial',
+    hasTrialAccess: false,
+    subscriptionTier: 'none',
     subscriptionEnd: null,
     trialEnd: null
   };
@@ -145,11 +145,11 @@ export const processSubscriptionData = (data: any) => {
   console.log("Processing subscription data:", { data, isAdmin });
 
   return {
-    isSubscribed: isActive || hasTrialAccess || true, // Always allow access to avoid blank screen
+    isSubscribed: isActive || hasTrialAccess,
     isAdmin: isAdmin,
     hasTempAccess: Boolean(data?.hasTempAccess),
-    hasTrialAccess: hasTrialAccess || true, // Always allow access to avoid blank screen
-    subscriptionTier: data?.subscription_tier || 'trial',
+    hasTrialAccess: hasTrialAccess,
+    subscriptionTier: data?.subscription_tier || 'none',
     subscriptionEnd: data?.subscription_end || null,
     trialEnd: data?.trial_end || null
   };
@@ -160,9 +160,9 @@ export const processSubscriptionData = (data: any) => {
  */
 function getDefaultSubscriptionState() {
   return {
-    hasActiveSubscription: true, // Default to true to prevent blank screens
-    has_trial_access: true,      // Default to true to prevent blank screens
-    subscription_tier: 'trial',
+    hasActiveSubscription: false, // Alterado para false para não permitir acesso por padrão
+    has_trial_access: false,      // Alterado para false para não permitir acesso por padrão
+    subscription_tier: 'none',
     isAdmin: false,
     hasTempAccess: false
   };

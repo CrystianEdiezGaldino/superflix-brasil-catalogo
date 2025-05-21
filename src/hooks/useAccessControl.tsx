@@ -17,8 +17,10 @@ export const useAccessControl = () => {
 
   // Memoize the access calculation
   const userHasAccess = useMemo(() => {
+    // Só permite acesso se tiver assinatura ativa, for admin, tiver acesso temporário ou estiver em período de teste
+    if (!user) return false;
     return Boolean(isSubscribed || isAdmin || hasTempAccess || hasTrialAccess);
-  }, [isSubscribed, isAdmin, hasTempAccess, hasTrialAccess]);
+  }, [user, isSubscribed, isAdmin, hasTempAccess, hasTrialAccess]);
 
   // Update access state when necessary
   useEffect(() => {

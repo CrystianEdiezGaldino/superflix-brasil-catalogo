@@ -1,4 +1,3 @@
-
 import React from "react";
 import { MediaItem } from "@/types/movie";
 import Banner from "@/components/Banner";
@@ -17,19 +16,23 @@ interface HomeHeaderProps {
 const HomeHeader = ({ 
   featuredMedia, 
   isAdmin = false, 
-  hasAccess = true, 
+  hasAccess = false, 
   hasTrialAccess = false,
   trialEnd = null,
   searchQuery = "",
   showFullContent = false,
   onButtonClick
 }: HomeHeaderProps) => {
+  // Calcula se o usuário tem acesso baseado em hasAccess ou hasTrialAccess
+  const userHasAccess = hasAccess || hasTrialAccess;
+
   return (
     <div className="relative">
       {/* Show Banner only when not searching */}
       {!searchQuery && featuredMedia && (
         <Banner 
           media={featuredMedia}
+          hasAccess={userHasAccess}
         />
       )}
     </div>

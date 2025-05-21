@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Session } from "@supabase/supabase-js";
 import { checkSubscriptionStatus, processSubscriptionData } from '@/utils/subscriptionUtils';
@@ -10,12 +9,12 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY = 5000; // 5 seconds
 
 export const useSubscriptionState = (user: any, session: Session | null) => {
-  const [isSubscribed, setIsSubscribed] = useState(true); // Default to true to prevent blank screens
+  const [isSubscribed, setIsSubscribed] = useState(false); // Alterado para false
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasTempAccess, setHasTempAccess] = useState(false);
-  const [hasTrialAccess, setHasTrialAccess] = useState(true); // Default to true to prevent blank screens
-  const [subscriptionTier, setSubscriptionTier] = useState<string | null>('trial');
+  const [hasTrialAccess, setHasTrialAccess] = useState(false); // Alterado para false
+  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [trialEnd, setTrialEnd] = useState<string | null>(null);
   
@@ -79,9 +78,9 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
       
-      // Use permissive values to avoid UI blocking
-      setIsSubscribed(true);
-      setHasTrialAccess(true);
+      // Não usar valores permissivos em caso de erro
+      setIsSubscribed(false);
+      setHasTrialAccess(false);
       
       if (retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current++;
