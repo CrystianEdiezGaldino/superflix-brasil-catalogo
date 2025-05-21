@@ -17,7 +17,9 @@ import {
   fetchDCMovies,
   fetchTrilogies,
   fetchActionMovies,
-  fetchComedyMovies
+  fetchComedyMovies,
+  fetchHorrorMovies,
+  fetchPopularInBrazil
 } from "@/services/tmdbApi";
 import { MediaItem } from "@/types/movie";
 
@@ -146,6 +148,26 @@ const useHomePageData = () => {
     refetchOnWindowFocus: false
   });
 
+  // Fetch horror movies
+  const { data: horrorMoviesData = [], isLoading: horrorMoviesLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homeHorrorMovies'],
+    queryFn: () => fetchHorrorMovies(30),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    retry: 3,
+    refetchOnWindowFocus: false
+  });
+
+  // Fetch popular content in Brazil
+  const { data: popularInBrazilData = [], isLoading: popularInBrazilLoading } = useQuery<MediaItem[]>({
+    queryKey: ['homePopularInBrazil'],
+    queryFn: () => fetchPopularInBrazil(30),
+    enabled: !!user,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    retry: 3,
+    refetchOnWindowFocus: false
+  });
+
   // Memoize loading state
   const isLoading = useMemo(() => {
     return moviesLoading || 
@@ -162,7 +184,9 @@ const useHomePageData = () => {
            dcMoviesLoading ||
            trilogiesLoading ||
            actionMoviesLoading ||
-           comedyMoviesLoading;
+           comedyMoviesLoading ||
+           horrorMoviesLoading ||
+           popularInBrazilLoading;
   }, [
     moviesLoading,
     trendingMoviesLoading,
@@ -178,7 +202,9 @@ const useHomePageData = () => {
     dcMoviesLoading,
     trilogiesLoading,
     actionMoviesLoading,
-    comedyMoviesLoading
+    comedyMoviesLoading,
+    horrorMoviesLoading,
+    popularInBrazilLoading
   ]);
 
   // Memoize section data
@@ -206,6 +232,8 @@ const useHomePageData = () => {
     doramasData,
     actionMoviesData,
     comedyMoviesData,
+    horrorMoviesData,
+    popularInBrazilData,
     adventureMoviesData: trendingMovies,
     sciFiMoviesData: topRatedMovies,
     marvelMoviesData,

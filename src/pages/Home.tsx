@@ -44,6 +44,8 @@ const Home = () => {
     sectionData = {},
     handleLoadMoreSection,
     trilogiesData = [],
+    horrorMoviesData = [],
+    popularInBrazilData = [],
   } = useHomePageData();
 
   // State for search functionality
@@ -249,6 +251,32 @@ const Home = () => {
                 </div>
               )}
 
+              {/* Seção de Filmes de Terror */}
+              {horrorMoviesData?.length > 0 && (
+                <div className="mb-10">
+                  <MediaSection 
+                    title="Filmes de Terror"
+                    medias={horrorMoviesData}
+                    showLoadMore={false}
+                    onLoadMore={() => {}}
+                    sectionIndex={3}
+                  />
+                </div>
+              )}
+
+              {/* Seção de Populares no Brasil */}
+              {popularInBrazilData?.length > 0 && (
+                <div className="mb-10">
+                  <MediaSection 
+                    title="Populares no Brasil"
+                    medias={popularInBrazilData}
+                    showLoadMore={false}
+                    onLoadMore={() => {}}
+                    sectionIndex={4}
+                  />
+                </div>
+              )}
+
               {/* Seção de Trilogias */}
               {trilogiesData?.length > 0 && (
                 <div className="mb-10">
@@ -257,7 +285,7 @@ const Home = () => {
                     medias={trilogiesData}
                     showLoadMore={false}
                     onLoadMore={() => {}}
-                    sectionIndex={3}
+                    sectionIndex={5}
                   />
                 </div>
               )}

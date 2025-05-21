@@ -10,7 +10,9 @@ import {
   fetchMoviesByGenre,
   fetchMoviesByKeyword,
   fetchActionMovies,
-  fetchComedyMovies
+  fetchComedyMovies,
+  fetchHorrorMovies,
+  fetchPopularInBrazil
 } from "./tmdb/movies";
 import {
   fetchPopularSeries,
@@ -119,6 +121,10 @@ export {
   fetchMoviesByKeyword,
   fetchMovieDetails,
   searchMovies,
+  fetchActionMovies,
+  fetchComedyMovies,
+  fetchHorrorMovies,
+  fetchPopularInBrazil,
   
   // Series exports
   fetchPopularSeries,
@@ -152,9 +158,7 @@ export {
   fetchDoramaCast,
   fetchMarvelMovies,
   fetchDCMovies,
-  fetchTrilogies,
-  fetchActionMovies,
-  fetchComedyMovies
+  fetchTrilogies
 };
 
 // Utility function for components needing to fetch media by ID
