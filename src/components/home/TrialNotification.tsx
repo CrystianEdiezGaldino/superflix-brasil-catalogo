@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { InfoIcon } from 'lucide-react';
 import { format, parseISO, isValid } from 'date-fns';
@@ -15,7 +14,7 @@ const TrialNotification = ({ trialEnd = null }: TrialNotificationProps) => {
     : 'em breve';
 
   return (
-    <div className="bg-gradient-to-r from-yellow-600 to-yellow-500 text-black px-4 py-2 flex items-center justify-center text-sm">
+    <div className="bg-gradient-to-r from-yellow-600 to-yellow-500 text-black px-4 py-2 flex items-center justify-center text-sm fixed top-0 left-0 right-0 z-50">
       <InfoIcon className="h-4 w-4 mr-2 flex-shrink-0" />
       <span>
         Você está em um período de avaliação gratuito que termina {formattedDate}.

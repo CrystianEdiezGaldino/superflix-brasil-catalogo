@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MediaItem } from "@/types/movie";
 
 export const useFeaturedMedia = (
@@ -13,32 +13,34 @@ export const useFeaturedMedia = (
 ) => {
   const [featuredMedia, setFeaturedMedia] = useState<MediaItem | undefined>(undefined);
 
+  // Memoize the media arrays to prevent unnecessary recalculations
+  const safeMediaArrays = useMemo(() => ({
+    movieData: Array.isArray(movieData) ? movieData : [],
+    seriesData: Array.isArray(seriesData) ? seriesData : [],
+    animeData: Array.isArray(animeData) ? animeData : [],
+    topRatedAnimeData: Array.isArray(topRatedAnimeData) ? topRatedAnimeData : [],
+    doramasData: Array.isArray(doramasData) ? doramasData : [],
+    recommendations: Array.isArray(recommendations) ? recommendations : []
+  }), [movieData, seriesData, animeData, topRatedAnimeData, doramasData, recommendations]);
+
   useEffect(() => {
     if (!user) return;
     
-    // Garantir que todos os dados são arrays
-    const safeMovieData = Array.isArray(movieData) ? movieData : [];
-    const safeSeriesData = Array.isArray(seriesData) ? seriesData : [];
-    const safeAnimeData = Array.isArray(animeData) ? animeData : [];
-    const safeTopRatedAnimeData = Array.isArray(topRatedAnimeData) ? topRatedAnimeData : [];
-    const safeDoramasData = Array.isArray(doramasData) ? doramasData : [];
-    const safeRecommendations = Array.isArray(recommendations) ? recommendations : [];
-    
     // Se houver recomendações, priorize-as
-    if (hasAccess && safeRecommendations.length > 0) {
-      const randomIndex = Math.floor(Math.random() * safeRecommendations.length);
-      setFeaturedMedia(safeRecommendations[randomIndex]);
+    if (hasAccess && safeMediaArrays.recommendations.length > 0) {
+      const randomIndex = Math.floor(Math.random() * safeMediaArrays.recommendations.length);
+      setFeaturedMedia(safeMediaArrays.recommendations[randomIndex]);
       return;
     }
     
     // If user has access to premium content (including trial access), include all media
     if (hasAccess) {
       const allMedia = [
-        ...safeMovieData,
-        ...safeSeriesData,
-        ...safeAnimeData,
-        ...safeTopRatedAnimeData,
-        ...safeDoramasData
+        ...safeMediaArrays.movieData,
+        ...safeMediaArrays.seriesData,
+        ...safeMediaArrays.animeData,
+        ...safeMediaArrays.topRatedAnimeData,
+        ...safeMediaArrays.doramasData
       ].filter(Boolean);
       
       if (allMedia.length > 0) {
@@ -48,9 +50,9 @@ export const useFeaturedMedia = (
     } else {
       // Show preview content only
       const freeMedia = [
-        ...safeMovieData.slice(0, 2),
-        ...safeSeriesData.slice(0, 2),
-        ...safeAnimeData.slice(0, 2)
+        ...safeMediaArrays.movieData.slice(0, 2),
+        ...safeMediaArrays.seriesData.slice(0, 2),
+        ...safeMediaArrays.animeData.slice(0, 2)
       ].filter(Boolean);
       
       if (freeMedia.length > 0) {
@@ -58,16 +60,7 @@ export const useFeaturedMedia = (
         setFeaturedMedia(freeMedia[randomIndex]);
       }
     }
-  }, [
-    user,
-    hasAccess,
-    movieData,
-    seriesData,
-    animeData,
-    topRatedAnimeData,
-    doramasData,
-    recommendations
-  ]);
+  }, [user, hasAccess, safeMediaArrays]);
 
   return { featuredMedia };
 };

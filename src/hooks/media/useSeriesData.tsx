@@ -1,31 +1,12 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { MediaItem } from "@/types/movie";
 import { useBaseMedia } from "./useBaseMedia";
 import { 
   fetchPopularSeries, 
   fetchTopRatedSeries,
-  fetchTrendingSeries
-} from "@/services/tmdbApi";
-
-// Implementação da função ausente
-const fetchPopularAmericanSeries = async (): Promise<MediaItem[]> => {
-  try {
-    const url = `/api/discover/tv?with_original_language=en&sort_by=popularity.desc&language=pt-BR`;
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    return data.results.map((item: any) => ({
-      ...item,
-      media_type: "tv"
-    }));
-  } catch (error) {
-    console.error("Error fetching popular American series:", error);
-    return [];
-  }
-};
+  fetchTrendingSeries,
+  fetchPopularAmericanSeries
+} from "@/services/tmdb/series";
 
 export const useSeriesData = () => {
   const { user, hasAccess, isUserAuthenticated } = useBaseMedia();

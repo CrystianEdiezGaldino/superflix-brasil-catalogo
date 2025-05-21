@@ -1,6 +1,5 @@
-
 // TMDB API Configuration
-export const API_KEY = "8c247ea0b4b56ed2ff7d41c9a833aa77";
+export const API_KEY = import.meta.env.VITE_TMDB_API_KEY;
 export const BASE_URL = "https://api.themoviedb.org/3";
 export const DEFAULT_LANGUAGE = "pt-BR";
 export const DEFAULT_REGION = "BR";

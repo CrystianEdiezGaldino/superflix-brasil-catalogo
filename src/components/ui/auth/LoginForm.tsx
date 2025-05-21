@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +15,31 @@ interface LoginFormProps {
 const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {};
+    
+    if (!email) {
+      newErrors.email = "E-mail é obrigatório";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "E-mail inválido";
+    }
+    
+    if (!password) {
+      newErrors.password = "Senha é obrigatória";
+    } else if (password.length < 6) {
+      newErrors.password = "A senha deve ter pelo menos 6 caracteres";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
-      toast.error("Por favor, preencha todos os campos");
+    if (!validateForm()) {
       return;
     }
     
@@ -29,8 +47,14 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
     
     try {
       await signInUser(email, password);
-    } catch (error) {
+      toast.success("Login realizado com sucesso!");
+    } catch (error: any) {
       console.error("Erro ao fazer login:", error);
+      if (error.message.includes("Invalid login credentials")) {
+        toast.error("E-mail ou senha incorretos");
+      } else {
+        toast.error(error.message || "Erro ao fazer login");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -50,11 +74,19 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
           type="email"
           placeholder="seu@email.com"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setErrors(prev => ({ ...prev, email: undefined }));
+          }}
           disabled={isLoading}
-          className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+          className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${
+            errors.email ? 'border-red-500' : ''
+          }`}
           required
         />
+        {errors.email && (
+          <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+        )}
       </div>
       
       <div className="space-y-2">
@@ -64,11 +96,19 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
           type="password"
           placeholder="********"
           value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setErrors(prev => ({ ...prev, password: undefined }));
+          }}
           disabled={isLoading}
-          className="bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red"
+          className={`bg-gray-800 border-gray-600 text-white focus:ring-netflix-red focus:border-netflix-red ${
+            errors.password ? 'border-red-500' : ''
+          }`}
           required
         />
+        {errors.password && (
+          <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+        )}
       </div>
       
       <div className="space-y-4">

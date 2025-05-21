@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { MediaItem } from "@/types/movie";
 import { useBaseMedia } from "./useBaseMedia";
@@ -9,15 +8,19 @@ import {
   fetchRecentMovies,
   fetchMoviesByGenre
 } from "@/services/tmdbApi";
+import { API_KEY, BASE_URL } from "@/services/tmdb/config";
 
 // Implementação do fetchMoviesByKeyword
-const fetchMoviesByKeyword = async (keywordId: number): Promise<MediaItem[]> => {
+const fetchMoviesByKeywordId = async (keywordId: number): Promise<MediaItem[]> => {
   try {
-    const url = `/api/discover/movie?with_keywords=${keywordId}&language=pt-BR`;
-    const response = await fetch(url);
+    const response = await fetch(
+      `${BASE_URL}/discover/movie?api_key=${API_KEY}&with_keywords=${keywordId}&language=pt-BR`
+    );
+    
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
+    
     const data = await response.json();
     return data.results.map((item: any) => ({
       ...item,
@@ -37,7 +40,9 @@ export const useMoviesData = () => {
     queryKey: ["popularMovies"],
     queryFn: () => fetchPopularMovies(),
     enabled: isUserAuthenticated,
-    staleTime: 1000 * 60 * 5 // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30, // 30 minutes
+    refetchOnWindowFocus: false
   });
 
   // Fetch action movies
@@ -45,7 +50,9 @@ export const useMoviesData = () => {
     queryKey: ["actionMovies"],
     queryFn: () => fetchMoviesByGenre(28), // 28 is action genre ID
     enabled: isUserAuthenticated && hasAccess,
-    staleTime: 1000 * 60 * 5
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false
   });
   
   // Fetch comedy movies
@@ -53,7 +60,9 @@ export const useMoviesData = () => {
     queryKey: ["comedyMovies"],
     queryFn: () => fetchMoviesByGenre(35), // 35 is comedy genre ID
     enabled: isUserAuthenticated && hasAccess,
-    staleTime: 1000 * 60 * 5
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false
   });
 
   // Fetch adventure movies
@@ -61,7 +70,9 @@ export const useMoviesData = () => {
     queryKey: ["adventureMovies"],
     queryFn: () => fetchMoviesByGenre(12), // 12 is adventure genre ID
     enabled: isUserAuthenticated && hasAccess,
-    staleTime: 1000 * 60 * 5
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false
   });
 
   // Fetch sci-fi movies
@@ -69,23 +80,29 @@ export const useMoviesData = () => {
     queryKey: ["sciFiMovies"],
     queryFn: () => fetchMoviesByGenre(878), // 878 is sci-fi genre ID
     enabled: isUserAuthenticated && hasAccess,
-    staleTime: 1000 * 60 * 5
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false
   });
 
   // Fetch Marvel movies by keyword
   const marvelMoviesQuery = useQuery({
     queryKey: ["marvelMovies"],
-    queryFn: () => fetchMoviesByKeyword(180547),
+    queryFn: () => fetchMoviesByKeywordId(180547),
     enabled: isUserAuthenticated && hasAccess,
-    staleTime: 1000 * 60 * 5
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false
   });
 
   // Fetch DC movies by keyword
   const dcMoviesQuery = useQuery({
     queryKey: ["dcMovies"],
-    queryFn: () => fetchMoviesByKeyword(9715),
+    queryFn: () => fetchMoviesByKeywordId(9715),
     enabled: isUserAuthenticated && hasAccess,
-    staleTime: 1000 * 60 * 5
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false
   });
 
   const isLoading = 

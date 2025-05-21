@@ -1,4 +1,3 @@
-
 import React, { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
@@ -16,7 +15,7 @@ import SearchResults from "@/components/home/SearchResults";
 import WatchHistory from "@/components/home/WatchHistory";
 import TrialNotification from "@/components/home/TrialNotification";
 import MediaSection from "@/components/MediaSection";
-import { useHomePageData } from "@/hooks/useHomePageData";
+import useHomePageData from "@/hooks/useHomePageData";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -106,178 +105,179 @@ const Home = () => {
 
   return (
     <div className="bg-netflix-background min-h-screen">
-      <Navbar />
-      
-      {hasTrialAccess && <TrialNotification />}
-      
-      <HomeHeader 
-        featuredMedia={featuredMedia}
-        isAdmin={isAdmin}
-        hasAccess={hasAccess}
-        hasTrialAccess={hasTrialAccess}
-        trialEnd={null}
-        searchQuery={searchQuery}
-        showFullContent={false}
-        onButtonClick={handlePlayFeatured}
-      />
-      
-      <main className="container mx-auto px-4">
-        {isSearching && (
-          <div className="py-10 text-center">
-            <div className="spinner mb-4"></div>
-            <p className="text-white">Buscando resultados...</p>
-          </div>
-        )}
+
+      <div className={hasTrialAccess ? "pt-10" : ""}>
+        <Navbar />
         
-        {searchQuery && !isSearching && (
-          <SearchResults 
-            results={searchResults}
-            onMovieClick={handleMovieClick}
-            onSeriesClick={handleSeriesClick}
-            onAnimeClick={handleAnimeClick}
-          />
-        )}
+        <HomeHeader 
+          featuredMedia={featuredMedia}
+          isAdmin={isAdmin}
+          hasAccess={hasAccess}
+          hasTrialAccess={hasTrialAccess}
+          trialEnd={null}
+          searchQuery={searchQuery}
+          showFullContent={false}
+          onButtonClick={handlePlayFeatured}
+        />
         
-        {!searchQuery && (
-          <>
-            {recommendations.length > 0 && (
+        <main className="container mx-auto px-4">
+          {isSearching && (
+            <div className="py-10 text-center">
+              <div className="spinner mb-4"></div>
+              <p className="text-white">Buscando resultados...</p>
+            </div>
+          )}
+          
+          {searchQuery && !isSearching && (
+            <SearchResults 
+              results={searchResults}
+              onMovieClick={handleMovieClick}
+              onSeriesClick={handleSeriesClick}
+              onAnimeClick={handleAnimeClick}
+            />
+          )}
+          
+          {!searchQuery && (
+            <>
+              {recommendations.length > 0 && (
+                <section className="mb-12">
+                  <RecommendationsSection 
+                    recommendations={recommendations} 
+                    onLoadMore={() => handleLoadMoreSection('recommendations')}
+                    isLoading={false}
+                    hasMore={true}
+                  />
+                </section>
+              )}
+              
               <section className="mb-12">
-                <RecommendationsSection 
-                  recommendations={recommendations} 
-                  onLoadMore={() => handleLoadMoreSection('recommendations')}
-                  isLoading={false}
-                  hasMore={true}
+                <WatchHistory 
+                  watchHistory={safeMovies.slice(0, 5) || []} 
+                  onMediaClick={handleMovieClick}
                 />
               </section>
-            )}
-            
-            <section className="mb-12">
-              <WatchHistory 
-                watchHistory={safeMovies.slice(0, 5) || []} 
-                onMediaClick={handleMovieClick}
-              />
-            </section>
 
-            <MediaView
-              title="Filmes"
-              type="movie"
-              mediaItems={safeMovies || []}
-              trendingItems={moviesData || []}
-              topRatedItems={actionMoviesData || []}
-              recentItems={comedyMoviesData || []}
-              sectionLoading={false}
-              onMediaClick={handleMovieClick}
-              onLoadMoreTrending={() => handleLoadMoreSection('movies')}
-              onLoadMoreTopRated={() => handleLoadMoreSection('actionMovies')}
-              onLoadMoreRecent={() => handleLoadMoreSection('comedyMovies')}
-              hasMoreTrending={true}
-              hasMoreTopRated={true}
-              hasMoreRecent={true}
-              trendingTitle="Em Alta"
-              topRatedTitle="Ação e Aventura"
-              recentTitle="Comédia"
-              focusedSection={0}
-              focusedItem={0}
-            />
-            
-            <MediaView
-              title="Séries"
-              type="tv"
-              mediaItems={safeSeriesData || []}
-              trendingItems={safeSeriesData || []}
-              topRatedItems={Array.isArray(popularContent) ? popularContent.slice(0, 10) : []}
-              recentItems={Array.isArray(seriesData) ? seriesData.slice(10, 20) : []}
-              sectionLoading={false}
-              onMediaClick={handleSeriesClick}
-              onLoadMoreTrending={() => handleLoadMoreSection('series')}
-              onLoadMoreTopRated={() => {}}
-              onLoadMoreRecent={() => {}}
-              hasMoreTrending={true}
-              hasMoreTopRated={false}
-              hasMoreRecent={false}
-              trendingTitle="Séries Populares"
-              topRatedTitle="Mais Bem Avaliadas"
-              recentTitle="Recentes"
-              focusedSection={0}
-              focusedItem={0}
-            />
-            
-            <div className="mb-16">
-              <AnimeSections 
-                anime={animeData || []}
-                topRatedAnime={topRatedAnimeData || []}
-                recentAnimes={animeData?.slice(10, 20) || []}
-                onMediaClick={handleAnimeClick}
-                onLoadMore={{
-                  anime: () => {},
-                  topRated: () => {},
-                  recent: () => {}
-                }}
-                isLoading={false}
-                hasMore={{
-                  anime: false,
-                  topRated: false,
-                  recent: false
-                }}
-                isFetchingNextPage={{
-                  anime: false,
-                  topRated: false,
-                  recent: false
-                }}
+              <MediaView
+                title="Filmes"
+                type="movie"
+                mediaItems={safeMovies || []}
+                trendingItems={moviesData || []}
+                topRatedItems={actionMoviesData || []}
+                recentItems={comedyMoviesData || []}
+                sectionLoading={false}
+                onMediaClick={handleMovieClick}
+                onLoadMoreTrending={() => handleLoadMoreSection('movies')}
+                onLoadMoreTopRated={() => handleLoadMoreSection('actionMovies')}
+                onLoadMoreRecent={() => handleLoadMoreSection('comedyMovies')}
+                hasMoreTrending={true}
+                hasMoreTopRated={true}
+                hasMoreRecent={true}
+                trendingTitle="Em Alta"
+                topRatedTitle="Ação e Aventura"
+                recentTitle="Comédia"
+                focusedSection={0}
+                focusedItem={0}
               />
-            </div>
-            
-            <DoramaSections 
-              doramas={doramasData || []}
-              topRatedDoramas={doramasData?.slice(5, 10) || []}
-              popularDoramas={doramasData?.slice(10, 15) || []}
-              koreanMovies={doramasData?.slice(15, 20) || []}
-              onMediaClick={handleDoramaClick}
-              onLoadMore={() => {}}
-              isLoading={false}
-              hasMore={false}
-            />
-            
-            {(marvelMoviesData?.length > 0 || dcMoviesData?.length > 0) && (
+              
+              <MediaView
+                title="Séries"
+                type="tv"
+                mediaItems={safeSeriesData || []}
+                trendingItems={safeSeriesData || []}
+                topRatedItems={Array.isArray(popularContent) ? popularContent.slice(0, 10) : []}
+                recentItems={Array.isArray(seriesData) ? seriesData.slice(10, 20) : []}
+                sectionLoading={false}
+                onMediaClick={handleSeriesClick}
+                onLoadMoreTrending={() => handleLoadMoreSection('series')}
+                onLoadMoreTopRated={() => {}}
+                onLoadMoreRecent={() => {}}
+                hasMoreTrending={true}
+                hasMoreTopRated={false}
+                hasMoreRecent={false}
+                trendingTitle="Séries Populares"
+                topRatedTitle="Mais Bem Avaliadas"
+                recentTitle="Recentes"
+                focusedSection={0}
+                focusedItem={0}
+              />
+              
               <div className="mb-16">
-                <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Universos</h2>
-                
-                {marvelMoviesData?.length > 0 && (
-                  <div className="mb-10">
-                    <MediaSection 
-                      title="Marvel"
-                      medias={marvelMoviesData}
-                      showLoadMore={false}
-                      onLoadMore={() => {}}
-                      isLoading={false}
-                      onMediaClick={handleMovieClick}
-                      sectionId="marvel"
-                      mediaType="movie"
-                      sectionIndex={0}
-                    />
-                  </div>
-                )}
-                
-                {dcMoviesData?.length > 0 && (
-                  <div>
-                    <MediaSection 
-                      title="DC"
-                      medias={dcMoviesData}
-                      showLoadMore={false}
-                      onLoadMore={() => {}}
-                      isLoading={false}
-                      onMediaClick={handleMovieClick}
-                      sectionId="dc"
-                      mediaType="movie"
-                      sectionIndex={1}
-                    />
-                  </div>
-                )}
+                <AnimeSections 
+                  anime={animeData || []}
+                  topRatedAnime={topRatedAnimeData || []}
+                  recentAnimes={animeData?.slice(10, 20) || []}
+                  onMediaClick={handleAnimeClick}
+                  onLoadMore={{
+                    anime: () => {},
+                    topRated: () => {},
+                    recent: () => {}
+                  }}
+                  isLoading={false}
+                  hasMore={{
+                    anime: false,
+                    topRated: false,
+                    recent: false
+                  }}
+                  isFetchingNextPage={{
+                    anime: false,
+                    topRated: false,
+                    recent: false
+                  }}
+                />
               </div>
-            )}
-          </>
-        )}
-      </main>
+              
+              <DoramaSections 
+                doramas={doramasData || []}
+                topRatedDoramas={doramasData?.slice(5, 10) || []}
+                popularDoramas={doramasData?.slice(10, 15) || []}
+                koreanMovies={doramasData?.slice(15, 20) || []}
+                onMediaClick={handleDoramaClick}
+                onLoadMore={() => {}}
+                isLoading={false}
+                hasMore={false}
+              />
+              
+              {(marvelMoviesData?.length > 0 || dcMoviesData?.length > 0) && (
+                <div className="mb-16">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">Universos</h2>
+                  
+                  {marvelMoviesData?.length > 0 && (
+                    <div className="mb-10">
+                      <MediaSection 
+                        title="Marvel"
+                        medias={marvelMoviesData}
+                        showLoadMore={false}
+                        onLoadMore={() => {}}
+                        isLoading={false}
+                        onMediaClick={handleMovieClick}
+                        sectionId="marvel"
+                        mediaType="movie"
+                        sectionIndex={0}
+                      />
+                    </div>
+                  )}
+                  
+                  {dcMoviesData?.length > 0 && (
+                    <div>
+                      <MediaSection 
+                        title="DC"
+                        medias={dcMoviesData}
+                        showLoadMore={false}
+                        onLoadMore={() => {}}
+                        isLoading={false}
+                        onMediaClick={handleMovieClick}
+                        sectionId="dc"
+                        mediaType="movie"
+                        sectionIndex={1}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

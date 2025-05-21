@@ -13,11 +13,11 @@ export const useMediaSearch = () => {
   const [hasMore, setHasMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const searchMediaWithPage = async (query: string, page: number = 1) => {
+  const searchMediaWithPage = async (query: string, page: number = 1): Promise<MediaItem[]> => {
     if (!user) {
       toast.error("É necessário fazer login para pesquisar");
       navigate("/auth");
-      return;
+      return [];
     }
     
     try {
@@ -27,7 +27,7 @@ export const useMediaSearch = () => {
       if (!query || query.trim() === "") {
         setResults([]);
         setHasMore(false);
-        return;
+        return [];
       }
       
       const newResults = await searchMedia(query, page);
@@ -51,9 +51,12 @@ export const useMediaSearch = () => {
       if (newResults.length === 0 && page === 1) {
         toast.info("Nenhum resultado encontrado para sua pesquisa.");
       }
+
+      return newResults;
     } catch (error) {
       console.error("Erro na pesquisa:", error);
       toast.error("Ocorreu um erro durante a pesquisa.");
+      return [];
     } finally {
       setIsLoading(false);
     }

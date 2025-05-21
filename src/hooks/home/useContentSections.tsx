@@ -1,6 +1,5 @@
-
-import { useState, useEffect } from "react";
-import { useHomePageData } from "../useHomePageData";
+import { useState, useEffect, useCallback } from "react";
+import useHomePageData from "../useHomePageData";
 import { useMovies } from "../movies/useMovies";
 import { MediaItem } from "@/types/movie";
 

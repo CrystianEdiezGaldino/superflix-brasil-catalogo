@@ -7,15 +7,9 @@ export const useBaseMedia = () => {
   const { user } = useAuth();
   const { hasAccess } = useAccessControl();
 
-  // Memoize the return value to prevent unnecessary recalculations
-  return useMemo(() => {
-    // Debug log user access status
-    console.log("useBaseMedia access status:", { hasAccess, userId: user?.id });
-
-    return {
-      user,
-      hasAccess,
-      isUserAuthenticated: !!user
-    };
-  }, [user, hasAccess]);
+  return useMemo(() => ({
+    user,
+    hasAccess,
+    isUserAuthenticated: !!user
+  }), [user, hasAccess]);
 };

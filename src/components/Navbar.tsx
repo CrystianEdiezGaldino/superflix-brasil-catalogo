@@ -42,7 +42,7 @@ const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
         "fixed top-0 left-0 w-full z-50 transition-all duration-300",
         isScrolled 
           ? "bg-black/95 backdrop-blur-md shadow-lg" 
-          : "bg-gradient-to-b from-black/90 to-transparent"
+          : "bg-black/90"
       )}
       role="banner"
       aria-label="Barra de navegação principal"

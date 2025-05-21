@@ -77,6 +77,12 @@ export const fetchMoviesByKeyword = async (keywordId: number, limit = 15) => {
   try {
     const url = buildApiUrl("/discover/movie", `&with_keywords=${keywordId}&sort_by=popularity.desc`);
     const data = await fetchFromApi<{results?: any[]}>(url);
+    
+    if (!data || !Array.isArray(data.results)) {
+      console.error("Invalid response format:", data);
+      return [];
+    }
+    
     const moviesWithType = addMediaTypeToResults(data.results, "movie");
     return limitResults(moviesWithType, limit);
   } catch (error) {
