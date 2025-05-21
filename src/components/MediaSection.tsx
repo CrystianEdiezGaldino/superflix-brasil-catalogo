@@ -53,7 +53,17 @@ const MediaSection = ({
     if (onMediaClick) {
       onMediaClick(media);
     } else {
-      navigate(`/${mediaType}/${media.id}`);
+      if (media.media_type === 'movie') {
+        navigate(`/filme/${media.id}`);
+      } else if (media.media_type === 'tv') {
+        if (media.original_language === 'ko') {
+          navigate(`/dorama/${media.id}`);
+        } else if (media.original_language === 'ja') {
+          navigate(`/anime/${media.id}`);
+        } else {
+          navigate(`/serie/${media.id}`);
+        }
+      }
     }
   };
 
