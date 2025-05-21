@@ -16,72 +16,12 @@ import SearchResults from "@/components/home/SearchResults";
 import WatchHistory from "@/components/home/WatchHistory";
 import TrialNotification from "@/components/home/TrialNotification";
 import MediaSection from "@/components/MediaSection";
+import { useHomePageData } from "@/hooks/useHomePageData";
 
 const Home = () => {
   const navigate = useNavigate();
   
-  // Handle cases when useContentSections might throw
-  let contentData = {
-    user: null,
-    isAdmin: false,
-    hasAccess: false,
-    hasTrialAccess: false,
-    featuredMedia: undefined,
-    recommendations: [],
-    moviesData: [],
-    seriesData: [],
-    animeData: [],
-    topRatedAnimeData: [],
-    doramasData: [],
-    actionMoviesData: [],
-    comedyMoviesData: [],
-    adventureMoviesData: [],
-    sciFiMoviesData: [],
-    marvelMoviesData: [],
-    dcMoviesData: [],
-    popularSeries: [],
-    recentAnimes: [],
-    movies: [],
-    isLoading: true,
-    isLoadingMore: false,
-    hasMore: false,
-    hasError: null,
-    searchQuery: "",
-    searchResults: [],
-    isSearching: false,
-    currentSection: "",
-    handleSearch: () => Promise.resolve(),
-    handleLoadMoreSection: () => {},
-    setSearchQuery: () => {},
-    setSearchResults: () => {},
-    setIsSearching: () => {},
-    sectionData: {},
-    fetchNextPage: {
-      anime: () => {},
-      topRated: () => {},
-      recent: () => {}
-    },
-    hasNextPage: {
-      anime: false,
-      topRated: false,
-      recent: false
-    },
-    isFetchingNextPage: {
-      anime: false,
-      topRated: false,
-      recent: false
-    }
-  };
-  
-  try {
-    // Dynamic import to prevent import errors
-    const { useContentSections } = require("@/hooks/home/useContentSections");
-    contentData = useContentSections();
-  } catch (error) {
-    console.error("Error loading content sections:", error);
-    return <LoadingState />;
-  }
-  
+  // Get data from the useHomePageData hook
   const {
     user,
     isAdmin,
@@ -100,27 +40,18 @@ const Home = () => {
     sciFiMoviesData = [],
     marvelMoviesData = [],
     dcMoviesData = [],
-    popularSeries = [],
-    recentAnimes = [],
-    movies = [],
+    popularContent = [],
     isLoading,
-    isLoadingMore,
-    hasMore,
     hasError,
-    searchQuery,
     searchResults = [],
-    isSearching,
-    currentSection,
-    handleSearch,
+    isSearchLoading,
+    sectionData = {},
     handleLoadMoreSection,
-    setSearchQuery,
-    setSearchResults,
-    setIsSearching,
-    sectionData: allSectionData = {},
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage
-  } = contentData;
+  } = useHomePageData();
+
+  // State for search functionality
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [isSearching, setIsSearching] = React.useState(false);
 
   const handleMovieClick = useCallback((movie: MediaItem) => {
     navigate(`/filme/${movie.id}`);
@@ -170,7 +101,7 @@ const Home = () => {
   }
 
   // Make sure all provided data is array
-  const safeMovies = Array.isArray(movies) ? movies : [];
+  const safeMovies = Array.isArray(moviesData) ? moviesData : [];
   const safeSeriesData = Array.isArray(seriesData) ? seriesData : [];
 
   return (
@@ -214,7 +145,7 @@ const Home = () => {
                 <RecommendationsSection 
                   recommendations={recommendations} 
                   onLoadMore={() => handleLoadMoreSection('recommendations')}
-                  isLoading={currentSection === 'recommendations' && isLoadingMore}
+                  isLoading={false}
                   hasMore={true}
                 />
               </section>
@@ -234,14 +165,14 @@ const Home = () => {
               trendingItems={moviesData || []}
               topRatedItems={actionMoviesData || []}
               recentItems={comedyMoviesData || []}
-              sectionLoading={currentSection === 'movies' && isLoadingMore}
+              sectionLoading={false}
               onMediaClick={handleMovieClick}
               onLoadMoreTrending={() => handleLoadMoreSection('movies')}
               onLoadMoreTopRated={() => handleLoadMoreSection('actionMovies')}
               onLoadMoreRecent={() => handleLoadMoreSection('comedyMovies')}
-              hasMoreTrending={allSectionData?.movies?.hasMore || true}
-              hasMoreTopRated={allSectionData?.actionMovies?.hasMore || true}
-              hasMoreRecent={allSectionData?.comedyMovies?.hasMore || true}
+              hasMoreTrending={true}
+              hasMoreTopRated={true}
+              hasMoreRecent={true}
               trendingTitle="Em Alta"
               topRatedTitle="Ação e Aventura"
               recentTitle="Comédia"
@@ -254,14 +185,14 @@ const Home = () => {
               type="tv"
               mediaItems={safeSeriesData || []}
               trendingItems={safeSeriesData || []}
-              topRatedItems={Array.isArray(popularSeries) ? popularSeries : []}
+              topRatedItems={Array.isArray(popularContent) ? popularContent.slice(0, 10) : []}
               recentItems={Array.isArray(seriesData) ? seriesData.slice(10, 20) : []}
-              sectionLoading={currentSection === 'series' && isLoadingMore}
+              sectionLoading={false}
               onMediaClick={handleSeriesClick}
               onLoadMoreTrending={() => handleLoadMoreSection('series')}
               onLoadMoreTopRated={() => {}}
               onLoadMoreRecent={() => {}}
-              hasMoreTrending={allSectionData?.series?.hasMore || true}
+              hasMoreTrending={true}
               hasMoreTopRated={false}
               hasMoreRecent={false}
               trendingTitle="Séries Populares"
@@ -275,23 +206,23 @@ const Home = () => {
               <AnimeSections 
                 anime={animeData || []}
                 topRatedAnime={topRatedAnimeData || []}
-                recentAnimes={recentAnimes || []}
+                recentAnimes={animeData?.slice(10, 20) || []}
                 onMediaClick={handleAnimeClick}
                 onLoadMore={{
-                  anime: () => fetchNextPage.anime(),
-                  topRated: () => fetchNextPage.topRated(),
-                  recent: () => fetchNextPage.recent()
+                  anime: () => {},
+                  topRated: () => {},
+                  recent: () => {}
                 }}
-                isLoading={isLoading}
+                isLoading={false}
                 hasMore={{
-                  anime: hasNextPage.anime,
-                  topRated: hasNextPage.topRated,
-                  recent: hasNextPage.recent
+                  anime: false,
+                  topRated: false,
+                  recent: false
                 }}
                 isFetchingNextPage={{
-                  anime: isFetchingNextPage.anime,
-                  topRated: isFetchingNextPage.topRated,
-                  recent: isFetchingNextPage.recent
+                  anime: false,
+                  topRated: false,
+                  recent: false
                 }}
               />
             </div>
@@ -302,9 +233,9 @@ const Home = () => {
               popularDoramas={doramasData?.slice(10, 15) || []}
               koreanMovies={doramasData?.slice(15, 20) || []}
               onMediaClick={handleDoramaClick}
-              onLoadMore={handleLoadMoreSection}
-              isLoading={currentSection.includes('dorama') && isLoadingMore}
-              hasMore={true}
+              onLoadMore={() => {}}
+              isLoading={false}
+              hasMore={false}
             />
             
             {(marvelMoviesData?.length > 0 || dcMoviesData?.length > 0) && (

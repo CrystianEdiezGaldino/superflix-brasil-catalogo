@@ -1,32 +1,30 @@
 
-import { corsHeaders } from "./cors.ts";
-
-// Helper function to create a standardized error response
-export const createErrorResponse = (message: string, status: number = 401, details?: any) => {
-  console.log(`[CHECK-SUBSCRIPTION] Error: ${message}`);
+// Helper for creating error responses
+export const createErrorResponse = (message: string, status: number = 400, additionalHeaders = {}) => {
   return new Response(
-    JSON.stringify({ 
-      error: message,
-      details,
-      hasActiveSubscription: false,
-      isAdmin: false,
-      hasTempAccess: false,
-      has_trial_access: false 
+    JSON.stringify({
+      error: message
     }),
-    { 
-      status: status, 
-      headers: { ...corsHeaders, "Content-Type": "application/json" } 
+    {
+      status,
+      headers: {
+        'Content-Type': 'application/json',
+        ...additionalHeaders
+      }
     }
   );
 };
 
-// Create a response with subscription data
-export const createSuccessResponse = (data: any) => {
+// Helper for creating success responses
+export const createSuccessResponse = (data: any, additionalHeaders = {}) => {
   return new Response(
     JSON.stringify(data),
-    { 
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200
+    {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        ...additionalHeaders
+      }
     }
   );
 };

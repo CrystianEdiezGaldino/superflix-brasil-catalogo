@@ -5,17 +5,17 @@ import { checkSubscriptionStatus, processSubscriptionData } from '@/utils/subscr
 import { toast } from "sonner";
 import { cacheManager } from '@/utils/cacheManager';
 
-const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutos
+const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 5000; // 5 segundos
+const RETRY_DELAY = 5000; // 5 seconds
 
 export const useSubscriptionState = (user: any, session: Session | null) => {
-  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(true); // Default to true to prevent blank screens
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasTempAccess, setHasTempAccess] = useState(false);
-  const [hasTrialAccess, setHasTrialAccess] = useState(false);
-  const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
+  const [hasTrialAccess, setHasTrialAccess] = useState(true); // Default to true to prevent blank screens
+  const [subscriptionTier, setSubscriptionTier] = useState<string | null>('trial');
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [trialEnd, setTrialEnd] = useState<string | null>(null);
   
@@ -23,12 +23,20 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
   const lastCheckTimeRef = useRef(0);
   const checkInProgressRef = useRef(false);
   const initialCheckDoneRef = useRef(false);
+  const totalChecksRef = useRef(0);
 
   const checkSubscription = useCallback(async (forceCheck = false) => {
     if (!user || !session || (checkInProgressRef.current && !forceCheck)) return;
     
     const now = Date.now();
     if (!forceCheck && now - lastCheckTimeRef.current < CHECK_INTERVAL) {
+      return;
+    }
+    
+    // Prevent excessive checks
+    totalChecksRef.current += 1;
+    if (totalChecksRef.current > 10 && !forceCheck) {
+      console.log("Too many subscription checks, skipping");
       return;
     }
 
@@ -46,10 +54,10 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
         console.log("Force check requested, cleared subscription cache");
       }
       
-      // Try first with direct database query
+      // Get subscription data
       const data = await checkSubscriptionStatus(user.id, session.access_token);
       
-      // If we get data, process it
+      // Process the data
       if (data) {
         const processedData = processSubscriptionData(data);
         
@@ -64,12 +72,6 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
         setTrialEnd(processedData.trialEnd);
         
         retryCountRef.current = 0;
-      } else {
-        // Se falhar, defina valores padrão de acesso mais permissivos
-        // Isso permite que o usuário ainda veja a página inicial mesmo com erro
-        console.log("No subscription data found, using default values");
-        setIsSubscribed(true); // Acesso temporário para não bloquear usuário
-        setHasTrialAccess(true);
       }
       
       // Mark that initial check is complete
@@ -77,15 +79,13 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
       
-      // Mesmo em caso de erro, definimos valores permissivos para evitar bloqueios
+      // Use permissive values to avoid UI blocking
       setIsSubscribed(true);
       setHasTrialAccess(true);
       
       if (retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current++;
         setTimeout(() => checkSubscription(forceCheck), RETRY_DELAY);
-      } else {
-        console.log("Maximum retries reached, continuing with default permissions");
       }
     } finally {
       checkInProgressRef.current = false;
@@ -93,33 +93,54 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     }
   }, [user, session]);
 
-  // Initial check effect
+  // Initial check effect - use setTimeout to avoid cyclic updates
   useEffect(() => {
+    let isMounted = true;
+    
     if (user && session && !initialCheckDoneRef.current) {
-      console.log("Performing initial subscription check");
-      checkSubscription(true); // Force check on initial load
+      console.log("Scheduling initial subscription check");
+      
+      // Use setTimeout to defer the check and avoid causing cycle
+      const timer = setTimeout(() => {
+        if (isMounted && !initialCheckDoneRef.current) {
+          console.log("Performing initial subscription check");
+          checkSubscription(true); // Force check on initial load
+        }
+      }, 1000);
+      
+      return () => {
+        isMounted = false;
+        clearTimeout(timer);
+      };
     } else if (!user || !session) {
       // Cleanup states when no user
       setIsLoading(false);
     }
+    
+    return () => { isMounted = false; };
   }, [user, session, checkSubscription]);
 
   // Regular interval check effect
   useEffect(() => {
-    if (user && session) {
-      const interval = setInterval(() => checkSubscription(), CHECK_INTERVAL);
-      return () => {
-        clearInterval(interval);
-      };
+    let intervalId: NodeJS.Timeout | null = null;
+    
+    if (user && session && initialCheckDoneRef.current) {
+      intervalId = setInterval(() => {
+        // Don't use checkSubscription directly in interval to prevent stale closure
+        if (user && session && !checkInProgressRef.current) {
+          const now = Date.now();
+          if (now - lastCheckTimeRef.current >= CHECK_INTERVAL) {
+            console.log("Performing scheduled subscription check");
+            checkSubscription(false);
+          }
+        }
+      }, CHECK_INTERVAL);
     }
-  }, [user, session, checkSubscription]);
-
-  // Cleanup on unmount
-  useEffect(() => {
+    
     return () => {
-      cacheManager.clear(); // Limpar cache ao desmontar
+      if (intervalId) clearInterval(intervalId);
     };
-  }, []);
+  }, [user, session, checkSubscription, initialCheckDoneRef.current]);
 
   return {
     isSubscribed,
@@ -130,6 +151,6 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     subscriptionTier,
     subscriptionEnd,
     trialEnd,
-    refreshSubscription: () => checkSubscription(true) // Exported function always forces a check
+    refreshSubscription: () => checkSubscription(true) // Always force check
   };
 };

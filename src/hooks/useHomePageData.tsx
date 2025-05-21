@@ -1,7 +1,6 @@
 
 import { useEffect, useCallback, useMemo, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useSubscription } from "@/contexts/SubscriptionContext";
+import { MediaItem } from "@/types/movie";
 import { useMediaData } from "./useMediaData";
 import { useMediaSearch } from "./useMediaSearch";
 import { useRecommendations } from "./useRecommendations";
@@ -15,75 +14,17 @@ export const useHomePageData = () => {
   const checkTimeoutRef = useRef<NodeJS.Timeout>();
   const lastDataRef = useRef<any>(null);
   const dataUpdateCount = useRef(0);
+
+  // Use accessControl hook with safe error handling
+  const accessControlData = useAccessControl();
   
-  // Wrap useAuth in a try-catch to handle case where AuthProvider doesn't exist
-  let authData = { 
-    user: null, 
-    loading: true,
-    session: null,
-    signUp: async () => {},
-    signIn: async () => {},
-    signOut: async () => {},
-    resetPassword: async () => {},
-    login: async () => {},
-    register: async () => {},
-    refreshSession: async () => {}
-  };
-  
-  try {
-    authData = useAuth();
-  } catch (error) {
-    console.error("Error using AuthContext:", error);
-    // Use default values defined above
-  }
-  
-  const { user, loading: authLoading } = authData;
-  
-  // Same for subscription
-  let subscriptionData = {
-    isSubscribed: false,
-    isAdmin: false,
-    hasTempAccess: false,
-    hasTrialAccess: false,
-    isLoading: true,
-    checkSubscription: () => {}
-  };
-  
-  try {
-    subscriptionData = useSubscription();
-  } catch (error) {
-    console.error("Error using SubscriptionContext:", error);
-    // Use default values defined above
-  }
-  
-  const { 
-    isSubscribed, 
-    isAdmin, 
-    hasTempAccess,
-    hasTrialAccess,
-    isLoading: subscriptionLoading, 
-    checkSubscription
-  } = subscriptionData;
-  
-  // Use accessControl with safe defaults
-  let accessControlData = { 
-    user: null, 
-    hasAccess: false, 
-    isLoading: true 
-  };
-  
-  try {
-    accessControlData = useAccessControl();
-  } catch (error) {
-    console.error("Error using AccessControl:", error);
-    // Use default values defined above
-  }
-  
-  const { hasAccess } = accessControlData;
+  const { user, hasAccess, isLoading: accessLoading } = accessControlData;
+  const isAdmin = accessControlData.user?.role === 'admin' || false;
+  const hasTrialAccess = accessControlData.hasTrialAccess || false;
 
   // Import data from smaller hooks - wrap in try-catch for safety
   let searchData = { 
-    searchMedia: () => Promise.resolve([]),
+    searchMedia: (query: string, page?: number) => Promise.resolve([]),
     results: [],
     isLoading: false,
     hasMore: false,
@@ -188,67 +129,20 @@ export const useHomePageData = () => {
     return searchMedia(query, page);
   }, [searchMedia]);
 
-  // Memoize the subscription check logic
-  const shouldCheckSubscription = useMemo(() => {
-    const now = Date.now();
-    const timeSinceLastCheck = now - lastCheckTime.current;
-    return timeSinceLastCheck > 300000; // 5 minutes (300000ms) to avoid excessive checks
-  }, []);
-
-  // Optimize subscription check effect - reduced frequency of calls
-  useEffect(() => {
-    if (!user || !shouldCheckSubscription) return;
-
-    if (checkTimeoutRef.current) {
-      clearTimeout(checkTimeoutRef.current);
-    }
-
-    checkTimeoutRef.current = setTimeout(() => {
-      if (isSubscribed && isAdmin) {
-        // Skip check if user is already subscribed and admin
-        lastCheckTime.current = Date.now();
-        return;
-      }
-
-      console.log("Subscription check triggered:", {
-        hasUser: !!user,
-        isSubscribed,
-        hasTrialAccess,
-        hasTempAccess,
-        isLoading: subscriptionLoading
-      });
-      
-      if (typeof checkSubscription === 'function') {
-        checkSubscription();
-      }
-      
-      lastCheckTime.current = Date.now();
-    }, 5000); // 5 seconds
-
-    return () => {
-      if (checkTimeoutRef.current) {
-        clearTimeout(checkTimeoutRef.current);
-      }
-    };
-  }, [user, shouldCheckSubscription, checkSubscription, isSubscribed, isAdmin]);
-
   // Memoize loading states
   const loadingStates = useMemo(() => ({
-    authLoading,
-    subscriptionLoading,
+    accessLoading,
     mediaLoading,
     isLoadingPopularContent
   }), [
-    authLoading,
-    subscriptionLoading,
+    accessLoading,
     mediaLoading,
     isLoadingPopularContent
   ]);
 
   // Loading state with timeout protection
   const isLoading = useMemo(() => {
-    const isStillLoading = authLoading || subscriptionLoading || mediaLoading || 
-                           isLoadingPopularContent;
+    const isStillLoading = accessLoading || mediaLoading || isLoadingPopularContent;
     
     if (isStillLoading && Date.now() - startTimeRef.current > 10000) {
       console.warn('Loading timeout reached - forcing completion');
@@ -256,7 +150,7 @@ export const useHomePageData = () => {
     }
     
     return isStillLoading;
-  }, [authLoading, subscriptionLoading, mediaLoading, isLoadingPopularContent]);
+  }, [accessLoading, mediaLoading, isLoadingPopularContent]);
 
   // Memoize the return value with deep comparison
   const result = useMemo(() => {
@@ -286,7 +180,16 @@ export const useHomePageData = () => {
       isSearchLoading: searchLoading,
       hasMoreResults: hasMore,
       searchCurrentPage: currentPage,
-      ...loadingStates
+      ...loadingStates,
+      sectionData: {
+        movies: { hasMore: true },
+        series: { hasMore: true },
+        actionMovies: { hasMore: true },
+        comedyMovies: { hasMore: true }
+      },
+      handleLoadMoreSection: (section: string) => {
+        console.log(`Loading more for section: ${section}`);
+      }
     };
 
     // Reduce the number of logs and deep comparisons to avoid excessive re-renders
