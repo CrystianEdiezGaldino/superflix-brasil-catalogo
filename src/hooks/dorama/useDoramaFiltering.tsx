@@ -2,6 +2,13 @@
 import { useState, useCallback, useEffect } from "react";
 import { MediaItem, Series, isSeries } from "@/types/movie";
 
+// Add origin_country to Series type augmentation
+declare module "@/types/movie" {
+  interface Series {
+    origin_country?: string[];
+  }
+}
+
 interface DoramaFiltering {
   filteredDoramas: MediaItem[];
   yearFilter: string;
@@ -57,8 +64,12 @@ export const useDoramaFiltering = (doramas: MediaItem[]): DoramaFiltering => {
       }
 
       // Country filter
-      if (countryFilter && isSeries(dorama) && dorama.origin_country) {
-        if (!(dorama.origin_country as string[]).includes(countryFilter)) return false;
+      if (countryFilter && isSeries(dorama)) {
+        // Add a safety check for origin_country
+        const originCountry = (dorama as Series).origin_country;
+        if (!originCountry || !originCountry.includes(countryFilter)) {
+          return false;
+        }
       }
 
       return true;
@@ -93,10 +104,13 @@ export const useDoramaFiltering = (doramas: MediaItem[]): DoramaFiltering => {
     const countries = new Set<string>();
     
     doramas.forEach((dorama) => {
-      if (isSeries(dorama) && dorama.origin_country) {
-        dorama.origin_country.forEach((country: string) => {
-          if (country) countries.add(country);
-        });
+      if (isSeries(dorama)) {
+        const originCountry = (dorama as Series).origin_country;
+        if (originCountry && Array.isArray(originCountry)) {
+          originCountry.forEach((country: string) => {
+            if (country) countries.add(country);
+          });
+        }
       }
     });
     

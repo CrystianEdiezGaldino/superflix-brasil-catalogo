@@ -36,8 +36,8 @@ export const useContentSections = () => {
     sciFiMoviesData,
     marvelMoviesData,
     dcMoviesData,
-    popularSeriesData, // Fixed property name to match useHomePageData
-    recentAnimesData, // Fixed property name to match useHomePageData
+    // Fix references to popularSeriesData and recentAnimesData
+    popularContent, // This will be used as a fallback for popularSeriesData
     isLoading,
     hasError,
     // Renamed this to apiSearchResults to avoid conflict
@@ -45,6 +45,10 @@ export const useContentSections = () => {
     isSearchLoading,
     handleSearch: originalHandleSearch,
   } = useHomePageData();
+
+  // Define popularSeriesData and recentAnimesData with fallbacks
+  const popularSeriesData = seriesData?.slice(0, 5) || [];
+  const recentAnimesData = animeData?.slice(0, 5) || [];
 
   // Add hook for loading more content
   const {
@@ -80,6 +84,9 @@ export const useContentSections = () => {
     updateSectionData('comedyMovies', comedyMoviesData);
     updateSectionData('adventureMovies', adventureMoviesData);
     updateSectionData('sciFiMovies', sciFiMoviesData);
+    // Add new sections for popularSeries and recentAnimes
+    updateSectionData('popularSeries', popularSeriesData);
+    updateSectionData('recentAnimes', recentAnimesData);
   }, [
     moviesData,
     seriesData,
@@ -89,7 +96,9 @@ export const useContentSections = () => {
     actionMoviesData,
     comedyMoviesData,
     adventureMoviesData,
-    sciFiMoviesData
+    sciFiMoviesData,
+    popularSeriesData,
+    recentAnimesData
   ]);
 
   // Enhanced search handler
@@ -168,6 +177,12 @@ export const useContentSections = () => {
         case 'sciFiMovies':
           sourceData = sciFiMoviesData || [];
           break;
+        case 'popularSeries':
+          sourceData = popularSeriesData || [];
+          break;
+        case 'recentAnimes':
+          sourceData = recentAnimesData || [];
+          break;
         default:
           sourceData = [];
       }
@@ -236,8 +251,8 @@ export const useContentSections = () => {
     sciFiMoviesData: sectionData.sciFiMovies?.items || sciFiMoviesData || [],
     marvelMoviesData,
     dcMoviesData,
-    popularSeries: popularSeriesData || [], // Fixed to use data from useHomePageData
-    recentAnimes: recentAnimesData || [], // Fixed to use data from useHomePageData
+    popularSeries: sectionData.popularSeries?.items || popularSeriesData || [], 
+    recentAnimes: sectionData.recentAnimes?.items || recentAnimesData || [], 
     movies,
     isLoading,
     isLoadingMore: Object.values(sectionData).some(section => section.isLoading),

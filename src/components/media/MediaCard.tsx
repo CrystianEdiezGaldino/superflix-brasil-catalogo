@@ -120,9 +120,9 @@ const MediaCard = ({
 
     if (user) {
       try {
-        // Fixed: Pass the numeric mediaId instead of the media object
+        // Fixed: Use the correct parameter type for addToWatchHistory
         await addToWatchHistory({ 
-          mediaId: mediaId,
+          mediaId: Number(mediaId),
           mediaType: media.media_type || 'movie'
         }, user.id);
       } catch (error) {

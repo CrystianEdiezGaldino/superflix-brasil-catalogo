@@ -10,16 +10,27 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface WatchHistoryProps {
+  watchHistory?: MediaItem[]; // Make this prop optional
   onMediaClick?: (media: MediaItem) => void;
 }
 
-export default function WatchHistory({ onMediaClick }: WatchHistoryProps) {
-  const [watchHistory, setWatchHistory] = useState<MediaItem[]>([]);
+export default function WatchHistory({ watchHistory: externalWatchHistory, onMediaClick }: WatchHistoryProps) {
+  const [internalWatchHistory, setInternalWatchHistory] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  // Use external watch history if provided, otherwise fetch from API
+  const watchHistory = externalWatchHistory || internalWatchHistory;
+
   useEffect(() => {
+    // If external watch history is provided, use it
+    if (externalWatchHistory) {
+      setLoading(false);
+      return;
+    }
+
+    // Otherwise, fetch from API
     const loadHistory = async () => {
       if (!user) {
         setLoading(false);
@@ -28,7 +39,7 @@ export default function WatchHistory({ onMediaClick }: WatchHistoryProps) {
 
       try {
         const history = await getWatchHistory(user.id);
-        setWatchHistory(history);
+        setInternalWatchHistory(history);
       } catch (error) {
         console.error('Error loading watch history:', error);
         toast.error('Erro ao carregar histórico');
@@ -38,7 +49,7 @@ export default function WatchHistory({ onMediaClick }: WatchHistoryProps) {
     };
 
     loadHistory();
-  }, [user]);
+  }, [user, externalWatchHistory]);
 
   const handleMediaClick = (media: MediaItem) => {
     if (onMediaClick) {
