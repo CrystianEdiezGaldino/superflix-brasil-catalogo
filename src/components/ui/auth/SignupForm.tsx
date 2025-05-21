@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,27 +54,38 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
       if (code.trim()) {
         console.log("Tentando resgatar código promocional:", code.trim());
         
-        const { data: redeemData, error: redeemError } = await supabase.rpc('redeem_promo_code', {
-          code_text: code.trim()
-        });
+        try {
+          const { data: redeemData, error: redeemError } = await supabase.rpc('redeem_promo_code', {
+            code_text: code.trim().toUpperCase()
+          });
 
-        if (redeemError) {
-          console.error("Erro ao resgatar código promocional:", redeemError);
-          toast.error(`Erro ao resgatar código: ${redeemError.message}`);
-        } else {
-          console.log("Resposta do resgate do código:", redeemData);
-          
-          // Processar dados do código resgatado - garantir que a verificação do tipo é feita corretamente
-          if (typeof redeemData === 'object' && redeemData !== null) {
-            const redeemResponse = redeemData as any;
+          if (redeemError) {
+            console.error("Erro ao resgatar código promocional:", redeemError);
             
-            if (redeemResponse.success) {
-              toast.success(`${redeemResponse.message} Você ganhou ${redeemResponse.days_valid} dias de acesso!`);
-              codeRedeemed = true;
+            // Mensagens de erro mais amigáveis baseadas no tipo de erro
+            if (redeemError.code === '42P10') {
+              toast.error("Este código promocional já foi utilizado ou expirou");
             } else {
-              toast.error(redeemResponse.message || "Código inválido ou expirado");
+              toast.error(`Não foi possível resgatar o código: ${redeemError.message}`);
+            }
+          } else {
+            console.log("Resposta do resgate do código:", redeemData);
+            
+            // Processar dados do código resgatado
+            if (typeof redeemData === 'object' && redeemData !== null) {
+              const redeemResponse = redeemData as any;
+              
+              if (redeemResponse.success) {
+                toast.success(`${redeemResponse.message} Você ganhou ${redeemResponse.days_valid} dias de acesso!`);
+                codeRedeemed = true;
+              } else {
+                toast.error(redeemResponse.message || "Código inválido ou expirado");
+              }
             }
           }
+        } catch (error: any) {
+          console.error("Erro ao processar código promocional:", error);
+          toast.error("Ocorreu um erro ao processar o código promocional. Por favor, tente novamente mais tarde.");
         }
       }
       
@@ -201,12 +211,13 @@ const SignupForm = ({ isLoading, setIsLoading, onSuccess }: SignupFormProps) => 
       <a 
         href="/naflixtv.apk"
         download
-        className="flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-md shadow-lg hover:shadow-xl transition-all duration-200 font-medium animate-pulse"
+        className="flex items-center justify-center gap-3 w-full px-6 py-3.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 font-medium group relative overflow-hidden"
       >
-        <Download className="text-xl" />
+        <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-green-600/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+        <Download className="text-xl transform group-hover:scale-110 transition-transform duration-300" />
         <div className="flex flex-col items-start">
-          <span className="text-sm font-normal">Baixar App</span>
-          <span className="text-xs opacity-80">Acesso mais rápido e sem anúncios!</span>
+          <span className="text-sm font-normal group-hover:text-green-100 transition-colors duration-300">Baixar App</span>
+          <span className="text-xs opacity-80 group-hover:opacity-100 transition-opacity duration-300">Acesso mais rápido e sem anúncios!</span>
         </div>
       </a>
     </form>

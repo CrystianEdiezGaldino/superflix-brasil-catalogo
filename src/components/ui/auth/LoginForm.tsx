@@ -139,12 +139,13 @@ const LoginForm = ({ isLoading, setIsLoading }: LoginFormProps) => {
       <a 
         href="/naflixtv.apk"
         download
-        className="flex items-center justify-center gap-2 w-full px-6 py-3.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-md shadow-lg hover:shadow-xl transition-all duration-200 font-medium animate-pulse"
+        className="flex items-center justify-center gap-3 w-full px-6 py-3.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 font-medium group relative overflow-hidden"
       >
-        <Download className="text-xl" />
+        <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-green-600/20 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
+        <Download className="text-xl transform group-hover:scale-110 transition-transform duration-300" />
         <div className="flex flex-col items-start">
-          <span className="text-sm font-normal">Baixar App</span>
-          <span className="text-xs opacity-80">Acesso mais rápido e sem anúncios!</span>
+          <span className="text-sm font-normal group-hover:text-green-100 transition-colors duration-300">Baixar App</span>
+          <span className="text-xs opacity-80 group-hover:opacity-100 transition-opacity duration-300">Acesso mais rápido e sem anúncios!</span>
         </div>
       </a>
       

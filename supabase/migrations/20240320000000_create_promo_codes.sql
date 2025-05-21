@@ -8,8 +8,35 @@ CREATE TABLE IF NOT EXISTS promo_codes (
     expires_at TIMESTAMP WITH TIME ZONE,
     max_uses INTEGER,
     current_uses INTEGER DEFAULT 0,
+    days_valid INTEGER DEFAULT 30,
     created_by UUID REFERENCES auth.users(id)
 );
+
+-- Add max_uses column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'promo_codes' 
+        AND column_name = 'max_uses'
+    ) THEN
+        ALTER TABLE promo_codes ADD COLUMN max_uses INTEGER;
+    END IF;
+END $$;
+
+-- Add current_uses column if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'promo_codes' 
+        AND column_name = 'current_uses'
+    ) THEN
+        ALTER TABLE promo_codes ADD COLUMN current_uses INTEGER DEFAULT 0;
+    END IF;
+END $$;
 
 -- Create index for faster lookups
 CREATE INDEX IF NOT EXISTS promo_codes_code_idx ON promo_codes(code);
@@ -34,16 +61,89 @@ CREATE POLICY "Enable update for authenticated users" ON promo_codes
     USING (true)
     WITH CHECK (true);
 
--- Create function to validate promo code
-CREATE OR REPLACE FUNCTION validate_promo_code(promo_code TEXT)
-RETURNS BOOLEAN AS $$
+-- Drop existing function if exists
+DROP FUNCTION IF EXISTS redeem_promo_code(text);
+
+-- Create function to redeem promo code
+CREATE OR REPLACE FUNCTION redeem_promo_code(code_text TEXT)
+RETURNS JSONB AS $$
+DECLARE
+    promo_record promo_codes;
+    user_id UUID;
+    subscription_record subscriptions;
+    trial_end TIMESTAMP WITH TIME ZONE;
 BEGIN
-    RETURN EXISTS (
-        SELECT 1 FROM promo_codes
-        WHERE code = promo_code
-        AND is_active = true
-        AND (expires_at IS NULL OR expires_at > NOW())
-        AND (max_uses IS NULL OR current_uses < max_uses)
+    -- Get current user
+    user_id := auth.uid();
+    IF user_id IS NULL THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'message', 'Usuário não autenticado'
+        );
+    END IF;
+
+    -- Find promo code
+    SELECT * INTO promo_record
+    FROM promo_codes
+    WHERE code = code_text
+    AND is_active = true
+    AND (expires_at IS NULL OR expires_at > NOW())
+    AND (usage_limit IS NULL OR usage_count < usage_limit);
+
+    IF promo_record IS NULL THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'message', 'Código promocional inválido ou expirado'
+        );
+    END IF;
+
+    -- Check if user already has a subscription
+    SELECT * INTO subscription_record
+    FROM subscriptions
+    WHERE subscriptions.user_id = auth.uid();
+
+    -- Calculate trial end date
+    trial_end := NOW() + (promo_record.days_valid || ' days')::INTERVAL;
+
+    -- Update or insert subscription
+    IF subscription_record IS NULL THEN
+        INSERT INTO subscriptions (
+            user_id,
+            plan_type,
+            status,
+            current_period_start,
+            trial_end,
+            created_at,
+            updated_at
+        ) VALUES (
+            auth.uid(),
+            'trial',
+            'trialing',
+            NOW(),
+            trial_end,
+            NOW(),
+            NOW()
+        );
+    ELSE
+        UPDATE subscriptions
+        SET 
+            plan_type = 'trial',
+            status = 'trialing',
+            current_period_start = NOW(),
+            trial_end = trial_end,
+            updated_at = NOW()
+        WHERE subscriptions.user_id = auth.uid();
+    END IF;
+
+    -- Increment usage count
+    UPDATE promo_codes
+    SET usage_count = usage_count + 1
+    WHERE id = promo_record.id;
+
+    RETURN jsonb_build_object(
+        'success', true,
+        'message', 'Código promocional resgatado com sucesso!',
+        'days_valid', promo_record.days_valid
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER; 
