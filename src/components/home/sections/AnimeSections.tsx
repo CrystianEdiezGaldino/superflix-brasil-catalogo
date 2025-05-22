@@ -1,6 +1,6 @@
-
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
+import AllAnimesSection from "@/components/anime/AllAnimesSection";
 import { Loader2 } from "lucide-react";
 
 interface AnimeSectionsProps {
@@ -50,64 +50,46 @@ const AnimeSections = ({
       </div>
     );
   }
-  
-  // Verificar se não temos nenhum dado para mostrar
-  if (safeAnime.length === 0 && 
-      safeTopRatedAnime.length === 0 && 
-      safeRecentAnimes.length === 0) {
-    return (
-      <div className="py-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Animes</h2>
-        <p className="text-gray-400 text-center py-12">Nenhum anime encontrado.</p>
-      </div>
-    );
-  }
 
+  // Sempre renderizar as seções, mesmo se vazias
   return (
     <div className="space-y-8 mb-16">
       <h2 className="text-2xl md:text-3xl font-bold text-white">Animes</h2>
 
-      {safeAnime.length > 0 && (
-        <MediaSection
-          title="Animes em Alta"
-          medias={safeAnime}
-          showLoadMore={hasMore.anime}
-          onLoadMore={onLoadMore.anime}
-          isLoading={isFetchingNextPage.anime}
-          onMediaClick={onMediaClick}
-          sectionId="anime"
-          mediaType="tv"
-          sectionIndex={0}
-        />
-      )}
+      {/* Seção de Todos os Animes */}
+      <AllAnimesSection
+        animes={safeAnime}
+        isLoading={isLoading}
+        isFetchingMore={isFetchingNextPage.anime}
+        hasMore={hasMore.anime}
+        onLoadMore={onLoadMore.anime}
+        onMediaClick={onMediaClick}
+      />
 
-      {safeTopRatedAnime.length > 0 && (
-        <MediaSection
-          title="Animes Mais Bem Avaliados"
-          medias={safeTopRatedAnime}
-          showLoadMore={hasMore.topRated}
-          onLoadMore={onLoadMore.topRated}
-          isLoading={isFetchingNextPage.topRated}
-          onMediaClick={onMediaClick}
-          sectionId="topRatedAnime" 
-          mediaType="tv"
-          sectionIndex={1}
-        />
-      )}
+      {/* Outras seções - sempre renderizar */}
+      <MediaSection
+        title="Animes Mais Bem Avaliados"
+        medias={safeTopRatedAnime.slice(0, 20)}
+        showLoadMore={false}
+        onLoadMore={onLoadMore.topRated}
+        isLoading={isFetchingNextPage.topRated}
+        onMediaClick={onMediaClick}
+        sectionId="topRatedAnime" 
+        mediaType="tv"
+        sectionIndex={1}
+      />
 
-      {safeRecentAnimes.length > 0 && (
-        <MediaSection
-          title="Animes Recentes"
-          medias={safeRecentAnimes}
-          showLoadMore={hasMore.recent}
-          onLoadMore={onLoadMore.recent}
-          isLoading={isFetchingNextPage.recent}
-          onMediaClick={onMediaClick}
-          sectionId="recentAnimes"
-          mediaType="tv"
-          sectionIndex={2}
-        />
-      )}
+      <MediaSection
+        title="Animes Recentes"
+        medias={safeRecentAnimes.slice(0, 20)}
+        showLoadMore={false}
+        onLoadMore={onLoadMore.recent}
+        isLoading={isFetchingNextPage.recent}
+        onMediaClick={onMediaClick}
+        sectionId="recentAnimes"
+        mediaType="tv"
+        sectionIndex={2}
+      />
     </div>
   );
 };

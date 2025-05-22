@@ -97,7 +97,33 @@ export interface Episode {
   season_number: number;
 }
 
-export type MediaItem = Movie | Series;
+export interface Anime extends BaseMedia {
+  name: string;
+  media_type: "anime";
+  original_name: string;
+  original_language: string;
+  number_of_seasons: number;
+  number_of_episodes: number;
+  status: string;
+  title?: string;
+  imdb_id?: string;
+  vote_count?: number;
+  external_ids?: {
+    imdb_id: string;
+  };
+  credits?: {
+    cast: Cast[];
+    crew: Crew[];
+  };
+  recommendations?: {
+    results: Anime[];
+  };
+  seasons: Season[];
+  adult: boolean;
+  origin_country?: string[];
+}
+
+export type MediaItem = Movie | Series | Anime;
 
 // Type guard to verify if it's a Movie
 export function isMovie(item: MediaItem): item is Movie {
@@ -107,6 +133,11 @@ export function isMovie(item: MediaItem): item is Movie {
 // Type guard to verify if it's a Series
 export function isSeries(item: MediaItem): item is Series {
   return item.media_type === "tv";
+}
+
+// Type guard to verify if it's an Anime
+export function isAnime(item: MediaItem): item is Anime {
+  return item.media_type === "anime";
 }
 
 // Helper function to get the title of a media item

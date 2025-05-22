@@ -1,6 +1,6 @@
 import React from "react";
 import { MediaItem, getMediaTitle, isMovie, isSeries } from "@/types/movie";
-import AnimeCarousel from "@/components/anime/AnimeCarousel";
+
 import { useNavigate } from "react-router-dom";
 
 interface HomeHeaderProps {
@@ -46,12 +46,7 @@ const HomeHeader = ({
   return (
     <div className="relative">
       {/* Show Carousel only when not searching */}
-      {!searchQuery && featuredMedia && (
-        <AnimeCarousel
-          animes={[featuredMedia]}
-          onAnimeClick={handleAnimeClick}
-        />
-      )}
+     
     </div>
   );
 };

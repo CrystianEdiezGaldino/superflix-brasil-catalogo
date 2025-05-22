@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { MediaItem } from "@/types/movie";
 import { TMDB_API_URL, TMDB_API_KEY } from "@/config/tmdb";
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { fetchAnimes } from '@/services/animeService';
 
 interface AnimeSections {
   featuredAnime: MediaItem[];
@@ -28,6 +30,60 @@ export const useAnimes = () => {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Query principal para todos os animes
+  const {
+    data: animeData,
+    fetchNextPage: fetchNextAnimePage,
+    hasNextPage: hasMoreAnime,
+    isFetchingNextPage: isFetchingNextAnimePage,
+    isLoading: isLoadingAnime,
+    error: animeError
+  } = useInfiniteQuery({
+    queryKey: ['animes'],
+    queryFn: ({ pageParam = 1 }) => fetchAnimes(pageParam),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.total_pages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  // Query para animes mais bem avaliados
+  const {
+    data: topRatedData,
+    isLoading: isLoadingTopRated,
+    error: topRatedError
+  } = useInfiniteQuery({
+    queryKey: ['topRatedAnime'],
+    queryFn: ({ pageParam = 1 }) => fetchAnimes(pageParam, 'vote_average.desc'),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.total_pages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  // Query para animes recentes
+  const {
+    data: recentData,
+    isLoading: isLoadingRecent,
+    error: recentError
+  } = useInfiniteQuery({
+    queryKey: ['recentAnime'],
+    queryFn: ({ pageParam = 1 }) => fetchAnimes(pageParam, 'first_air_date.desc'),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.total_pages) {
+        return lastPage.page + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+  });
 
   // Função para buscar animes populares
   const fetchPopularAnimes = useCallback(async (pageNum = 1) => {
@@ -192,11 +248,17 @@ export const useAnimes = () => {
       setIsLoadingInitial(true);
       
       try {
-        // Carregar animes populares para a lista principal
-        const popularAnimes = await fetchPopularAnimes();
-        setAnimes(popularAnimes);
+        // Carregar animes populares para a lista principal (50 itens)
+        const [page1, page2, page3] = await Promise.all([
+          fetchPopularAnimes(1),
+          fetchPopularAnimes(2),
+          fetchPopularAnimes(3)
+        ]);
         
-        // Carregar outras categorias
+        const initialAnimes = [...page1, ...page2, ...page3].slice(0, 50);
+        setAnimes(initialAnimes);
+        
+        // Carregar outras categorias (20 itens cada)
         const [topRated, trending, recent, seasonal] = await Promise.all([
           fetchTopRatedAnimes(),
           fetchTrendingAnimes(),
@@ -204,10 +266,10 @@ export const useAnimes = () => {
           fetchSeasonalAnimes()
         ]);
         
-        setTopRatedAnimes(topRated);
-        setTrendingAnimes(trending);
-        setRecentAnimes(recent);
-        setSeasonalAnimes(seasonal);
+        setTopRatedAnimes(topRated.slice(0, 20));
+        setTrendingAnimes(trending.slice(0, 20));
+        setRecentAnimes(recent.slice(0, 20));
+        setSeasonalAnimes(seasonal.slice(0, 20));
         
         // Carregar seções adicionais
         const [actionAnimes, classicAnimes] = await Promise.all([
@@ -216,14 +278,14 @@ export const useAnimes = () => {
         ]);
         
         setAnimeSections({
-          featuredAnime: trending.slice(0, 10),
-          popularAnime: popularAnimes,
-          newReleases: recent,
-          classicAnime: classicAnimes,
-          actionAnime: actionAnimes
+          featuredAnime: trending.slice(0, 20),
+          popularAnime: initialAnimes,
+          newReleases: recent.slice(0, 20),
+          classicAnime: classicAnimes.slice(0, 20),
+          actionAnime: actionAnimes.slice(0, 20)
         });
         
-        setHasMore(popularAnimes.length === 20);
+        setHasMore(true);
       } catch (error) {
         console.error("Erro ao carregar dados iniciais:", error);
       } finally {
@@ -234,81 +296,39 @@ export const useAnimes = () => {
     loadInitialData();
   }, [fetchPopularAnimes, fetchTopRatedAnimes, fetchTrendingAnimes, fetchRecentAnimes, fetchSeasonalAnimes, fetchAnimesByGenre, fetchClassicAnimes]);
 
+  // Atualizar estados quando os dados mudarem
+  useEffect(() => {
+    if (animeData) {
+      const allAnimes = animeData.pages.flatMap(page => page.results);
+      setAnimes(allAnimes);
+    }
+  }, [animeData]);
+
+  useEffect(() => {
+    if (topRatedData) {
+      const allTopRated = topRatedData.pages.flatMap(page => page.results);
+      setTopRatedAnimes(allTopRated);
+    }
+  }, [topRatedData]);
+
+  useEffect(() => {
+    if (recentData) {
+      const allRecent = recentData.pages.flatMap(page => page.results);
+      setRecentAnimes(allRecent);
+    }
+  }, [recentData]);
+
   // Função para carregar mais animes
   const loadMoreAnimes = async () => {
-    if (isLoadingMore || !hasMore) return;
-    
-    setIsLoadingMore(true);
-    const nextPage = page + 1;
-    
-    try {
-      const moreAnimes = await fetchPopularAnimes(nextPage);
-      
-      if (moreAnimes.length > 0) {
-        setAnimes(prev => [...prev, ...moreAnimes]);
-        setPage(nextPage);
-        setHasMore(moreAnimes.length === 20);
-      } else {
-        setHasMore(false);
-      }
-    } catch (error) {
-      console.error("Erro ao carregar mais animes:", error);
-    } finally {
-      setIsLoadingMore(false);
+    if (hasMoreAnime && !isFetchingNextAnimePage) {
+      await fetchNextAnimePage();
     }
   };
 
   // Função para carregar mais animes para uma seção específica
   const loadMoreForSection = async (sectionId: string) => {
-    if (!animeSections) return;
-    
-    try {
-      let newItems: MediaItem[] = [];
-      
-      switch (sectionId) {
-        case "newReleases":
-          newItems = await fetchRecentAnimes();
-          if (newItems.length > 0) {
-            setAnimeSections({
-              ...animeSections,
-              newReleases: [...animeSections.newReleases, ...newItems.slice(0, 10)]
-            });
-          }
-          break;
-          
-        case "classicAnime":
-          newItems = await fetchClassicAnimes();
-          if (newItems.length > 0) {
-            setAnimeSections({
-              ...animeSections,
-              classicAnime: [...animeSections.classicAnime, ...newItems.slice(0, 10)]
-            });
-          }
-          break;
-          
-        case "actionAnime":
-          newItems = await fetchAnimesByGenre(28);
-          if (newItems.length > 0) {
-            setAnimeSections({
-              ...animeSections,
-              actionAnime: [...animeSections.actionAnime, ...newItems.slice(0, 10)]
-            });
-          }
-          break;
-          
-        case "seasonalAnime":
-          newItems = await fetchSeasonalAnimes();
-          if (newItems.length > 0) {
-            setSeasonalAnimes(prev => [...prev, ...newItems.slice(0, 10)]);
-          }
-          break;
-          
-        default:
-          break;
-      }
-    } catch (error) {
-      console.error(`Erro ao carregar mais itens para a seção ${sectionId}:`, error);
-    }
+    // Desabilitar carregamento para outras seções
+    return;
   };
 
   // Função para buscar animes
@@ -417,15 +437,23 @@ export const useAnimes = () => {
     searchQuery,
     yearFilter,
     ratingFilter,
-    hasMore,
-    isLoadingInitial,
+    hasMore: {
+      anime: !!hasMoreAnime,
+      topRated: false,
+      recent: false
+    },
+    isLoading: isLoadingAnime || isLoadingTopRated || isLoadingRecent,
     isLoadingMore,
     isFiltering,
     isSearching,
     page,
     handleSearch,
-    loadMoreAnimes,
-    loadMoreForSection,
+    onLoadMore: {
+      anime: loadMoreAnimes,
+      topRated: () => {},
+      recent: () => {}
+    },
+    error: animeError || topRatedError || recentError,
     setYearFilter,
     setRatingFilter,
     resetFilters
