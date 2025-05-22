@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import useHomePageData from "../useHomePageData";
 import { useMovies } from "../movies/useMovies";
@@ -42,7 +43,7 @@ export const useContentSections = () => {
     // Renamed this to apiSearchResults to avoid conflict
     searchResults: apiSearchResults, 
     isSearchLoading,
-    handleSearch: originalHandleSearch,
+    searchMedia, // Use searchMedia from useHomePageData directly
   } = useHomePageData();
 
   // Define popularSeriesData and recentAnimesData with fallbacks
@@ -116,10 +117,9 @@ export const useContentSections = () => {
     }
     
     try {
-      if (originalHandleSearch) {
-        await originalHandleSearch(query);
-        // Use apiSearchResults instead of searchResults
-        setSearchResults(apiSearchResults || []);
+      if (searchMedia) {
+        const results = await searchMedia(query);
+        setSearchResults(results || []);
       }
     } catch (error) {
       console.error("Search error:", error);
