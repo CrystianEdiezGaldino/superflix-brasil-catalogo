@@ -11,11 +11,12 @@ export const useAnimeData = () => {
   const shouldFetchData = !!user && isUserAuthenticated;
   
   // Fetch anime data with infinite query
-  const animeQuery = useInfiniteQuery<MediaItem[]>({
+  const animeQuery = useInfiniteQuery({
     queryKey: ["anime"],
     queryFn: ({ pageParam = 1 }) => fetchAnime(pageParam as number),
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage && lastPage.length === 20 ? allPages.length + 1 : undefined;
+      // Safety check: ensure lastPage is defined and has items
+      return lastPage && lastPage.length > 0 ? allPages.length + 1 : undefined;
     },
     initialPageParam: 1,
     enabled: shouldFetchData,
@@ -25,11 +26,12 @@ export const useAnimeData = () => {
   });
 
   // Fetch top rated anime with infinite query
-  const topRatedAnimeQuery = useInfiniteQuery<MediaItem[]>({
+  const topRatedAnimeQuery = useInfiniteQuery({
     queryKey: ["topRatedAnime"],
     queryFn: ({ pageParam = 1 }) => fetchTopRatedAnime(pageParam as number),
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage && lastPage.length === 20 ? allPages.length + 1 : undefined;
+      // Safety check: ensure lastPage is defined and has items
+      return lastPage && lastPage.length > 0 ? allPages.length + 1 : undefined;
     },
     initialPageParam: 1,
     enabled: shouldFetchData,
@@ -39,11 +41,12 @@ export const useAnimeData = () => {
   });
 
   // Fetch recent anime with infinite query
-  const recentAnimesQuery = useInfiniteQuery<MediaItem[]>({
+  const recentAnimesQuery = useInfiniteQuery({
     queryKey: ["recentAnime"],
     queryFn: ({ pageParam = 1 }) => fetchRecentAnime(pageParam as number),
     getNextPageParam: (lastPage, allPages) => {
-      return lastPage && lastPage.length === 20 ? allPages.length + 1 : undefined;
+      // Safety check: ensure lastPage is defined and has items
+      return lastPage && lastPage.length > 0 ? allPages.length + 1 : undefined;
     },
     initialPageParam: 1,
     enabled: shouldFetchData,

@@ -15,18 +15,18 @@ export const useSectionPagination = (
     recent: useCallback(() => handleLoadMoreSection('recentAnimes'), [handleLoadMoreSection]),
   };
 
-  // Check if more data is available for sections
+  // Check if more data is available for sections with null/undefined checks
   const hasNextPage = {
-    anime: sectionData?.anime?.hasMore || false,
-    topRated: sectionData?.topRatedAnime?.hasMore || false,
-    recent: sectionData?.recentAnimes?.hasMore || false,
+    anime: sectionData?.anime?.hasMore ?? false,
+    topRated: sectionData?.topRatedAnime?.hasMore ?? false,
+    recent: sectionData?.recentAnimes?.hasMore ?? false,
   };
 
-  // Check if sections are currently fetching data
+  // Check if sections are currently fetching data with null/undefined checks
   const isFetchingNextPage = {
-    anime: sectionData?.anime?.isLoading || false,
-    topRated: sectionData?.topRatedAnime?.isLoading || false,
-    recent: sectionData?.recentAnimes?.isLoading || false,
+    anime: sectionData?.anime?.isLoading ?? false,
+    topRated: sectionData?.topRatedAnime?.isLoading ?? false,
+    recent: sectionData?.recentAnimes?.isLoading ?? false,
   };
 
   return {
