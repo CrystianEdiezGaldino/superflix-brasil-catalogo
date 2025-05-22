@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -54,10 +55,10 @@ const Animes: React.FC = () => {
       }
     },
     getNextPageParam: (lastPage) => {
-      // Add safety checks to prevent the undefined error
+      // Add comprehensive safety checks
       if (!lastPage) return undefined;
       if (!lastPage.results || lastPage.results.length === 0) return undefined;
-      if (lastPage.page >= lastPage.total_pages) return undefined;
+      if (lastPage.page >= (lastPage.total_pages || 0)) return undefined;
       return lastPage.page + 1;
     },
     initialPageParam: 1,
@@ -92,10 +93,10 @@ const Animes: React.FC = () => {
       }
     },
     getNextPageParam: (lastPage) => {
-      // Add safety checks to prevent the undefined error
+      // Add comprehensive safety checks
       if (!lastPage) return undefined;
       if (!lastPage.results || lastPage.results.length === 0) return undefined;
-      if (lastPage.page >= lastPage.total_pages) return undefined;
+      if (lastPage.page >= (lastPage.total_pages || 0)) return undefined;
       return lastPage.page + 1;
     },
     initialPageParam: 1,
@@ -167,10 +168,10 @@ const Animes: React.FC = () => {
       }
     },
     getNextPageParam: (lastPage) => {
-      // Add safety checks to prevent the undefined error
+      // Add comprehensive safety checks
       if (!lastPage) return undefined;
       if (!lastPage.results || lastPage.results.length === 0) return undefined;
-      if (lastPage.page >= lastPage.total_pages) return undefined;
+      if (lastPage.page >= (lastPage.total_pages || 0)) return undefined;
       return lastPage.page + 1;
     },
     initialPageParam: 1,
@@ -249,6 +250,22 @@ const Animes: React.FC = () => {
     navigate(`/anime/${media.id}`);
   };
 
+  // Handlers for loading more content in each section
+  const handleLoadMoreTrending = () => {
+    console.log("Loading more trending animes");
+    fetchNextPage();
+  };
+
+  const handleLoadMoreTopRated = () => {
+    console.log("Loading more top rated animes");
+    fetchNextTop100Page();
+  };
+
+  const handleLoadMoreRecent = () => {
+    console.log("Loading more recent animes");
+    fetchNextRecentPage();
+  };
+
   const isLoading = authLoading || queryLoading;
 
   if (isLoading) {
@@ -295,20 +312,21 @@ const Animes: React.FC = () => {
         trendingItems={trendingItems}
         topRatedItems={topRatedItems}
         recentItems={recentAnimes}
-        top100Items={top100Animes}
         isLoading={isLoading}
-        isLoadingMore={isFetchingNextPage}
-        hasMore={hasNextPage}
         isFiltering={isFiltering}
         isSearching={isSearching}
-        page={animePages?.pages?.length || 1}
         yearFilter={yearFilter}
         ratingFilter={ratingFilter}
         searchQuery={searchQuery}
         onSearch={handleSearch}
         onYearFilterChange={handleYearFilterChange}
         onRatingFilterChange={handleRatingFilterChange}
-        onLoadMore={fetchNextPage}
+        onLoadMoreTrending={handleLoadMoreTrending}
+        onLoadMoreTopRated={handleLoadMoreTopRated}
+        onLoadMoreRecent={handleLoadMoreRecent}
+        hasMoreTrending={hasNextPage}
+        hasMoreTopRated={hasNextTop100Page}
+        hasMoreRecent={hasNextRecentPage}
         onResetFilters={handleResetFilters}
         onMediaClick={handleMediaClick}
       />

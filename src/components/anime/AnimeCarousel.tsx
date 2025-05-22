@@ -9,12 +9,12 @@ interface AnimeCarouselProps {
   onAnimeClick: (anime: MediaItem) => void;
 }
 
-const AnimeCarousel = ({ animes = [], onAnimeClick }: AnimeCarouselProps) => {
+const AnimeCarousel = ({ animes = null, onAnimeClick }: AnimeCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   
   // Ensure animes is an array
-  const animesArray = Array.isArray(animes) ? animes : [];
+  const animesArray = Array.isArray(animes) ? animes.filter(Boolean) : [];
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -46,6 +46,8 @@ const AnimeCarousel = ({ animes = [], onAnimeClick }: AnimeCarouselProps) => {
   if (!animesArray.length) return null;
 
   const currentAnime = animesArray[currentIndex];
+  if (!currentAnime) return null;
+  
   const title = getMediaTitle(currentAnime);
   
   // Safely get release date using type guards

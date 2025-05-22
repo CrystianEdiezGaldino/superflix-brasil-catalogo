@@ -1,3 +1,4 @@
+
 import React from "react";
 import { MediaItem } from "@/types/movie";
 import MediaSectionLoader from "./MediaSectionLoader";
@@ -21,6 +22,14 @@ interface MediaViewProps {
   recentTitle?: string;
   sectionLoading?: boolean;
   isFiltering?: boolean;
+  isSearching?: boolean;
+  yearFilter?: string;
+  ratingFilter?: string;
+  searchQuery?: string;
+  onSearch?: (query: string) => void;
+  onYearFilterChange?: (year: string) => void;
+  onRatingFilterChange?: (rating: string) => void;
+  onResetFilters?: () => void;
   focusedSection?: number;
   focusedItem?: number;
   children?: React.ReactNode;
@@ -45,21 +54,35 @@ const MediaView: React.FC<MediaViewProps> = ({
   recentTitle = "Recentes",
   sectionLoading = false,
   isFiltering = false,
+  isSearching = false,
+  yearFilter = "",
+  ratingFilter = "",
+  searchQuery = "",
+  onSearch,
+  onYearFilterChange,
+  onRatingFilterChange,
+  onResetFilters,
   focusedSection = 0,
   focusedItem = 0,
   children
 }) => {
+  // Ensure all item arrays are valid
+  const safeMediaItems = Array.isArray(mediaItems) ? mediaItems : [];
+  const safeTrendingItems = Array.isArray(trendingItems) ? trendingItems : [];
+  const safeTopRatedItems = Array.isArray(topRatedItems) ? topRatedItems : [];
+  const safeRecentItems = Array.isArray(recentItems) ? recentItems : [];
+  
   return (
     <div className="mb-16">
       <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">{title}</h2>
       
       {children}
       
-      {trendingItems.length > 0 && (
+      {safeTrendingItems.length > 0 && (
         <div className="mb-10">
           <MediaSectionLoader 
             title={trendingTitle}
-            medias={trendingItems}
+            medias={safeTrendingItems}
             showLoadMore={hasMoreTrending}
             onLoadMore={onLoadMoreTrending}
             isLoading={sectionLoading}
@@ -71,11 +94,11 @@ const MediaView: React.FC<MediaViewProps> = ({
         </div>
       )}
       
-      {topRatedItems.length > 0 && (
+      {safeTopRatedItems.length > 0 && (
         <div className="mb-10">
           <MediaSectionLoader 
             title={topRatedTitle}
-            medias={topRatedItems}
+            medias={safeTopRatedItems}
             showLoadMore={hasMoreTopRated}
             onLoadMore={onLoadMoreTopRated}
             isLoading={sectionLoading}
@@ -87,11 +110,11 @@ const MediaView: React.FC<MediaViewProps> = ({
         </div>
       )}
       
-      {recentItems.length > 0 && (
+      {safeRecentItems.length > 0 && (
         <div className="mb-10">
           <MediaSectionLoader 
             title={recentTitle}
-            medias={recentItems}
+            medias={safeRecentItems}
             showLoadMore={hasMoreRecent}
             onLoadMore={onLoadMoreRecent}
             isLoading={sectionLoading}

@@ -16,7 +16,10 @@ export const useAnimeData = () => {
     queryFn: ({ pageParam = 1 }) => fetchAnime(pageParam as number),
     getNextPageParam: (lastPage, allPages) => {
       // Safety check: ensure lastPage is defined and has items
-      return lastPage && lastPage.length > 0 ? allPages.length + 1 : undefined;
+      if (!lastPage || lastPage.length === 0) {
+        return undefined;
+      }
+      return allPages.length + 1;
     },
     initialPageParam: 1,
     enabled: shouldFetchData,
@@ -31,7 +34,10 @@ export const useAnimeData = () => {
     queryFn: ({ pageParam = 1 }) => fetchTopRatedAnime(pageParam as number),
     getNextPageParam: (lastPage, allPages) => {
       // Safety check: ensure lastPage is defined and has items
-      return lastPage && lastPage.length > 0 ? allPages.length + 1 : undefined;
+      if (!lastPage || lastPage.length === 0) {
+        return undefined;
+      }
+      return allPages.length + 1;
     },
     initialPageParam: 1,
     enabled: shouldFetchData,
@@ -46,7 +52,10 @@ export const useAnimeData = () => {
     queryFn: ({ pageParam = 1 }) => fetchRecentAnime(pageParam as number),
     getNextPageParam: (lastPage, allPages) => {
       // Safety check: ensure lastPage is defined and has items
-      return lastPage && lastPage.length > 0 ? allPages.length + 1 : undefined;
+      if (!lastPage || lastPage.length === 0) {
+        return undefined;
+      }
+      return allPages.length + 1;
     },
     initialPageParam: 1,
     enabled: shouldFetchData,
