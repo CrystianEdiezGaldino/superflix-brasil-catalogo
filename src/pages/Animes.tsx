@@ -5,6 +5,8 @@ import MediaView from "@/components/media/MediaView";
 import { MediaItem } from "@/types/movie";
 import { fetchAnime, fetchTopRatedAnime } from "@/services/tmdb/anime";
 import { useAuth } from "@/contexts/AuthContext";
+import AnimeCarousel from "@/components/anime/AnimeCarousel";
+import { useAnimeLoader } from "@/hooks/anime/useAnimeLoader";
 
 const Animes: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -14,6 +16,9 @@ const Animes: React.FC = () => {
   const [ratingFilter, setRatingFilter] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isFiltering, setIsFiltering] = useState(false);
+  
+  // Get anime recommendations from our loader
+  const { recommendedAnimes } = useAnimeLoader();
 
   // Função para filtrar animes sem imagem
   const filterAnimesWithoutImage = (animes: MediaItem[] = []) => {
@@ -273,6 +278,16 @@ const Animes: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-netflix-background">
+      {/* Add carousel for anime recommendations */}
+      {recommendedAnimes && recommendedAnimes.length > 0 && !isSearching && !isFiltering && (
+        <div className="mb-8">
+          <AnimeCarousel 
+            animes={recommendedAnimes.slice(0, 5)} 
+            onAnimeClick={handleMediaClick}
+          />
+        </div>
+      )}
+      
       <MediaView
         title="Animes"
         type="anime"

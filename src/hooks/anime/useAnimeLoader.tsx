@@ -60,6 +60,30 @@ export const useAnimeLoader = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  // Get recommended animes (max 5) based on popularity and rating
+  const getRecommendedAnimes = (): MediaItem[] => {
+    // First prioritize trending content
+    if (trendingAnimes && trendingAnimes.length > 0) {
+      // Filter content with good backdrop images
+      const withBackdrops = trendingAnimes.filter(anime => anime.backdrop_path);
+      return withBackdrops.slice(0, 5);
+    }
+    
+    // If no trending, use top rated
+    if (topRatedAnimes && topRatedAnimes.length > 0) {
+      const withBackdrops = topRatedAnimes.filter(anime => anime.backdrop_path);
+      return withBackdrops.slice(0, 5);
+    }
+    
+    // If no top rated, fallback to initial animes
+    if (initialAnimes && initialAnimes.length > 0) {
+      const withBackdrops = initialAnimes.filter(anime => anime.backdrop_path);
+      return withBackdrops.slice(0, 5);
+    }
+    
+    return [];
+  };
+
   // Function to fetch a specific batch of anime
   const fetchAnimeBatchById = async (batchIndex: number) => {
     return fetchAnimeBatch(batchIndex, 20);
@@ -72,6 +96,7 @@ export const useAnimeLoader = () => {
     recentAnimes,
     seasonalAnimes,
     animeSections,
+    recommendedAnimes: getRecommendedAnimes(),
     fetchAnimeBatch: fetchAnimeBatchById,
     totalAnimes: animeIdsList.length,
     isLoadingInitial,
