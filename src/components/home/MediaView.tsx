@@ -32,6 +32,7 @@ interface MediaViewProps {
   onResetFilters?: () => void;
   focusedSection?: number;
   focusedItem?: number;
+  isLoading?: boolean;
   children?: React.ReactNode;
 }
 
@@ -64,6 +65,7 @@ const MediaView: React.FC<MediaViewProps> = ({
   onResetFilters,
   focusedSection = 0,
   focusedItem = 0,
+  isLoading = false,
   children
 }) => {
   // Ensure all item arrays are valid

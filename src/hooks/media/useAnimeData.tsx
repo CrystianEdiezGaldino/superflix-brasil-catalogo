@@ -13,10 +13,13 @@ export const useAnimeData = () => {
   // Fetch anime data with infinite query
   const animeQuery = useInfiniteQuery({
     queryKey: ["anime"],
-    queryFn: ({ pageParam = 1 }) => fetchAnime(pageParam as number),
+    queryFn: async ({ pageParam = 1 }) => {
+      const data = await fetchAnime(pageParam as number);
+      return data || [];
+    },
     getNextPageParam: (lastPage, allPages) => {
       // Safety check: ensure lastPage is defined and has items
-      if (!lastPage || lastPage.length === 0) {
+      if (!lastPage || !Array.isArray(lastPage) || lastPage.length === 0) {
         return undefined;
       }
       return allPages.length + 1;
@@ -31,10 +34,13 @@ export const useAnimeData = () => {
   // Fetch top rated anime with infinite query
   const topRatedAnimeQuery = useInfiniteQuery({
     queryKey: ["topRatedAnime"],
-    queryFn: ({ pageParam = 1 }) => fetchTopRatedAnime(pageParam as number),
+    queryFn: async ({ pageParam = 1 }) => {
+      const data = await fetchTopRatedAnime(pageParam as number);
+      return data || [];
+    },
     getNextPageParam: (lastPage, allPages) => {
       // Safety check: ensure lastPage is defined and has items
-      if (!lastPage || lastPage.length === 0) {
+      if (!lastPage || !Array.isArray(lastPage) || lastPage.length === 0) {
         return undefined;
       }
       return allPages.length + 1;
@@ -49,10 +55,13 @@ export const useAnimeData = () => {
   // Fetch recent anime with infinite query
   const recentAnimesQuery = useInfiniteQuery({
     queryKey: ["recentAnime"],
-    queryFn: ({ pageParam = 1 }) => fetchRecentAnime(pageParam as number),
+    queryFn: async ({ pageParam = 1 }) => {
+      const data = await fetchRecentAnime(pageParam as number);
+      return data || [];
+    },
     getNextPageParam: (lastPage, allPages) => {
       // Safety check: ensure lastPage is defined and has items
-      if (!lastPage || lastPage.length === 0) {
+      if (!lastPage || !Array.isArray(lastPage) || lastPage.length === 0) {
         return undefined;
       }
       return allPages.length + 1;

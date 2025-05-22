@@ -25,7 +25,9 @@ const AnimeCarousel = ({ animes = null, onAnimeClick }: AnimeCarouselProps) => {
       }, 5000);
     }
 
-    return () => clearInterval(interval);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
   }, [isAutoPlaying, animesArray.length]);
 
   const handleNext = () => {

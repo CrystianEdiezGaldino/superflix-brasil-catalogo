@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import MediaView from "@/components/media/MediaView";
+import MediaView from "@/components/home/MediaView";
 import { MediaItem } from "@/types/movie";
 import { fetchAnime, fetchTopRatedAnime } from "@/services/tmdb/anime";
 import { useAuth } from "@/contexts/AuthContext";
@@ -57,7 +57,7 @@ const Animes: React.FC = () => {
     getNextPageParam: (lastPage) => {
       // Add comprehensive safety checks
       if (!lastPage) return undefined;
-      if (!lastPage.results || lastPage.results.length === 0) return undefined;
+      if (!lastPage.results || !Array.isArray(lastPage.results) || lastPage.results.length === 0) return undefined;
       if (lastPage.page >= (lastPage.total_pages || 0)) return undefined;
       return lastPage.page + 1;
     },
@@ -95,7 +95,7 @@ const Animes: React.FC = () => {
     getNextPageParam: (lastPage) => {
       // Add comprehensive safety checks
       if (!lastPage) return undefined;
-      if (!lastPage.results || lastPage.results.length === 0) return undefined;
+      if (!lastPage.results || !Array.isArray(lastPage.results) || lastPage.results.length === 0) return undefined;
       if (lastPage.page >= (lastPage.total_pages || 0)) return undefined;
       return lastPage.page + 1;
     },
@@ -170,7 +170,7 @@ const Animes: React.FC = () => {
     getNextPageParam: (lastPage) => {
       // Add comprehensive safety checks
       if (!lastPage) return undefined;
-      if (!lastPage.results || lastPage.results.length === 0) return undefined;
+      if (!lastPage.results || !Array.isArray(lastPage.results) || lastPage.results.length === 0) return undefined;
       if (lastPage.page >= (lastPage.total_pages || 0)) return undefined;
       return lastPage.page + 1;
     },
@@ -321,14 +321,18 @@ const Animes: React.FC = () => {
         onSearch={handleSearch}
         onYearFilterChange={handleYearFilterChange}
         onRatingFilterChange={handleRatingFilterChange}
+        onResetFilters={handleResetFilters}
+        onMediaClick={handleMediaClick}
         onLoadMoreTrending={handleLoadMoreTrending}
         onLoadMoreTopRated={handleLoadMoreTopRated}
         onLoadMoreRecent={handleLoadMoreRecent}
         hasMoreTrending={hasNextPage}
         hasMoreTopRated={hasNextTop100Page}
         hasMoreRecent={hasNextRecentPage}
-        onResetFilters={handleResetFilters}
-        onMediaClick={handleMediaClick}
+        trendingTitle="Em Alta"
+        topRatedTitle="Mais Bem Avaliados"
+        recentTitle="Lançamentos Recentes"
+        sectionLoading={isFetchingNextPage || isFetchingNextTop100Page || isFetchingNextRecentPage}
       />
     </div>
   );
