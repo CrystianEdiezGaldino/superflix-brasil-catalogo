@@ -1,15 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
-import { useNavigate } from 'react-router-dom';
-import { MediaItem } from '@/types/movie';
-import { useFetch } from './useFetch';
-import { useSearchMedia } from './useSearchMedia';
 import { useAccessControl } from './useAccessControl';
+import { useMediaData } from './useMediaData';
+import { useFeaturedMedia } from './useFeaturedMedia';
+import { usePopularContent } from './usePopularContent';
+import { useRecommendations } from './useRecommendations';
+import { useSearchMedia } from './useSearchMedia';
 
 const useHomePageData = () => {
-  const navigate = useNavigate();
-  
   // Try to get auth context, handle if not available
   let user = null;
   try {
@@ -38,105 +37,60 @@ const useHomePageData = () => {
   // Use the access control hook to determine user access status
   const accessControlData = useAccessControl();
   
-  // Media data fetching
-  const {
-    data: moviesData = [],
-    isLoading: moviesLoading,
-    error: moviesError
-  } = useFetch<MediaItem[]>('/api/movies/trending');
-  
-  const {
-    data: seriesData = [],
-    isLoading: seriesLoading,
-    error: seriesError
-  } = useFetch<MediaItem[]>('/api/series/popular');
+  // Get all media data from specialized hooks
+  const { 
+    moviesData, 
+    seriesData, 
+    animeData,
+    topRatedAnimeData,
+    doramasData,
+    actionMoviesData,
+    comedyMoviesData,
+    adventureMoviesData,
+    sciFiMoviesData,
+    marvelMoviesData,
+    dcMoviesData,
+    popularSeriesData,
+    recentAnimesData,
+    isLoading: mediaLoading,
+    hasError: mediaError
+  } = useMediaData();
 
-  // Additional media sections
-  const {
-    data: actionMoviesData = [],
-    isLoading: actionLoading
-  } = useFetch<MediaItem[]>('/api/movies/genre/action');
-  
-  const {
-    data: comedyMoviesData = [],
-    isLoading: comedyLoading
-  } = useFetch<MediaItem[]>('/api/movies/genre/comedy');
+  // Get popular content
+  const { 
+    popularContent, 
+    recentAnimes,
+    isLoading: popularLoading 
+  } = usePopularContent();
 
-  const {
-    data: adventureMoviesData = [],
-    isLoading: adventureLoading
-  } = useFetch<MediaItem[]>('/api/movies/genre/adventure');
-  
-  const {
-    data: sciFiMoviesData = [],
-    isLoading: sciFiLoading
-  } = useFetch<MediaItem[]>('/api/movies/genre/sci-fi');
-
-  const {
-    data: marvelMoviesData = [],
-    isLoading: marvelLoading
-  } = useFetch<MediaItem[]>('/api/movies/studio/marvel');
-
-  const {
-    data: dcMoviesData = [],
-    isLoading: dcLoading
-  } = useFetch<MediaItem[]>('/api/movies/studio/dc');
-
-  const {
-    data: doramasData = [],
-    isLoading: doramasLoading
-  } = useFetch<MediaItem[]>('/api/doramas');
-
-  const {
-    data: popularContent = [],
-    isLoading: popularLoading
-  } = useFetch<MediaItem[]>('/api/popular');
-
-  const {
-    data: recommendations = [],
-    isLoading: recommendationsLoading
-  } = useFetch<MediaItem[]>('/api/recommendations');
-  
-  const {
-    data: horrorMoviesData = [],
-    isLoading: horrorLoading
-  } = useFetch<MediaItem[]>('/api/movies/genre/horror');
-
-  const {
-    data: popularInBrazilData = [],
-    isLoading: popularInBrazilLoading
-  } = useFetch<MediaItem[]>('/api/popular/brazil');
-
-  const {
-    data: trilogiesData = [],
-    isLoading: trilogiesLoading
-  } = useFetch<MediaItem[]>('/api/movies/collections');
+  // Get recommendations
+  const { recommendations } = useRecommendations();
 
   // Get featured media for the hero section
-  const featuredMedia = useMemo(() => {
-    if (moviesData && moviesData.length > 0) {
-      // Return a random featured item from the first 5 movies
-      const randomIndex = Math.floor(Math.random() * Math.min(5, moviesData.length));
-      return moviesData[randomIndex];
-    }
-    return null;
-  }, [moviesData]);
+  const { featuredMedia } = useFeaturedMedia(
+    accessControlData.hasAccess,
+    user,
+    moviesData,
+    seriesData,
+    animeData,
+    topRatedAnimeData,
+    doramasData,
+    recommendations
+  );
   
   // Search functionality
   const search = useSearchMedia();
   
   // Section data for load more functionality
-  const [sectionData, setSectionData] = useState<Record<string, MediaItem[]>>({});
+  const [sectionData, setSectionData] = useState<Record<string, any>>({});
   
   // Handle errors
-  const hasError = moviesError || seriesError;
+  const hasError = mediaError;
   
   // Loading state
   const isLoading = 
-    moviesLoading || 
-    seriesLoading || 
-    actionLoading ||
-    recommendationsLoading ||
+    mediaLoading || 
+    popularLoading || 
     accessControlData.isLoading;
 
   // Handle loading more items for a specific section
@@ -178,16 +132,16 @@ const useHomePageData = () => {
       marvelMoviesData: marvelMoviesData || [],
       dcMoviesData: dcMoviesData || [],
       seriesData: seriesData || [],
-      popularSeriesData: seriesData?.slice(0, 10) || [],
-      animeData: [], // This would need implementation
-      topRatedAnimeData: [], // This would need implementation
-      recentAnimesData: [], // This would need implementation
+      popularSeriesData: popularSeriesData || [],
+      animeData: animeData || [],
+      topRatedAnimeData: topRatedAnimeData || [],
+      recentAnimesData: recentAnimesData || [],
       doramasData: doramasData || [],
       recommendations: recommendations || [],
       popularContent: popularContent || [],
-      horrorMoviesData: horrorMoviesData || [],
-      popularInBrazilData: popularInBrazilData || [],
-      trilogiesData: trilogiesData || [],
+      horrorMoviesData: [], // These will be provided by useMediaData in the future
+      popularInBrazilData: [], // These will be provided by useMediaData in the future
+      trilogiesData: [], // These will be provided by useMediaData in the future
       isLoading,
       hasError,
       searchResults: search.results,
@@ -209,12 +163,13 @@ const useHomePageData = () => {
     marvelMoviesData,
     dcMoviesData,
     seriesData,
+    animeData,
+    topRatedAnimeData,
     doramasData,
+    recentAnimesData,
+    popularSeriesData,
     recommendations,
     popularContent,
-    horrorMoviesData,
-    popularInBrazilData,
-    trilogiesData,
     isLoading,
     hasError,
     search.results,
