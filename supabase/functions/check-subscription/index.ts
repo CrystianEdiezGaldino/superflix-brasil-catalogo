@@ -1,3 +1,4 @@
+
 // Import required modules
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
@@ -46,7 +47,7 @@ serve(async (req) => {
     } catch (error) {
       console.error("[CHECK-SUBSCRIPTION] Auth error:", error);
       
-      // Retornar valores não permissivos em caso de erro de autenticação
+      // Return non-permissive values in case of authentication error
       return new Response(
         JSON.stringify({
           hasActiveSubscription: false,
@@ -57,7 +58,7 @@ serve(async (req) => {
           user: { id: 'unknown', email: 'unknown' }
         }),
         {
-          status: 200,
+          status: 200, // Return 200 even on auth error to prevent crashes in frontend
           headers: { ...updatedCorsHeaders, "Content-Type": "application/json" }
         }
       );
@@ -128,7 +129,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('[CHECK-SUBSCRIPTION] Error:', error);
     
-    // Retornar valores não permissivos em caso de erro
+    // Return non-permissive values in case of error
     return new Response(
       JSON.stringify({
         error: String(error),
@@ -139,7 +140,7 @@ serve(async (req) => {
         subscription_tier: 'none'
       }),
       {
-        status: 200,
+        status: 200, // Return 200 to prevent frontend crashes
         headers: { ...updatedCorsHeaders, "Content-Type": "application/json" }
       }
     );

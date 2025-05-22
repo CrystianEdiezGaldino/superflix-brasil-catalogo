@@ -6,10 +6,12 @@ import { signInUser } from "@/utils/authUtils";
 import { toast } from "sonner";
 import { FaGooglePlay } from "react-icons/fa";
 import { Download, Star } from "lucide-react";
+
 interface LoginFormProps {
   isLoading: boolean;
   setIsLoading: (isLoading: boolean) => void;
 }
+
 const LoginForm = ({
   isLoading,
   setIsLoading
@@ -20,36 +22,49 @@ const LoginForm = ({
     email?: string;
     password?: string;
   }>({});
+  
   const validateForm = () => {
     const newErrors: {
       email?: string;
       password?: string;
     } = {};
+    
     if (!email) {
       newErrors.email = "E-mail é obrigatório";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "E-mail inválido";
     }
+    
     if (!password) {
       newErrors.password = "Senha é obrigatória";
     } else if (password.length < 6) {
       newErrors.password = "A senha deve ter pelo menos 6 caracteres";
     }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateForm()) {
       return;
     }
+    
     setIsLoading(true);
     try {
-      await signInUser(email, password);
+      const { user, session, error } = await signInUser(email, password);
+      
+      if (error) throw error;
+      if (!user) throw new Error("Usuário não encontrado");
+      
       toast.success("Login realizado com sucesso!");
+      
+      // Automatically check subscription status after successful login
+      // This will be handled by the useEffect in AuthContext and SubscriptionContext
     } catch (error: any) {
       console.error("Erro ao fazer login:", error);
-      if (error.message.includes("Invalid login credentials")) {
+      if (error.message?.includes("Invalid login credentials")) {
         toast.error("E-mail ou senha incorretos");
       } else {
         toast.error(error.message || "Erro ao fazer login");
@@ -58,6 +73,7 @@ const LoginForm = ({
       setIsLoading(false);
     }
   };
+  
   return <form onSubmit={handleLogin} className="space-y-4">
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-white mb-2">Bem-vindo de volta</h1>
@@ -129,4 +145,5 @@ const LoginForm = ({
       </div>
     </form>;
 };
+
 export default LoginForm;

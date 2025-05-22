@@ -157,11 +157,13 @@ export type Database = {
           code: string
           created_at: string
           created_by: string | null
+          current_uses: number | null
           days_valid: number
           description: string | null
           expires_at: string
           id: string
           is_active: boolean
+          max_uses: number | null
           usage_count: number
           usage_limit: number | null
         }
@@ -169,11 +171,13 @@ export type Database = {
           code: string
           created_at?: string
           created_by?: string | null
+          current_uses?: number | null
           days_valid?: number
           description?: string | null
           expires_at: string
           id?: string
           is_active?: boolean
+          max_uses?: number | null
           usage_count?: number
           usage_limit?: number | null
         }
@@ -181,11 +185,13 @@ export type Database = {
           code?: string
           created_at?: string
           created_by?: string | null
+          current_uses?: number | null
           days_valid?: number
           description?: string | null
           expires_at?: string
           id?: string
           is_active?: boolean
+          max_uses?: number | null
           usage_count?: number
           usage_limit?: number | null
         }

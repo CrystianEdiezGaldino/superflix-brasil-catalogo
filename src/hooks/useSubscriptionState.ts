@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Session } from "@supabase/supabase-js";
 import { checkSubscriptionStatus, processSubscriptionData } from '@/utils/subscriptionUtils';
@@ -9,11 +10,11 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY = 5000; // 5 seconds
 
 export const useSubscriptionState = (user: any, session: Session | null) => {
-  const [isSubscribed, setIsSubscribed] = useState(false); // Alterado para false
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasTempAccess, setHasTempAccess] = useState(false);
-  const [hasTrialAccess, setHasTrialAccess] = useState(false); // Alterado para false
+  const [hasTrialAccess, setHasTrialAccess] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<string | null>(null);
   const [subscriptionEnd, setSubscriptionEnd] = useState<string | null>(null);
   const [trialEnd, setTrialEnd] = useState<string | null>(null);
@@ -23,22 +24,24 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
   const checkInProgressRef = useRef(false);
   const initialCheckDoneRef = useRef(false);
   const totalChecksRef = useRef(0);
+  const maxChecksRef = useRef(10); // Limit to 10 checks per session to prevent infinite loops
 
   const checkSubscription = useCallback(async (forceCheck = false) => {
+    // Skip if conditions aren't met or check is already running
     if (!user || !session || (checkInProgressRef.current && !forceCheck)) return;
+    
+    // Check if we've reached the maximum number of checks
+    if (totalChecksRef.current >= maxChecksRef.current && !forceCheck) {
+      console.log("Maximum subscription checks reached, skipping");
+      return;
+    }
     
     const now = Date.now();
     if (!forceCheck && now - lastCheckTimeRef.current < CHECK_INTERVAL) {
       return;
     }
     
-    // Prevent excessive checks
     totalChecksRef.current += 1;
-    if (totalChecksRef.current > 10 && !forceCheck) {
-      console.log("Too many subscription checks, skipping");
-      return;
-    }
-
     checkInProgressRef.current = true;
     lastCheckTimeRef.current = now;
 
@@ -54,7 +57,8 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
       }
       
       // Get subscription data
-      const data = await checkSubscriptionStatus(user.id, session.access_token);
+      const accessToken = session?.access_token || '';
+      const data = await checkSubscriptionStatus(user.id, accessToken);
       
       // Process the data
       if (data) {
@@ -78,19 +82,36 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     } catch (error) {
       console.error('Erro ao verificar assinatura:', error);
       
-      // Não usar valores permissivos em caso de erro
+      // Don't use permissive values on error
       setIsSubscribed(false);
       setHasTrialAccess(false);
       
       if (retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current++;
         setTimeout(() => checkSubscription(forceCheck), RETRY_DELAY);
+      } else {
+        console.log("Max retries reached for subscription check");
+        // After max retries, mark initial check as done anyway to prevent blocking UI
+        initialCheckDoneRef.current = true;
       }
     } finally {
       checkInProgressRef.current = false;
       setIsLoading(false);
     }
   }, [user, session]);
+
+  // Safety timeout to prevent indefinite loading state
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (isLoading) {
+        console.log("Loading timeout reached - forcing completion");
+        setIsLoading(false);
+        initialCheckDoneRef.current = true;
+      }
+    }, 10000); // 10 seconds max loading time
+    
+    return () => clearTimeout(timeoutId);
+  }, [isLoading]);
 
   // Initial check effect - use setTimeout to avoid cyclic updates
   useEffect(() => {
@@ -114,6 +135,8 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     } else if (!user || !session) {
       // Cleanup states when no user
       setIsLoading(false);
+      initialCheckDoneRef.current = false;
+      totalChecksRef.current = 0;
     }
     
     return () => { isMounted = false; };

@@ -1,251 +1,230 @@
-import { useCallback, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
-import { useSubscription } from "@/contexts/SubscriptionContext";
-import { 
-  fetchPopularMovies, 
-  fetchTopRatedMovies, 
-  fetchTrendingMovies, 
-  fetchRecentMovies,
-  fetchPopularSeries,
-  fetchTopRatedSeries,
-  fetchTrendingSeries,
-  fetchKoreanDramas,
-  fetchPopularKoreanDramas,
-  fetchTopRatedKoreanDramas,
-  fetchMarvelMovies,
-  fetchDCMovies,
-  fetchTrilogies,
-  fetchActionMovies,
-  fetchComedyMovies,
-  fetchHorrorMovies,
-  fetchPopularInBrazil
-} from "@/services/tmdbApi";
-import { MediaItem } from "@/types/movie";
+import { useState, useEffect, useMemo } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { useNavigate } from 'react-router-dom';
+import { MediaItem } from '@/types/movie';
+import { useFetch } from './useFetch';
+import { useSearchMedia } from './useSearchMedia';
+import { useAccessControl } from './useAccessControl';
 
 const useHomePageData = () => {
-  const { user } = useAuth();
-  const { isAdmin, isSubscribed, hasTrialAccess } = useSubscription();
+  const navigate = useNavigate();
+  
+  // Try to get auth context, handle if not available
+  let user = null;
+  try {
+    const auth = useAuth();
+    user = auth.user;
+  } catch (error) {
+    console.error('Auth context not available in useHomePageData:', error);
+  }
 
-  // Fetch movies data
-  const { data: moviesData = [], isLoading: moviesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeMovies'],
-    queryFn: () => fetchPopularMovies(),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5 // 5 minutes
-  });
+  // Try to get subscription context, handle if not available
+  let subscriptionData = {
+    isSubscribed: false,
+    isAdmin: false,
+    hasTempAccess: false,
+    hasTrialAccess: false,
+    subscriptionTier: null,
+    isLoading: false
+  };
+  
+  try {
+    subscriptionData = useSubscription();
+  } catch (error) {
+    console.error('Subscription context not available in useHomePageData:', error);
+  }
+  
+  // Use the access control hook to determine user access status
+  const accessControlData = useAccessControl();
+  
+  // Media data fetching
+  const {
+    data: moviesData = [],
+    isLoading: moviesLoading,
+    error: moviesError
+  } = useFetch<MediaItem[]>('/api/movies/trending');
+  
+  const {
+    data: seriesData = [],
+    isLoading: seriesLoading,
+    error: seriesError
+  } = useFetch<MediaItem[]>('/api/series/popular');
 
-  const { data: trendingMovies = [], isLoading: trendingMoviesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeTrendingMovies'],
-    queryFn: () => fetchTrendingMovies(),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  // Additional media sections
+  const {
+    data: actionMoviesData = [],
+    isLoading: actionLoading
+  } = useFetch<MediaItem[]>('/api/movies/genre/action');
+  
+  const {
+    data: comedyMoviesData = [],
+    isLoading: comedyLoading
+  } = useFetch<MediaItem[]>('/api/movies/genre/comedy');
 
-  const { data: topRatedMovies = [], isLoading: topRatedMoviesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeTopRatedMovies'],
-    queryFn: () => fetchTopRatedMovies(),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  const {
+    data: adventureMoviesData = [],
+    isLoading: adventureLoading
+  } = useFetch<MediaItem[]>('/api/movies/genre/adventure');
+  
+  const {
+    data: sciFiMoviesData = [],
+    isLoading: sciFiLoading
+  } = useFetch<MediaItem[]>('/api/movies/genre/sci-fi');
 
-  const { data: recentMovies = [], isLoading: recentMoviesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeRecentMovies'],
-    queryFn: () => fetchRecentMovies(),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  const {
+    data: marvelMoviesData = [],
+    isLoading: marvelLoading
+  } = useFetch<MediaItem[]>('/api/movies/studio/marvel');
 
-  // Fetch series data
-  const { data: seriesData = [], isLoading: seriesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeSeries'],
-    queryFn: () => fetchPopularSeries(),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  const {
+    data: dcMoviesData = [],
+    isLoading: dcLoading
+  } = useFetch<MediaItem[]>('/api/movies/studio/dc');
 
-  const { data: trendingSeries = [], isLoading: trendingSeriesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeTrendingSeries'],
-    queryFn: () => fetchTrendingSeries(),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  const {
+    data: doramasData = [],
+    isLoading: doramasLoading
+  } = useFetch<MediaItem[]>('/api/doramas');
 
-  const { data: topRatedSeries = [], isLoading: topRatedSeriesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeTopRatedSeries'],
-    queryFn: () => fetchTopRatedSeries(),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  const {
+    data: popularContent = [],
+    isLoading: popularLoading
+  } = useFetch<MediaItem[]>('/api/popular');
 
-  // Fetch doramas data
-  const { data: doramasData = [], isLoading: doramasLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeDoramas'],
-    queryFn: () => fetchKoreanDramas(),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  const {
+    data: recommendations = [],
+    isLoading: recommendationsLoading
+  } = useFetch<MediaItem[]>('/api/recommendations');
+  
+  const {
+    data: horrorMoviesData = [],
+    isLoading: horrorLoading
+  } = useFetch<MediaItem[]>('/api/movies/genre/horror');
 
-  const { data: topRatedDoramasData = [], isLoading: topRatedDoramasLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeTopRatedDoramas'],
-    queryFn: () => fetchTopRatedKoreanDramas(),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  const {
+    data: popularInBrazilData = [],
+    isLoading: popularInBrazilLoading
+  } = useFetch<MediaItem[]>('/api/popular/brazil');
 
-  const { data: popularDoramasData = [], isLoading: popularDoramasLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homePopularDoramas'],
-    queryFn: () => fetchPopularKoreanDramas(),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  const {
+    data: trilogiesData = [],
+    isLoading: trilogiesLoading
+  } = useFetch<MediaItem[]>('/api/movies/collections');
 
-  // Fetch Marvel movies
-  const { data: marvelMoviesData = [], isLoading: marvelMoviesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeMarvelMovies'],
-    queryFn: () => fetchMarvelMovies(30),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5
-  });
+  // Get featured media for the hero section
+  const featuredMedia = useMemo(() => {
+    if (moviesData && moviesData.length > 0) {
+      // Return a random featured item from the first 5 movies
+      const randomIndex = Math.floor(Math.random() * Math.min(5, moviesData.length));
+      return moviesData[randomIndex];
+    }
+    return null;
+  }, [moviesData]);
+  
+  // Search functionality
+  const search = useSearchMedia();
+  
+  // Section data for load more functionality
+  const [sectionData, setSectionData] = useState<Record<string, MediaItem[]>>({});
+  
+  // Handle errors
+  const hasError = moviesError || seriesError;
+  
+  // Loading state
+  const isLoading = 
+    moviesLoading || 
+    seriesLoading || 
+    actionLoading ||
+    recommendationsLoading ||
+    accessControlData.isLoading;
 
-  // Fetch DC movies
-  const { data: dcMoviesData, isLoading: dcMoviesLoading } = useQuery({
-    queryKey: ['homeDCMovies'],
-    queryFn: () => fetchDCMovies(30),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    retry: 3,
-    refetchOnWindowFocus: false
-  });
-
-  // Fetch trilogies
-  const { data: trilogiesData = [], isLoading: trilogiesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeTrilogies'],
-    queryFn: () => fetchTrilogies(30),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    retry: 3,
-    refetchOnWindowFocus: false
-  });
-
-  // Fetch action movies
-  const { data: actionMoviesData = [], isLoading: actionMoviesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeActionMovies'],
-    queryFn: () => fetchActionMovies(30),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    retry: 3,
-    refetchOnWindowFocus: false
-  });
-
-  // Fetch comedy movies
-  const { data: comedyMoviesData = [], isLoading: comedyMoviesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeComedyMovies'],
-    queryFn: () => fetchComedyMovies(30),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    retry: 3,
-    refetchOnWindowFocus: false
-  });
-
-  // Fetch horror movies
-  const { data: horrorMoviesData = [], isLoading: horrorMoviesLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homeHorrorMovies'],
-    queryFn: () => fetchHorrorMovies(30),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    retry: 3,
-    refetchOnWindowFocus: false
-  });
-
-  // Fetch popular content in Brazil
-  const { data: popularInBrazilData = [], isLoading: popularInBrazilLoading } = useQuery<MediaItem[]>({
-    queryKey: ['homePopularInBrazil'],
-    queryFn: () => fetchPopularInBrazil(30),
-    enabled: !!user,
-    staleTime: 1000 * 60 * 5, // 5 minutos
-    retry: 3,
-    refetchOnWindowFocus: false
-  });
-
-  // Memoize loading state
-  const isLoading = useMemo(() => {
-    return moviesLoading || 
-           trendingMoviesLoading || 
-           topRatedMoviesLoading || 
-           recentMoviesLoading ||
-           seriesLoading ||
-           trendingSeriesLoading ||
-           topRatedSeriesLoading ||
-           doramasLoading ||
-           topRatedDoramasLoading ||
-           popularDoramasLoading ||
-           marvelMoviesLoading ||
-           dcMoviesLoading ||
-           trilogiesLoading ||
-           actionMoviesLoading ||
-           comedyMoviesLoading ||
-           horrorMoviesLoading ||
-           popularInBrazilLoading;
+  // Handle loading more items for a specific section
+  const handleLoadMoreSection = async (sectionId: string) => {
+    console.log(`Loading more items for section: ${sectionId}`);
+    // Implementation would go here - fetch more data for the specified section
+  };
+  
+  // Format the data for the Home component
+  const homeData = useMemo(() => {
+    // Check if the user has access based on subscription status
+    const isAdmin = subscriptionData.isAdmin;
+    const hasAccess = accessControlData.hasAccess;
+    const hasTrialAccess = accessControlData.hasTrialAccess;
+    
+    // Log the home page data periodically for debugging
+    console.log("Home page data:", {
+      user,
+      isAdmin,
+      hasAccess,
+      hasTrialAccess,
+      featuredMedia,
+      moviesData,
+      seriesData,
+      // Other data...
+    });
+    
+    return {
+      user,
+      isAdmin,
+      hasAccess,
+      hasTrialAccess,
+      featuredMedia,
+      moviesData: moviesData || [],
+      actionMoviesData: actionMoviesData || [],
+      comedyMoviesData: comedyMoviesData || [],
+      adventureMoviesData: adventureMoviesData || [],
+      sciFiMoviesData: sciFiMoviesData || [],
+      marvelMoviesData: marvelMoviesData || [],
+      dcMoviesData: dcMoviesData || [],
+      seriesData: seriesData || [],
+      popularSeriesData: seriesData?.slice(0, 10) || [],
+      animeData: [], // This would need implementation
+      topRatedAnimeData: [], // This would need implementation
+      recentAnimesData: [], // This would need implementation
+      doramasData: doramasData || [],
+      recommendations: recommendations || [],
+      popularContent: popularContent || [],
+      horrorMoviesData: horrorMoviesData || [],
+      popularInBrazilData: popularInBrazilData || [],
+      trilogiesData: trilogiesData || [],
+      isLoading,
+      hasError,
+      searchResults: search.results,
+      isSearchLoading: search.isLoading,
+      sectionData,
+      handleLoadMoreSection,
+    };
   }, [
-    moviesLoading,
-    trendingMoviesLoading,
-    topRatedMoviesLoading,
-    recentMoviesLoading,
-    seriesLoading,
-    trendingSeriesLoading,
-    topRatedSeriesLoading,
-    doramasLoading,
-    topRatedDoramasLoading,
-    popularDoramasLoading,
-    marvelMoviesLoading,
-    dcMoviesLoading,
-    trilogiesLoading,
-    actionMoviesLoading,
-    comedyMoviesLoading,
-    horrorMoviesLoading,
-    popularInBrazilLoading
-  ]);
-
-  // Memoize section data
-  const sectionData = useMemo(() => ({
-    movies: { hasMore: true },
-    series: { hasMore: true },
-    actionMovies: { hasMore: true },
-    comedyMovies: { hasMore: true }
-  }), []);
-
-  // Memoize load more handler
-  const handleLoadMoreSection = useCallback((section: string) => {
-    // Implement load more logic here
-  }, []);
-
-  return {
-    user,
-    isAdmin,
-    hasAccess: isSubscribed,
-    hasTrialAccess,
-    featuredMedia: trendingMovies[0] || null,
-    recommendations: trendingMovies.slice(0, 10),
+    user, 
+    accessControlData.hasAccess,
+    accessControlData.hasTrialAccess,
+    subscriptionData.isAdmin,
+    featuredMedia,
     moviesData,
-    seriesData,
-    doramasData,
     actionMoviesData,
     comedyMoviesData,
-    horrorMoviesData,
-    popularInBrazilData,
-    adventureMoviesData: trendingMovies,
-    sciFiMoviesData: topRatedMovies,
+    adventureMoviesData,
+    sciFiMoviesData,
     marvelMoviesData,
     dcMoviesData,
+    seriesData,
+    doramasData,
+    recommendations,
+    popularContent,
+    horrorMoviesData,
+    popularInBrazilData,
     trilogiesData,
-    popularContent: trendingSeries,
     isLoading,
-    hasError: null,
-    searchResults: [],
-    isSearchLoading: false,
-    sectionData,
-    handleLoadMoreSection
+    hasError,
+    search.results,
+    search.isLoading,
+    sectionData
+  ]);
+
+  return {
+    ...homeData,
+    searchMedia: search.searchMedia
   };
 };
 

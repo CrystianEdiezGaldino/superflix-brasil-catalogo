@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { cacheManager } from "./cacheManager";
 
@@ -31,7 +32,7 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
       .from('user_roles')
       .select('role')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
 
     const isAdmin = roleData?.role === 'admin';
     console.log("Admin check result:", { isAdmin, roleData, roleError });
@@ -90,8 +91,7 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
     
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription', {
-        body: { user_id: userId },
-        headers: sessionToken ? { Authorization: `Bearer ${sessionToken}` } : undefined
+        body: { user_id: userId }
       });
       
       if (error) {
@@ -145,7 +145,7 @@ export const processSubscriptionData = (data: any) => {
   console.log("Processing subscription data:", { data, isAdmin });
 
   return {
-    isSubscribed: isActive || hasTrialAccess,
+    isSubscribed: isActive,
     isAdmin: isAdmin,
     hasTempAccess: Boolean(data?.hasTempAccess),
     hasTrialAccess: hasTrialAccess,
@@ -160,8 +160,8 @@ export const processSubscriptionData = (data: any) => {
  */
 function getDefaultSubscriptionState() {
   return {
-    hasActiveSubscription: false, // Alterado para false para não permitir acesso por padrão
-    has_trial_access: false,      // Alterado para false para não permitir acesso por padrão
+    hasActiveSubscription: false,
+    has_trial_access: false,
     subscription_tier: 'none',
     isAdmin: false,
     hasTempAccess: false
