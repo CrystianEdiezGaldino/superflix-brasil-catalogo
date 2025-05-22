@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -11,11 +10,17 @@ export const signUpUser = async (email: string, password: string, metadata?: { [
       email,
       password,
       options: {
-        data: metadata
+        data: metadata,
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
     
     if (error) throw error;
+    
+    // Store session in localStorage if available
+    if (data.session) {
+      localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
+    }
     
     return { user: data.user, session: data.session, error: null };
   } catch (error) {
@@ -35,6 +40,11 @@ export const signInUser = async (email: string, password: string) => {
     });
     
     if (error) throw error;
+    
+    // Store session in localStorage if available
+    if (data.session) {
+      localStorage.setItem('supabase.auth.token', JSON.stringify(data.session));
+    }
     
     return { user: data.user, session: data.session, error: null };
   } catch (error) {

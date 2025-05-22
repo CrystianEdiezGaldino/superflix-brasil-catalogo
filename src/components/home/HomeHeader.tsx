@@ -1,6 +1,5 @@
-
 import React from "react";
-import { MediaItem, getMediaTitle } from "@/types/movie";
+import { MediaItem, getMediaTitle, isMovie, isSeries } from "@/types/movie";
 import AnimeCarousel from "@/components/anime/AnimeCarousel";
 import { useNavigate } from "react-router-dom";
 
@@ -32,14 +31,15 @@ const HomeHeader = ({
   const handleAnimeClick = (media: MediaItem) => {
     if (!media) return;
     
-    if (media.media_type === 'movie') {
+    if (isMovie(media)) {
       navigate(`/filme/${media.id}`);
-    } else if (media.media_type === 'tv') {
+    } else if (isSeries(media)) {
       navigate(`/serie/${media.id}`);
-    } else if ((media as any).original_language === 'ja') {
-      navigate(`/anime/${media.id}`);
-    } else if ((media as any).original_language === 'ko') {
-      navigate(`/dorama/${media.id}`);
+      if (media.original_language === 'ja') {
+        navigate(`/anime/${media.id}`);
+      } else if (media.original_language === 'ko') {
+        navigate(`/dorama/${media.id}`);
+      }
     }
   };
 

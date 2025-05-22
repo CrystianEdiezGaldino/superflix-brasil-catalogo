@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAccessControl } from './useAccessControl';
@@ -87,12 +87,43 @@ const useHomePageData = () => {
   // Handle errors
   const hasError = mediaError;
   
-  // Loading state
-  const isLoading = 
-    mediaLoading || 
-    popularLoading || 
-    accessControlData.isLoading;
-
+  // Loading state with timeout
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadingTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.log('Loading timeout reached, forcing loading state to false');
+        setIsLoading(false);
+      }
+    }, 10000); // 10 second timeout
+    
+    return () => clearTimeout(loadingTimeout);
+  }, [isLoading]);
+  
+  useEffect(() => {
+    const shouldBeLoading = 
+      mediaLoading || 
+      popularLoading || 
+      accessControlData.isLoading ||
+      subscriptionData.isLoading;
+      
+    console.log('Loading states:', {
+      mediaLoading,
+      popularLoading,
+      accessControlLoading: accessControlData.isLoading,
+      subscriptionLoading: subscriptionData.isLoading,
+      shouldBeLoading
+    });
+    
+    setIsLoading(shouldBeLoading);
+  }, [
+    mediaLoading,
+    popularLoading,
+    accessControlData.isLoading,
+    subscriptionData.isLoading
+  ]);
+  
   // Handle loading more items for a specific section
   const handleLoadMoreSection = async (sectionId: string) => {
     console.log(`Loading more items for section: ${sectionId}`);
@@ -112,10 +143,12 @@ const useHomePageData = () => {
       isAdmin,
       hasAccess,
       hasTrialAccess,
+      subscriptionData,
+      accessControlData,
       featuredMedia,
       moviesData,
       seriesData,
-      // Other data...
+      isLoading
     });
     
     return {
@@ -154,6 +187,8 @@ const useHomePageData = () => {
     accessControlData.hasAccess,
     accessControlData.hasTrialAccess,
     subscriptionData.isAdmin,
+    subscriptionData,
+    accessControlData,
     featuredMedia,
     moviesData,
     actionMoviesData,

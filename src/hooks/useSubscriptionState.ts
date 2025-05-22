@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Session } from "@supabase/supabase-js";
 import { checkSubscriptionStatus, processSubscriptionData } from '@/utils/subscriptionUtils';
@@ -8,6 +7,7 @@ import { cacheManager } from '@/utils/cacheManager';
 const CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 5000; // 5 seconds
+const INITIAL_CHECK_DELAY = 2000; // 2 seconds
 
 export const useSubscriptionState = (user: any, session: Session | null) => {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -24,11 +24,19 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
   const checkInProgressRef = useRef(false);
   const initialCheckDoneRef = useRef(false);
   const totalChecksRef = useRef(0);
-  const maxChecksRef = useRef(10); // Limit to 10 checks per session to prevent infinite loops
+  const maxChecksRef = useRef(10);
 
   const checkSubscription = useCallback(async (forceCheck = false) => {
     // Skip if conditions aren't met or check is already running
-    if (!user || !session || (checkInProgressRef.current && !forceCheck)) return;
+    if (!user || !session || (checkInProgressRef.current && !forceCheck)) {
+      console.log("Skipping subscription check:", { 
+        hasUser: !!user, 
+        hasSession: !!session, 
+        checkInProgress: checkInProgressRef.current,
+        forceCheck 
+      });
+      return;
+    }
     
     // Check if we've reached the maximum number of checks
     if (totalChecksRef.current >= maxChecksRef.current && !forceCheck) {
@@ -38,6 +46,7 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
     
     const now = Date.now();
     if (!forceCheck && now - lastCheckTimeRef.current < CHECK_INTERVAL) {
+      console.log("Skipping check - too soon since last check");
       return;
     }
     
@@ -80,7 +89,7 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
       // Mark that initial check is complete
       initialCheckDoneRef.current = true;
     } catch (error) {
-      console.error('Erro ao verificar assinatura:', error);
+      console.error('Error checking subscription:', error);
       
       // Don't use permissive values on error
       setIsSubscribed(false);
@@ -88,6 +97,7 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
       
       if (retryCountRef.current < MAX_RETRIES) {
         retryCountRef.current++;
+        console.log(`Retrying subscription check (${retryCountRef.current}/${MAX_RETRIES})`);
         setTimeout(() => checkSubscription(forceCheck), RETRY_DELAY);
       } else {
         console.log("Max retries reached for subscription check");
@@ -126,7 +136,7 @@ export const useSubscriptionState = (user: any, session: Session | null) => {
           console.log("Performing initial subscription check");
           checkSubscription(true); // Force check on initial load
         }
-      }, 1000);
+      }, INITIAL_CHECK_DELAY);
       
       return () => {
         isMounted = false;

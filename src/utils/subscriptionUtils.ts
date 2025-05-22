@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { cacheManager } from "./cacheManager";
 
@@ -20,14 +19,21 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
   }
 
   try {
+    console.log("Starting subscription check for user:", userId);
+
     // Check cache first
     const cachedData = cacheManager.get(CACHE_KEYS.SUBSCRIPTION(userId));
     if (cachedData) {
-      console.log("Subscription data from cache");
+      console.log("Subscription data from cache:", cachedData);
       return cachedData;
     }
 
+    // Add a small delay to allow webhook to complete
+    console.log("Waiting for webhook to complete...");
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Increased to 2 seconds
+
     // First check if user is admin
+    console.log("Checking admin status...");
     const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
       .select('role')
@@ -50,7 +56,8 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
       return adminState;
     }
 
-    // Optimized query to fetch only the needed fields
+    // Try direct query first for faster results
+    console.log("Checking subscription directly...");
     const { data: directData, error: directError } = await supabase
       .from('subscriptions')
       .select('status, plan_type, trial_end, current_period_end, current_period_start')
@@ -59,7 +66,7 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
       .maybeSingle();
     
     if (!directError && directData) {
-      console.log("Dados de assinatura obtidos diretamente:", directData);
+      console.log("Subscription data from direct query:", directData);
       
       const now = new Date();
       const isTrialing = directData.status === 'trialing' && 
@@ -85,39 +92,40 @@ export const checkSubscriptionStatus = async (userId: string, sessionToken?: str
       
       return result;
     }
-    
-    // Try edge function if direct query fails
-    console.log("Tentando edge function para obter dados de assinatura");
-    
+
+    // If direct query fails, try edge function
+    console.log("Direct query failed, trying edge function...");
     try {
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
+      const { data: edgeData, error: edgeError } = await supabase.functions.invoke('check-subscription', {
         body: { user_id: userId }
       });
       
-      if (error) {
-        console.error('Erro ao verificar assinatura:', error);
-        return getDefaultSubscriptionState();
+      if (!edgeError && edgeData) {
+        console.log("Subscription data from edge function:", edgeData);
+        
+        // Add admin status to the data
+        const result = {
+          ...edgeData,
+          isAdmin: false // Explicitly set to false for non-admin users
+        };
+        
+        // Cache the result
+        if (result) {
+          const cacheTime = result?.has_trial_access ? 60000 : 300000;
+          cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), result, cacheTime);
+        }
+        
+        return result;
       }
-      
-      // Add admin status to the data
-      const result = {
-        ...data,
-        isAdmin: false // Explicitly set to false for non-admin users
-      };
-      
-      // Cache the result
-      if (result) {
-        const cacheTime = result?.has_trial_access ? 60000 : 300000;
-        cacheManager.set(CACHE_KEYS.SUBSCRIPTION(userId), result, cacheTime);
-      }
-      
-      return result;
     } catch (edgeError) {
-      console.error('Falha ao verificar assinatura via Edge Function:', edgeError);
-      return getDefaultSubscriptionState();
+      console.error('Edge function error:', edgeError);
     }
+    
+    console.log("No subscription data found, returning default state");
+    return getDefaultSubscriptionState();
+    
   } catch (error) {
-    console.error('Falha ao verificar assinatura:', error);
+    console.error('Failed to check subscription:', error);
     return getDefaultSubscriptionState();
   }
 };
@@ -136,7 +144,10 @@ export const processSubscriptionData = (data: any) => {
     trialEnd: null
   };
 
-  if (!data) return defaults;
+  if (!data) {
+    console.log("No data provided to processSubscriptionData, returning defaults");
+    return defaults;
+  }
 
   const hasTrialAccess = Boolean(data?.has_trial_access);
   const isActive = Boolean(data?.hasActiveSubscription);
@@ -159,6 +170,7 @@ export const processSubscriptionData = (data: any) => {
  * Get default subscription state for error cases
  */
 function getDefaultSubscriptionState() {
+  console.log("Returning default subscription state");
   return {
     hasActiveSubscription: false,
     has_trial_access: false,

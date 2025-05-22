@@ -16,16 +16,44 @@ export const useAuthState = () => {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const initializeSession = async () => {
+      try {
+        // First try to get session from localStorage
+        const storedSession = localStorage.getItem('supabase.auth.token');
+        if (storedSession) {
+          const parsedSession = JSON.parse(storedSession);
+          setSession(parsedSession);
+          setUser(parsedSession?.user ?? null);
+        }
+
+        // Then get fresh session from Supabase
+        const { data: { session: freshSession } } = await supabase.auth.getSession();
+        if (freshSession) {
+          setSession(freshSession);
+          setUser(freshSession.user);
+          localStorage.setItem('supabase.auth.token', JSON.stringify(freshSession));
+        }
+      } catch (error) {
+        console.error('Error initializing session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setLastAuthEvent(event);
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session) {
+        localStorage.setItem('supabase.auth.token', JSON.stringify(session));
+      } else {
+        localStorage.removeItem('supabase.auth.token');
+      }
+      
       setLoading(false);
     });
 
@@ -38,10 +66,10 @@ export const useAuthState = () => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && visibilityChanged) {
         setVisibilityChanged(false);
-        console.log("Tab visible again, maintaining session state");
+        // Refresh session when tab becomes visible again
+        supabase.auth.refreshSession().catch(console.error);
       } else if (document.visibilityState === 'hidden') {
         setVisibilityChanged(true);
-        console.log("Tab hidden, maintaining session state");
       }
     };
 
