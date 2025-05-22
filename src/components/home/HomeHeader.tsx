@@ -30,6 +30,8 @@ const HomeHeader = ({
   const userHasAccess = hasAccess || hasTrialAccess;
   
   const handleAnimeClick = (media: MediaItem) => {
+    if (!media) return;
+    
     if (media.media_type === 'movie') {
       navigate(`/filme/${media.id}`);
     } else if (media.media_type === 'tv') {

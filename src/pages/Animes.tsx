@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +20,7 @@ const Animes: React.FC = () => {
   // Get anime recommendations from our loader
   const { recommendedAnimes } = useAnimeLoader();
 
-  // Função para filtrar animes sem imagem
+  // Function to filter animes without image
   const filterAnimesWithoutImage = (animes: MediaItem[] = []) => {
     return animes.filter(anime => anime?.poster_path && anime.poster_path !== "");
   };
@@ -58,7 +57,8 @@ const Animes: React.FC = () => {
       // Add comprehensive safety checks
       if (!lastPage) return undefined;
       if (!lastPage.results || !Array.isArray(lastPage.results) || lastPage.results.length === 0) return undefined;
-      if (lastPage.page >= (lastPage.total_pages || 0)) return undefined;
+      const totalPages = lastPage.total_pages || 0;
+      if (lastPage.page >= totalPages) return undefined;
       return lastPage.page + 1;
     },
     initialPageParam: 1,
@@ -96,7 +96,8 @@ const Animes: React.FC = () => {
       // Add comprehensive safety checks
       if (!lastPage) return undefined;
       if (!lastPage.results || !Array.isArray(lastPage.results) || lastPage.results.length === 0) return undefined;
-      if (lastPage.page >= (lastPage.total_pages || 0)) return undefined;
+      const totalPages = lastPage.total_pages || 0;
+      if (lastPage.page >= totalPages) return undefined;
       return lastPage.page + 1;
     },
     initialPageParam: 1,
@@ -171,7 +172,8 @@ const Animes: React.FC = () => {
       // Add comprehensive safety checks
       if (!lastPage) return undefined;
       if (!lastPage.results || !Array.isArray(lastPage.results) || lastPage.results.length === 0) return undefined;
-      if (lastPage.page >= (lastPage.total_pages || 0)) return undefined;
+      const totalPages = lastPage.total_pages || 0;
+      if (lastPage.page >= totalPages) return undefined;
       return lastPage.page + 1;
     },
     initialPageParam: 1,

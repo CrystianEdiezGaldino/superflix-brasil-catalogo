@@ -32,11 +32,13 @@ const AnimeCarousel = ({ animes = null, onAnimeClick }: AnimeCarouselProps) => {
 
   const handleNext = () => {
     setIsAutoPlaying(false);
+    if (animesArray.length === 0) return;
     setCurrentIndex((prevIndex) => (prevIndex + 1) % animesArray.length);
   };
 
   const handlePrev = () => {
     setIsAutoPlaying(false);
+    if (animesArray.length === 0) return;
     setCurrentIndex((prevIndex) => (prevIndex - 1 + animesArray.length) % animesArray.length);
   };
 
