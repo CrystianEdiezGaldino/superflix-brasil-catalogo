@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { MediaItem, getMediaTitle } from '@/types/movie';
@@ -15,7 +16,7 @@ import { Button } from '@/components/ui/button';
 
 type MediaSectionProps = {
   title: string;
-  medias?: MediaItem[];
+  medias?: MediaItem[] | null;
   showLoadMore?: boolean;
   onLoadMore?: () => void;
   isLoading?: boolean;
@@ -74,6 +75,9 @@ const MediaSection = ({
     onFocusChange?.(index);
   };
 
+  // Ensure medias is an array
+  const mediasArray = Array.isArray(medias) ? medias : [];
+
   if (isLoading) {
     return (
       <div className="space-y-4 py-4">
@@ -92,7 +96,8 @@ const MediaSection = ({
     );
   }
 
-  if (!medias || medias.length === 0) {
+  // Don't render if no media items
+  if (!mediasArray.length) {
     return null;
   }
 
@@ -107,7 +112,7 @@ const MediaSection = ({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 relative">
-        {medias.map((media, index) => (
+        {mediasArray.map((media, index) => (
           <div
             key={`section-${sectionIndex}-media-${media.id}-${index}`}
             data-section={sectionIndex}

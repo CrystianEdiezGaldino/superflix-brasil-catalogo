@@ -3,7 +3,7 @@ import { MediaItem, Movie, Series } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
 
 interface RecommendationsSectionProps {
-  recommendations: MediaItem[];
+  recommendations: MediaItem[] | null;
   onLoadMore?: () => void;
   isLoading?: boolean;
   hasMore?: boolean;
@@ -17,9 +17,12 @@ const RecommendationsSection = ({
   hasMore = false,
   sectionId = 'recommendations'
 }: RecommendationsSectionProps) => {
+  // Ensure recommendations is an array
+  const recommendationsArray = Array.isArray(recommendations) ? recommendations : [];
+  
   // Filter recommendations to recent and with images
-  const filteredRecommendations = recommendations
-    .filter(item => item.poster_path || item.backdrop_path)
+  const filteredRecommendations = recommendationsArray
+    .filter(item => item && (item.poster_path || item.backdrop_path))
     .filter(item => {
       const releaseDate = new Date(
         item.media_type === 'movie' 

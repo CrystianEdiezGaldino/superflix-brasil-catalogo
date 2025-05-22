@@ -5,34 +5,37 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
 interface AnimeCarouselProps {
-  animes: MediaItem[];
+  animes: MediaItem[] | null;
   onAnimeClick: (anime: MediaItem) => void;
 }
 
-const AnimeCarousel = ({ animes, onAnimeClick }: AnimeCarouselProps) => {
+const AnimeCarousel = ({ animes = [], onAnimeClick }: AnimeCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  
+  // Ensure animes is an array
+  const animesArray = Array.isArray(animes) ? animes : [];
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    if (isAutoPlaying && animes.length > 0) {
+    if (isAutoPlaying && animesArray.length > 0) {
       interval = setInterval(() => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % animes.length);
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % animesArray.length);
       }, 5000);
     }
 
     return () => clearInterval(interval);
-  }, [isAutoPlaying, animes.length]);
+  }, [isAutoPlaying, animesArray.length]);
 
   const handleNext = () => {
     setIsAutoPlaying(false);
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % animes.length);
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % animesArray.length);
   };
 
   const handlePrev = () => {
     setIsAutoPlaying(false);
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + animes.length) % animes.length);
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + animesArray.length) % animesArray.length);
   };
 
   const handleIndicatorClick = (index: number) => {
@@ -40,9 +43,9 @@ const AnimeCarousel = ({ animes, onAnimeClick }: AnimeCarouselProps) => {
     setCurrentIndex(index);
   };
 
-  if (!animes.length) return null;
+  if (!animesArray.length) return null;
 
-  const currentAnime = animes[currentIndex];
+  const currentAnime = animesArray[currentIndex];
   const title = getMediaTitle(currentAnime);
   
   // Safely get release date using type guards
@@ -87,37 +90,41 @@ const AnimeCarousel = ({ animes, onAnimeClick }: AnimeCarouselProps) => {
       </div>
 
       {/* Navigation arrows */}
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/30 text-white hover:bg-black/50 rounded-full h-10 w-10"
-        onClick={handlePrev}
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </Button>
+      {animesArray.length > 1 && (
+        <>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-1/2 left-2 transform -translate-y-1/2 bg-black/30 text-white hover:bg-black/50 rounded-full h-10 w-10"
+            onClick={handlePrev}
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </Button>
 
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/30 text-white hover:bg-black/50 rounded-full h-10 w-10"
-        onClick={handleNext}
-      >
-        <ChevronRight className="h-6 w-6" />
-      </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-1/2 right-2 transform -translate-y-1/2 bg-black/30 text-white hover:bg-black/50 rounded-full h-10 w-10"
+            onClick={handleNext}
+          >
+            <ChevronRight className="h-6 w-6" />
+          </Button>
 
-      {/* Indicators */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1.5">
-        {animes.map((_, index) => (
-          <button
-            key={index}
-            className={`h-1.5 rounded-full transition-all ${
-              index === currentIndex ? "w-6 bg-white" : "w-2 bg-white/50"
-            }`}
-            onClick={() => handleIndicatorClick(index)}
-            aria-label={`Go to slide ${index + 1}`}
-          />
-        ))}
-      </div>
+          {/* Indicators */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-1.5">
+            {animesArray.map((_, index) => (
+              <button
+                key={index}
+                className={`h-1.5 rounded-full transition-all ${
+                  index === currentIndex ? "w-6 bg-white" : "w-2 bg-white/50"
+                }`}
+                onClick={() => handleIndicatorClick(index)}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 };

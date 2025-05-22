@@ -1,3 +1,4 @@
+
 import React from "react";
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
@@ -6,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface MediaSectionLoaderProps {
   isLoading: boolean;
   title: string;
-  medias: MediaItem[];
+  medias: MediaItem[] | null;
   showLoadMore?: boolean;
   onLoadMore?: () => void;
   onMediaClick?: (media: MediaItem) => void;
@@ -26,8 +27,11 @@ const MediaSectionLoader: React.FC<MediaSectionLoaderProps> = ({
   mediaType = "movie",
   hasMore = false
 }) => {
+  // Ensure medias is an array
+  const mediasArray = Array.isArray(medias) ? medias : [];
+  
   // If loading and no medias, show skeleton loader
-  if (isLoading && medias.length === 0) {
+  if (isLoading && mediasArray.length === 0) {
     return (
       <div className="mb-10">
         <div className="flex justify-between items-center mb-4">
@@ -44,14 +48,14 @@ const MediaSectionLoader: React.FC<MediaSectionLoaderProps> = ({
   }
 
   // If no medias, don't render
-  if (medias.length === 0) {
+  if (mediasArray.length === 0) {
     return null;
   }
 
   return (
     <MediaSection
       title={title}
-      medias={medias}
+      medias={mediasArray}
       showLoadMore={showLoadMore || hasMore}
       onLoadMore={onLoadMore}
       isLoading={isLoading}

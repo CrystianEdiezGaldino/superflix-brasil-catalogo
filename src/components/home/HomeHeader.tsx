@@ -46,7 +46,7 @@ const HomeHeader = ({
       {/* Show Carousel only when not searching */}
       {!searchQuery && featuredMedia && (
         <AnimeCarousel
-          animes={[featuredMedia].filter(Boolean)}
+          animes={[featuredMedia]}
           onAnimeClick={handleAnimeClick}
         />
       )}

@@ -37,8 +37,8 @@ export const useSectionRecommendations = (maxItems: number = 5) => {
   // Filter content that has backdrop images (for better visuals in the carousel)
   const filterWithBackdrops = (items: MediaItem[] = []): MediaItem[] => {
     return items
-      .filter(item => item && item.backdrop_path)
-      .slice(0, maxItems);
+      ?.filter(item => item && item.backdrop_path)
+      ?.slice(0, maxItems) || [];
   };
 
   // Get kids content based on some criteria (genre, rating, etc)

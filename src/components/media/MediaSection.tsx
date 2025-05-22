@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { MediaItem, getMediaTitle } from '@/types/movie';
@@ -6,7 +7,7 @@ import { Button } from '@/components/ui/button';
 
 type MediaSectionProps = {
   title: string;
-  medias?: MediaItem[];
+  medias?: MediaItem[] | null;
   showLoadMore?: boolean;
   onLoadMore?: () => void;
   isLoading?: boolean;
@@ -36,6 +37,9 @@ const MediaSection = ({
   const navigate = useNavigate();
   const [focusedIndex, setFocusedIndex] = useState(focusedItem);
   
+  // Ensure medias is an array
+  const mediasArray = Array.isArray(medias) ? medias : [];
+  
   useEffect(() => {
     setFocusedIndex(focusedItem);
   }, [focusedItem]);
@@ -56,7 +60,7 @@ const MediaSection = ({
       switch (e.key) {
         case 'ArrowRight':
           e.preventDefault();
-          const newIndex = Math.min(focusedIndex + 1, medias.length - 1);
+          const newIndex = Math.min(focusedIndex + 1, mediasArray.length - 1);
           setFocusedIndex(newIndex);
           onFocusChange?.(newIndex);
           break;
@@ -68,7 +72,7 @@ const MediaSection = ({
           break;
         case 'ArrowDown':
           e.preventDefault();
-          const downIndex = Math.min(focusedIndex + itemsPerRow, medias.length - 1);
+          const downIndex = Math.min(focusedIndex + itemsPerRow, mediasArray.length - 1);
           setFocusedIndex(downIndex);
           onFocusChange?.(downIndex);
           break;
@@ -80,8 +84,8 @@ const MediaSection = ({
           break;
         case 'Enter':
           e.preventDefault();
-          if (focusedIndex >= 0 && focusedIndex < medias.length) {
-            onMediaClick?.(medias[focusedIndex]);
+          if (focusedIndex >= 0 && focusedIndex < mediasArray.length) {
+            onMediaClick?.(mediasArray[focusedIndex]);
           }
           break;
       }
@@ -89,7 +93,7 @@ const MediaSection = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [focusedIndex, medias, onMediaClick, onFocusChange, onKeyDown]);
+  }, [focusedIndex, mediasArray, onMediaClick, onFocusChange, onKeyDown]);
 
   // Only show load more for sections with showLoadMore flag
   const shouldShowLoadMore = showLoadMore && onLoadMore;
@@ -131,7 +135,7 @@ const MediaSection = ({
   };
 
   // Skip rendering if no media items
-  if (medias.length === 0) {
+  if (mediasArray.length === 0) {
     return null;
   }
 
@@ -146,7 +150,7 @@ const MediaSection = ({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 relative">
-        {medias.map((media, index) => (
+        {mediasArray.map((media, index) => (
           <div
             key={`section-${sectionIndex}-media-${media.id}`}
             data-section={sectionIndex}
@@ -184,10 +188,10 @@ const MediaSection = ({
           <button 
             onClick={handleLoadMore}
             className={`group relative overflow-hidden rounded-lg bg-netflix-red hover:bg-red-700 transition-all duration-300 flex items-center justify-center cursor-pointer px-6 py-3 min-w-[200px] focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-100 ${
-              focusedIndex === medias.length ? 'scale-105' : ''
+              focusedIndex === mediasArray.length ? 'scale-105' : ''
             }`}
             data-section-id={sectionId}
-            tabIndex={focusedIndex === medias.length ? 0 : -1}
+            tabIndex={focusedIndex === mediasArray.length ? 0 : -1}
           >
             <div className="flex items-center space-x-2">
               {isLoading ? (
