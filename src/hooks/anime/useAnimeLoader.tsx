@@ -63,22 +63,28 @@ export const useAnimeLoader = () => {
   // Get recommended animes (max 5) based on popularity and rating
   const getRecommendedAnimes = (): MediaItem[] => {
     // First prioritize trending content
-    if (trendingAnimes && trendingAnimes.length > 0) {
+    if (trendingAnimes && Array.isArray(trendingAnimes) && trendingAnimes.length > 0) {
       // Filter content with good backdrop images
-      const withBackdrops = trendingAnimes.filter(anime => anime.backdrop_path);
-      return withBackdrops.slice(0, 5);
+      const withBackdrops = trendingAnimes.filter(anime => anime && anime.backdrop_path);
+      if (withBackdrops.length > 0) {
+        return withBackdrops.slice(0, 5);
+      }
     }
     
     // If no trending, use top rated
-    if (topRatedAnimes && topRatedAnimes.length > 0) {
-      const withBackdrops = topRatedAnimes.filter(anime => anime.backdrop_path);
-      return withBackdrops.slice(0, 5);
+    if (topRatedAnimes && Array.isArray(topRatedAnimes) && topRatedAnimes.length > 0) {
+      const withBackdrops = topRatedAnimes.filter(anime => anime && anime.backdrop_path);
+      if (withBackdrops.length > 0) {
+        return withBackdrops.slice(0, 5);
+      }
     }
     
     // If no top rated, fallback to initial animes
-    if (initialAnimes && initialAnimes.length > 0) {
-      const withBackdrops = initialAnimes.filter(anime => anime.backdrop_path);
-      return withBackdrops.slice(0, 5);
+    if (initialAnimes && Array.isArray(initialAnimes) && initialAnimes.length > 0) {
+      const withBackdrops = initialAnimes.filter(anime => anime && anime.backdrop_path);
+      if (withBackdrops.length > 0) {
+        return withBackdrops.slice(0, 5);
+      }
     }
     
     return [];
@@ -90,15 +96,15 @@ export const useAnimeLoader = () => {
   };
 
   return {
-    initialAnimes,
-    topRatedAnimes,
-    trendingAnimes,
-    recentAnimes,
-    seasonalAnimes,
+    initialAnimes: Array.isArray(initialAnimes) ? initialAnimes.filter(Boolean) : [],
+    topRatedAnimes: Array.isArray(topRatedAnimes) ? topRatedAnimes.filter(Boolean) : [],
+    trendingAnimes: Array.isArray(trendingAnimes) ? trendingAnimes.filter(Boolean) : [],
+    recentAnimes: Array.isArray(recentAnimes) ? recentAnimes.filter(Boolean) : [],
+    seasonalAnimes: Array.isArray(seasonalAnimes) ? seasonalAnimes.filter(Boolean) : [],
     animeSections,
     recommendedAnimes: getRecommendedAnimes(),
     fetchAnimeBatch: fetchAnimeBatchById,
-    totalAnimes: animeIdsList.length,
+    totalAnimes: animeIdsList ? animeIdsList.length : 0,
     isLoadingInitial,
     isLoadingTopRated,
     isLoadingTrending,

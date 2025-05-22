@@ -13,8 +13,10 @@ const AnimeCarousel = ({ animes = null, onAnimeClick }: AnimeCarouselProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   
-  // Ensure animes is an array
-  const animesArray = Array.isArray(animes) ? animes.filter(Boolean) : [];
+  // Ensure animes is an array and filter out any null/undefined items
+  const animesArray = Array.isArray(animes) 
+    ? animes.filter(anime => Boolean(anime) && anime.backdrop_path) 
+    : [];
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -47,6 +49,7 @@ const AnimeCarousel = ({ animes = null, onAnimeClick }: AnimeCarouselProps) => {
     setCurrentIndex(index);
   };
 
+  // Return null if there are no valid animes to display
   if (!animesArray.length) return null;
 
   const currentAnime = animesArray[currentIndex];
@@ -95,7 +98,7 @@ const AnimeCarousel = ({ animes = null, onAnimeClick }: AnimeCarouselProps) => {
         </div>
       </div>
 
-      {/* Navigation arrows */}
+      {/* Navigation arrows - only show if there's more than one anime */}
       {animesArray.length > 1 && (
         <>
           <Button

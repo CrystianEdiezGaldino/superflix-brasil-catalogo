@@ -69,13 +69,13 @@ const MediaView: React.FC<MediaViewProps> = ({
   children
 }) => {
   // Ensure all item arrays are valid
-  const safeMediaItems = Array.isArray(mediaItems) ? mediaItems : [];
-  const safeTrendingItems = Array.isArray(trendingItems) ? trendingItems : [];
-  const safeTopRatedItems = Array.isArray(topRatedItems) ? topRatedItems : [];
-  const safeRecentItems = Array.isArray(recentItems) ? recentItems : [];
+  const safeMediaItems = Array.isArray(mediaItems) ? mediaItems.filter(Boolean) : [];
+  const safeTrendingItems = Array.isArray(trendingItems) ? trendingItems.filter(Boolean) : [];
+  const safeTopRatedItems = Array.isArray(topRatedItems) ? topRatedItems.filter(Boolean) : [];
+  const safeRecentItems = Array.isArray(recentItems) ? recentItems.filter(Boolean) : [];
   
   return (
-    <div className="mb-16">
+    <div className="container mx-auto px-4 py-8 mb-16">
       <h2 className="text-2xl md:text-3xl font-bold text-white mb-6">{title}</h2>
       
       {children}
@@ -89,7 +89,7 @@ const MediaView: React.FC<MediaViewProps> = ({
             onLoadMore={onLoadMoreTrending}
             isLoading={sectionLoading}
             onMediaClick={onMediaClick}
-            sectionId={`trending-${type}-${Date.now()}`}
+            sectionId={`trending-${type}`}
             mediaType={type}
             hasMore={hasMoreTrending}
           />
@@ -105,7 +105,7 @@ const MediaView: React.FC<MediaViewProps> = ({
             onLoadMore={onLoadMoreTopRated}
             isLoading={sectionLoading}
             onMediaClick={onMediaClick}
-            sectionId={`top-rated-${type}-${Date.now()}`}
+            sectionId={`top-rated-${type}`}
             mediaType={type}
             hasMore={hasMoreTopRated}
           />
@@ -121,7 +121,7 @@ const MediaView: React.FC<MediaViewProps> = ({
             onLoadMore={onLoadMoreRecent}
             isLoading={sectionLoading}
             onMediaClick={onMediaClick}
-            sectionId={`recent-${type}-${Date.now()}`}
+            sectionId={`recent-${type}`}
             mediaType={type}
             hasMore={hasMoreRecent}
           />

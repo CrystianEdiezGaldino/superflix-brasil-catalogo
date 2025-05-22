@@ -1,6 +1,6 @@
 
 import React from "react";
-import { MediaItem } from "@/types/movie";
+import { MediaItem, getMediaTitle } from "@/types/movie";
 import AnimeCarousel from "@/components/anime/AnimeCarousel";
 import { useNavigate } from "react-router-dom";
 
