@@ -5,7 +5,6 @@ import { MediaItem } from "@/types/movie";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
 import FeaturedAnimeCarousel from "@/components/anime/FeaturedAnimeCarousel";
 import AnimeSection from "@/components/anime/AnimeSection";
 import AllAnimesSection from "@/components/anime/AllAnimesSection";
@@ -39,6 +38,7 @@ const Animes: React.FC = () => {
   // Search and filter functionality
   const {
     filteredAnimes,
+    searchQuery, // Add this to fix the error
     isFiltering,
     isSearching,
     handleSearch,

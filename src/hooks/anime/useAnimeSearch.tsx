@@ -1,108 +1,96 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { MediaItem } from '@/types/movie';
 
 interface UseAnimeSearchProps {
   allAnimes: MediaItem[];
-  onResetFilters?: () => void;
 }
 
-export const useAnimeSearch = ({ allAnimes, onResetFilters }: UseAnimeSearchProps) => {
+export const useAnimeSearch = ({ allAnimes }: UseAnimeSearchProps) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [yearFilter, setYearFilter] = useState<number>(0);
-  const [ratingFilter, setRatingFilter] = useState<number>(0);
+  const [yearFilter, setYearFilter] = useState<number | null>(null);
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [filteredAnimes, setFilteredAnimes] = useState<MediaItem[]>([]);
   const [isFiltering, setIsFiltering] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Handle search
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-    
-    if (!query.trim()) {
-      if (isSearching) {
-        setIsFiltering(yearFilter > 0 || ratingFilter > 0);
-        setIsSearching(false);
-      }
+  // Apply filters and search
+  const applyFilters = useCallback(() => {
+    // If no filters are active, return all animes
+    if (!searchQuery && !yearFilter && !ratingFilter) {
+      setFilteredAnimes([]);
+      setIsFiltering(false);
+      setIsSearching(false);
       return;
     }
+
+    let filtered = [...allAnimes];
     
-    setIsSearching(true);
-    setIsFiltering(true);
-  }, [yearFilter, ratingFilter, isSearching]);
+    // Filter by search query
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(anime => {
+        const title = (anime.title || anime.name || '').toLowerCase();
+        const overview = (anime.overview || '').toLowerCase();
+        return title.includes(query) || overview.includes(query);
+      });
+      setIsSearching(true);
+    } else {
+      setIsSearching(false);
+    }
+    
+    // Filter by year
+    if (yearFilter) {
+      filtered = filtered.filter(anime => {
+        const releaseDate = anime.first_air_date || anime.release_date || '';
+        const year = new Date(releaseDate).getFullYear();
+        return year === yearFilter;
+      });
+    }
+    
+    // Filter by rating
+    if (ratingFilter) {
+      filtered = filtered.filter(anime => {
+        return anime.vote_average >= ratingFilter;
+      });
+    }
+    
+    setFilteredAnimes(filtered);
+    setIsFiltering(!!yearFilter || !!ratingFilter);
+  }, [searchQuery, yearFilter, ratingFilter, allAnimes]);
 
-  // Handle year filter
-  const handleYearFilter = useCallback((year: number) => {
+  // Apply filters when any filter changes
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  // Handle search query changes
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  // Handle year filter changes
+  const handleYearFilter = (year: number | null) => {
     setYearFilter(year);
-    setIsFiltering(year > 0 || ratingFilter > 0 || searchQuery !== '');
-  }, [ratingFilter, searchQuery]);
+  };
 
-  // Handle rating filter
-  const handleRatingFilter = useCallback((rating: number) => {
+  // Handle rating filter changes
+  const handleRatingFilter = (rating: number | null) => {
     setRatingFilter(rating);
-    setIsFiltering(yearFilter > 0 || rating > 0 || searchQuery !== '');
-  }, [yearFilter, searchQuery]);
+  };
 
-  // Reset filters
-  const resetFilters = useCallback(() => {
+  // Reset all filters
+  const resetFilters = () => {
     setSearchQuery('');
-    setYearFilter(0);
-    setRatingFilter(0);
+    setYearFilter(null);
+    setRatingFilter(null);
     setIsFiltering(false);
     setIsSearching(false);
-    
-    if (onResetFilters) {
-      onResetFilters();
-    }
-  }, [onResetFilters]);
-
-  // Apply filters
-  useEffect(() => {
-    if (!isFiltering && !isSearching) {
-      setFilteredAnimes([]);
-      return;
-    }
-
-    const applyFilters = () => {
-      if (!allAnimes || !Array.isArray(allAnimes)) {
-        setFilteredAnimes([]);
-        return;
-      }
-      
-      let results = [...allAnimes];
-      
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        results = results.filter(anime => {
-          // Safe access to properties with fallbacks
-          const title = (anime.title || anime.name || '').toLowerCase();
-          const overview = (anime.overview || '').toLowerCase();
-          return title.includes(query) || overview.includes(query);
-        });
-      }
-      
-      if (yearFilter > 0) {
-        results = results.filter(anime => {
-          const releaseYear = new Date(anime.first_air_date || anime.release_date || '').getFullYear();
-          return releaseYear === yearFilter;
-        });
-      }
-      
-      if (ratingFilter > 0) {
-        results = results.filter(anime => anime.vote_average >= ratingFilter);
-      }
-      
-      setFilteredAnimes(results);
-    };
-    
-    applyFilters();
-  }, [allAnimes, searchQuery, yearFilter, ratingFilter, isFiltering, isSearching]);
+  };
 
   return {
-    searchQuery,
-    yearFilter,
-    ratingFilter,
     filteredAnimes,
+    searchQuery,
     isFiltering,
     isSearching,
     handleSearch,
