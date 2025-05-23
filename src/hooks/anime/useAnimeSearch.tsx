@@ -1,60 +1,108 @@
 
-import { useState } from "react";
-import { toast } from "sonner";
-import { searchMedia } from "@/services/tmdbApi";
-import { MediaItem } from "@/types/movie";
+import { useState, useCallback, useEffect } from 'react';
+import { MediaItem } from '@/types/movie';
 
 interface UseAnimeSearchProps {
-  setAnimes: React.Dispatch<React.SetStateAction<MediaItem[]>>;
-  initialAnimes: MediaItem[];
-  resetPagination: () => void;
+  allAnimes: MediaItem[];
+  onResetFilters?: () => void;
 }
 
-export const useAnimeSearch = ({ 
-  setAnimes, 
-  initialAnimes, 
-  resetPagination 
-}: UseAnimeSearchProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
+export const useAnimeSearch = ({ allAnimes, onResetFilters }: UseAnimeSearchProps) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [yearFilter, setYearFilter] = useState<number>(0);
+  const [ratingFilter, setRatingFilter] = useState<number>(0);
+  const [filteredAnimes, setFilteredAnimes] = useState<MediaItem[]>([]);
+  const [isFiltering, setIsFiltering] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
-  const handleSearch = async (query: string) => {
+  // Handle search
+  const handleSearch = useCallback((query: string) => {
     setSearchQuery(query);
     
     if (!query.trim()) {
-      setAnimes(initialAnimes);
-      setIsSearching(false);
-      resetPagination();
+      if (isSearching) {
+        setIsFiltering(yearFilter > 0 || ratingFilter > 0);
+        setIsSearching(false);
+      }
+      return;
+    }
+    
+    setIsSearching(true);
+    setIsFiltering(true);
+  }, [yearFilter, ratingFilter, isSearching]);
+
+  // Handle year filter
+  const handleYearFilter = useCallback((year: number) => {
+    setYearFilter(year);
+    setIsFiltering(year > 0 || ratingFilter > 0 || searchQuery !== '');
+  }, [ratingFilter, searchQuery]);
+
+  // Handle rating filter
+  const handleRatingFilter = useCallback((rating: number) => {
+    setRatingFilter(rating);
+    setIsFiltering(yearFilter > 0 || rating > 0 || searchQuery !== '');
+  }, [yearFilter, searchQuery]);
+
+  // Reset filters
+  const resetFilters = useCallback(() => {
+    setSearchQuery('');
+    setYearFilter(0);
+    setRatingFilter(0);
+    setIsFiltering(false);
+    setIsSearching(false);
+    
+    if (onResetFilters) {
+      onResetFilters();
+    }
+  }, [onResetFilters]);
+
+  // Apply filters
+  useEffect(() => {
+    if (!isFiltering && !isSearching) {
+      setFilteredAnimes([]);
       return;
     }
 
-    setIsSearching(true);
-    try {
-      const results = await searchMedia(query);
-      const animeResults = results.filter((item) => 
-        item.media_type === "tv" && 
-        (item.name?.toLowerCase().includes("anime") || 
-        item.name?.match(/\bjapanese\b/i) || 
-        item.name?.match(/\banime\b/i))
-      );
+    const applyFilters = () => {
+      let results = [...allAnimes];
       
-      setAnimes(animeResults);
-      resetPagination();
-      
-      if (animeResults.length === 0) {
-        toast.info("Nenhum anime encontrado para sua pesquisa.");
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        results = results.filter(anime => {
+          const title = anime.title || anime.name || '';
+          const overview = anime.overview || '';
+          return title.toLowerCase().includes(query) || 
+                 overview.toLowerCase().includes(query);
+        });
       }
-    } catch (error) {
-      console.error("Erro na pesquisa:", error);
-      toast.error("Ocorreu um erro durante a pesquisa.");
-    } finally {
-      setIsSearching(false);
-    }
-  };
+      
+      if (yearFilter > 0) {
+        results = results.filter(anime => {
+          const releaseYear = new Date(anime.first_air_date || anime.release_date || '').getFullYear();
+          return releaseYear === yearFilter;
+        });
+      }
+      
+      if (ratingFilter > 0) {
+        results = results.filter(anime => anime.vote_average >= ratingFilter);
+      }
+      
+      setFilteredAnimes(results);
+    };
+    
+    applyFilters();
+  }, [allAnimes, searchQuery, yearFilter, ratingFilter, isFiltering, isSearching]);
 
   return {
     searchQuery,
+    yearFilter,
+    ratingFilter,
+    filteredAnimes,
+    isFiltering,
     isSearching,
-    handleSearch
+    handleSearch,
+    handleYearFilter,
+    handleRatingFilter,
+    resetFilters
   };
 };

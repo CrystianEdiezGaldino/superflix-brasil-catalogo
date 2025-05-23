@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useCallback } from 'react';
 
 interface UseInfiniteScrollProps {
@@ -5,15 +6,20 @@ interface UseInfiniteScrollProps {
   hasMore: boolean;
   isLoading: boolean;
   threshold?: number;
+  root?: Element | null;
+  rootMargin?: string;
 }
 
 export const useInfiniteScroll = ({
   onLoadMore,
   hasMore,
   isLoading,
-  threshold = 100
+  threshold = 0.5,
+  root = null,
+  rootMargin = '100px'
 }: UseInfiniteScrollProps) => {
   const observer = useRef<IntersectionObserver | null>(null);
+  
   const lastElementRef = useCallback((node: HTMLElement | null) => {
     if (isLoading) return;
     
@@ -26,13 +32,15 @@ export const useInfiniteScroll = ({
         onLoadMore();
       }
     }, {
-      rootMargin: `${threshold}px`
+      root,
+      rootMargin,
+      threshold
     });
     
     if (node) {
       observer.current.observe(node);
     }
-  }, [isLoading, hasMore, onLoadMore, threshold]);
+  }, [isLoading, hasMore, onLoadMore, root, rootMargin, threshold]);
 
   useEffect(() => {
     return () => {
@@ -43,4 +51,4 @@ export const useInfiniteScroll = ({
   }, []);
 
   return lastElementRef;
-}; 
+};
