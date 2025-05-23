@@ -41,6 +41,13 @@ export interface MediaItem {
     }[];
   };
   original_name?: string;
+  
+  // Add these missing properties used in series and animes data
+  number_of_seasons?: number;
+  number_of_episodes?: number;
+  status?: string;
+  origin_country?: string[];
+  seasons?: Season[];
 }
 
 export interface Genre {
