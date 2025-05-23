@@ -12,17 +12,19 @@ interface AdultContentSectionProps {
   title: string;
   animes: MediaItem[];
   onMediaClick: (media: MediaItem) => void;
+  isVisible: boolean;
+  onToggleVisibility: (password: string) => boolean;
 }
 
 const AdultContentSection: React.FC<AdultContentSectionProps> = ({
   title,
   animes,
-  onMediaClick
+  onMediaClick,
+  isVisible,
+  onToggleVisibility
 }) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [password, setPassword] = useState("");
-  const [selectedAnime, setSelectedAnime] = useState<MediaItem | null>(null);
-  const [isUnlocked, setIsUnlocked] = useState(false);
   const { user } = useAuth();
 
   // Safety check for animes array
@@ -35,22 +37,10 @@ const AdultContentSection: React.FC<AdultContentSectionProps> = ({
     return null;
   }
 
-  const handleAnimeClick = (anime: MediaItem) => {
-    if (isUnlocked) {
-      onMediaClick(anime);
-    } else {
-      setSelectedAnime(anime);
-      setIsDialogOpen(true);
-    }
-  };
-
   const handlePasswordSubmit = () => {
-    // Check password against user email or admin password
-    if (password === user?.email || password === "admin123") {
-      setIsUnlocked(true);
-      if (selectedAnime) {
-        onMediaClick(selectedAnime);
-      }
+    const success = onToggleVisibility(password);
+    
+    if (success) {
       setIsDialogOpen(false);
       setPassword("");
       toast.success("Conteúdo adulto desbloqueado");
@@ -69,10 +59,10 @@ const AdultContentSection: React.FC<AdultContentSectionProps> = ({
         <Button 
           variant="outline" 
           size="sm"
-          className={isUnlocked ? "text-green-500 border-green-500" : "text-gray-400 border-gray-400"}
-          onClick={() => setIsUnlocked(!isUnlocked)}
+          className={isVisible ? "text-green-500 border-green-500" : "text-gray-400 border-gray-400"}
+          onClick={() => isVisible ? onToggleVisibility("") : setIsDialogOpen(true)}
         >
-          {isUnlocked ? (
+          {isVisible ? (
             <>
               <Eye size={16} className="mr-2" /> Conteúdo Desbloqueado
             </>
@@ -84,20 +74,21 @@ const AdultContentSection: React.FC<AdultContentSectionProps> = ({
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {validAnimes.map((anime, index) => (
           <div
             key={`${anime.id}-${index}`}
             className="relative aspect-[2/3] rounded-lg overflow-hidden cursor-pointer group"
-            onClick={() => handleAnimeClick(anime)}
+            onClick={() => isVisible ? onMediaClick(anime) : setIsDialogOpen(true)}
           >
             <img
               src={`https://image.tmdb.org/t/p/w500${anime.poster_path || anime.backdrop_path}`}
               alt={getMediaTitle(anime)}
-              className={`w-full h-full object-cover ${!isUnlocked ? 'blur-md' : ''}`}
+              className={`w-full h-full object-cover ${!isVisible ? 'blur-md' : ''}`}
+              loading="lazy"
             />
-            <div className={`absolute inset-0 ${isUnlocked ? 'bg-black/40 group-hover:bg-black/60' : 'bg-black/70'} transition-all duration-300`}>
-              {!isUnlocked ? (
+            <div className={`absolute inset-0 ${isVisible ? 'bg-black/40 group-hover:bg-black/60' : 'bg-black/70'} transition-all duration-300`}>
+              {!isVisible ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
                   <Lock className="text-white/80 w-10 h-10 mb-2" />
                   <h3 className="text-white font-medium mb-1 line-clamp-2">{getMediaTitle(anime)}</h3>
@@ -126,7 +117,7 @@ const AdultContentSection: React.FC<AdultContentSectionProps> = ({
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-gray-300">
-              Este conteúdo é restrito para maiores de 18 anos. Para acessar, digite a senha da sua conta (seu e-mail).
+              Este conteúdo é restrito para maiores de 18 anos. Para acessar, digite a senha da sua conta (por padrão, use "admin123").
             </p>
             <Input
               type="password"
@@ -134,6 +125,11 @@ const AdultContentSection: React.FC<AdultContentSectionProps> = ({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="bg-gray-800 border-gray-700"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handlePasswordSubmit();
+                }
+              }}
             />
             <Button onClick={handlePasswordSubmit} className="w-full bg-netflix-red hover:bg-netflix-red/90">
               Desbloquear

@@ -1,0 +1,138 @@
+
+import { useState, useEffect, useCallback } from 'react';
+import { useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query';
+import { MediaItem } from '@/types/movie';
+import { fetchAnimes, fetchTopRatedAnimes, fetchRecentAnimes, isAdultAnime } from '@/services/animeService';
+
+export const useAnimeData = () => {
+  const [featuredAnimes, setFeaturedAnimes] = useState<MediaItem[]>([]);
+  const [recentReleases, setRecentReleases] = useState<MediaItem[]>([]);
+  const [topRatedAnimes, setTopRatedAnimes] = useState<MediaItem[]>([]);
+  const [adultContent, setAdultContent] = useState<MediaItem[]>([]);
+  const [isAdultContentVisible, setIsAdultContentVisible] = useState(false);
+  const [displayedAnimes, setDisplayedAnimes] = useState<MediaItem[]>([]);
+
+  // Main anime listing with infinite query
+  const {
+    data: animesData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isLoadingAnimes,
+    error: animesError,
+  } = useInfiniteQuery({
+    queryKey: ['animes'],
+    queryFn: ({ pageParam = 1 }) => fetchAnimes(pageParam as number),
+    getNextPageParam: (lastPage) => {
+      if (lastPage.page < lastPage.total_pages && lastPage.page < 20) { // Limit to 20 pages maximum
+        return lastPage.page + 1;
+      }
+      return undefined;
+    },
+    initialPageParam: 1,
+  });
+
+  // Query for top rated animes
+  const {
+    data: topRatedData,
+    isLoading: isLoadingTopRated,
+  } = useQuery({
+    queryKey: ['topRatedAnimes'],
+    queryFn: () => fetchTopRatedAnimes(1),
+  });
+
+  // Query for recent releases
+  const {
+    data: recentData,
+    isLoading: isLoadingRecent,
+  } = useQuery({
+    queryKey: ['recentAnimes'],
+    queryFn: () => fetchRecentAnimes(1),
+  });
+
+  // Load more animes from the current query
+  const loadMoreAnimes = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      console.log("Loading next page of animes");
+      fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  // Process and categorize animes
+  useEffect(() => {
+    if (animesData) {
+      // Flatten all pages
+      const allAnimes = animesData.pages.flatMap(page => page.results);
+      
+      // Separate adult content
+      const safeAnimes = allAnimes.filter(anime => !isAdultAnime(anime));
+      const adultAnimes = allAnimes.filter(anime => isAdultAnime(anime));
+      
+      // Set featured animes (high quality backdrops, good ratings)
+      const featured = safeAnimes
+        .filter(anime => anime.backdrop_path && anime.vote_average >= 7)
+        .sort((a, b) => b.vote_average - a.vote_average || b.popularity - a.popularity)
+        .slice(0, 10);
+      
+      setFeaturedAnimes(featured);
+      setDisplayedAnimes(safeAnimes);
+      setAdultContent(adultAnimes);
+    }
+  }, [animesData]);
+
+  // Process top rated animes
+  useEffect(() => {
+    if (topRatedData && topRatedData.results) {
+      setTopRatedAnimes(
+        topRatedData.results
+          .filter(anime => !isAdultAnime(anime))
+          .slice(0, 30)
+      );
+    }
+  }, [topRatedData]);
+
+  // Process recent releases
+  useEffect(() => {
+    if (recentData && recentData.results) {
+      setRecentReleases(
+        recentData.results
+          .filter(anime => !isAdultAnime(anime))
+          .slice(0, 20)
+      );
+    }
+  }, [recentData]);
+
+  // Toggle adult content visibility
+  const toggleAdultContent = useCallback((password: string) => {
+    // Simple check - in a real app you would verify against user's actual password
+    if (password === 'admin123' || password === 'password') {
+      setIsAdultContentVisible(prev => !prev);
+      return true;
+    }
+    return false;
+  }, []);
+
+  return {
+    // Collections
+    featuredAnimes,
+    recentReleases,
+    topRatedAnimes,
+    adultContent,
+    isAdultContentVisible,
+    displayedAnimes,
+    
+    // Loading states
+    isLoading: isLoadingAnimes || isLoadingTopRated || isLoadingRecent,
+    isFetchingMore: isFetchingNextPage,
+    
+    // Pagination
+    loadMoreAnimes,
+    hasMore: !!hasNextPage,
+    
+    // Adult content handling
+    toggleAdultContent,
+    
+    // Errors
+    error: animesError
+  };
+};

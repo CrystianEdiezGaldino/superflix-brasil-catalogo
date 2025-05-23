@@ -1,10 +1,10 @@
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { MediaItem, getMediaTitle } from "@/types/movie";
 import MediaCard from "@/components/media/MediaCard";
-import LoadingCard from "@/components/media/LoadingCard";
 import { Loader2, Play, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useInView } from "react-intersection-observer";
 
 interface AllAnimesSectionProps {
   animes: MediaItem[];
@@ -13,7 +13,6 @@ interface AllAnimesSectionProps {
   hasMore: boolean;
   onLoadMore: () => void;
   onMediaClick: (media: MediaItem) => void;
-  loadingRef: React.RefObject<HTMLDivElement>;
 }
 
 const AllAnimesSection: React.FC<AllAnimesSectionProps> = ({
@@ -23,12 +22,25 @@ const AllAnimesSection: React.FC<AllAnimesSectionProps> = ({
   hasMore,
   onLoadMore,
   onMediaClick,
-  loadingRef
 }) => {
+  // Setup intersection observer for infinite scrolling
+  const { ref: loadMoreRef, inView } = useInView({
+    threshold: 0.1,
+    rootMargin: "400px",
+  });
+  
   // Safety check for animes array
   const validAnimes = Array.isArray(animes) ? animes.filter(anime => 
     anime && (anime.poster_path || anime.backdrop_path)
   ) : [];
+  
+  // Effect for intersection observer
+  useEffect(() => {
+    if (inView && hasMore && !isLoading && !isFetchingMore) {
+      console.log("Intersection observer triggered load more");
+      onLoadMore();
+    }
+  }, [inView, hasMore, isLoading, isFetchingMore, onLoadMore]);
   
   // Checking if we have data to show
   if (isLoading && validAnimes.length === 0) {
@@ -50,24 +62,18 @@ const AllAnimesSection: React.FC<AllAnimesSectionProps> = ({
     );
   }
 
-  // Manual load more handler for debugging
-  const handleManualLoadMore = () => {
-    console.log("Manual load more triggered");
-    onLoadMore();
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-semibold text-white">Todos os Animes</h3>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
         {validAnimes.map((anime, index) => (
           <div
             key={`${anime.id}-${index}`}
             className="relative group overflow-hidden rounded-lg"
-            ref={index === validAnimes.length - 2 ? loadingRef : null}
+            ref={index === validAnimes.length - 5 ? loadMoreRef : undefined}
           >
             <MediaCard
               media={anime}
@@ -106,20 +112,11 @@ const AllAnimesSection: React.FC<AllAnimesSectionProps> = ({
         </div>
       )}
       
-      {/* Manual load more button for debugging */}
-      {hasMore && !isFetchingMore && (
-        <div className="flex justify-center py-6">
-          <Button 
-            onClick={handleManualLoadMore}
-            className="bg-netflix-red hover:bg-netflix-red/90 text-white"
-          >
-            Carregar mais animes
-          </Button>
-        </div>
-      )}
+      {/* Invisible element for intersection observer */}
+      <div ref={loadMoreRef} className="h-10" />
       
       {/* End of list message */}
-      {!hasMore && validAnimes.length > 0 && (
+      {!hasMore && validAnimes.length > 0 && !isFetchingMore && (
         <div className="text-center py-8 text-gray-400">
           Você chegou ao fim da lista de animes disponíveis.
         </div>
