@@ -1,3 +1,4 @@
+
 export interface MediaItem {
   adult?: boolean;
   backdrop_path: string | null;
@@ -21,6 +22,25 @@ export interface MediaItem {
     imdb_id?: string;
   };
   imdb_id?: string;
+  recommendations?: {
+    results: MediaItem[];
+  };
+  credits?: {
+    cast: {
+      id: number;
+      name: string;
+      character: string;
+      profile_path: string | null;
+    }[];
+    crew: {
+      id: number;
+      name: string;
+      job: string;
+      department: string;
+      profile_path: string | null;
+    }[];
+  };
+  original_name?: string;
 }
 
 export interface Genre {
@@ -44,6 +64,7 @@ export interface Series extends MediaItem {
   number_of_seasons?: number;
   number_of_episodes?: number;
   status?: string;
+  origin_country?: string[];
 }
 
 export interface Season {
@@ -53,6 +74,7 @@ export interface Season {
   poster_path: string | null;
   season_number: number;
   episodes?: Episode[];
+  air_date?: string;
 }
 
 export interface Episode {
@@ -68,4 +90,25 @@ export interface Episode {
 
 export const getMediaTitle = (media: MediaItem): string => {
   return media?.title || media?.name || 'Título desconhecido';
+};
+
+// Add type guards for movie and series
+export const isMovie = (media: MediaItem): media is Movie => {
+  return media?.media_type === 'movie' || (!!media?.title && !!media?.release_date);
+};
+
+export const isSeries = (media: MediaItem): media is Series => {
+  return media?.media_type === 'tv' || (!!media?.name && !!media?.first_air_date);
+};
+
+// Add helper function to check if it's an anime (Japanese series)
+export const isAnime = (media: MediaItem): boolean => {
+  return isSeries(media) && (media.original_language === 'ja' || 
+    (media.origin_country && media.origin_country.includes('JP')));
+};
+
+// Add helper function to check if it's a dorama (Korean series)
+export const isDorama = (media: MediaItem): boolean => {
+  return isSeries(media) && (media.original_language === 'ko' || 
+    (media.origin_country && media.origin_country.includes('KR')));
 };

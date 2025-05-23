@@ -1,16 +1,7 @@
 
 import React, { useState } from "react";
-import { MediaItem, getMediaTitle } from "@/types/movie";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Play, Info, Star } from "lucide-react";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { MediaItem } from "@/types/movie";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface FeaturedAnimeCarouselProps {
   animes: MediaItem[];
@@ -21,80 +12,86 @@ const FeaturedAnimeCarousel: React.FC<FeaturedAnimeCarouselProps> = ({
   animes,
   onAnimeClick,
 }) => {
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!animes || animes.length === 0) {
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? animes.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev === animes.length - 1 ? 0 : prev + 1));
+  };
+
+  // Handle empty state
+  if (!animes.length) {
     return null;
   }
 
-  // Handle carousel selection
-  const handleSelect = (index: number) => {
-    setActiveIndex(index);
-  };
+  const currentAnime = animes[currentIndex];
 
   return (
-    <div className="relative mb-12 overflow-hidden rounded-xl">
-      <Carousel
-        className="w-full"
-        onSelect={handleSelect}
+    <div className="relative w-full h-[50vh] mb-12 overflow-hidden rounded-xl">
+      {/* Background image */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src={`https://image.tmdb.org/t/p/original${currentAnime.backdrop_path}`}
+          alt={currentAnime.title || currentAnime.name}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent" />
+      </div>
+
+      {/* Navigation buttons */}
+      <button
+        onClick={handlePrevious}
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full z-10 hover:bg-black/70 transition"
       >
-        <CarouselContent>
-          {animes.map((anime, index) => (
-            <CarouselItem key={`${anime.id}-${index}`}>
-              <div className="relative aspect-[21/9] w-full overflow-hidden rounded-lg">
-                <img
-                  src={`https://image.tmdb.org/t/p/original${anime.backdrop_path}`}
-                  alt={getMediaTitle(anime)}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
-                  <h1 className="mb-2 text-3xl font-bold text-white md:text-5xl">
-                    {getMediaTitle(anime)}
-                  </h1>
-                  <div className="mb-4 flex items-center gap-3">
-                    <Badge className="bg-netflix-red px-2 py-1 text-white">
-                      {anime.vote_average.toFixed(1)}
-                    </Badge>
-                    <span className="text-sm text-gray-300">
-                      {new Date(anime.first_air_date || anime.release_date || "").getFullYear()}
-                    </span>
-                    <span className="text-sm text-gray-300">
-                      {/* Safe access to original_language with fallback */}
-                      {anime.original_language === "ja" ? "Japonês" : (anime.original_language || "Desconhecido")}
-                    </span>
-                  </div>
-                  <p className="mb-6 max-w-2xl text-sm text-gray-300 line-clamp-3 md:text-base">
-                    {anime.overview || "Sem descrição disponível."}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      onClick={() => onAnimeClick(anime)}
-                      className="bg-netflix-red hover:bg-netflix-red/90 text-white"
-                    >
-                      <Play size={18} className="mr-2" /> Assistir
-                    </Button>
-                    <Button variant="outline" className="bg-white/20 text-white hover:bg-white/30">
-                      <Info size={18} className="mr-2" /> Mais Informações
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="left-4 bg-black/50 text-white hover:bg-black/80" />
-        <CarouselNext className="right-4 bg-black/50 text-white hover:bg-black/80" />
-      </Carousel>
-      <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
+        <ChevronLeft className="text-white" size={24} />
+      </button>
+
+      <button
+        onClick={handleNext}
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 p-2 rounded-full z-10 hover:bg-black/70 transition"
+      >
+        <ChevronRight className="text-white" size={24} />
+      </button>
+
+      {/* Carousel indicators */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
         {animes.map((_, index) => (
-          <div
+          <button
             key={index}
-            className={`h-1 w-4 rounded-full transition-all ${
-              activeIndex === index ? "bg-netflix-red w-6" : "bg-gray-600"
+            onClick={() => setCurrentIndex(index)}
+            className={`w-2 h-2 rounded-full transition-all ${
+              currentIndex === index ? "bg-netflix-red w-4" : "bg-gray-400"
             }`}
+            aria-label={`Go to slide ${index + 1}`}
           />
         ))}
+      </div>
+
+      {/* Content overlay */}
+      <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12 z-10 flex flex-col justify-end h-full">
+        <h2 className="text-3xl md:text-5xl font-bold text-white mb-2">
+          {currentAnime.title || currentAnime.name}
+        </h2>
+        <div className="flex items-center mb-4 space-x-2">
+          <span className="bg-netflix-red text-white px-2 py-0.5 rounded text-sm">
+            Anime
+          </span>
+          <span className="text-gray-300 text-sm">
+            {currentAnime.vote_average} ★
+          </span>
+        </div>
+        <p className="text-white/80 max-w-2xl line-clamp-3 mb-6">
+          {currentAnime.overview}
+        </p>
+        <button
+          onClick={() => onAnimeClick(currentAnime)}
+          className="bg-netflix-red hover:bg-netflix-red/80 text-white rounded py-3 px-6 w-full sm:w-auto font-medium transition flex items-center justify-center"
+        >
+          Assistir agora
+        </button>
       </div>
     </div>
   );
