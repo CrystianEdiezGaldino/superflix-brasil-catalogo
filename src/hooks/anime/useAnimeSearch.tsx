@@ -64,15 +64,20 @@ export const useAnimeSearch = ({ allAnimes, onResetFilters }: UseAnimeSearchProp
     }
 
     const applyFilters = () => {
+      if (!allAnimes || !Array.isArray(allAnimes)) {
+        setFilteredAnimes([]);
+        return;
+      }
+      
       let results = [...allAnimes];
       
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         results = results.filter(anime => {
-          const title = anime.title || anime.name || '';
-          const overview = anime.overview || '';
-          return title.toLowerCase().includes(query) || 
-                 overview.toLowerCase().includes(query);
+          // Safe access to properties with fallbacks
+          const title = (anime.title || anime.name || '').toLowerCase();
+          const overview = (anime.overview || '').toLowerCase();
+          return title.includes(query) || overview.includes(query);
         });
       }
       

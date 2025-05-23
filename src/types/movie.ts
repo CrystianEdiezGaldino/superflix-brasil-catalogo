@@ -1,151 +1,71 @@
+export interface MediaItem {
+  adult?: boolean;
+  backdrop_path: string | null;
+  genre_ids?: number[];
+  id: number;
+  original_language?: string;
+  original_title?: string;
+  overview: string;
+  popularity?: number;
+  poster_path: string | null;
+  release_date?: string;
+  first_air_date?: string;
+  title?: string;
+  name?: string;
+  video?: boolean;
+  vote_average: number;
+  vote_count?: number;
+  media_type?: 'movie' | 'tv';
+  genres?: Genre[];
+  external_ids?: {
+    imdb_id?: string;
+  };
+  imdb_id?: string;
+}
+
 export interface Genre {
   id: number;
   name: string;
 }
 
-export interface Cast {
-  id: number;
-  name: string;
-  character: string;
-  profile_path: string;
-}
-
-export interface Crew {
-  id: number;
-  name: string;
-  job: string;
-  department: string;
-  profile_path: string;
-}
-
-export interface BaseMedia {
-  id: number;
-  overview: string;
-  poster_path: string;
-  backdrop_path: string;
-  vote_average: number;
-  genres: Genre[];
-  genre_ids: number[];
-  first_air_date?: string;
-  release_date?: string;
-  popularity?: number;
-}
-
-export interface Movie extends BaseMedia {
+export interface Movie extends MediaItem {
   title: string;
-  media_type: "movie";
-  original_title: string;
-  vote_count?: number;
-  runtime: number;
-  status: string;
-  imdb_id?: string;
-  external_ids?: {
-    imdb_id: string;
-  };
-  credits?: {
-    cast: Cast[];
-    crew: Crew[];
-  };
-  recommendations?: {
-    results: Movie[];
-  };
+  release_date: string;
+  runtime?: number;
+  budget?: number;
+  revenue?: number;
+  status?: string;
 }
 
-export interface Series extends BaseMedia {
+export interface Series extends MediaItem {
   name: string;
-  media_type: "tv";
-  original_name: string;
-  original_language: string;
-  number_of_seasons: number;
-  number_of_episodes: number;
-  status: string;
-  title?: string;
-  imdb_id?: string;
-  vote_count?: number;
-  external_ids?: {
-    imdb_id: string;
-  };
-  credits?: {
-    cast: Cast[];
-    crew: Crew[];
-  };
-  recommendations?: {
-    results: Series[];
-  };
-  seasons: Season[];
+  first_air_date: string;
+  seasons?: Season[];
+  number_of_seasons?: number;
+  number_of_episodes?: number;
+  status?: string;
 }
 
 export interface Season {
   id: number;
   name: string;
   overview: string;
-  poster_path: string;
+  poster_path: string | null;
   season_number: number;
-  air_date: string;
-  episodes: Episode[];
+  episodes?: Episode[];
 }
 
 export interface Episode {
   id: number;
   name: string;
   overview: string;
-  still_path: string;
+  still_path: string | null;
   episode_number: number;
-  air_date: string;
-  vote_average: number;
-  vote_count: number;
   season_number: number;
+  vote_average: number;
+  air_date: string;
 }
 
-export interface Anime extends BaseMedia {
-  name: string;
-  media_type: "anime";
-  original_name: string;
-  original_language: string;
-  number_of_seasons: number;
-  number_of_episodes: number;
-  status: string;
-  title?: string;
-  imdb_id?: string;
-  vote_count?: number;
-  external_ids?: {
-    imdb_id: string;
-  };
-  credits?: {
-    cast: Cast[];
-    crew: Crew[];
-  };
-  recommendations?: {
-    results: Anime[];
-  };
-  seasons: Season[];
-  adult: boolean;
-  origin_country?: string[];
-}
-
-export type MediaItem = Movie | Series | Anime;
-
-// Type guard to verify if it's a Movie
-export function isMovie(item: MediaItem): item is Movie {
-  return item.media_type === "movie";
-}
-
-// Type guard to verify if it's a Series
-export function isSeries(item: MediaItem): item is Series {
-  return item.media_type === "tv";
-}
-
-// Type guard to verify if it's an Anime
-export function isAnime(item: MediaItem): item is Anime {
-  return item.media_type === "anime";
-}
-
-// Helper function to get the title of a media item
-export function getMediaTitle(item: MediaItem): string {
-  return isMovie(item) ? item.title : item.name;
-}
-
-// Helper function to get the release date of a media item
-export function getMediaReleaseDate(item: MediaItem): string {
-  return isMovie(item) ? item.release_date : item.first_air_date;
-}
+export const getMediaTitle = (media: MediaItem): string => {
+  return media?.title || media?.name || 'Título desconhecido';
+};

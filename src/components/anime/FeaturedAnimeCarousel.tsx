@@ -27,11 +27,16 @@ const FeaturedAnimeCarousel: React.FC<FeaturedAnimeCarouselProps> = ({
     return null;
   }
 
+  // Handle carousel selection
+  const handleSelect = (index: number) => {
+    setActiveIndex(index);
+  };
+
   return (
     <div className="relative mb-12 overflow-hidden rounded-xl">
       <Carousel
         className="w-full"
-        onSelect={(index) => setActiveIndex(index)}
+        onSelect={handleSelect}
       >
         <CarouselContent>
           {animes.map((anime, index) => (
@@ -55,7 +60,8 @@ const FeaturedAnimeCarousel: React.FC<FeaturedAnimeCarouselProps> = ({
                       {new Date(anime.first_air_date || anime.release_date || "").getFullYear()}
                     </span>
                     <span className="text-sm text-gray-300">
-                      {anime.original_language === "ja" ? "Japonês" : anime.original_language}
+                      {/* Safe access to original_language with fallback */}
+                      {anime.original_language === "ja" ? "Japonês" : (anime.original_language || "Desconhecido")}
                     </span>
                   </div>
                   <p className="mb-6 max-w-2xl text-sm text-gray-300 line-clamp-3 md:text-base">

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +23,7 @@ import {
 const Animes: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const loadingRef = useRef<HTMLDivElement>(null);
   
   // Use our custom hook for anime listings
   const {
@@ -32,7 +33,6 @@ const Animes: React.FC = () => {
     isLoading,
     isLoadingMore,
     hasMore,
-    loadingRef,
     handleLoadMore
   } = useAnimeListings();
 
@@ -47,11 +47,13 @@ const Animes: React.FC = () => {
     resetFilters
   } = useAnimeSearch({ allAnimes });
 
-  // Setup infinite scroll
+  // Setup infinite scroll with enhanced hook
   useInfiniteScroll({
     onLoadMore: handleLoadMore,
     hasMore,
-    isLoading: isLoadingMore
+    isLoading: isLoadingMore,
+    rootMargin: '200px',
+    enabled: !isFiltering && !isSearching
   });
 
   // Navigate to anime
@@ -75,7 +77,7 @@ const Animes: React.FC = () => {
       <Navbar />
       <div className="container mx-auto px-4 py-8">
         {/* Featured Anime Carousel - only show when not filtering */}
-        {!isFiltering && !isSearching && (
+        {!isFiltering && !isSearching && sections.featured && sections.featured.length > 0 && (
           <FeaturedAnimeCarousel 
             animes={sections.featured} 
             onAnimeClick={handleMediaClick} 
@@ -116,7 +118,7 @@ const Animes: React.FC = () => {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-white mb-4">
               {isSearching 
-                ? `Resultados para "${handleSearch}"` 
+                ? `Resultados para "${searchQuery}"` 
                 : "Resultados filtrados"}
               <span className="text-gray-400 text-lg ml-2">({filteredAnimes.length})</span>
             </h2>
@@ -137,31 +139,37 @@ const Animes: React.FC = () => {
         {!isFiltering && !isSearching && (
           <div className="space-y-16">
             {/* Recent Releases */}
-            <AnimeSection
-              title="Lançamentos em Exibição"
-              animes={sections.recent}
-              icon={<Calendar className="mr-2 text-netflix-red" size={24} />}
-              onMediaClick={handleMediaClick}
-            />
+            {sections.recent && sections.recent.length > 0 && (
+              <AnimeSection
+                title="Lançamentos em Exibição"
+                animes={sections.recent}
+                icon={<Calendar className="mr-2 text-netflix-red" size={24} />}
+                onMediaClick={handleMediaClick}
+              />
+            )}
 
             {/* Trending Animes */}
-            <AnimeSection
-              title="Em Alta"
-              animes={sections.trending}
-              icon={<TrendingUp className="mr-2 text-netflix-red" size={24} />}
-              onMediaClick={handleMediaClick}
-            />
+            {sections.trending && sections.trending.length > 0 && (
+              <AnimeSection
+                title="Em Alta"
+                animes={sections.trending}
+                icon={<TrendingUp className="mr-2 text-netflix-red" size={24} />}
+                onMediaClick={handleMediaClick}
+              />
+            )}
 
             {/* Top Rated Animes */}
-            <AnimeSection
-              title="Melhores Animes"
-              animes={sections.topRated}
-              icon={<Award className="mr-2 text-netflix-red" size={24} />}
-              onMediaClick={handleMediaClick}
-            />
+            {sections.topRated && sections.topRated.length > 0 && (
+              <AnimeSection
+                title="Melhores Animes"
+                animes={sections.topRated}
+                icon={<Award className="mr-2 text-netflix-red" size={24} />}
+                onMediaClick={handleMediaClick}
+              />
+            )}
 
             {/* Adult Content Section */}
-            {sections.adult.length > 0 && (
+            {sections.adult && sections.adult.length > 0 && (
               <AdultContentSection
                 title="Conteúdo Adulto"
                 animes={sections.adult.slice(0, 12)}

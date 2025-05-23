@@ -1,7 +1,9 @@
+
 import { MediaItem } from "@/types/movie";
 import MediaSection from "@/components/MediaSection";
 import AllAnimesSection from "@/components/anime/AllAnimesSection";
 import { Loader2 } from "lucide-react";
+import { useRef } from "react";
 
 interface AnimeSectionsProps {
   anime: MediaItem[];
@@ -36,6 +38,9 @@ const AnimeSections = ({
   onLoadMore,
   onMediaClick,
 }: AnimeSectionsProps) => {
+  // Create a ref for the loading element
+  const loadingRef = useRef<HTMLDivElement>(null);
+  
   // Garantir que todos os dados são arrays válidos
   const safeAnime = Array.isArray(anime) ? anime : [];
   const safeTopRatedAnime = Array.isArray(topRatedAnime) ? topRatedAnime : [];
@@ -64,6 +69,7 @@ const AnimeSections = ({
         hasMore={hasMore.anime}
         onLoadMore={onLoadMore.anime}
         onMediaClick={onMediaClick}
+        loadingRef={loadingRef}
       />
 
       {/* Outras seções - sempre renderizar */}

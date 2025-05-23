@@ -50,12 +50,14 @@ export const useAnimeListings = ({
   // Check if content is adult
   const isAdultContent = (anime: MediaItem): boolean => {
     const adultGenres = ['hentai', 'ecchi', 'adult'];
-    const name = anime.name || anime.title || '';
+    // Safe access to name/title
+    const animeTitle = anime.title || anime.name || '';
     const overview = (anime.overview || '').toLowerCase();
 
-    return (anime.adult) ||
-           anime.genres?.some(genre => adultGenres.some(ag => genre.name.toLowerCase().includes(ag))) ||
-           adultGenres.some(ag => name.toLowerCase().includes(ag) || overview.includes(ag));
+    // Safe access to adult property with optional chaining
+    return (anime.adult === true) ||
+           (anime.genres?.some(genre => adultGenres.some(ag => genre.name.toLowerCase().includes(ag))) || false) ||
+           adultGenres.some(ag => animeTitle.toLowerCase().includes(ag) || overview.includes(ag));
   };
 
   // Fetch animes from TMDB
@@ -83,7 +85,7 @@ export const useAnimeListings = ({
           return results.filter((anime: any) => {
             const isJapanese = anime.origin_country?.includes('JP') || 
                             anime.original_language === 'ja' ||
-                            anime.name?.toLowerCase().includes('anime');
+                            (anime.title?.toLowerCase().includes('anime') || anime.name?.toLowerCase().includes('anime'));
             return isJapanese && isValidAnime(anime);
           });
         };
@@ -212,6 +214,15 @@ export const useAnimeListings = ({
           );
           return unique;
         });
+        
+        // Add new animes to displayed animes
+        setDisplayedAnimes(prev => {
+          const newAnimes = [...prev, ...validAnimes];
+          const unique = newAnimes.filter((anime, index, self) => 
+            index === self.findIndex(a => a.id === anime.id)
+          );
+          return unique;
+        });
       }
     }
   }, [tmdbData, superflixData, currentPage, itemsPerPage]);
@@ -225,18 +236,15 @@ export const useAnimeListings = ({
     try {
       const startIndex = displayedAnimes.length;
       const endIndex = startIndex + itemsPerPage;
-      const newAnimes = allAnimes.slice(startIndex, endIndex);
       
-      if (newAnimes.length > 0) {
+      // First check if we have more animes in the existing allAnimes array
+      if (endIndex < allAnimes.length) {
+        const newAnimes = allAnimes.slice(startIndex, endIndex);
         setDisplayedAnimes(prev => [...prev, ...newAnimes]);
         setHasMore(endIndex < allAnimes.length);
       } else {
-        // Try to load more from API
-        if (currentPage < (tmdbData?.totalPages || 1)) {
-          setCurrentPage(prev => prev + 1);
-        } else {
-          setHasMore(false);
-        }
+        // Need to fetch more animes from API
+        setCurrentPage(prev => prev + 1);
       }
     } catch (error) {
       console.error('Error loading more animes:', error);

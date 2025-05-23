@@ -50,6 +50,12 @@ const AllAnimesSection: React.FC<AllAnimesSectionProps> = ({
     );
   }
 
+  // Manual load more handler for debugging
+  const handleManualLoadMore = () => {
+    console.log("Manual load more triggered");
+    onLoadMore();
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -61,7 +67,7 @@ const AllAnimesSection: React.FC<AllAnimesSectionProps> = ({
           <div
             key={`${anime.id}-${index}`}
             className="relative group overflow-hidden rounded-lg"
-            ref={index === validAnimes.length - 1 ? loadingRef : null}
+            ref={index === validAnimes.length - 2 ? loadingRef : null}
           >
             <MediaCard
               media={anime}
@@ -100,6 +106,19 @@ const AllAnimesSection: React.FC<AllAnimesSectionProps> = ({
         </div>
       )}
       
+      {/* Manual load more button for debugging */}
+      {hasMore && !isFetchingMore && (
+        <div className="flex justify-center py-6">
+          <Button 
+            onClick={handleManualLoadMore}
+            className="bg-netflix-red hover:bg-netflix-red/90 text-white"
+          >
+            Carregar mais animes
+          </Button>
+        </div>
+      )}
+      
+      {/* End of list message */}
       {!hasMore && validAnimes.length > 0 && (
         <div className="text-center py-8 text-gray-400">
           Você chegou ao fim da lista de animes disponíveis.
