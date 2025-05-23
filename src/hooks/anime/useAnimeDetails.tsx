@@ -5,7 +5,7 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { TMDB_API_URL, TMDB_API_KEY } from "@/config/tmdb";
 
 // Adicionar a URL da API do SuperFlix
-const SUPERFLIX_API_URL = "https://superflixapi.fyi";
+const SUPERFLIX_API_URL = "https://superflixapi.ist";
 
 export const useAnimeDetails = () => {
   const { id } = useParams<{ id: string }>();

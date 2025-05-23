@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     proxy: {
       '/api': {
-        // Updated domain from superflixapi.fyi to superflixapi.ist
+        // Updated domain from superflixapi.ist to superflixapi.ist
         target: 'https://superflixapi.ist',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),

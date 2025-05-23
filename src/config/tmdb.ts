@@ -4,7 +4,7 @@ export const TMDB_API_KEY = "8c247ea0b4b56ed2ff7d41c9a833aa77";
 export const TMDB_API_URL = "https://api.themoviedb.org/3"; 
 
 // SuperFlix API configuration for watching content
-export const SUPERFLIX_API_URL = "https://superflixapi.fyi";
+export const SUPERFLIX_API_URL = "https://superflixapi.ist";
 
 // Image URLs
 export const IMAGE_BASE_URL = "https://image.tmdb.org/t/p/";

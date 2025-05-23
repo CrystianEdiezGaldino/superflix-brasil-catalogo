@@ -19,7 +19,7 @@ interface SuperFlixPlayerProps {
 const SuperFlixPlayer = ({ type, imdb, season, episode, options = {} }: SuperFlixPlayerProps) => {
   useEffect(() => {
     const script = document.createElement('script');
-    script.src = 'https://superflixapi.fyi/player.js';
+    script.src = 'https://superflixapi.ist/player.js';
     script.async = true;
     //teste
     document.body.appendChild(script);
@@ -34,7 +34,7 @@ const SuperFlixPlayer = ({ type, imdb, season, episode, options = {} }: SuperFli
     .map(([key]) => `#${key}`)
     .join('');
 
-  const baseUrl = 'https://superflixapi.fyi';
+  const baseUrl = 'https://superflixapi.ist';
   const seasonStr = type === 'serie' ? `/${season}` : '';
   const episodeStr = type === 'serie' ? `/${episode}` : '';
   

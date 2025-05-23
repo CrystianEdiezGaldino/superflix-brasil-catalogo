@@ -1,8 +1,20 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useInfiniteQuery, useQueries, useQuery } from '@tanstack/react-query';
 import { MediaItem } from '@/types/movie';
 import { fetchAnimes, fetchTopRatedAnimes, fetchRecentAnimes, isAdultAnime } from '@/services/animeService';
+
+// Função para verificar se o texto contém apenas caracteres japoneses
+const isJapaneseOnly = (text: string) => {
+  const japaneseRegex = /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3400-\u4DBF]+$/;
+  return japaneseRegex.test(text);
+};
+
+// Função para verificar se o anime tem imagem e título válido
+const isValidAnime = (anime: MediaItem) => {
+  const hasImage = anime.poster_path || anime.backdrop_path;
+  const title = anime.name || anime.title || '';
+  return hasImage && !isJapaneseOnly(title);
+};
 
 export const useAnimeData = () => {
   const [featuredAnimes, setFeaturedAnimes] = useState<MediaItem[]>([]);
@@ -64,9 +76,12 @@ export const useAnimeData = () => {
       // Flatten all pages
       const allAnimes = animesData.pages.flatMap(page => page.results);
       
+      // Filter valid animes first
+      const validAnimes = allAnimes.filter(isValidAnime);
+      
       // Separate adult content
-      const safeAnimes = allAnimes.filter(anime => !isAdultAnime(anime));
-      const adultAnimes = allAnimes.filter(anime => isAdultAnime(anime));
+      const safeAnimes = validAnimes.filter(anime => !isAdultAnime(anime));
+      const adultAnimes = validAnimes.filter(anime => isAdultAnime(anime));
       
       // Set featured animes (high quality backdrops, good ratings)
       const featured = safeAnimes
@@ -85,6 +100,7 @@ export const useAnimeData = () => {
     if (topRatedData && topRatedData.results) {
       setTopRatedAnimes(
         topRatedData.results
+          .filter(isValidAnime)
           .filter(anime => !isAdultAnime(anime))
           .slice(0, 30)
       );
@@ -96,6 +112,7 @@ export const useAnimeData = () => {
     if (recentData && recentData.results) {
       setRecentReleases(
         recentData.results
+          .filter(isValidAnime)
           .filter(anime => !isAdultAnime(anime))
           .slice(0, 20)
       );

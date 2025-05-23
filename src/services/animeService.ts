@@ -73,7 +73,7 @@ export const fetchRecentAnimes = async (page: number = 1): Promise<AnimeResponse
 // Function to fetch anime IDs from Superflix
 export const fetchSuperflixAnimeIds = async (): Promise<string[]> => {
   try {
-    // Updated domain from superflixapi.fyi to superflixapi.ist
+    // Updated domain from superflixapi.ist to superflixapi.ist
     const response = await fetch('https://superflixapi.ist/animes/export/');
     
     if (!response.ok) {

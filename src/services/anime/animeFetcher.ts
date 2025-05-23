@@ -66,7 +66,7 @@ export const fetchAnimeData = async (page: number = 1): Promise<{
  */
 export const fetchSuperflixAnimeIds = async (): Promise<string[]> => {
   try {
-    // Updated domain from superflixapi.fyi to superflixapi.ist
+    // Updated domain from superflixapi.ist to superflixapi.ist
     const response = await fetch('/api/animes');
     if (!response.ok) throw new Error('Error fetching animes from Superflix');
     

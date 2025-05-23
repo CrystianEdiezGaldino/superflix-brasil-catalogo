@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
@@ -48,11 +47,27 @@ const Animes: React.FC = () => {
   
   // Filter animes based on search and filters
   const filteredAnimes = React.useMemo(() => {
+    // Função para verificar se o texto contém apenas caracteres japoneses
+    const isJapaneseOnly = (text: string) => {
+      const japaneseRegex = /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\u3400-\u4DBF]+$/;
+      return japaneseRegex.test(text);
+    };
+
+    // Função para verificar se o anime tem imagem e título válido
+    const isValidAnime = (anime: MediaItem) => {
+      const hasImage = anime.poster_path || anime.backdrop_path;
+      const title = anime.name || anime.title || '';
+      return hasImage && !isJapaneseOnly(title);
+    };
+
+    // Primeiro filtra animes inválidos
+    const validAnimes = displayedAnimes.filter(isValidAnime);
+    
     if (!searchQuery && !yearFilter && !ratingFilter) {
-      return displayedAnimes;
+      return validAnimes;
     }
     
-    return displayedAnimes.filter(anime => {
+    return validAnimes.filter(anime => {
       // Search filter
       if (searchQuery) {
         const title = (anime.name || anime.title || '').toLowerCase();
@@ -130,6 +145,85 @@ const Animes: React.FC = () => {
                 Bem Avaliados
               </TabsTrigger>
             </TabsList>
+
+            <div className="space-y-16">
+              <TabsContent value="all" className="space-y-16 mt-0">
+                {/* Recent Releases */}
+                {recentReleases.length > 0 && (
+                  <AnimeSectionGrid
+                    title="Lançamentos em Exibição"
+                    animes={recentReleases}
+                    icon={<Calendar className="mr-2 text-netflix-red" size={24} />}
+                    onMediaClick={handleMediaClick}
+                    isLoading={isLoading && recentReleases.length === 0}
+                  />
+                )}
+
+                {/* Top Rated Animes */}
+                {topRatedAnimes.length > 0 && (
+                  <AnimeSectionGrid
+                    title="Melhores Animes"
+                    animes={topRatedAnimes}
+                    icon={<Award className="mr-2 text-netflix-red" size={24} />}
+                    onMediaClick={handleMediaClick}
+                    isLoading={isLoading && topRatedAnimes.length === 0}
+                    showGenres={true}
+                  />
+                )}
+
+                {/* Adult Content Section */}
+                {adultContent.length > 0 && (
+                  <AdultContentSection
+                    title="Conteúdo Adulto"
+                    animes={adultContent.slice(0, 24)}
+                    onMediaClick={handleMediaClick}
+                    isVisible={isAdultContentVisible}
+                    onToggleVisibility={toggleAdultContent}
+                  />
+                )}
+
+                {/* All Animes with Infinite Scroll */}
+                <AllAnimesSection
+                  animes={displayedAnimes}
+                  isLoading={isLoading}
+                  isFetchingMore={isFetchingMore}
+                  hasMore={hasMore}
+                  onLoadMore={loadMoreAnimes}
+                  onMediaClick={handleMediaClick}
+                />
+              </TabsContent>
+
+              <TabsContent value="new" className="mt-0">
+                <AnimeSectionGrid
+                  title="Lançamentos em Exibição"
+                  animes={recentReleases}
+                  icon={<Calendar className="mr-2 text-netflix-red" size={24} />}
+                  onMediaClick={handleMediaClick}
+                  isLoading={isLoading && recentReleases.length === 0}
+                />
+              </TabsContent>
+
+              <TabsContent value="popular" className="mt-0">
+                <AnimeSectionGrid
+                  title="Animes Populares"
+                  animes={featuredAnimes}
+                  icon={<TrendingUp className="mr-2 text-netflix-red" size={24} />}
+                  onMediaClick={handleMediaClick}
+                  isLoading={isLoading && featuredAnimes.length === 0}
+                />
+              </TabsContent>
+
+              <TabsContent value="rated" className="mt-0">
+                <AnimeSectionGrid
+                  title="Melhores Animes"
+                  animes={topRatedAnimes}
+                  icon={<Award className="mr-2 text-netflix-red" size={24} />}
+                  onMediaClick={handleMediaClick}
+                  isLoading={isLoading && topRatedAnimes.length === 0}
+                  showGenres={true}
+                />
+              </TabsContent>
+            </div>
           </Tabs>
         )}
 
@@ -151,88 +245,6 @@ const Animes: React.FC = () => {
               onLoadMore={() => {}}
               onMediaClick={handleMediaClick}
             />
-          </div>
-        )}
-
-        {/* Main Content - only show when not filtering */}
-        {!isFiltering && (
-          <div className="space-y-16">
-            <TabsContent value="all" className="space-y-16 mt-0">
-              {/* Recent Releases */}
-              {recentReleases.length > 0 && (
-                <AnimeSectionGrid
-                  title="Lançamentos em Exibição"
-                  animes={recentReleases}
-                  icon={<Calendar className="mr-2 text-netflix-red" size={24} />}
-                  onMediaClick={handleMediaClick}
-                  isLoading={isLoading && recentReleases.length === 0}
-                />
-              )}
-
-              {/* Top Rated Animes */}
-              {topRatedAnimes.length > 0 && (
-                <AnimeSectionGrid
-                  title="Melhores Animes"
-                  animes={topRatedAnimes}
-                  icon={<Award className="mr-2 text-netflix-red" size={24} />}
-                  onMediaClick={handleMediaClick}
-                  isLoading={isLoading && topRatedAnimes.length === 0}
-                  showGenres={true}
-                />
-              )}
-
-              {/* Adult Content Section */}
-              {adultContent.length > 0 && (
-                <AdultContentSection
-                  title="Conteúdo Adulto"
-                  animes={adultContent.slice(0, 24)}
-                  onMediaClick={handleMediaClick}
-                  isVisible={isAdultContentVisible}
-                  onToggleVisibility={toggleAdultContent}
-                />
-              )}
-
-              {/* All Animes with Infinite Scroll */}
-              <AllAnimesSection
-                animes={displayedAnimes}
-                isLoading={isLoading}
-                isFetchingMore={isFetchingMore}
-                hasMore={hasMore}
-                onLoadMore={loadMoreAnimes}
-                onMediaClick={handleMediaClick}
-              />
-            </TabsContent>
-            
-            <TabsContent value="new" className="mt-0">
-              <AnimeSectionGrid
-                title="Lançamentos em Exibição"
-                animes={recentReleases}
-                icon={<Calendar className="mr-2 text-netflix-red" size={24} />}
-                onMediaClick={handleMediaClick}
-                isLoading={isLoading && recentReleases.length === 0}
-              />
-            </TabsContent>
-            
-            <TabsContent value="popular" className="mt-0">
-              <AnimeSectionGrid
-                title="Animes Populares"
-                animes={featuredAnimes}
-                icon={<TrendingUp className="mr-2 text-netflix-red" size={24} />}
-                onMediaClick={handleMediaClick}
-                isLoading={isLoading && featuredAnimes.length === 0}
-              />
-            </TabsContent>
-            
-            <TabsContent value="rated" className="mt-0">
-              <AnimeSectionGrid
-                title="Melhores Animes"
-                animes={topRatedAnimes}
-                icon={<Award className="mr-2 text-netflix-red" size={24} />}
-                onMediaClick={handleMediaClick}
-                isLoading={isLoading && topRatedAnimes.length === 0}
-                showGenres={true}
-              />
-            </TabsContent>
           </div>
         )}
       </div>

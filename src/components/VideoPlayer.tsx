@@ -22,7 +22,7 @@ const VideoPlayer = ({ type, imdbId, season, episode }: VideoPlayerProps) => {
   }>({});
 
   // Construir a URL do player usando a API correta
-  let playerUrl = `https://superflixapi.fyi/${type}/${imdbId}`;
+  let playerUrl = `https://superflixapi.ist/${type}/${imdbId}`;
   
   // Adicionar temporada e episódio se for série
   if (type === "serie" && season !== undefined) {

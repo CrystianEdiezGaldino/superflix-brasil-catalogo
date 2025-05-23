@@ -110,7 +110,7 @@ const Auth = () => {
 
       {/* Content */}
       <div className="relative z-10">
-        <Navbar />
+        {/* <Navbar /> */}
         
         {redirecting && (
           <div className="fixed inset-0 bg-black/50 z-50 flex flex-col items-center justify-center">
