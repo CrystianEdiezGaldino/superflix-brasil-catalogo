@@ -42,20 +42,41 @@ const SeriesContent = ({
               </h2>
 
               {/* Season selector */}
-              <div className="flex gap-2 mb-4 sm:mb-6 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-netflix-red scrollbar-track-netflix-gray">
-                {seasons.map((season) => (
-                  <button
-                    key={season}
-                    onClick={() => setSelectedSeason(season)}
-                    className={`px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
-                      selectedSeason === season
-                        ? "bg-netflix-red text-white"
-                        : "bg-netflix-gray text-gray-300 hover:bg-netflix-gray-hover"
-                    }`}
+              <div className="space-y-4 mb-4 sm:mb-6">
+                {/* Mobile Select */}
+                <div className="sm:hidden">
+                  <select
+                    value={selectedSeason}
+                    onChange={(e) => setSelectedSeason(Number(e.target.value))}
+                    className="w-full bg-black text-white rounded-lg px-5 py-4 text-base font-medium focus:outline-none focus:ring-2 focus:ring-netflix-red focus:border-transparent appearance-none cursor-pointer border border-netflix-red/30 hover:border-netflix-red transition-all duration-200 shadow-lg shadow-black/20"
                   >
-                    Temporada {season}
-                  </button>
-                ))}
+                    {seasons.map((season) => (
+                      <option key={season} value={season} className="bg-black text-lg py-2">
+                        Temporada {season}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Desktop Button Grid */}
+                <div className="hidden sm:grid sm:grid-cols-2 lg:flex lg:gap-3 gap-3">
+                  {seasons.map((season) => (
+                    <button
+                      key={season}
+                      onClick={() => setSelectedSeason(season)}
+                      className={`px-5 py-4 rounded-lg text-base font-medium transition-all duration-200 whitespace-nowrap flex items-center justify-center ${
+                        selectedSeason === season
+                          ? "bg-netflix-red text-white shadow-lg shadow-netflix-red/20 scale-[1.02] border border-netflix-red hover:bg-netflix-red/90"
+                          : "bg-black text-white hover:scale-[1.02] border border-netflix-red/30 hover:border-netflix-red hover:bg-black/90"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="hidden sm:inline text-lg">Temporada</span>
+                        <span className="font-bold text-lg">{season}</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Episodes list */}

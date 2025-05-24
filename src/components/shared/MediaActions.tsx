@@ -93,7 +93,7 @@ const MediaActions = ({
 
   return (
     <div className="relative z-10 px-4 sm:px-6 md:px-10 mt-2 mb-8">
-      <div className="max-w-7xl mx-auto flex flex-wrap gap-3 sm:gap-6">
+      <div className="max-w-7xl mx-auto flex flex-wrap justify-center sm:justify-start gap-3 sm:gap-6">
         {/* Botão Assistir */}
         <button
           ref={watchButtonRef}
@@ -101,7 +101,7 @@ const MediaActions = ({
           disabled={!hasAccess}
           onFocus={() => onButtonFocus?.('watch')}
           className={cn(
-            "flex items-center gap-2 sm:gap-3 py-3 px-6 sm:px-8 rounded-full font-medium text-base sm:text-lg transition-all duration-300 shadow-lg",
+            "flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 py-4 sm:py-3 px-6 sm:px-8 rounded-full font-medium text-base sm:text-lg transition-all duration-300 shadow-lg min-w-[45%] sm:min-w-0",
             showPlayer 
               ? "bg-gray-700 hover:bg-gray-600 text-white"
               : hasAccess 
@@ -110,7 +110,7 @@ const MediaActions = ({
             focusedButton === 'watch' && "ring-4 ring-white shadow-[0_0_15px_rgba(255,255,255,0.5)] scale-105"
           )}
         >
-          <Play fill="currentColor" size={18} className="sm:size-5" />
+          <Play fill="currentColor" size={20} className="sm:size-5" />
           <span>{showPlayer ? "Fechar Player" : "Assistir"}</span>
         </button>
 
@@ -120,7 +120,7 @@ const MediaActions = ({
           onClick={onFavoriteClick}
           onFocus={() => onButtonFocus?.('favorite')}
           className={cn(
-            "flex items-center gap-2 sm:gap-3 py-3 px-6 sm:px-8 rounded-full font-medium text-base transition-all duration-300 border-2 shadow-lg",
+            "flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 py-4 sm:py-3 px-6 sm:px-8 rounded-full font-medium text-base transition-all duration-300 border-2 shadow-lg min-w-[45%] sm:min-w-0",
             isFavorite
               ? "bg-white/10 border-white text-white hover:bg-white/20"
               : "bg-black/60 backdrop-blur border-gray-600 text-gray-300 hover:border-white hover:text-white",
@@ -128,7 +128,7 @@ const MediaActions = ({
           )}
         >
           <Heart
-            size={18}
+            size={20}
             className={cn(
               "sm:size-5 transition-all duration-300", 
               isFavorite && "fill-netflix-red text-netflix-red"

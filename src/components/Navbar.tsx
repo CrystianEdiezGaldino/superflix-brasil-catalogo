@@ -82,7 +82,7 @@ const Navbar = ({ onSearch = () => {} }: NavbarProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-[50px] w-[50px] text-white hover:text-netflix-red"
+              className="h-12 w-12 text-white hover:text-white bg-[rgb(229,9,20)] hover:bg-[rgb(229,9,20)]/90 border-2 border-[rgb(229,9,20)] hover:border-[rgb(229,9,20)] rounded-full transition-all duration-200"
               onClick={toggleMobileMenu}
               aria-label="Abrir menu"
             >

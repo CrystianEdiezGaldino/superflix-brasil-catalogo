@@ -103,11 +103,11 @@ const MobileMenu = ({
                   tabIndex={0}
                   role="menuitem"
                   className={`flex items-center py-3 px-4 rounded-[45px] transition-all duration-200 
-                    focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black
+                    focus:outline-none focus:ring-2 focus:ring-netflix-red focus:ring-offset-2 focus:ring-offset-black
                     border-2 ${
                       isRouteActive(link.path)
-                        ? "bg-netflix-red/20 text-netflix-red border-netflix-red/50"
-                        : "text-white border-white/30 hover:border-white hover:bg-white/5"
+                        ? "bg-netflix-red text-white border-netflix-red shadow-lg shadow-netflix-red/20"
+                        : "bg-netflix-red/20 text-white border-netflix-red/50 hover:bg-netflix-red/30 hover:border-netflix-red"
                     }`}
                   onClick={handleLinkClick}
                   aria-current={isRouteActive(link.path) ? "page" : undefined}
@@ -127,8 +127,8 @@ const MobileMenu = ({
                     tabIndex={0}
                     role="menuitem"
                     className="flex items-center py-3 px-4 rounded-[45px] transition-all duration-200 
-                      focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black
-                      border-2 text-white border-white/30 hover:border-white hover:bg-white/5"
+                      focus:outline-none focus:ring-2 focus:ring-netflix-red focus:ring-offset-2 focus:ring-offset-black
+                      border-2 text-white bg-netflix-red/20 border-netflix-red/50 hover:bg-netflix-red/30 hover:border-netflix-red"
                     onClick={handleLinkClick}
                     aria-label="Meu Perfil"
                   >
@@ -144,8 +144,8 @@ const MobileMenu = ({
                     tabIndex={0}
                     role="menuitem"
                     className="flex items-center w-full py-3 px-4 rounded-[45px] transition-all duration-200 
-                      focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black
-                      border-2 text-white border-white/30 hover:border-white hover:bg-white/5"
+                      focus:outline-none focus:ring-2 focus:ring-netflix-red focus:ring-offset-2 focus:ring-offset-black
+                      border-2 text-white bg-netflix-red/20 border-netflix-red/50 hover:bg-netflix-red/30 hover:border-netflix-red"
                     aria-label="Sair"
                   >
                     <span className="mr-3" aria-hidden="true">
@@ -163,8 +163,8 @@ const MobileMenu = ({
                 tabIndex={0}
                 role="menuitem"
                 className="flex items-center py-3 px-4 rounded-[45px] transition-all duration-200 
-                  focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black
-                  border-2 text-white border-white/30 hover:border-white hover:bg-white/5"
+                  focus:outline-none focus:ring-2 focus:ring-netflix-red focus:ring-offset-2 focus:ring-offset-black
+                  border-2 text-white bg-netflix-red/20 border-netflix-red/50 hover:bg-netflix-red/30 hover:border-netflix-red"
                 onClick={handleLinkClick}
                 aria-label="Termos"
               >
