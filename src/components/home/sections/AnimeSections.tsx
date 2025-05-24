@@ -1,21 +1,13 @@
 
+import React, { useRef } from "react";
 import { MediaItem } from "@/types/movie";
-import MediaSection from "@/components/MediaSection";
-import AllAnimesSection from "@/components/anime/AllAnimesSection";
-import { Loader2 } from "lucide-react";
-import { useRef } from "react";
 
-interface AnimeSectionsProps {
+interface AnimeSectionProps {
   anime: MediaItem[];
   topRatedAnime: MediaItem[];
   recentAnimes: MediaItem[];
   isLoading: boolean;
   hasMore: {
-    anime: boolean;
-    topRated: boolean;
-    recent: boolean;
-  };
-  isFetchingNextPage: {
     anime: boolean;
     topRated: boolean;
     recent: boolean;
@@ -26,75 +18,191 @@ interface AnimeSectionsProps {
     recent: () => void;
   };
   onMediaClick: (media: MediaItem) => void;
+  isFetchingNextPage: {
+    anime: boolean;
+    topRated: boolean;
+    recent: boolean;
+  };
 }
 
-const AnimeSections = ({
+// Helper component to render a single section
+const AnimeSection = ({
+  title,
+  anime,
+  isLoading,
+  hasMore,
+  onLoadMore,
+  onMediaClick,
+  isFetchingNextPage,
+}) => {
+  if (!anime || anime.length === 0) return null;
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-xl font-bold text-white mb-4">{title}</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {anime.map((item) => (
+          <div
+            key={item.id}
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => onMediaClick(item)}
+          >
+            <img
+              src={`https://image.tmdb.org/t/p/w300${item.poster_path}`}
+              alt={item.name || item.title}
+              className="w-full h-auto rounded-md"
+              loading="lazy"
+            />
+            <h3 className="text-white text-sm mt-1 truncate">
+              {item.name || item.title}
+            </h3>
+          </div>
+        ))}
+      </div>
+
+      {hasMore && (
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={onLoadMore}
+            disabled={isFetchingNextPage}
+            className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
+          >
+            {isFetchingNextPage ? "Carregando..." : "Carregar mais"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Component for All Animes with Infinite Scroll
+interface AllAnimesSectionProps {
+  animes: MediaItem[];
+  isLoading: boolean;
+  isFetchingMore: boolean;
+  hasMore: boolean;
+  onLoadMore: () => void;
+  onMediaClick: (media: MediaItem) => void;
+}
+
+const AllAnimesSection: React.FC<AllAnimesSectionProps> = ({
+  animes,
+  isLoading,
+  isFetchingMore,
+  hasMore,
+  onLoadMore,
+  onMediaClick,
+}) => {
+  const loadingRef = useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
+          onLoadMore();
+        }
+      },
+      { threshold: 1.0 }
+    );
+
+    if (loadingRef.current) {
+      observer.observe(loadingRef.current);
+    }
+
+    return () => {
+      if (loadingRef.current) {
+        observer.unobserve(loadingRef.current);
+      }
+    };
+  }, [hasMore, isFetchingMore, onLoadMore]);
+
+  if (!animes || animes.length === 0) return null;
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-xl font-bold text-white mb-4">Todos os Animes</h2>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {animes.map((item) => (
+          <div
+            key={item.id}
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => onMediaClick(item)}
+          >
+            <img
+              src={`https://image.tmdb.org/t/p/w300${item.poster_path}`}
+              alt={item.name || item.title}
+              className="w-full h-auto rounded-md"
+              loading="lazy"
+            />
+            <h3 className="text-white text-sm mt-1 truncate">
+              {item.name || item.title}
+            </h3>
+          </div>
+        ))}
+      </div>
+
+      <div ref={loadingRef} className="h-10 mt-4 text-center">
+        {isFetchingMore && (
+          <div className="flex justify-center items-center gap-2">
+            <div className="w-4 h-4 rounded-full bg-red-600 animate-pulse"></div>
+            <div className="w-4 h-4 rounded-full bg-red-600 animate-pulse delay-100"></div>
+            <div className="w-4 h-4 rounded-full bg-red-600 animate-pulse delay-200"></div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const AnimeSections: React.FC<AnimeSectionProps> = ({
   anime,
   topRatedAnime,
   recentAnimes,
   isLoading,
   hasMore,
-  isFetchingNextPage,
   onLoadMore,
   onMediaClick,
-}: AnimeSectionsProps) => {
-  // Create a ref for the loading element
-  const loadingRef = useRef<HTMLDivElement>(null);
-  
-  // Garantir que todos os dados são arrays válidos
-  const safeAnime = Array.isArray(anime) ? anime : [];
-  const safeTopRatedAnime = Array.isArray(topRatedAnime) ? topRatedAnime : [];
-  const safeRecentAnimes = Array.isArray(recentAnimes) ? recentAnimes : [];
-  
-  // Verificar se temos dados para mostrar, caso contrário mostrar um loading
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-netflix-red animate-spin" />
-        <p className="mt-2 text-gray-400">Carregando animes...</p>
-      </div>
-    );
-  }
-
-  // Sempre renderizar as seções, mesmo se vazias
+  isFetchingNextPage,
+}) => {
   return (
-    <div className="space-y-8 mb-16">
-      <h2 className="text-2xl md:text-3xl font-bold text-white">Animes</h2>
+    <div className="mt-8">
+      <AnimeSection
+        title="Animes em destaque"
+        anime={anime}
+        isLoading={isLoading}
+        hasMore={hasMore.anime}
+        onLoadMore={onLoadMore.anime}
+        onMediaClick={onMediaClick}
+        isFetchingNextPage={isFetchingNextPage.anime}
+      />
 
-      {/* Seção de Todos os Animes */}
+      <AnimeSection
+        title="Melhores animes"
+        anime={topRatedAnime}
+        isLoading={isLoading}
+        hasMore={hasMore.topRated}
+        onLoadMore={onLoadMore.topRated}
+        onMediaClick={onMediaClick}
+        isFetchingNextPage={isFetchingNextPage.topRated}
+      />
+
+      <AnimeSection
+        title="Lançamentos recentes"
+        anime={recentAnimes}
+        isLoading={isLoading}
+        hasMore={hasMore.recent}
+        onLoadMore={onLoadMore.recent}
+        onMediaClick={onMediaClick}
+        isFetchingNextPage={isFetchingNextPage.recent}
+      />
+
       <AllAnimesSection
-        animes={safeAnime}
+        animes={anime}
         isLoading={isLoading}
         isFetchingMore={isFetchingNextPage.anime}
         hasMore={hasMore.anime}
         onLoadMore={onLoadMore.anime}
         onMediaClick={onMediaClick}
-        loadingRef={loadingRef}
-      />
-
-      {/* Outras seções - sempre renderizar */}
-      <MediaSection
-        title="Animes Mais Bem Avaliados"
-        medias={safeTopRatedAnime.slice(0, 20)}
-        showLoadMore={false}
-        onLoadMore={onLoadMore.topRated}
-        isLoading={isFetchingNextPage.topRated}
-        onMediaClick={onMediaClick}
-        sectionId="topRatedAnime" 
-        mediaType="tv"
-        sectionIndex={1}
-      />
-
-      <MediaSection
-        title="Animes Recentes"
-        medias={safeRecentAnimes.slice(0, 20)}
-        showLoadMore={false}
-        onLoadMore={onLoadMore.recent}
-        isLoading={isFetchingNextPage.recent}
-        onMediaClick={onMediaClick}
-        sectionId="recentAnimes"
-        mediaType="tv"
-        sectionIndex={2}
       />
     </div>
   );

@@ -1,61 +1,56 @@
 
-import { MediaItem, Movie, Series } from "@/types/movie";
-import MediaSection from "@/components/MediaSection";
+import React from "react";
+import { MediaItem } from "@/types/movie";
+import { Button } from "@/components/ui/button";
+import MediaCard from "@/components/media/MediaCard";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface RecommendationsSectionProps {
-  recommendations: MediaItem[] | null;
-  onLoadMore?: () => void;
-  isLoading?: boolean;
-  hasMore?: boolean;
-  sectionId?: string;
+  recommendations: MediaItem[];
+  isLoading: boolean;
+  hasMore: boolean;
+  onLoadMore: () => void;
+  title?: string;
 }
 
-const RecommendationsSection = ({ 
+const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
   recommendations,
-  onLoadMore = () => {},
-  isLoading = false,
-  hasMore = false,
-  sectionId = 'recommendations'
-}: RecommendationsSectionProps) => {
-  // Ensure recommendations is an array
-  const recommendationsArray = Array.isArray(recommendations) ? recommendations : [];
-  
-  // Filter recommendations to recent and with images
-  const filteredRecommendations = recommendationsArray
-    .filter(item => item && (item.poster_path || item.backdrop_path))
-    .filter(item => {
-      const releaseDate = new Date(
-        item.media_type === 'movie' 
-          ? (item as Movie).release_date 
-          : (item as Series).first_air_date || ''
-      );
-      const fiveYearsAgo = new Date();
-      fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
-      return releaseDate >= fiveYearsAgo;
-    });
-
-  // Don't render if no recommendations
-  if (!filteredRecommendations.length) {
+  isLoading,
+  hasMore,
+  onLoadMore,
+  title = "Recomendações"
+}) => {
+  if (!recommendations || recommendations.length === 0) {
     return null;
   }
-  
-  // Criar uma função de carregamento específica para esta seção
-  const handleLoadMoreRecommendations = () => {
-    // Passa o ID da seção para a função de carregamento
-    onLoadMore();
-    console.log(`Carregando mais recomendações para: ${sectionId}`);
-  };
-  
+
   return (
-    <div className="recommendations-section-container" id={`section-${sectionId}`}>
-      <MediaSection 
-        title="Recomendados para Você" 
-        medias={filteredRecommendations.slice(0, 5)}
-        showLoadMore={hasMore && filteredRecommendations.length > 5}
-        onLoadMore={handleLoadMoreRecommendations}
-        isLoading={isLoading}
-        sectionIndex={0}
-      />
+    <div className="mb-8">
+      <h2 className="text-xl md:text-2xl font-bold text-white mb-4">{title}</h2>
+
+      <ScrollArea className="w-full whitespace-nowrap">
+        <div className="flex space-x-4">
+          {recommendations.map((media) => (
+            <div key={media.id} className="w-[180px] md:w-[200px] flex-none">
+              <MediaCard media={media} />
+            </div>
+          ))}
+          
+          {hasMore && (
+            <div className="flex items-center justify-center w-[180px] md:w-[200px] flex-none">
+              <Button
+                onClick={onLoadMore}
+                disabled={isLoading}
+                variant="outline"
+                className="h-32"
+              >
+                {isLoading ? "Carregando..." : "Carregar mais"}
+              </Button>
+            </div>
+          )}
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
     </div>
   );
 };
