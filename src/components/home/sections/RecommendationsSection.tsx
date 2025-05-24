@@ -4,6 +4,7 @@ import { MediaItem } from "@/types/movie";
 import { Button } from "@/components/ui/button";
 import MediaCard from "@/components/media/MediaCard";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import MediaSection from "@/components/MediaSection";
 
 interface RecommendationsSectionProps {
   recommendations: MediaItem[];
@@ -11,6 +12,7 @@ interface RecommendationsSectionProps {
   hasMore: boolean;
   onLoadMore: () => void;
   title?: string;
+  onMediaClick?: (media: MediaItem) => void;
 }
 
 const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
@@ -18,45 +20,23 @@ const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
   isLoading,
   hasMore,
   onLoadMore,
-  title = "Recomendações"
+  title = "Recomendações",
+  onMediaClick = () => {}
 }) => {
   if (!recommendations || recommendations.length === 0) {
     return null;
   }
 
   return (
-    <div className="mb-8">
-      <h2 className="text-xl md:text-2xl font-bold text-white mb-4">{title}</h2>
-
-      <ScrollArea className="w-full whitespace-nowrap">
-        <div className="flex space-x-4">
-          {recommendations.map((media, index) => (
-            <div key={media.id} className="w-[180px] md:w-[200px] flex-none">
-              <MediaCard 
-                media={media} 
-                index={index} 
-                isFocused={false} 
-                onFocus={() => {}} 
-              />
-            </div>
-          ))}
-          
-          {hasMore && (
-            <div className="flex items-center justify-center w-[180px] md:w-[200px] flex-none">
-              <Button
-                onClick={onLoadMore}
-                disabled={isLoading}
-                variant="outline"
-                className="h-32"
-              >
-                {isLoading ? "Carregando..." : "Carregar mais"}
-              </Button>
-            </div>
-          )}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
-    </div>
+    <MediaSection
+      title={title}
+      medias={recommendations}
+      showLoadMore={hasMore}
+      onLoadMore={onLoadMore}
+      sectionIndex={999} // Use a high number to avoid conflicts
+      onMediaClick={onMediaClick}
+      isLoading={isLoading}
+    />
   );
 };
 

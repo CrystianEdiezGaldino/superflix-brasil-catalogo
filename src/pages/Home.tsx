@@ -60,6 +60,23 @@ const Home = () => {
   const safeSeriesData = Array.isArray(seriesData) ? seriesData : [];
   const continueWatchingItems = safeMovies.slice(0, 8); // Mock data for continue watching
 
+  // Create different subsets of movies for various sections
+  const familyMovies = safeMovies.slice(10, 25);
+  const childrenMovies = safeMovies.slice(30, 45);
+  const dubbedMovies = safeMovies.slice(40, 55);
+  const subtitledMovies = safeMovies.slice(50, 65);
+  const comicsBasedMovies = safeMovies.slice(60, 75);
+  const bookBasedMovies = safeMovies.slice(70, 85);
+  const renownedDirectorsMovies = safeMovies.slice(80, 95);
+  const blockbusterMovies = safeMovies.slice(90, 105);
+  const cultMovies = safeMovies.slice(100, 115);
+  const shortFilms = safeMovies.slice(110, 125);
+  const nostalgicMovies = safeMovies.slice(120, 135);
+  
+  // Create different subsets of series
+  const teenSeries = safeSeriesData.slice(10, 25);
+  const internationalSeries = safeSeriesData.slice(20, 35);
+
   // State for search functionality
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -152,8 +169,8 @@ const Home = () => {
           
           {!searchQuery && (
             <>
-              {/* Continue Watching Section */}
-              <section className="mb-12">
+              {/* Continue Watching Section - Added mt-16 for extra margin below navbar */}
+              <section className="mb-12 mt-16">
                 <ContinueWatchingSection 
                   items={continueWatchingItems}
                   onMediaClick={handleMovieClick}
@@ -241,6 +258,31 @@ const Home = () => {
                   className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 py-6 px-2 rounded-lg"
                 />
               </section>
+              
+              {/* NaflixTV Exclusive */}
+              <section className="mb-12">
+                <MediaSection 
+                  title="Exclusivos NaflixTV"
+                  medias={safeSeriesData.slice(5, 20)}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={5}
+                  onMediaClick={handleSeriesClick}
+                  className="bg-gradient-to-r from-purple-900/30 to-red-900/30 py-6 px-2 rounded-lg"
+                />
+              </section>
+
+              {/* Documentaries and Biographies */}
+              <section className="mb-12">
+                <MediaSection 
+                  title="Documentários e biografias"
+                  medias={safeMovies.slice(200, 215)}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={6}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
 
               {/* Award-winning Movies */}
               <section className="mb-12">
@@ -249,7 +291,7 @@ const Home = () => {
                   medias={safeMovies.slice(30, 45)}
                   showLoadMore={false}
                   onLoadMore={() => {}}
-                  sectionIndex={5}
+                  sectionIndex={7}
                   onMediaClick={handleMovieClick}
                 />
               </section>
@@ -261,7 +303,7 @@ const Home = () => {
                   medias={safeMovies.slice(45, 60)}
                   showLoadMore={false}
                   onLoadMore={() => {}}
-                  sectionIndex={6}
+                  sectionIndex={8}
                   onMediaClick={handleMovieClick}
                 />
               </section>
@@ -335,7 +377,7 @@ const Home = () => {
                   medias={safeSeriesData.slice(30, 45)}
                   showLoadMore={false}
                   onLoadMore={() => {}}
-                  sectionIndex={7}
+                  sectionIndex={9}
                   onMediaClick={handleSeriesClick}
                 />
               </section>
@@ -346,8 +388,152 @@ const Home = () => {
                   medias={safeSeriesData.slice(45, 60)}
                   showLoadMore={false}
                   onLoadMore={() => {}}
-                  sectionIndex={8}
+                  sectionIndex={10}
                   onMediaClick={handleSeriesClick}
+                />
+              </section>
+              
+              {/* New sections being added */}
+              <section className="mb-12">
+                <MediaSection 
+                  title="Séries teen"
+                  medias={teenSeries}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={11}
+                  onMediaClick={handleSeriesClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Séries internacionais premiadas"
+                  medias={internationalSeries}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={12}
+                  onMediaClick={handleSeriesClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Filmes para toda a família"
+                  medias={familyMovies}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={13}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Filmes infantis e animações"
+                  medias={childrenMovies}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={14}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Lançamentos dublados"
+                  medias={dubbedMovies}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={15}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Filmes legendados"
+                  medias={subtitledMovies}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={16}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Filmes baseados em HQs"
+                  medias={comicsBasedMovies}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={17}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Filmes inspirados em livros"
+                  medias={bookBasedMovies}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={18}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Diretores renomados"
+                  medias={renownedDirectorsMovies}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={19}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Sucessos de bilheteria"
+                  medias={blockbusterMovies}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={20}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Filmes cult"
+                  medias={cultMovies}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={21}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Curtas-metragens"
+                  medias={shortFilms}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={22}
+                  onMediaClick={handleMovieClick}
+                />
+              </section>
+              
+              <section className="mb-12">
+                <MediaSection 
+                  title="Nostalgia dos anos 80/90"
+                  medias={nostalgicMovies}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={23}
+                  onMediaClick={handleMovieClick}
                 />
               </section>
             </>

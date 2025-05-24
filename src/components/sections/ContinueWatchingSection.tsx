@@ -7,13 +7,18 @@ import { Play, Info } from 'lucide-react';
 interface ContinueWatchingProps {
   items: MediaItem[];
   onMediaClick: (media: MediaItem) => void;
+  className?: string;
 }
 
-const ContinueWatchingSection: React.FC<ContinueWatchingProps> = ({ items, onMediaClick }) => {
+const ContinueWatchingSection: React.FC<ContinueWatchingProps> = ({ 
+  items, 
+  onMediaClick,
+  className = ""
+}) => {
   if (!items || items.length === 0) return null;
 
   return (
-    <div className="mb-8">
+    <div className={`mb-8 ${className}`}>
       <h2 className="text-xl md:text-2xl font-bold text-white mb-4">Continuar assistindo</h2>
       
       <ScrollArea className="w-full whitespace-nowrap rounded-md">

@@ -12,7 +12,13 @@ export interface MediaSectionProps {
   onLoadMore: () => void;
   sectionIndex: number;
   onMediaClick: (media: MediaItem) => void;
-  className?: string; // Add className prop
+  className?: string;
+  isLoading?: boolean;
+  sectionId?: string;
+  mediaType?: 'movie' | 'tv' | 'anime' | 'dorama' | 'tv-channel';
+  focusedItem?: number;
+  onFocusChange?: (index: number) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
 }
 
 const MediaSection: React.FC<MediaSectionProps> = ({
@@ -22,7 +28,13 @@ const MediaSection: React.FC<MediaSectionProps> = ({
   onLoadMore,
   sectionIndex,
   onMediaClick,
-  className = "" // Default to empty string
+  className = "",
+  isLoading = false,
+  sectionId = "section",
+  mediaType,
+  focusedItem = -1,
+  onFocusChange,
+  onKeyDown
 }) => {
   if (!medias || medias.length === 0) {
     return null;
@@ -39,14 +51,23 @@ const MediaSection: React.FC<MediaSectionProps> = ({
               key={`${media.id}-${index}-${sectionIndex}`}
               className="w-64 flex-none cursor-pointer"
               onClick={() => onMediaClick(media)}
+              data-section={sectionIndex}
+              data-item={index}
+              onFocus={() => onFocusChange && onFocusChange(index)}
+              tabIndex={focusedItem === index ? 0 : -1}
+              onKeyDown={onKeyDown}
             >
               <MediaCard 
                 media={media} 
                 index={index} 
-                isFocused={false}
-                onFocus={() => {}}
+                isFocused={focusedItem === index}
+                onFocus={() => onFocusChange && onFocusChange(index)}
               />
             </div>
+          ))}
+          
+          {isLoading && Array.from({ length: 3 }).map((_, i) => (
+            <div key={`loading-${i}`} className="w-64 h-36 flex-none bg-gray-800/60 rounded-md animate-pulse"></div>
           ))}
           
           {showLoadMore && (
@@ -54,8 +75,9 @@ const MediaSection: React.FC<MediaSectionProps> = ({
               <Button
                 onClick={onLoadMore}
                 className="h-32"
+                disabled={isLoading}
               >
-                Carregar mais
+                {isLoading ? "Carregando..." : "Carregar mais"}
               </Button>
             </div>
           )}
