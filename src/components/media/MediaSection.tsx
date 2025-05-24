@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Plus } from 'lucide-react';
+
+import { useState, useEffect, useRef } from 'react';
+import { Plus, ChevronRight, ChevronLeft } from 'lucide-react';
 import { MediaItem, getMediaTitle } from '@/types/movie';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import MediaCard from "./MediaCard";
 import LoadingCard from "./LoadingCard";
+import { cn } from '@/lib/utils';
 
 type MediaSectionProps = {
   title: string;
@@ -25,7 +27,7 @@ const MediaSection = ({
   title, 
   medias = [], 
   showLoadMore = false, 
-  onLoadMore, 
+  onLoadMore = () => {}, // Set default to empty function
   isLoading = false,
   onMediaClick,
   sectionId = 'default',
@@ -37,6 +39,9 @@ const MediaSection = ({
 }: MediaSectionProps) => {
   const navigate = useNavigate();
   const [focusedIndex, setFocusedIndex] = useState(focusedItem);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
   
   // Ensure medias is an array
   const mediasArray = Array.isArray(medias) ? medias : [];
@@ -45,7 +50,46 @@ const MediaSection = ({
     setFocusedIndex(focusedItem);
   }, [focusedItem]);
 
-  // Navegação por teclado
+  // Handle scroll position to show/hide arrows
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+    
+    const checkScrollPosition = () => {
+      if (!container) return;
+      
+      setShowLeftArrow(container.scrollLeft > 20);
+      setShowRightArrow(
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 20
+      );
+    };
+    
+    container.addEventListener('scroll', checkScrollPosition);
+    window.addEventListener('resize', checkScrollPosition);
+    
+    // Initial check
+    checkScrollPosition();
+    
+    return () => {
+      container.removeEventListener('scroll', checkScrollPosition);
+      window.removeEventListener('resize', checkScrollPosition);
+    };
+  }, [mediasArray]);
+
+  // Handle scroll when arrow buttons are clicked
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (!contentRef.current) return;
+    
+    const container = contentRef.current;
+    const scrollAmount = container.clientWidth * 0.75; // Scroll 75% of visible width
+    const newPosition = direction === 'left' 
+      ? Math.max(container.scrollLeft - scrollAmount, 0) 
+      : Math.min(container.scrollLeft + scrollAmount, container.scrollWidth - container.clientWidth);
+    
+    container.scrollTo({ left: newPosition, behavior: 'smooth' });
+  };
+
+  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (onKeyDown) {
@@ -96,16 +140,16 @@ const MediaSection = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [focusedIndex, mediasArray, onMediaClick, onFocusChange, onKeyDown]);
 
-  // Only show load more for sections with showLoadMore flag
+  // Flag to show load more button
   const shouldShowLoadMore = showLoadMore && onLoadMore;
   
-  // Function to handle click on "Load More" button
+  // Handle load more button click
   const handleLoadMore = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
     if (mediaType) {
-      // Navegar para a rota correspondente ao tipo de mídia
+      // Navigate to the corresponding media type route
       switch (mediaType) {
         case 'movie':
           navigate('/filmes');
@@ -136,13 +180,18 @@ const MediaSection = ({
   };
 
   // Skip rendering if no media items
-  if (mediasArray.length === 0) {
+  if (mediasArray.length === 0 && !isLoading) {
     return null;
   }
 
+  // Generate loading placeholders
+  const loadingItems = Array.from({ length: 6 }).map((_, i) => (
+    <LoadingCard key={`loading-${i}`} />
+  ));
+
   return (
     <div 
-      className="space-y-4 py-4" 
+      className="space-y-4 py-4 relative group" 
       id={`media-section-${sectionId}`} 
       data-section-id={sectionId}
     >
@@ -150,58 +199,82 @@ const MediaSection = ({
         <h2 className="text-xl md:text-2xl font-bold text-white">{title}</h2>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 relative">
-        {mediasArray.map((media, index) => (
-          <MediaCard
+      {/* Navigation arrows */}
+      <button 
+        onClick={() => handleScroll('left')}
+        className={cn(
+          "absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 rounded-full p-2 transform -translate-x-1/4 transition-opacity",
+          showLeftArrow ? "opacity-80" : "opacity-0 pointer-events-none"
+        )}
+        aria-label="Scroll left"
+      >
+        <ChevronLeft className="h-6 w-6 text-white" />
+      </button>
+
+      {/* Content container with horizontal scrolling */}
+      <div 
+        ref={contentRef}
+        className="flex space-x-4 overflow-x-scroll scrollbar-hide pb-4 pt-1 px-1"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {/* Display loading placeholders or actual content */}
+        {isLoading ? loadingItems : mediasArray.map((media, index) => (
+          <div
             key={`${media.id}-${index}`}
-            media={media}
+            className="w-48 flex-none cursor-pointer"
             onClick={() => handleClick(media)}
-            index={index}
-            isFocused={index === focusedIndex}
-            onFocus={() => {
-              setFocusedIndex(index);
-              onFocusChange?.(index);
-            }}
-          />
+            data-section={sectionIndex}
+            data-item={index}
+          >
+            <MediaCard
+              media={media}
+              index={index}
+              isFocused={index === focusedIndex}
+              onFocus={() => {
+                setFocusedIndex(index);
+                onFocusChange?.(index);
+              }}
+            />
+          </div>
         ))}
         
-        {/* Loading cards */}
-        {isLoading && (
-          <>
-            {[...Array(6)].map((_, index) => (
-              <LoadingCard key={`loading-${index}`} />
-            ))}
-          </>
+        {/* Load more button */}
+        {shouldShowLoadMore && (
+          <div className="flex-none items-center justify-center w-48 h-72 flex">
+            <button 
+              onClick={handleLoadMore}
+              className="group relative overflow-hidden rounded-lg bg-netflix-red hover:bg-red-700 transition-all duration-300 flex items-center justify-center cursor-pointer px-6 py-3 h-12 focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-10"
+              data-section-id={sectionId}
+              tabIndex={focusedIndex === mediasArray.length ? 0 : -1}
+            >
+              <div className="flex items-center space-x-2">
+                {isLoading ? (
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                ) : (
+                  <Plus className="w-5 h-5 text-white group-hover:scale-110 transition-transform duration-300" />
+                )}
+                <span className="text-sm font-medium text-white">
+                  {isLoading ? "Carregando..." : "Ver mais"}
+                </span>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            </button>
+          </div>
         )}
       </div>
-
-      {/* Load more button */}
-      {shouldShowLoadMore && (
-        <div className="flex items-center justify-center mt-6">
-          <button 
-            onClick={handleLoadMore}
-            className={`group relative overflow-hidden rounded-lg bg-netflix-red hover:bg-red-700 transition-all duration-300 flex items-center justify-center cursor-pointer px-6 py-3 min-w-[200px] focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-100 ${
-              focusedIndex === mediasArray.length ? 'scale-105' : ''
-            }`}
-            data-section-id={sectionId}
-            tabIndex={focusedIndex === mediasArray.length ? 0 : -1}
-          >
-            <div className="flex items-center space-x-2">
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              ) : (
-                <Plus className="w-5 h-5 text-white group-hover:scale-110 transition-transform duration-300" />
-              )}
-              <span className="text-sm font-medium text-white">
-                {isLoading ? "Carregando..." : "Ver mais"}
-              </span>
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-          </button>
-        </div>
-      )}
+      
+      <button 
+        onClick={() => handleScroll('right')}
+        className={cn(
+          "absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 rounded-full p-2 transform translate-x-1/4 transition-opacity",
+          showRightArrow ? "opacity-80" : "opacity-0 pointer-events-none"
+        )}
+        aria-label="Scroll right"
+      >
+        <ChevronRight className="h-6 w-6 text-white" />
+      </button>
     </div>
   );
 };
 
-export default MediaSection; 
+export default MediaSection;

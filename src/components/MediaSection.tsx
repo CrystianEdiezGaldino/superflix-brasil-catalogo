@@ -4,6 +4,7 @@ import { MediaItem } from '@/types/movie';
 import { Button } from '@/components/ui/button';
 import MediaCard from '@/components/media/MediaCard';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface MediaSectionProps {
   title: string;
@@ -40,16 +41,43 @@ const MediaSection: React.FC<MediaSectionProps> = ({
 }) => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
   
-  if (!medias || medias.length === 0) {
-    return null;
-  }
+  // Ensure medias is a valid array
+  const validMedias = Array.isArray(medias) ? medias : [];
+  
+  // Check scroll position to control arrow visibility
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+    
+    const checkScrollPosition = () => {
+      if (!container) return;
+      
+      setShowLeftArrow(container.scrollLeft > 20);
+      setShowRightArrow(
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 20
+      );
+    };
+    
+    container.addEventListener('scroll', checkScrollPosition);
+    window.addEventListener('resize', checkScrollPosition);
+    
+    // Initial check
+    checkScrollPosition();
+    
+    return () => {
+      container.removeEventListener('scroll', checkScrollPosition);
+      window.removeEventListener('resize', checkScrollPosition);
+    };
+  }, [validMedias]);
   
   const handleScroll = (direction: 'left' | 'right') => {
     if (!contentRef.current) return;
     
     const container = contentRef.current;
-    const scrollAmount = container.clientWidth * 0.8;
+    const scrollAmount = container.clientWidth * 0.75; // Scroll 75% of the visible width
     const newPosition = direction === 'left' 
       ? Math.max(scrollPosition - scrollAmount, 0) 
       : Math.min(scrollPosition + scrollAmount, container.scrollWidth - container.clientWidth);
@@ -59,12 +87,12 @@ const MediaSection: React.FC<MediaSectionProps> = ({
   };
   
   // Generate placeholder items for loading state
-  const loadingItems = Array.from({ length: 5 }).map((_, i) => (
-    <div key={`loading-${i}`} className="w-64 h-36 flex-none bg-gray-800/60 rounded-md animate-pulse"></div>
+  const loadingItems = Array.from({ length: 6 }).map((_, i) => (
+    <div key={`loading-${i}`} className="w-64 h-40 flex-none bg-gray-800/60 rounded-md animate-pulse"></div>
   ));
   
   // Media content to display based on either medias prop or loading state
-  const mediaContent = isLoading ? loadingItems : medias.map((media, index) => (
+  const mediaContent = isLoading ? loadingItems : validMedias.map((media, index) => (
     <div
       key={`${media.id}-${index}-${sectionIndex}`}
       className="w-64 flex-none cursor-pointer"
@@ -84,17 +112,23 @@ const MediaSection: React.FC<MediaSectionProps> = ({
     </div>
   ));
   
+  if (validMedias.length === 0 && !isLoading) {
+    return null;
+  }
+  
   return (
-    <div className={`mb-8 ${className}`}>
+    <div className={`mb-8 ${className}`} id={`media-section-${sectionId}`}>
       <h2 className="text-xl md:text-2xl font-bold text-white mb-4">{title}</h2>
       
       {displayStyle === 'carousel' ? (
-        <div className="relative">
+        <div className="relative group">
           {/* Left scroll button */}
           <button 
             onClick={() => handleScroll('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 rounded-full p-2 z-10 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
-            style={{ opacity: scrollPosition > 0 ? 0.7 : 0 }}
+            className={cn(
+              "absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 rounded-full p-2 transform -translate-x-1/4 transition-opacity",
+              showLeftArrow ? "opacity-80" : "opacity-0 pointer-events-none"
+            )}
             aria-label="Scroll left"
           >
             <ChevronLeft className="h-6 w-6 text-white" />
@@ -103,7 +137,7 @@ const MediaSection: React.FC<MediaSectionProps> = ({
           {/* Content area */}
           <div 
             ref={contentRef}
-            className="flex space-x-4 overflow-x-scroll scrollbar-hide"
+            className="flex space-x-4 overflow-x-scroll scrollbar-hide pb-4 pt-1 px-1"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {mediaContent}
@@ -124,7 +158,10 @@ const MediaSection: React.FC<MediaSectionProps> = ({
           {/* Right scroll button */}
           <button 
             onClick={() => handleScroll('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 rounded-full p-2 z-10 transform translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+            className={cn(
+              "absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 rounded-full p-2 transform translate-x-1/4 transition-opacity",
+              showRightArrow ? "opacity-80" : "opacity-0 pointer-events-none"
+            )}
             aria-label="Scroll right"
           >
             <ChevronRight className="h-6 w-6 text-white" />

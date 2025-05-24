@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
@@ -92,15 +93,15 @@ const MediaView = ({
     }
   };
 
-  // Array de sessões para navegação por foco
+  // Array of sections for focus navigation
   const sections = [
-    { items: trendingItems, title: `Tendências em ${getContentTypeTitle(type)}` },
-    { items: top100Items, title: `TOP ANIMES` },
-    { items: topRatedItems, title: `${getContentTypeTitle(type)} Mais Bem Avaliados` },
-    { items: recentItems, title: `${getContentTypeTitle(type)} Recentes` }
+    { items: trendingItems, title: `Tendências em ${getContentTypeTitle(type)}`, onLoadMore: () => {} },
+    { items: top100Items, title: `TOP ANIMES`, onLoadMore: () => {} },
+    { items: topRatedItems, title: `${getContentTypeTitle(type)} Mais Bem Avaliados`, onLoadMore: () => {} },
+    { items: recentItems, title: `${getContentTypeTitle(type)} Recentes`, onLoadMore: () => {} }
   ];
 
-  // Efeito para navegação por controle de TV
+  // Effect for TV navigation control
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const currentSectionItems = sections[currentFocusedSection]?.items || [];
@@ -227,10 +228,10 @@ const MediaView = ({
       <div className={`container mx-auto px-4 ${!hideNavbar ? 'pt-24' : ''}`}>
         <h1 className="text-2xl md:text-3xl font-bold text-white mb-6">{title}</h1>
         
-        {/* Conteúdo de destaque (renderizado condicionalmente) */}
+        {/* Featured content (conditionally rendered) */}
         {!isSearching && !isFiltering && children}
         
-        {/* Seções de conteúdo - ocultadas durante a busca */}
+        {/* Content sections - hidden during search */}
         <div ref={sectionsRef} className={isSearching ? "hidden" : ""}>
           {sections.map((section, sectionIndex) => (
             section.items && section.items.length > 0 && (
@@ -245,14 +246,14 @@ const MediaView = ({
                   setCurrentFocusedSection(sectionIndex);
                 }}
                 sectionIndex={sectionIndex}
-                onLoadMore={() => {}}
+                onLoadMore={section.onLoadMore}
                 showLoadMore={false}
               />
             )
           ))}
         </div>
         
-        {/* Grade de conteúdo completa */}
+        {/* Complete content grid */}
         <div className="mt-8">
           <MediaGrid 
             mediaItems={mediaItems}

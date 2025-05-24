@@ -38,7 +38,12 @@ import {
 } from "./tmdb/doramas";
 import { fetchMarvelMovies } from "./tmdb/marvel";
 import { fetchDCMovies } from "./tmdb/dc";
-import { fetchTrilogies } from "./tmdb/trilogies";
+import { 
+  fetchTrilogies, 
+  fetchStarWarsMovies,
+  fetchHarryPotterMovies,
+  fetchLordOfTheRingsMovies
+} from "./tmdb/trilogies";
 
 // Create recommendations function
 export const fetchRecommendations = async (type: string, id: string): Promise<MediaItem[]> => {
@@ -156,9 +161,14 @@ export {
   fetchDoramaDetails,
   fetchSimilarDoramas,
   fetchDoramaCast,
+  
+  // Franchise exports
   fetchMarvelMovies,
   fetchDCMovies,
-  fetchTrilogies
+  fetchTrilogies,
+  fetchStarWarsMovies,
+  fetchHarryPotterMovies,
+  fetchLordOfTheRingsMovies
 };
 
 // Utility function for components needing to fetch media by ID

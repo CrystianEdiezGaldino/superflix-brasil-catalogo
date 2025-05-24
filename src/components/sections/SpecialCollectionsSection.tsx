@@ -1,8 +1,11 @@
 
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { MediaItem } from '@/types/movie';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { fetchTrilogies } from '@/services/tmdb/trilogies';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface SpecialCollectionsSectionProps {
   marvelMovies: MediaItem[];
@@ -21,11 +24,93 @@ const SpecialCollectionsSection: React.FC<SpecialCollectionsSectionProps> = ({
   lordOfTheRingsMovies,
   onMediaClick
 }) => {
+  // State for managing carousels
+  const [activeTab, setActiveTab] = useState("marvel");
+  const [loadedMovies, setLoadedMovies] = useState({
+    marvel: marvelMovies || [],
+    dc: dcMovies || [],
+    harryPotter: harryPotterMovies || [],
+    starWars: starWarsMovies || [],
+    lotr: lordOfTheRingsMovies || []
+  });
+
+  // Refs for scroll containers
+  const scrollContainers = {
+    marvel: useRef<HTMLDivElement>(null),
+    dc: useRef<HTMLDivElement>(null),
+    harryPotter: useRef<HTMLDivElement>(null),
+    starWars: useRef<HTMLDivElement>(null),
+    lotr: useRef<HTMLDivElement>(null),
+  };
+
+  // Fetch additional content for franchises if needed
+  useEffect(() => {
+    const fetchMissingContent = async () => {
+      try {
+        // Only fetch if we don't have content
+        if (!harryPotterMovies?.length) {
+          const harryPotterData = await fetchTrilogies(20);
+          const hpMovies = harryPotterData.filter(movie => 
+            movie.title?.toLowerCase().includes('harry potter') || 
+            movie.overview?.toLowerCase().includes('harry potter')
+          );
+          if (hpMovies.length) {
+            setLoadedMovies(prev => ({ ...prev, harryPotter: hpMovies }));
+          }
+        }
+
+        if (!starWarsMovies?.length) {
+          const starWarsData = await fetchTrilogies(20);
+          const swMovies = starWarsData.filter(movie => 
+            movie.title?.toLowerCase().includes('star wars') || 
+            movie.overview?.toLowerCase().includes('star wars')
+          );
+          if (swMovies.length) {
+            setLoadedMovies(prev => ({ ...prev, starWars: swMovies }));
+          }
+        }
+
+        if (!lordOfTheRingsMovies?.length) {
+          const lotrData = await fetchTrilogies(20);
+          const lotrMovies = lotrData.filter(movie => 
+            movie.title?.toLowerCase().includes('lord of the rings') || 
+            movie.title?.toLowerCase().includes('hobbit') ||
+            movie.overview?.toLowerCase().includes('middle earth') ||
+            movie.overview?.toLowerCase().includes('lord of the rings')
+          );
+          if (lotrMovies.length) {
+            setLoadedMovies(prev => ({ ...prev, lotr: lotrMovies }));
+          }
+        }
+      } catch (error) {
+        console.error("Error loading franchise movies:", error);
+      }
+    };
+
+    fetchMissingContent();
+  }, [harryPotterMovies, starWarsMovies, lordOfTheRingsMovies]);
+
+  // Handle scrolling for each carousel
+  const handleScroll = (direction: 'left' | 'right', tabKey: string) => {
+    const container = scrollContainers[tabKey as keyof typeof scrollContainers]?.current;
+    if (!container) return;
+    
+    const scrollAmount = container.clientWidth * 0.75; // Scroll 75% of the visible area
+    const scrollTo = direction === 'left' 
+      ? container.scrollLeft - scrollAmount 
+      : container.scrollLeft + scrollAmount;
+    
+    container.scrollTo({
+      left: scrollTo,
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <div className="mb-8">
       <h2 className="text-xl md:text-2xl font-bold text-white mb-4">Universos Cinematográficos</h2>
       
-      <Tabs defaultValue="marvel" className="w-full">
+      <Tabs defaultValue="marvel" className="w-full" onValueChange={setActiveTab}>
         <TabsList className="mb-4 bg-gray-800/50">
           <TabsTrigger value="marvel">Marvel</TabsTrigger>
           <TabsTrigger value="dc">DC Comics</TabsTrigger>
@@ -35,95 +120,159 @@ const SpecialCollectionsSection: React.FC<SpecialCollectionsSectionProps> = ({
         </TabsList>
         
         <TabsContent value="marvel">
-          <div className="mb-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Universo Marvel</h3>
-            </div>
-            <p className="text-sm text-gray-400">Explore o Universo Cinematográfico Marvel com seus super-heróis e histórias interconectadas.</p>
-          </div>
-          
-          <ScrollArea className="w-full whitespace-nowrap rounded-md">
-            <div className="flex space-x-4 pb-4">
-              {marvelMovies?.map((item) => (
-                <FranchiseItem key={item.id} item={item} onMediaClick={onMediaClick} />
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          <FranchiseCarousel 
+            title="Universo Marvel" 
+            description="Explore o Universo Cinematográfico Marvel com seus super-heróis e histórias interconectadas." 
+            movies={loadedMovies.marvel} 
+            onMediaClick={onMediaClick}
+            scrollRef={scrollContainers.marvel}
+            onScroll={(direction) => handleScroll(direction, 'marvel')}
+          />
         </TabsContent>
         
         <TabsContent value="dc">
-          <div className="mb-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Universo DC</h3>
-            </div>
-            <p className="text-sm text-gray-400">Mergulhe no universo dos super-heróis da DC Comics.</p>
-          </div>
-          
-          <ScrollArea className="w-full whitespace-nowrap rounded-md">
-            <div className="flex space-x-4 pb-4">
-              {dcMovies?.map((item) => (
-                <FranchiseItem key={item.id} item={item} onMediaClick={onMediaClick} />
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          <FranchiseCarousel 
+            title="Universo DC" 
+            description="Mergulhe no universo dos super-heróis da DC Comics." 
+            movies={loadedMovies.dc} 
+            onMediaClick={onMediaClick}
+            scrollRef={scrollContainers.dc}
+            onScroll={(direction) => handleScroll(direction, 'dc')}
+          />
         </TabsContent>
         
         <TabsContent value="harry-potter">
-          <div className="mb-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Especial Harry Potter</h3>
-            </div>
-            <p className="text-sm text-gray-400">O mundo mágico de Harry Potter em uma coleção completa.</p>
-          </div>
-          
-          <ScrollArea className="w-full whitespace-nowrap rounded-md">
-            <div className="flex space-x-4 pb-4">
-              {harryPotterMovies.map((item) => (
-                <FranchiseItem key={item.id} item={item} onMediaClick={onMediaClick} />
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          <FranchiseCarousel 
+            title="Especial Harry Potter" 
+            description="O mundo mágico de Harry Potter em uma coleção completa." 
+            movies={loadedMovies.harryPotter} 
+            onMediaClick={onMediaClick}
+            scrollRef={scrollContainers.harryPotter}
+            onScroll={(direction) => handleScroll(direction, 'harryPotter')}
+          />
         </TabsContent>
         
         <TabsContent value="star-wars">
-          <div className="mb-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Especial Star Wars</h3>
-            </div>
-            <p className="text-sm text-gray-400">Uma galáxia muito, muito distante com todos os filmes e séries de Star Wars.</p>
-          </div>
-          
-          <ScrollArea className="w-full whitespace-nowrap rounded-md">
-            <div className="flex space-x-4 pb-4">
-              {starWarsMovies.map((item) => (
-                <FranchiseItem key={item.id} item={item} onMediaClick={onMediaClick} />
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          <FranchiseCarousel 
+            title="Especial Star Wars" 
+            description="Uma galáxia muito, muito distante com todos os filmes e séries de Star Wars." 
+            movies={loadedMovies.starWars} 
+            onMediaClick={onMediaClick}
+            scrollRef={scrollContainers.starWars}
+            onScroll={(direction) => handleScroll(direction, 'starWars')}
+          />
         </TabsContent>
         
         <TabsContent value="lotr">
-          <div className="mb-3">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">Especial Senhor dos Anéis</h3>
-            </div>
-            <p className="text-sm text-gray-400">A jornada completa pela Terra Média com todos os filmes de Senhor dos Anéis e O Hobbit.</p>
-          </div>
-          
-          <ScrollArea className="w-full whitespace-nowrap rounded-md">
-            <div className="flex space-x-4 pb-4">
-              {lordOfTheRingsMovies.map((item) => (
-                <FranchiseItem key={item.id} item={item} onMediaClick={onMediaClick} />
-              ))}
-            </div>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          <FranchiseCarousel 
+            title="Especial Senhor dos Anéis" 
+            description="A jornada completa pela Terra Média com todos os filmes de Senhor dos Anéis e O Hobbit." 
+            movies={loadedMovies.lotr} 
+            onMediaClick={onMediaClick}
+            scrollRef={scrollContainers.lotr}
+            onScroll={(direction) => handleScroll(direction, 'lotr')}
+          />
         </TabsContent>
       </Tabs>
+    </div>
+  );
+};
+
+interface FranchiseCarouselProps {
+  title: string;
+  description: string;
+  movies: MediaItem[];
+  onMediaClick: (media: MediaItem) => void;
+  scrollRef: React.RefObject<HTMLDivElement>;
+  onScroll: (direction: 'left' | 'right') => void;
+}
+
+const FranchiseCarousel: React.FC<FranchiseCarouselProps> = ({ 
+  title, 
+  description, 
+  movies, 
+  onMediaClick,
+  scrollRef,
+  onScroll
+}) => {
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const checkScrollPosition = () => {
+      if (!container) return;
+      
+      setShowLeftArrow(container.scrollLeft > 20);
+      setShowRightArrow(
+        container.scrollLeft < container.scrollWidth - container.clientWidth - 20
+      );
+    };
+
+    container.addEventListener('scroll', checkScrollPosition);
+    window.addEventListener('resize', checkScrollPosition);
+    checkScrollPosition();
+
+    return () => {
+      container.removeEventListener('scroll', checkScrollPosition);
+      window.removeEventListener('resize', checkScrollPosition);
+    };
+  }, [scrollRef, movies]);
+
+  return (
+    <div className="mb-3">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-lg font-semibold text-white">{title}</h3>
+      </div>
+      <p className="text-sm text-gray-400 mb-3">{description}</p>
+      
+      <div className="relative group">
+        {/* Left navigation button */}
+        <button 
+          onClick={() => onScroll('left')}
+          className={cn(
+            "absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 rounded-full p-2 transform -translate-x-1/4 transition-opacity",
+            showLeftArrow ? "opacity-80" : "opacity-0 pointer-events-none"
+          )}
+          aria-label="Rolar para a esquerda"
+        >
+          <ChevronLeft className="h-6 w-6 text-white" />
+        </button>
+        
+        <div 
+          ref={scrollRef} 
+          className="flex space-x-4 overflow-x-scroll scrollbar-hide pb-4 pt-1 px-1"
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {movies && movies.length > 0 ? (
+            movies.map((item, index) => (
+              <FranchiseItem key={`${item.id}-${index}`} item={item} onMediaClick={onMediaClick} />
+            ))
+          ) : (
+            // Loading placeholders when no movies are available
+            Array(6).fill(0).map((_, index) => (
+              <div 
+                key={`placeholder-${index}`}
+                className="w-48 h-64 bg-gray-800/40 rounded-md animate-pulse flex-none"
+              />
+            ))
+          )}
+        </div>
+        
+        {/* Right navigation button */}
+        <button 
+          onClick={() => onScroll('right')} 
+          className={cn(
+            "absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-black/60 hover:bg-black/80 rounded-full p-2 transform translate-x-1/4 transition-opacity",
+            showRightArrow ? "opacity-80" : "opacity-0 pointer-events-none"
+          )}
+          aria-label="Rolar para a direita"
+        >
+          <ChevronRight className="h-6 w-6 text-white" />
+        </button>
+      </div>
     </div>
   );
 };
