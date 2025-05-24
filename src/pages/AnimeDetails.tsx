@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -15,7 +16,7 @@ import ContentNotAvailable from "@/components/ContentNotAvailable";
 import AdblockSuggestion from "@/components/AdblockSuggestion";
 import SuperFlixPlayer from "@/components/series/SuperFlixPlayer";
 import AnimeRecommendations from "@/components/anime/AnimeRecommendations";
-import { Series } from "@/types/movie";
+import { Series, MediaItem } from "@/types/movie";
 
 const AnimeDetails = () => {
   const { id } = useParams();
@@ -172,6 +173,12 @@ const AnimeDetails = () => {
     }, 100);
   };
 
+  // Handle recommendation click - new function to handle MediaItem parameter
+  const handleRecommendationClick = (media: MediaItem) => {
+    // Navigate to the anime details page for the selected recommendation
+    navigate(`/anime/${media.id}`);
+  };
+
   // Show subscription modal if trying to watch without access
   const handleWatchClick = () => {
     if (!hasAccess) {
@@ -299,7 +306,7 @@ const AnimeDetails = () => {
                 <div className="max-w-7xl mx-auto">
                   <AnimeRecommendations 
                     recommendations={anime.recommendations?.results || []} 
-                    onAnimeClick={handleEpisodeSelect} 
+                    onAnimeClick={handleRecommendationClick} 
                   />
                 </div>
               </div>
