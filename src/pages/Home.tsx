@@ -14,13 +14,20 @@ import LargeSubscriptionUpsell from "@/components/home/LargeSubscriptionUpsell";
 import SearchResults from "@/components/home/SearchResults";
 import useHomePageData from "@/hooks/useHomePageData";
 import AdultContentSection from "@/components/sections/AdultContentSection";
+import { NetflixOriginalsSection } from '@/components/sections/NetflixOriginalsSection';
+import { fetchNetflixOriginals } from '@/services/tmdb/netflixOriginals';
+import { PrimeOriginalsSection } from '@/components/sections/PrimeOriginalsSection';
+
 // Optimized loading by using lazy loading for less critical components
 const CollectionsSection = lazy(() => import("@/components/sections/CollectionsSection"));
-const SpecialCollectionsSection = lazy(() => import("@/components/sections/SpecialCollectionsSection"));
 const FamilyMoviesSection = lazy(() => import("@/components/sections/FamilyMoviesSection"));
 const PopularTVSeriesSection = lazy(() => import("@/components/sections/PopularTVSeriesSection"));
 import { usePopularTVSeries } from "@/hooks/usePopularTVSeries";
 import { useRecentReleases } from "@/hooks/useRecentReleases";
+import { DisneyOriginalsSection } from "@/components/sections/DisneyOriginalsSection";
+import { HBOOriginalsSection } from "@/components/sections/HBOOriginalsSection";
+import { AppleOriginalsSection } from "@/components/sections/AppleOriginalsSection";
+import { StarOriginalsSection } from "@/components/sections/StarOriginalsSection";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -124,6 +131,24 @@ const Home = () => {
     }
   }, [navigate, featuredMedia]);
 
+  const [netflixOriginals, setNetflixOriginals] = useState<MediaItem[]>([]);
+  const [isLoadingOriginals, setIsLoadingOriginals] = useState(true);
+
+  useEffect(() => {
+    const loadNetflixOriginals = async () => {
+      try {
+        const data = await fetchNetflixOriginals();
+        setNetflixOriginals(data);
+      } catch (error) {
+        console.error('Error loading Netflix originals:', error);
+      } finally {
+        setIsLoadingOriginals(false);
+      }
+    };
+
+    loadNetflixOriginals();
+  }, []);
+
   if (isLoading) {
     return <LoadingState />;
   }
@@ -197,7 +222,53 @@ const Home = () => {
                   onMediaClick={handleMovieClick}
                 />
               </section>
-              
+            
+              {/* NaflixTV Originals */}
+              <section className="mb-12">
+                <MediaSection 
+                  title="Originais NaflixTV"
+                  medias={netflixOriginals}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
+                  sectionIndex={4}
+                  onMediaClick={(media) => {
+                    if (media.media_type === 'movie') {
+                      handleMovieClick(media);
+                    } else {
+                      handleSeriesClick(media);
+                    }
+                  }}
+                  className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 py-6 px-2 rounded-lg"
+                  isLoading={isLoadingOriginals}
+                />
+              </section>
+
+              {/* Streaming Platform Originals */}
+             
+
+              <section className="mb-12">
+                <PrimeOriginalsSection />
+              </section>
+
+              <section className="mb-12">
+                <DisneyOriginalsSection />
+              </section>
+
+              <section className="mb-12">
+                <HBOOriginalsSection />
+              </section>
+
+              <section className="mb-12">
+                <AppleOriginalsSection />
+              </section>
+
+              <section className="mb-12">
+                <PrimeOriginalsSection />
+              </section>
+
+              <section className="mb-12">
+                <StarOriginalsSection />
+              </section>
               {/* Popular Series in Brazil */}
               <section className="mb-12">
                 <PopularTVSeriesSection
@@ -294,30 +365,9 @@ const Home = () => {
                 />
               </section>
 
-              {/* Popular Series */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries populares"
-                  medias={safeSeriesData.slice(0, 50)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={3}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
+            
 
-              {/* NaflixTV Originals */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Originais NaflixTV"
-                  medias={safeSeriesData.slice(15, 65)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={4}
-                  onMediaClick={handleSeriesClick}
-                  className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 py-6 px-2 rounded-lg"
-                />
-              </section>
+            
               
               {/* Action Without Limits */}
               <section className="mb-12">
@@ -391,20 +441,6 @@ const Home = () => {
                 />
               </section>
 
-              {/* Special Franchise Collections */}
-              <Suspense fallback={<div className="w-full h-40 flex-none bg-gray-800/60 rounded-md animate-pulse"></div>}>
-                <section className="mb-12">
-                  <SpecialCollectionsSection 
-                    marvelMovies={marvelMoviesData}
-                    dcMovies={dcMoviesData}
-                    harryPotterMovies={safeMovies.slice(190, 210)}
-                    starWarsMovies={safeMovies.slice(180, 200)}
-                    lordOfTheRingsMovies={safeMovies.slice(200, 220)}
-                    onMediaClick={handleMovieClick}
-                  />
-                </section>
-              </Suspense>
-
               {/* Animations and Kids Movies */}
               <section className="mb-12">
                 <MediaSection 
@@ -416,6 +452,8 @@ const Home = () => {
                   onMediaClick={handleMovieClick}
                 />
               </section>
+
+              
             </>
           )}
         </main>
