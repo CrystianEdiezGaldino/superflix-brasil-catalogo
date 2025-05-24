@@ -245,6 +245,8 @@ const MediaView = ({
                   setCurrentFocusedSection(sectionIndex);
                 }}
                 sectionIndex={sectionIndex}
+                onLoadMore={() => {}}
+                showLoadMore={false}
               />
             )
           ))}
@@ -270,4 +272,4 @@ const MediaView = ({
   );
 };
 
-export default MediaView; 
+export default MediaView;

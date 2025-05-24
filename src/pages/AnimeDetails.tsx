@@ -297,7 +297,10 @@ const AnimeDetails = () => {
 
               <div className="px-4 sm:px-6 md:px-10 lg:px-16 mb-8 sm:mb-12">
                 <div className="max-w-7xl mx-auto">
-                  <AnimeRecommendations anime={anime} />
+                  <AnimeRecommendations 
+                    recommendations={anime.recommendations?.results || []} 
+                    onAnimeClick={handleEpisodeSelect} 
+                  />
                 </div>
               </div>
             </div>

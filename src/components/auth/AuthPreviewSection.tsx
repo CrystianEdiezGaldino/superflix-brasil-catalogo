@@ -30,7 +30,10 @@ const AuthPreviewSection = ({ movies, series, animes }: AuthPreviewSectionProps)
         <ContentPreview 
           movies={filteredMovies}
           series={filteredSeries}
-          anime={filteredAnimes}
+          animes={filteredAnimes}
+          onMovieClick={() => {}}
+          onSeriesClick={() => {}}
+          onAnimeClick={() => {}}
         />
       </div>
     </div>
