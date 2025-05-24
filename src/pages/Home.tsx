@@ -386,10 +386,11 @@ const Home = () => {
                 <MediaSection 
                   title="Aventura épica"
                   medias={adventureMoviesData || safeMovies.slice(126, 176)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
+                  showLoadMore={true}
+                  onLoadMore={() => handleLoadMoreSection("adventureMovies")}
                   sectionIndex={8}
                   onMediaClick={handleMovieClick}
+                  mediaType="movie"
                 />
               </section>
 
@@ -398,10 +399,11 @@ const Home = () => {
                 <MediaSection 
                   title="Ficção científica e futuros distópicos"
                   medias={sciFiMoviesData || safeMovies.slice(154, 204)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
+                  showLoadMore={true}
+                  onLoadMore={() => handleLoadMoreSection("sciFiMovies")}
                   sectionIndex={9}
                   onMediaClick={handleMovieClick}
+                  mediaType="movie"
                 />
               </section>
 
@@ -410,22 +412,24 @@ const Home = () => {
                 <MediaSection 
                   title="Suspense e terror"
                   medias={horrorMoviesData || safeMovies.slice(168, 218)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
+                  showLoadMore={true}
+                  onLoadMore={() => handleLoadMoreSection("horrorMovies")}
                   sectionIndex={10}
                   onMediaClick={handleMovieClick}
+                  mediaType="movie"
                 />
               </section>
 
               {/* DC Universe */}
               <section className="mb-12">
-                <MediaSection 
-                  title="Universo DC (Batman, Superman, Mulher-Maravilha, etc.)"
-                  medias={dcMoviesData || safeMovies.slice(118, 168)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
+                <MediaSection
+                  title="DC Universe"
+                  medias={dcMoviesData}
+                  isLoading={isLoading}
                   sectionIndex={12}
                   onMediaClick={handleMovieClick}
+                  showLoadMore={false}
+                  onLoadMore={() => {}}
                 />
               </section>
 

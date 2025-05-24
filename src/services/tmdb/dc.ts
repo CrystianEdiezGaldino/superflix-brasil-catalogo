@@ -1,7 +1,7 @@
 import { MediaItem } from "@/types/movie";
 import { buildApiUrl, fetchFromApi, addMediaTypeToResults, limitResults } from "./utils";
 
-export async function fetchDCMovies(limit: number = 30): Promise<MediaItem[]> {
+export async function fetchDCMovies(limit: number = 50): Promise<MediaItem[]> {
   try {
     // Busca filmes da DC por palavra-chave
     const keywordUrl = buildApiUrl('/discover/movie', `&with_keywords=9715&sort_by=popularity.desc&vote_count.gte=1000&include_adult=false&language=pt-BR`);
@@ -15,11 +15,31 @@ export async function fetchDCMovies(limit: number = 30): Promise<MediaItem[]> {
     // Busca filmes da DC por título
     const searchUrl = buildApiUrl('/search/movie', `&query=DC%20Comics&language=pt-BR&include_adult=false`);
 
-    const [keywordResponse, companyResponse, genreResponse, searchResponse] = await Promise.all([
+    // Busca filmes específicos do Batman
+    const batmanUrl = buildApiUrl('/search/movie', `&query=Batman&language=pt-BR&include_adult=false`);
+
+    // Busca filmes específicos do Superman
+    const supermanUrl = buildApiUrl('/search/movie', `&query=Superman&language=pt-BR&include_adult=false`);
+
+    // Busca filmes específicos da Mulher-Maravilha
+    const wonderWomanUrl = buildApiUrl('/search/movie', `&query=Wonder%20Woman&language=pt-BR&include_adult=false`);
+
+    const [
+      keywordResponse, 
+      companyResponse, 
+      genreResponse, 
+      searchResponse,
+      batmanResponse,
+      supermanResponse,
+      wonderWomanResponse
+    ] = await Promise.all([
       fetchFromApi<{results?: any[]}>(keywordUrl),
       fetchFromApi<{results?: any[]}>(companyUrl),
       fetchFromApi<{results?: any[]}>(genreUrl),
-      fetchFromApi<{results?: any[]}>(searchUrl)
+      fetchFromApi<{results?: any[]}>(searchUrl),
+      fetchFromApi<{results?: any[]}>(batmanUrl),
+      fetchFromApi<{results?: any[]}>(supermanUrl),
+      fetchFromApi<{results?: any[]}>(wonderWomanUrl)
     ]);
 
     // Combina os resultados
@@ -27,7 +47,10 @@ export async function fetchDCMovies(limit: number = 30): Promise<MediaItem[]> {
       ...(keywordResponse.results || []),
       ...(companyResponse.results || []),
       ...(genreResponse.results || []),
-      ...(searchResponse.results || [])
+      ...(searchResponse.results || []),
+      ...(batmanResponse.results || []),
+      ...(supermanResponse.results || []),
+      ...(wonderWomanResponse.results || [])
     ];
 
     // Remove duplicatas

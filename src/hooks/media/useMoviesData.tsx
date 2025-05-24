@@ -8,6 +8,7 @@ import {
   fetchRecentMovies,
   fetchMoviesByGenre
 } from "@/services/tmdbApi";
+import { fetchDCMovies } from "@/services/tmdb/dc";
 import { API_KEY, BASE_URL } from "@/services/tmdb/config";
 
 // Implementação do fetchMoviesByKeyword
@@ -95,13 +96,13 @@ export const useMoviesData = () => {
     refetchOnWindowFocus: false
   });
 
-  // Fetch DC movies by keyword
-  const dcMoviesQuery = useQuery({
-    queryKey: ["dcMovies"],
-    queryFn: () => fetchMoviesByKeywordId(9715),
+  // Fetch DC movies
+  const dcMoviesQuery = useQuery<MediaItem[]>({
+    queryKey: ['dcMovies'],
+    queryFn: () => fetchDCMovies(50),
     enabled: isUserAuthenticated && hasAccess,
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 30,
+    staleTime: 1000 * 60 * 60, // 1 hora
+    gcTime: 1000 * 60 * 30, // 30 minutos
     refetchOnWindowFocus: false
   });
 
