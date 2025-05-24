@@ -2,38 +2,30 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@import './styles/reducedMotion.css';
+ 
 @layer base {
   :root {
-    --background: 0 0% 8%;
+    --background: 0 0% 3.9%;
     --foreground: 0 0% 98%;
-
-    --card: 0 0% 10%;
+    --card: 0 0% 3.9%;
     --card-foreground: 0 0% 98%;
-
-    --popover: 0 0% 8%;
+    --popover: 0 0% 3.9%;
     --popover-foreground: 0 0% 98%;
-
-    --primary: 357 92% 47%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 0 0% 14%;
+    --primary: 0 72.2% 50.6%;
+    --primary-foreground: 0 85.7% 97.3%;
+    --secondary: 0 0% 14.9%;
     --secondary-foreground: 0 0% 98%;
-
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 65%;
-
-    --accent: 0 0% 14%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
     --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 20%;
-    --input: 0 0% 14%;
-    --ring: 357 92% 47%;
-
-    --radius: 0.3rem;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 72.2% 50.6%;
+    --radius: 0.5rem;
   }
 }
 
@@ -41,231 +33,21 @@
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-netflix-background text-foreground;
-  }
-  
-  /* Improved touchable areas for mobile */
-  @media (max-width: 768px) {
-    button, 
-    [role="button"],
-    a,
-    .touchable {
-      @apply min-h-[44px] min-w-[44px];
-    }
-    
-    input,
-    select,
-    textarea {
-      @apply text-base;
-    }
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
 
-@layer components {
-  .movie-card {
-    @apply relative overflow-hidden transition-transform duration-300 hover:scale-105 hover:z-10;
-  }
-
-  .movie-card:hover .movie-info {
-    @apply opacity-100;
-  }
-
-  .movie-info {
-    @apply opacity-90 transition-opacity duration-300;
-  }
-  
-  .movie-grid-item {
-    @apply animate-fade-in;
-    animation-fill-mode: both;
-    animation-delay: calc(var(--delay, 0) * 50ms);
-  }
-  
-  .scrollbar-hide {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none; /* Chrome, Safari and Opera */
-  }
-  
-  /* Mobile optimized card */
-  .mobile-card {
-    @apply rounded-lg overflow-hidden;
-  }
-  
-  /* Mobile optimized touch targets */
-  .touch-target {
-    @apply p-3;
-  }
-  
-  /* Mobile optimized typography */
-  .mobile-text-xs {
-    @apply text-xs md:text-sm;
-  }
-  
-  .mobile-text-sm {
-    @apply text-sm md:text-base;
-  }
-  
-  .mobile-text-base {
-    @apply text-base md:text-lg;
-  }
-  
-  .mobile-text-lg {
-    @apply text-lg md:text-xl;
-  }
-  
-  .mobile-text-xl {
-    @apply text-xl md:text-2xl;
-  }
-  
-  /* Mobile optimized spacing */
-  .mobile-p {
-    @apply px-4 py-3 md:px-6 md:py-4;
-  }
-  
-  .mobile-px {
-    @apply px-4 md:px-6;
-  }
-  
-  .mobile-py {
-    @apply py-3 md:py-4;
-  }
-  
-  /* Mobile optimized gradients */
-  .mobile-card-overlay {
-    @apply bg-gradient-to-t from-black via-black/70 to-transparent;
-  }
-  
-  /* Mobile optimized grid */
-  .mobile-grid {
-    @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4;
-  }
+:root {
+  --netflix-background: #141414;
+  --netflix-red: #E50914;
+  --netflix-text-light: #e5e5e5;
+  --netflix-text-dark: #999;
 }
 
-@keyframes fade-in {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #555;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #E50914;
-}
-
-/* Glass effect for filters */
-.glass-effect {
-  @apply backdrop-blur-lg bg-black/30 border border-white/10;
-}
-
-/* Add animation to the grid items */
-@for $i from 1 through 20 {
-  .movie-grid-item:nth-child(#{$i}) {
-    --delay: #{$i};
-  }
-}
-
-/* Active route styles */
-.active-route {
-  @apply text-red-600 font-medium;
-  position: relative;
-}
-
-.active-route::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: #E50914;
-  transform: scaleX(1);
-  transform-origin: center;
-  transition: transform 0.3s ease;
-}
-
-/* Hover effect for menu items */
-.nav-link {
-  position: relative;
-}
-
-.nav-link::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: #E50914;
-  transform: scaleX(0);
-  transform-origin: center;
-  transition: transform 0.3s ease;
-}
-
-.nav-link:hover::after {
-  transform: scaleX(1);
-}
-
-/* Mobile-specific optimizations */
-@media (max-width: 640px) {
-  .movie-card .movie-info {
-    opacity: 1;
-    background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);
-  }
-  
-  .touch-friendly {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  .mobile-spacing {
-    padding: 0.75rem !important;
-  }
-  
-  .mobile-font-size {
-    font-size: 0.9rem !important;
-  }
-  
-  .mobile-full-width {
-    width: 100% !important;
-  }
-}
-
-/* Iframe container for responsive embeds */
-.responsive-iframe-container {
-  position: relative;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
-  height: 0;
-  overflow: hidden;
-}
-
-.responsive-iframe-container iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
+body {
+  background-color: var(--netflix-background);
+  color: var(--netflix-text-light);
+  overflow-x: hidden;
 }

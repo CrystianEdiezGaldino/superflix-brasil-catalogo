@@ -1,5 +1,5 @@
 
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
 import Navbar from "@/components/Navbar";
@@ -8,21 +8,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import MediaSection from "@/components/MediaSection";
 import ContinueWatchingSection from "@/components/sections/ContinueWatchingSection";
 import RecommendationsSection from "@/components/home/sections/RecommendationsSection";
-import MediaView from "@/components/home/MediaView";
-import DoramaSections from "@/components/home/sections/DoramaSections";
 import LoadingState from "@/components/home/LoadingState";
 import ErrorState from "@/components/home/ErrorState";
 import UnauthenticatedState from "@/components/home/UnauthenticatedState";
 import LargeSubscriptionUpsell from "@/components/home/LargeSubscriptionUpsell";
 import SearchResults from "@/components/home/SearchResults";
-import WatchHistory from "@/components/home/WatchHistory";
-import TrialNotification from "@/components/home/TrialNotification";
 import useHomePageData from "@/hooks/useHomePageData";
 import AdultContentSection from "@/components/sections/AdultContentSection";
-import CollectionsSection from "@/components/sections/CollectionsSection";
-import SpecialCollectionsSection from "@/components/sections/SpecialCollectionsSection";
-import GenreSection from "@/components/sections/GenreSection";
-import { GENRE_IDS, DIRECTOR_IDS, FRANCHISE_KEYWORDS } from "@/services/tmdb/genres";
+// Optimized loading by using lazy loading for less critical components
+const CollectionsSection = lazy(() => import("@/components/sections/CollectionsSection"));
+const SpecialCollectionsSection = lazy(() => import("@/components/sections/SpecialCollectionsSection"));
+const FamilyMoviesSection = lazy(() => import("@/components/sections/FamilyMoviesSection"));
+const PopularTVSeriesSection = lazy(() => import("@/components/sections/PopularTVSeriesSection"));
+import { usePopularTVSeries } from "@/hooks/usePopularTVSeries";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -54,8 +52,10 @@ const Home = () => {
     trilogiesData = [],
     horrorMoviesData = [],
     popularInBrazilData = [],
-    // Add more data from the hook as needed
   } = useHomePageData();
+
+  // Get popular TV series
+  const { popularTVSeries, isLoading: isSeriesLoading } = usePopularTVSeries(30);
 
   // Make sure all provided data is array
   const safeMovies = Array.isArray(moviesData) ? moviesData : [];
@@ -63,56 +63,37 @@ const Home = () => {
   const continueWatchingItems = safeMovies.slice(0, 8); // Mock data for continue watching
 
   // Create different subsets of movies for various sections
-  const familyMovies = safeMovies.slice(10, 60);
+  const familyMovies = safeMovies; // Use all movies, filtering will happen in component
   const childrenMovies = safeMovies.slice(30, 80);
-  const dubbedMovies = safeMovies.slice(40, 90);
-  const subtitledMovies = safeMovies.slice(50, 100);
-  const comicsBasedMovies = safeMovies.slice(60, 110);
-  const bookBasedMovies = safeMovies.slice(70, 120);
-  const renownedDirectorsMovies = safeMovies.slice(80, 130);
-  const blockbusterMovies = safeMovies.slice(90, 140);
-  const cultMovies = safeMovies.slice(100, 150);
-  const shortFilms = safeMovies.slice(110, 160);
-  const nostalgicMovies = safeMovies.slice(120, 170);
-  const brazilianMovies = safeMovies.slice(130, 180);
-  const lgbtMovies = safeMovies.slice(140, 190);
-  const warMovies = safeMovies.slice(150, 200);
-  const thrillerMovies = safeMovies.slice(160, 210);
-  const psychologicalThrillerMovies = safeMovies.slice(170, 220);
+  const batmanMovies = safeMovies.slice(110, 130);
+  const supermanMovies = safeMovies.slice(140, 160);
   
-  // Special franchise subsets
-  const starWarsMovies = safeMovies.slice(180, 195);
-  const harryPotterMovies = safeMovies.slice(190, 205);
-  const lotrMovies = safeMovies.slice(200, 215);
-  const tolkienMovies = safeMovies.slice(210, 225);
-  const ghibliMovies = safeMovies.slice(220, 235);
+  // Reduce animations for better performance
+  const [reducedMotion, setReducedMotion] = useState(false);
   
-  // Directors collections
-  const nolanMovies = safeMovies.slice(230, 245);
-  const tarantinoMovies = safeMovies.slice(240, 255);
-  const spielbergMovies = safeMovies.slice(250, 265);
+  // Look for reducedMotion preference
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReducedMotion(mediaQuery.matches);
+    
+    const handleChange = (e: MediaQueryListEvent) => {
+      setReducedMotion(e.matches);
+    };
+    
+    mediaQuery.addEventListener('change', handleChange);
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
   
-  // Special categories
-  const newThisWeekMovies = safeMovies.slice(260, 310);
-  const last30DaysMovies = safeMovies.slice(270, 320);
-  const indieMovies = safeMovies.slice(280, 330);
-  const asianActionMovies = safeMovies.slice(290, 340);
-  const weekendBingeContent = [...safeMovies.slice(300, 325), ...safeSeriesData.slice(30, 55)];
-  const nostalgic2000sContent = safeMovies.slice(310, 360);
-  
-  // Create different subsets of series
-  const teenSeries = safeSeriesData.slice(10, 60);
-  const internationalSeries = safeSeriesData.slice(20, 70);
-  const brazilianSeries = safeSeriesData.slice(30, 80);
-  const popularBrazilianSeries = safeSeriesData.slice(40, 90);
-  const crimeSeries = safeSeriesData.slice(50, 100);
-  const realityShows = safeSeriesData.slice(60, 110);
-  const crimeDocs = safeSeriesData.slice(70, 120);
-  const periodSeries = safeSeriesData.slice(80, 130);
-  const scifiFantasySeries = safeSeriesData.slice(90, 140);
-  const dramaSeries = safeSeriesData.slice(100, 150);
-  const shortSeries = safeSeriesData.slice(110, 160);
-  const miniseries = safeSeriesData.slice(120, 170);
+  // Add a class to the body to control animations
+  useEffect(() => {
+    if (reducedMotion) {
+      document.body.classList.add('reduce-motion');
+    } else {
+      document.body.classList.remove('reduce-motion');
+    }
+  }, [reducedMotion]);
 
   // State for search functionality
   const [searchQuery, setSearchQuery] = useState("");
@@ -214,6 +195,16 @@ const Home = () => {
                 />
               </section>
               
+              {/* Popular Series in Brazil */}
+              <section className="mb-12">
+                <PopularTVSeriesSection
+                  title="Séries Populares no Brasil"
+                  series={popularTVSeries}
+                  onSeriesClick={handleSeriesClick}
+                  isLoading={isSeriesLoading}
+                />
+              </section>
+              
               {/* Recommendations For You */}
               {recommendations.length > 0 && (
                 <section className="mb-12">
@@ -251,6 +242,29 @@ const Home = () => {
                   onMediaClick={handleMovieClick}
                 />
               </section>
+
+              {/* Collections Section */}
+              <Suspense fallback={<div className="w-full h-40 flex-none bg-gray-800/60 rounded-md animate-pulse"></div>}>
+                <section className="mb-12">
+                  <CollectionsSection 
+                    trilogies={trilogiesData || safeMovies.slice(95, 110)}
+                    batmanMovies={batmanMovies}
+                    supermanMovies={supermanMovies}
+                    onMediaClick={handleMovieClick}
+                  />
+                </section>
+              </Suspense>
+
+              {/* Family Movies Section (Grid Layout) */}
+              <Suspense fallback={<div className="w-full h-40 flex-none bg-gray-800/60 rounded-md animate-pulse"></div>}>
+                <section className="mb-12">
+                  <FamilyMoviesSection
+                    title="Filmes para toda a família"
+                    movies={familyMovies}
+                    onMediaClick={handleMovieClick}
+                  />
+                </section>
+              </Suspense>
 
               {/* Adult Content with Password Protection */}
               <section className="mb-12">
@@ -297,32 +311,7 @@ const Home = () => {
                 />
               </section>
               
-              {/* NaflixTV Exclusive */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Exclusivos NaflixTV"
-                  medias={safeSeriesData.slice(5, 55)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={5}
-                  onMediaClick={handleSeriesClick}
-                  className="bg-gradient-to-r from-purple-900/30 to-red-900/30 py-6 px-2 rounded-lg"
-                />
-              </section>
-
-              {/* Series Popular in Brazil */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries populares no Brasil"
-                  medias={popularBrazilianSeries}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={6}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-
-              {/* Action Without Limits - Grid Display */}
+              {/* Action Without Limits */}
               <section className="mb-12">
                 <MediaSection 
                   title="Ação sem limites"
@@ -331,7 +320,6 @@ const Home = () => {
                   onLoadMore={() => {}}
                   sectionIndex={7}
                   onMediaClick={handleMovieClick}
-                  displayStyle="grid"
                 />
               </section>
 
@@ -371,18 +359,6 @@ const Home = () => {
                 />
               </section>
 
-              {/* Superhero Movies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes de super-heróis"
-                  medias={comicsBasedMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={11}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
               {/* DC Universe */}
               <section className="mb-12">
                 <MediaSection 
@@ -407,139 +383,19 @@ const Home = () => {
                 />
               </section>
 
-              {/* Global Blockbusters */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Sucessos de bilheteria mundial"
-                  medias={blockbusterMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={14}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Award-winning Movies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes premiados (Oscar, Cannes, etc.)"
-                  medias={safeMovies.slice(30, 80)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={15}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Teen Series - Grid Display */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries teen"
-                  medias={teenSeries}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={16}
-                  onMediaClick={handleSeriesClick}
-                  displayStyle="grid"
-                />
-              </section>
-              
-              {/* Acclaimed International Series */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries internacionais aclamadas"
-                  medias={internationalSeries}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={17}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-              
-              {/* Brazilian Comedy Series */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries de comédia brasileiras"
-                  medias={brazilianSeries}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={18}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-              
-              {/* Documentaries and Biographies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Documentários e biografias"
-                  medias={safeMovies.slice(200, 250)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={19}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Movies Based on True Stories */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes baseados em fatos reais"
-                  medias={safeMovies.slice(210, 260)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={20}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Trilogies and Sagas - Grid Display */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Trilogias e sagas (Matrix, John Wick, Senhor dos Anéis)"
-                  medias={trilogiesData || safeMovies.slice(95, 145)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={21}
-                  onMediaClick={handleMovieClick}
-                  displayStyle="grid"
-                />
-              </section>
-
-              {/* Cinema Classics */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Clássicos do cinema (anos 70, 80 e 90)"
-                  medias={safeMovies.slice(45, 95)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={22}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Cult Movies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes cult"
-                  medias={cultMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={23}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Asian Action Movies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes de ação asiáticos"
-                  medias={asianActionMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={24}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
+              {/* Special Franchise Collections */}
+              <Suspense fallback={<div className="w-full h-40 flex-none bg-gray-800/60 rounded-md animate-pulse"></div>}>
+                <section className="mb-12">
+                  <SpecialCollectionsSection 
+                    marvelMovies={marvelMoviesData}
+                    dcMovies={dcMoviesData}
+                    harryPotterMovies={safeMovies.slice(190, 210)}
+                    starWarsMovies={safeMovies.slice(180, 200)}
+                    lordOfTheRingsMovies={safeMovies.slice(200, 220)}
+                    onMediaClick={handleMovieClick}
+                  />
+                </section>
+              </Suspense>
 
               {/* Animations and Kids Movies */}
               <section className="mb-12">
@@ -549,448 +405,6 @@ const Home = () => {
                   showLoadMore={false}
                   onLoadMore={() => {}}
                   sectionIndex={25}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Weekend Binge Content */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Conteúdos para maratonar no fim de semana"
-                  medias={weekendBingeContent}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={26}
-                  onMediaClick={(media) => {
-                    if (media.media_type === 'tv') {
-                      handleSeriesClick(media);
-                    } else {
-                      handleMovieClick(media);
-                    }
-                  }}
-                />
-              </section>
-
-              {/* Movies Inspired by Books */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes inspirados em livros"
-                  medias={bookBasedMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={27}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* LGBTQIA+ Movies and Series */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes e séries LGBTQIA+"
-                  medias={lgbtMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={28}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Nostalgic Content from 2000s */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Conteúdo nostálgico dos anos 2000"
-                  medias={nostalgic2000sContent}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={29}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* New This Week */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Novidades da semana"
-                  medias={newThisWeekMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={30}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Released in Last 30 Days */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes lançados recentemente (últimos 30 dias)"
-                  medias={last30DaysMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={31}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Portuguese Dubbed Titles */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Títulos dublados em português"
-                  medias={dubbedMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={32}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Subtitled Titles with Original Audio */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Títulos legendados com áudio original"
-                  medias={subtitledMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={33}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Famous Directors' Films */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes de diretores famosos (Nolan, Tarantino, Spielberg etc.)"
-                  medias={renownedDirectorsMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={34}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Miniseries and Anthologies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Minisséries e antologias"
-                  medias={miniseries}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={35}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-
-              {/* Crime and Investigation Series */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries policiais e de investigação"
-                  medias={crimeSeries}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={36}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-
-              {/* Reality Shows and Competition Programs */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Reality shows e programas de competição"
-                  medias={realityShows}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={37}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-
-              {/* Criminal Documentary Series */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries documentais criminais"
-                  medias={crimeDocs}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={38}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-
-              {/* Period and Historical Series */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries de época e históricas"
-                  medias={periodSeries}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={39}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-
-              {/* Sci-fi and Fantasy Series */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries sci-fi e fantasia"
-                  medias={scifiFantasySeries}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={40}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-
-              {/* Drama Series */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries dramáticas"
-                  medias={dramaSeries}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={41}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-
-              {/* Short Series (less than 6 episodes) */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Séries curtas (menos de 6 episódios)"
-                  medias={shortSeries}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={42}
-                  onMediaClick={handleSeriesClick}
-                />
-              </section>
-
-              {/* Featured Brazilian Movies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes brasileiros de destaque"
-                  medias={brazilianMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={43}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Popular Releases in Brazil */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Lançamentos populares no Brasil"
-                  medias={popularInBrazilData || safeMovies.slice(130, 180)}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={44}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Star Wars Special */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Especial Star Wars"
-                  medias={starWarsMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={45}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Harry Potter Special */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Especial Harry Potter"
-                  medias={harryPotterMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={46}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Lord of the Rings Special */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Especial Senhor dos Anéis"
-                  medias={lotrMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={47}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Tolkien Universe Special */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Especial Universo Tolkien"
-                  medias={tolkienMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={48}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Studio Ghibli Special */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Especial Studio Ghibli"
-                  medias={ghibliMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={49}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Independent Productions */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Produções independentes"
-                  medias={indieMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={50}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* War Movies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes de guerra"
-                  medias={warMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={51}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Heist and Thriller Movies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes de assalto e suspense"
-                  medias={thrillerMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={52}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Psychological Thriller Movies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes de terror psicológico"
-                  medias={psychologicalThrillerMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={53}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Special Franchise Collections */}
-              <section className="mb-12">
-                <SpecialCollectionsSection 
-                  marvelMovies={marvelMoviesData}
-                  dcMovies={dcMoviesData}
-                  harryPotterMovies={harryPotterMovies}
-                  starWarsMovies={starWarsMovies}
-                  lordOfTheRingsMovies={lotrMovies}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Movie Collections */}
-              <section className="mb-12">
-                <CollectionsSection 
-                  trilogies={trilogiesData || safeMovies.slice(95, 110)}
-                  batmanMovies={safeMovies.slice(110, 118)}
-                  supermanMovies={safeMovies.slice(118, 126)}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-
-              {/* Director's Collections */}
-              <section className="mb-12">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <h3 className="text-lg font-medium text-white mb-4">Christopher Nolan</h3>
-                    <MediaSection 
-                      title=""
-                      medias={nolanMovies}
-                      showLoadMore={false}
-                      onLoadMore={() => {}}
-                      sectionIndex={54}
-                      onMediaClick={handleMovieClick}
-                      displayStyle="grid"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-white mb-4">Quentin Tarantino</h3>
-                    <MediaSection 
-                      title=""
-                      medias={tarantinoMovies}
-                      showLoadMore={false}
-                      onLoadMore={() => {}}
-                      sectionIndex={55}
-                      onMediaClick={handleMovieClick}
-                      displayStyle="grid"
-                    />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-medium text-white mb-4">Steven Spielberg</h3>
-                    <MediaSection 
-                      title=""
-                      medias={spielbergMovies}
-                      showLoadMore={false}
-                      onLoadMore={() => {}}
-                      sectionIndex={56}
-                      onMediaClick={handleMovieClick}
-                      displayStyle="grid"
-                    />
-                  </div>
-                </div>
-              </section>
-
-              {/* Family Movies */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Filmes para toda a família"
-                  medias={familyMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={57}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Nostalgic Movies from 80s/90s */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Nostalgia dos anos 80/90"
-                  medias={nostalgicMovies}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={58}
-                  onMediaClick={handleMovieClick}
-                />
-              </section>
-              
-              {/* Short Films */}
-              <section className="mb-12">
-                <MediaSection 
-                  title="Curtas-metragens"
-                  medias={shortFilms}
-                  showLoadMore={false}
-                  onLoadMore={() => {}}
-                  sectionIndex={59}
                   onMediaClick={handleMovieClick}
                 />
               </section>

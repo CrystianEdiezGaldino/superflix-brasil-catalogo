@@ -71,19 +71,22 @@ export async function fetchFranchise(franchiseName: string, limit: number = 20):
   try {
     const results = await Promise.all([
       // Search by collection/franchise ID (most reliable)
-      fetchFromApi<{results: any[]}>(buildApiUrl('/collection/' + franchise.franchiseId, '?language=pt-BR')).then(data => {
-        return data.parts || [];
-      }).catch(() => []),
+      fetchFromApi<{results: any[], parts?: any[]}>(buildApiUrl('/collection/' + franchise.franchiseId, '?language=pt-BR'))
+        .then(data => {
+          // Collection endpoint might return 'parts' array instead of results
+          return data.parts || data.results || [];
+        })
+        .catch(() => []),
       
       // Search by keyword
-      fetchFromApi<{results: any[]}>(buildApiUrl('/discover/movie', `&with_keywords=${franchise.keywordId}&sort_by=popularity.desc&include_adult=false&language=pt-BR`)).then(data => {
-        return data.results || [];
-      }).catch(() => []),
+      fetchFromApi<{results: any[]}>(buildApiUrl('/discover/movie', `&with_keywords=${franchise.keywordId}&sort_by=popularity.desc&include_adult=false&language=pt-BR`))
+        .then(data => data.results || [])
+        .catch(() => []),
       
       // Direct search by name
-      fetchFromApi<{results: any[]}>(buildApiUrl('/search/movie', `&query=${encodeURIComponent(franchise.keyword)}&language=pt-BR&include_adult=false`)).then(data => {
-        return data.results || [];
-      }).catch(() => [])
+      fetchFromApi<{results: any[]}>(buildApiUrl('/search/movie', `&query=${encodeURIComponent(franchise.keyword)}&language=pt-BR&include_adult=false`))
+        .then(data => data.results || [])
+        .catch(() => [])
     ]);
     
     // Combine and filter results
