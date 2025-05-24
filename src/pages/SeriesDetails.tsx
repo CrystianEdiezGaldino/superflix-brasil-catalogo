@@ -253,6 +253,7 @@ const SeriesDetails = () => {
               showPlayer={showPlayer}
               tmdbId={series.id}
               mediaType="tv"
+              imdbId={series.external_ids?.imdb_id}
             />
           </div>
 

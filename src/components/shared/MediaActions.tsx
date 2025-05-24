@@ -1,7 +1,15 @@
-import { Heart, Play } from "lucide-react";
+import { Heart, Play, Tv, Cast } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { watchHistoryService } from "@/services/watchHistoryService";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { initializeCast, castToTV } from "@/utils/cast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface MediaActionsProps {
   onPlayClick: () => void;
@@ -13,6 +21,7 @@ interface MediaActionsProps {
   mediaType: 'movie' | 'tv';
   focusedButton?: string | null;
   onButtonFocus?: (button: string | null) => void;
+  imdbId?: string;
 }
 
 const MediaActions = ({ 
@@ -24,10 +33,46 @@ const MediaActions = ({
   tmdbId,
   mediaType,
   focusedButton,
-  onButtonFocus
+  onButtonFocus,
+  imdbId
 }: MediaActionsProps) => {
   const watchButtonRef = useRef<HTMLButtonElement>(null);
   const favoriteButtonRef = useRef<HTMLButtonElement>(null);
+  const castButtonRef = useRef<HTMLButtonElement>(null);
+  const [isCastingAvailable, setIsCastingAvailable] = useState(false);
+  const [isCasting, setIsCasting] = useState(false);
+
+  useEffect(() => {
+    const initCast = async () => {
+      try {
+        await initializeCast();
+        setIsCastingAvailable(true);
+      } catch (error) {
+        console.log('Cast não disponível:', error);
+      }
+    };
+
+    initCast();
+  }, []);
+
+  const handleCast = async () => {
+    if (!imdbId) return;
+
+    try {
+      const videoUrl = `https://seu-servidor.com/watch/${imdbId}`;
+      await castToTV(videoUrl);
+      setIsCasting(true);
+      toast.success('Transmitindo para TV');
+    } catch (error) {
+      console.error('Erro ao iniciar cast:', error);
+      toast.error('Erro ao transmitir para TV');
+    }
+  };
+
+  const stopCasting = () => {
+    setIsCasting(false);
+    toast.success('Transmissão encerrada');
+  };
 
   const handlePlayClick = async () => {
     if (hasAccess) {
@@ -50,6 +95,8 @@ const MediaActions = ({
       watchButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else if (focusedButton === 'favorite' && favoriteButtonRef.current) {
       favoriteButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (focusedButton === 'cast' && castButtonRef.current) {
+      castButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   }, [focusedButton]);
 
@@ -63,12 +110,16 @@ const MediaActions = ({
           e.preventDefault();
           if (focusedButton === 'favorite') {
             onButtonFocus?.('watch');
+          } else if (focusedButton === 'cast') {
+            onButtonFocus?.('favorite');
           }
           break;
         case 'ArrowRight':
           e.preventDefault();
           if (focusedButton === 'watch') {
             onButtonFocus?.('favorite');
+          } else if (focusedButton === 'favorite') {
+            onButtonFocus?.('cast');
           }
           break;
         case 'Enter':
@@ -136,6 +187,62 @@ const MediaActions = ({
           />
           <span>{isFavorite ? "Favorito" : "Favoritar"}</span>
         </button>
+
+        {/* Botão Cast */}
+        {hasAccess && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                ref={castButtonRef}
+                onFocus={() => onButtonFocus?.('cast')}
+                className={cn(
+                  "flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 py-4 sm:py-3 px-6 sm:px-8 rounded-full font-medium text-base transition-all duration-300 border-2 shadow-lg min-w-[45%] sm:min-w-0",
+                  isCasting
+                    ? "bg-white/10 border-white text-white hover:bg-white/20"
+                    : "bg-black/60 backdrop-blur border-gray-600 text-gray-300 hover:border-white hover:text-white",
+                  focusedButton === 'cast' && "ring-4 ring-white shadow-[0_0_15px_rgba(255,255,255,0.5)] scale-105"
+                )}
+              >
+                {isCasting ? (
+                  <Cast 
+                    size={20} 
+                    className={cn(
+                      "sm:size-5 transition-all duration-300",
+                      isCasting && "text-netflix-red"
+                    )}
+                  />
+                ) : (
+                  <Tv 
+                    size={20} 
+                    className="sm:size-5 transition-all duration-300"
+                  />
+                )}
+                <span>{isCasting ? "Transmitindo" : "Ver na TV"}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              align="end" 
+              className="bg-black/95 backdrop-blur-sm border border-gray-800 shadow-2xl"
+            >
+              <DropdownMenuItem
+                onClick={isCasting ? stopCasting : handleCast}
+                className="text-white hover:bg-white/10 cursor-pointer transition-colors duration-200"
+              >
+                {isCasting ? (
+                  <>
+                    <Cast className="h-4 w-4 mr-2 text-netflix-red" />
+                    <span className="font-medium">Parar de Transmitir</span>
+                  </>
+                ) : (
+                  <>
+                    <Tv className="h-4 w-4 mr-2 text-netflix-red" />
+                    <span className="font-medium">Assistir na TV</span>
+                  </>
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
     </div>
   );

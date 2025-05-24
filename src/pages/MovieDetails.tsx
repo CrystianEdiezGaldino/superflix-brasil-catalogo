@@ -116,7 +116,7 @@ const MovieDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black">
       <Navbar onSearch={() => {}} />
       <MovieLoadingState 
         isLoading={authLoading || subscriptionLoading || isLoading}
@@ -125,7 +125,7 @@ const MovieDetails = () => {
       />
 
       {movie && (
-        <>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div 
             ref={headerRef}
             tabIndex={0}
@@ -133,14 +133,14 @@ const MovieDetails = () => {
               setFocusedElement('header');
               setFocusedButton(null);
             }}
-            className="mb-4 sm:mb-6"
+            className="mb-8 sm:mb-12"
           >
             <MovieHeader 
               movie={movie} 
             />
           </div>
           
-          <div className="px-4 sm:px-6 md:px-10 mb-4 sm:mb-6">
+          <div className="mb-6 sm:mb-8">
             <AdblockSuggestion />
           </div>
 
@@ -151,7 +151,7 @@ const MovieDetails = () => {
               setFocusedElement('actions');
               setFocusedButton(null);
             }}
-            className="mb-6 sm:mb-8"
+            className="mb-8 sm:mb-10"
           >
             <MediaActions 
               onPlayClick={handleWatchClick}
@@ -163,6 +163,7 @@ const MovieDetails = () => {
               showPlayer={showPlayer}
               focusedButton={focusedButton}
               onButtonFocus={setFocusedButton}
+              imdbId={movie.imdb_id || movie.external_ids?.imdb_id}
             />
           </div>
 
@@ -171,17 +172,17 @@ const MovieDetails = () => {
               ref={playerRef}
               id="video-player" 
               tabIndex={0}
-              className="px-4 sm:px-6 md:px-10 mb-8 sm:mb-10"
+              className="mb-10 sm:mb-12"
               onFocus={() => {
                 setFocusedElement('player');
                 setFocusedButton(null);
               }}
             >
-              <div className="max-w-6xl mx-auto">
-                <div className="aspect-[16/9] sm:aspect-video w-full bg-black rounded-lg overflow-hidden shadow-xl">
+              <div className="relative rounded-xl overflow-hidden shadow-2xl transform transition-all duration-300 hover:scale-[1.01]">
+                <div className="aspect-[16/9] sm:aspect-video w-full bg-black">
                   <MovieVideoPlayer 
                     showPlayer={true}
-                    imdbId={movie.imdb_id || movie.external_ids?.imdb_id || ''}
+                    imdbId={movie.imdb_id || movie.external_ids?.imdb_id}
                     hasAccess={hasAccess}
                   />
                 </div>
@@ -190,7 +191,7 @@ const MovieDetails = () => {
           )}
 
           {!isContentAvailable && (
-            <div className="px-4 sm:px-6 md:px-10 mb-8 sm:mb-10">
+            <div className="mb-10 sm:mb-12">
               <ContentNotAvailable onAddToFavorites={handleToggleFavorite} />
             </div>
           )}
@@ -202,7 +203,7 @@ const MovieDetails = () => {
               setFocusedElement('content');
               setFocusedButton(null);
             }}
-            className="mb-8 sm:mb-12"
+            className="mb-12 sm:mb-16"
           >
             <MovieContent movie={movie} hasAccess={hasAccess} />
           </div>
@@ -211,16 +212,16 @@ const MovieDetails = () => {
             <div 
               ref={recommendationsRef}
               tabIndex={0}
-              className="px-4 sm:px-6 md:px-10 mt-8 sm:mt-12 mb-12 sm:mb-16"
+              className="mt-12 sm:mt-16 mb-16 sm:mb-20"
               onFocus={() => {
                 setFocusedElement('recommendations');
                 setFocusedButton(null);
               }}
             >
-              <div className="max-w-7xl mx-auto">
-                <h2 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6 border-l-4 border-netflix-red pl-3">
-                  Recomendados para Você
-                </h2>
+              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8 border-l-4 border-netflix-red pl-4">
+                Recomendados para Você
+              </h2>
+              <div className="bg-gray-900/50 rounded-xl p-4 sm:p-6 backdrop-blur-sm">
                 <MediaGrid
                   mediaItems={recommendations.slice(0, 6)}
                   onMediaClick={handleMovieClick}
@@ -235,7 +236,7 @@ const MovieDetails = () => {
               </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
