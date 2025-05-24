@@ -30,9 +30,14 @@ const RecommendationsSection: React.FC<RecommendationsSectionProps> = ({
 
       <ScrollArea className="w-full whitespace-nowrap">
         <div className="flex space-x-4">
-          {recommendations.map((media) => (
+          {recommendations.map((media, index) => (
             <div key={media.id} className="w-[180px] md:w-[200px] flex-none">
-              <MediaCard media={media} />
+              <MediaCard 
+                media={media} 
+                index={index} 
+                isFocused={false} 
+                onFocus={() => {}} 
+              />
             </div>
           ))}
           
