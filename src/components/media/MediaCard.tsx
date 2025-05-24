@@ -36,11 +36,7 @@ const MediaCard = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (isFocused && cardRef.current) {
-      cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    }
-  }, [isFocused]);
+
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const itemsPerRow = window.innerWidth >= 1280 ? 6 : 
