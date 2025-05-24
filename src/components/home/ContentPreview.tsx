@@ -1,95 +1,74 @@
 
-import { useState } from "react";
-import { MediaItem } from "@/types/movie";
-import MediaSection from "@/components/MediaSection";
-import { motion } from "framer-motion";
+import React, { useState } from 'react';
+import { MediaItem } from '@/types/movie';
+import MediaSection from '@/components/MediaSection';
 
 interface ContentPreviewProps {
   movies: MediaItem[];
   series: MediaItem[];
-  anime: MediaItem[];
+  animes: MediaItem[];
+  onMovieClick: (media: MediaItem) => void;
+  onSeriesClick: (media: MediaItem) => void;
+  onAnimeClick: (media: MediaItem) => void;
 }
 
-const ContentPreview = ({ movies, series, anime }: ContentPreviewProps) => {
+const ContentPreview: React.FC<ContentPreviewProps> = ({
+  movies,
+  series,
+  animes,
+  onMovieClick,
+  onSeriesClick,
+  onAnimeClick
+}) => {
+  const [focusedSection, setFocusedSection] = useState(0);
   const [focusedItem, setFocusedItem] = useState(0);
-
-  // Only show sections with content
-  const hasMovies = movies.length > 0;
-  const hasSeries = series.length > 0;
-  const hasAnime = anime.length > 0;
-
-  // If no content at all, don't render
-  if (!hasMovies && !hasSeries && !hasAnime) {
-    return null;
-  }
-
-  const handleFocusChange = (idx: number) => {
-    setFocusedItem(idx);
+  
+  const handleFocusChange = (section: number, item: number) => {
+    setFocusedSection(section);
+    setFocusedItem(item);
   };
-
-  // Animation variants for the container
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  // Animation variants for each item
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
-
+  
   return (
-    <motion.div 
-      className="space-y-12"
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-    >
-      {hasMovies && (
-        <motion.div variants={itemVariants}>
-          <MediaSection
-            key="movies-preview"
-            title="Filmes"
-            medias={movies}
-            focusedItem={focusedItem}
-            onFocusChange={handleFocusChange}
-            sectionIndex={0}
-          />
-        </motion.div>
+    <div className="content-preview space-y-8 pt-6">
+      {movies && movies.length > 0 && (
+        <MediaSection
+          key="preview-movies"
+          title="Filmes em destaque"
+          medias={movies}
+          onLoadMore={() => {}}
+          sectionIndex={0}
+          onMediaClick={onMovieClick}
+          focusedItem={focusedSection === 0 ? focusedItem : -1}
+          onFocusChange={(idx) => handleFocusChange(0, idx)}
+        />
       )}
-
-      {hasSeries && (
-        <motion.div variants={itemVariants}>
-          <MediaSection
-            key="series-preview"
-            title="Séries"
-            medias={series}
-            focusedItem={focusedItem}
-            onFocusChange={handleFocusChange}
-            sectionIndex={1}
-          />
-        </motion.div>
+      
+      {series && series.length > 0 && (
+        <MediaSection
+          key="preview-series"
+          title="Séries em destaque"
+          medias={series}
+          onLoadMore={() => {}}
+          sectionIndex={1}
+          onMediaClick={onSeriesClick}
+          focusedItem={focusedSection === 1 ? focusedItem : -1}
+          onFocusChange={(idx) => handleFocusChange(1, idx)}
+        />
       )}
-
-      {hasAnime && (
-        <motion.div variants={itemVariants}>
-          <MediaSection
-            key="anime-preview"
-            title="Anime"
-            medias={anime}
-            focusedItem={focusedItem}
-            onFocusChange={handleFocusChange}
-            sectionIndex={2}
-          />
-        </motion.div>
+      
+      {animes && animes.length > 0 && (
+        <MediaSection
+          key="preview-animes"
+          title="Animes em destaque"
+          medias={animes}
+          onLoadMore={() => {}}
+          sectionIndex={2}
+          onMediaClick={onAnimeClick}
+          focusedItem={focusedSection === 2 ? focusedItem : -1}
+          onFocusChange={(idx) => handleFocusChange(2, idx)}
+        />
       )}
-    </motion.div>
+    </div>
   );
 };
 

@@ -1,9 +1,6 @@
 
 import React from "react";
 import { MediaItem } from "@/types/movie";
-import { Button } from "@/components/ui/button";
-import MediaCard from "@/components/media/MediaCard";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import MediaSection from "@/components/MediaSection";
 
 interface RecommendationsSectionProps {
