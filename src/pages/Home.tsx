@@ -1,4 +1,3 @@
-
 import React, { useCallback, useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
@@ -21,6 +20,7 @@ const SpecialCollectionsSection = lazy(() => import("@/components/sections/Speci
 const FamilyMoviesSection = lazy(() => import("@/components/sections/FamilyMoviesSection"));
 const PopularTVSeriesSection = lazy(() => import("@/components/sections/PopularTVSeriesSection"));
 import { usePopularTVSeries } from "@/hooks/usePopularTVSeries";
+import { useRecentReleases } from "@/hooks/useRecentReleases";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -56,6 +56,9 @@ const Home = () => {
 
   // Get popular TV series
   const { popularTVSeries, isLoading: isSeriesLoading } = usePopularTVSeries(30);
+
+  // Get recent releases
+  const { recentReleases, isLoading: isRecentLoading } = useRecentReleases(50);
 
   // Make sure all provided data is array
   const safeMovies = Array.isArray(moviesData) ? moviesData : [];
@@ -223,11 +226,17 @@ const Home = () => {
               <section className="mb-12">
                 <MediaSection 
                   title="Lançamentos recentes"
-                  medias={Array.isArray(popularContent) ? popularContent.slice(0, 50) : []}
+                  medias={recentReleases}
                   showLoadMore={false}
                   onLoadMore={() => {}}
                   sectionIndex={0}
-                  onMediaClick={handleMovieClick}
+                  onMediaClick={(media) => {
+                    if (media.media_type === 'movie') {
+                      handleMovieClick(media);
+                    } else {
+                      handleSeriesClick(media);
+                    }
+                  }}
                 />
               </section>
 
@@ -260,7 +269,6 @@ const Home = () => {
                 <section className="mb-12">
                   <FamilyMoviesSection
                     title="Filmes para toda a família"
-                    movies={familyMovies}
                     onMediaClick={handleMovieClick}
                   />
                 </section>

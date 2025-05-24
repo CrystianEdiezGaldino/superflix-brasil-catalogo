@@ -115,3 +115,97 @@ export const fetchSeriesRecommendations = async (seriesId: string) => {
     return { results: [] };
   }
 };
+
+// Fetch popular TV series in Brazil
+export const fetchPopularTVSeriesInBrazil = async (page = 1, itemsPerPage = 20) => {
+  try {
+    // Exclude talk shows (genre ID 10767) and exclude shows with "Late" or "Show" in title
+    const url = buildApiUrl("/discover/tv", 
+      `&page=${page}&region=BR&sort_by=popularity.desc&language=pt-BR&vote_count.gte=100&without_genres=10767`
+    );
+    const data = await fetchFromApi<{results?: any[]}>(url);
+    
+    // Filter out talk shows, late night shows, and shows without Portuguese titles
+    const filteredResults = data.results?.filter(show => {
+      const title = (show.name || '').toLowerCase();
+      const originalTitle = (show.original_name || '').toLowerCase();
+      
+      // Check if the title is in Portuguese (has Brazilian Portuguese characters or common Portuguese words)
+      const hasPortugueseTitle = /[áàâãéèêíïóôõöúüç]/.test(title) || 
+        /\b(o|a|os|as|um|uma|uns|umas|e|é|não|sim|que|como|para|por|com|sem|em|no|na|nos|nas)\b/i.test(title);
+
+      return !title.includes('late') && 
+             !title.includes('show') && 
+             !title.includes('letterman') && 
+             !title.includes('colbert') && 
+             !title.includes('meyers') &&
+             !title.includes('ferguson') &&
+             hasPortugueseTitle;
+    }) || [];
+
+    const seriesWithType = addMediaTypeToResults(filteredResults, "tv");
+    return limitResults(seriesWithType, itemsPerPage);
+  } catch (error) {
+    console.error("Error fetching popular TV series in Brazil:", error);
+    return [];
+  }
+};
+
+// Fetch recent releases (movies and series) for current year
+export const fetchRecentReleases = async (page = 1, itemsPerPage = 100) => {
+  try {
+    const currentYear = new Date().getFullYear();
+    const currentDate = new Date().toISOString().split('T')[0];
+    
+    // Fetch recent TV series
+    const seriesUrl = buildApiUrl("/discover/tv", 
+      `&page=${page}&region=BR&sort_by=first_air_date.desc&language=pt-BR&vote_count.gte=100&without_genres=10767&first_air_date.gte=${currentYear}-01-01&first_air_date.lte=${currentDate}`
+    );
+    const seriesData = await fetchFromApi<{results?: any[]}>(seriesUrl);
+    
+    // Filter TV series
+    const filteredSeries = seriesData.results?.filter(show => {
+      const title = (show.name || '').toLowerCase();
+      const hasPortugueseTitle = /[áàâãéèêíïóôõöúüç]/.test(title) || 
+        /\b(o|a|os|as|um|uma|uns|umas|e|é|não|sim|que|como|para|por|com|sem|em|no|na|nos|nas)\b/i.test(title);
+
+      return !title.includes('late') && 
+             !title.includes('show') && 
+             !title.includes('letterman') && 
+             !title.includes('colbert') && 
+             !title.includes('meyers') &&
+             !title.includes('ferguson') &&
+             hasPortugueseTitle;
+    }) || [];
+
+    // Fetch recent movies
+    const moviesUrl = buildApiUrl("/discover/movie", 
+      `&page=${page}&region=BR&sort_by=release_date.desc&language=pt-BR&vote_count.gte=100&release_date.gte=${currentYear}-01-01&release_date.lte=${currentDate}`
+    );
+    const moviesData = await fetchFromApi<{results?: any[]}>(moviesUrl);
+    
+    // Filter movies
+    const filteredMovies = moviesData.results?.filter(movie => {
+      const title = (movie.title || '').toLowerCase();
+      const hasPortugueseTitle = /[áàâãéèêíïóôõöúüç]/.test(title) || 
+        /\b(o|a|os|as|um|uma|uns|umas|e|é|não|sim|que|como|para|por|com|sem|em|no|na|nos|nas)\b/i.test(title);
+
+      return hasPortugueseTitle;
+    }) || [];
+
+    // Combine and sort by release date
+    const allContent = [
+      ...addMediaTypeToResults(filteredSeries, "tv"),
+      ...addMediaTypeToResults(filteredMovies, "movie")
+    ].sort((a, b) => {
+      const dateA = a.media_type === 'tv' ? a.first_air_date : a.release_date;
+      const dateB = b.media_type === 'tv' ? b.first_air_date : b.release_date;
+      return new Date(dateB).getTime() - new Date(dateA).getTime();
+    });
+
+    return limitResults(allContent, itemsPerPage);
+  } catch (error) {
+    console.error("Error fetching recent releases:", error);
+    return [];
+  }
+};

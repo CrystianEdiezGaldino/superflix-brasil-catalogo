@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { MediaItem } from '@/types/movie';
-import { fetchPopularTVSeriesInBrazil } from '@/services/tmdb/series';
+import { fetchRecentReleases } from '@/services/tmdb/series';
 
-export const usePopularTVSeries = (limit: number = 20) => {
-  const [popularTVSeries, setPopularTVSeries] = useState<MediaItem[]>([]);
+export const useRecentReleases = (limit: number = 100) => {
+  const [recentReleases, setRecentReleases] = useState<MediaItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    const fetchPopularShows = async () => {
+    const fetchReleases = async () => {
       setIsLoading(true);
       try {
-        const series = await fetchPopularTVSeriesInBrazil(1, limit);
-        setPopularTVSeries(series);
+        const releases = await fetchRecentReleases(1, limit);
+        setRecentReleases(releases);
         setIsLoading(false);
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Unknown error'));
@@ -20,8 +20,8 @@ export const usePopularTVSeries = (limit: number = 20) => {
       }
     };
     
-    fetchPopularShows();
+    fetchReleases();
   }, [limit]);
 
-  return { popularTVSeries, isLoading, error };
-};
+  return { recentReleases, isLoading, error };
+}; 

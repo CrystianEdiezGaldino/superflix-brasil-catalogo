@@ -1,4 +1,3 @@
-
 import { MediaItem } from "@/types/movie";
 import { buildApiUrl, fetchFromApi, addMediaTypeToResults, limitResults } from "./utils";
 
@@ -97,14 +96,21 @@ export async function fetchFranchise(franchiseName: string, limit: number = 20):
       index === self.findIndex((m) => m.id === movie.id)
     );
     
-    // Filter for relevance using search terms
+    // Filter for relevance using search terms and Portuguese content
     const relevantMovies = uniqueMovies.filter(movie => {
       const title = (movie.title || '').toLowerCase();
       const overview = (movie.overview || '').toLowerCase();
       
-      return franchise.searchTerms.some(term => 
+      // Check for Portuguese content
+      const hasPortugueseTitle = /[áàâãéèêíïóôõöúüç]/.test(title) || 
+        /\b(o|a|os|as|um|uma|uns|umas|e|é|não|sim|que|como|para|por|com|sem|em|no|na|nos|nas)\b/i.test(title);
+      
+      // Check for franchise relevance
+      const isRelevant = franchise.searchTerms.some(term => 
         title.includes(term) || overview.includes(term)
       );
+      
+      return isRelevant && hasPortugueseTitle;
     });
     
     // Add media type and sort by popularity
