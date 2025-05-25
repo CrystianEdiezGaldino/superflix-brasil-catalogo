@@ -1,4 +1,3 @@
-
 export interface MediaItem {
   adult?: boolean;
   backdrop_path: string | null;
@@ -48,6 +47,20 @@ export interface MediaItem {
   status?: string;
   origin_country?: string[];
   seasons?: Season[];
+  
+  // Add production companies and networks for streaming service filtering
+  production_companies?: {
+    id: number;
+    name: string;
+    logo_path?: string | null;
+    origin_country?: string;
+  }[];
+  networks?: {
+    id: number;
+    name: string;
+    logo_path?: string | null;
+    origin_country?: string;
+  }[];
 }
 
 export interface Genre {

@@ -1,3 +1,4 @@
+
 declare global {
   interface Window {
     chrome: {
@@ -27,13 +28,7 @@ export const castToTV = async (videoUrl: string) => {
         },
       });
       
-      // Cria um elemento de vídeo para transmitir
-      const video = document.createElement('video');
-      video.src = videoUrl;
-      video.autoplay = true;
-      
-      // Inicia a transmissão
-      const mediaStream = video.captureStream();
+      // Configura qualidade da transmissão
       stream.getVideoTracks()[0].applyConstraints({
         width: { ideal: 1920 },
         height: { ideal: 1080 }

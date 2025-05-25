@@ -14,23 +14,8 @@ export function AppleOriginalsSection() {
   useEffect(() => {
     const loadOriginals = async () => {
       try {
-        // Buscar apenas conteúdo da Apple TV+
         const data = await fetchAppleOriginals();
-        // Filtrar para garantir que são apenas da Apple TV+
-        const appleOnlyContent = data.filter(item => {
-          // Verificar se é conteúdo original da Apple TV+
-          const isAppleOriginal = item.production_companies?.some(company => 
-            company.name?.toLowerCase().includes('apple') || 
-            company.name?.toLowerCase().includes('apple tv+')
-          ) || item.networks?.some(network => 
-            network.name?.toLowerCase().includes('apple') ||
-            network.name?.toLowerCase().includes('apple tv+')
-          );
-          
-          return isAppleOriginal;
-        });
-        
-        setOriginals(appleOnlyContent);
+        setOriginals(data);
       } catch (error) {
         console.error('Error loading Apple TV+ originals:', error);
       } finally {
