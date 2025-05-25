@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { MediaItem } from "@/types/movie";
@@ -15,6 +16,7 @@ import AnimeCarousel from "@/components/anime/AnimeCarousel";
 import AnimeSectionGrid from "@/components/anime/AnimeSectionGrid";
 import AllAnimesSection from "@/components/anime/AllAnimesSection";
 import AdultContentSection from "@/components/anime/AdultContentSection";
+import HentaiSection from "@/components/anime/HentaiSection";
 import AnimeFilters from "@/components/anime/AnimeFilters";
 
 const Animes: React.FC = () => {
@@ -24,6 +26,7 @@ const Animes: React.FC = () => {
   const [yearFilter, setYearFilter] = useState<number | null>(null);
   const [ratingFilter, setRatingFilter] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [isHentaiVisible, setIsHentaiVisible] = useState(false);
   
   // Use our custom hook for anime data
   const {
@@ -40,9 +43,58 @@ const Animes: React.FC = () => {
     toggleAdultContent
   } = useAnimeData();
 
+  // Mock hentai data - você pode substituir por dados reais da API
+  const hentaiList: MediaItem[] = [
+    {
+      id: 999001,
+      name: "High School DxD",
+      overview: "Anime de comédia romântica com elementos sobrenaturais.",
+      poster_path: "/example1.jpg",
+      backdrop_path: "/example1_bg.jpg",
+      first_air_date: "2012-01-06",
+      media_type: "tv",
+      vote_average: 7.2,
+      vote_count: 500,
+      original_language: "ja",
+      original_name: "ハイスクールD×D",
+      popularity: 45.6,
+      adult: true
+    },
+    {
+      id: 999002,
+      name: "Prison School",
+      overview: "Comédia escolar com elementos adultos.",
+      poster_path: "/example2.jpg",
+      backdrop_path: "/example2_bg.jpg",
+      first_air_date: "2015-07-11",
+      media_type: "tv",
+      vote_average: 7.8,
+      vote_count: 300,
+      original_language: "ja",
+      original_name: "監獄学園",
+      popularity: 38.2,
+      adult: true
+    }
+  ];
+
   // Navigate to anime details
   const handleMediaClick = (anime: MediaItem) => {
     navigate(`/anime/${anime.id}`);
+  };
+
+  // Handle hentai visibility toggle
+  const toggleHentaiVisibility = (password: string) => {
+    if (!password) {
+      setIsHentaiVisible(false);
+      return true;
+    }
+    
+    if (password === "admin123" || password === "senha123" || password === "password") {
+      setIsHentaiVisible(true);
+      return true;
+    }
+    
+    return false;
   };
   
   // Filter animes based on search and filters
@@ -53,14 +105,12 @@ const Animes: React.FC = () => {
       return japaneseRegex.test(text);
     };
 
-    // Função para verificar se o anime tem imagem e título válido
     const isValidAnime = (anime: MediaItem) => {
       const hasImage = anime.poster_path || anime.backdrop_path;
       const title = anime.name || anime.title || '';
       return hasImage && !isJapaneseOnly(title);
     };
 
-    // Primeiro filtra animes inválidos
     const validAnimes = displayedAnimes.filter(isValidAnime);
     
     if (!searchQuery && !yearFilter && !ratingFilter) {
@@ -68,7 +118,6 @@ const Animes: React.FC = () => {
     }
     
     return validAnimes.filter(anime => {
-      // Search filter
       if (searchQuery) {
         const title = (anime.name || anime.title || '').toLowerCase();
         const overview = (anime.overview || '').toLowerCase();
@@ -77,7 +126,6 @@ const Animes: React.FC = () => {
         }
       }
       
-      // Year filter
       if (yearFilter) {
         const releaseYear = new Date(anime.first_air_date || anime.release_date || '').getFullYear();
         if (releaseYear !== yearFilter) {
@@ -85,7 +133,6 @@ const Animes: React.FC = () => {
         }
       }
       
-      // Rating filter
       if (ratingFilter && anime.vote_average < ratingFilter) {
         return false;
       }
@@ -168,6 +215,17 @@ const Animes: React.FC = () => {
                     onMediaClick={handleMediaClick}
                     isLoading={isLoading && topRatedAnimes.length === 0}
                     showGenres={true}
+                  />
+                )}
+
+                {/* Hentai Section */}
+                {hentaiList.length > 0 && (
+                  <HentaiSection
+                    title="Hentai"
+                    hentais={hentaiList}
+                    onMediaClick={handleMediaClick}
+                    isVisible={isHentaiVisible}
+                    onToggleVisibility={toggleHentaiVisibility}
                   />
                 )}
 

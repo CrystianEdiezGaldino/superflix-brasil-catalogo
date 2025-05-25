@@ -79,7 +79,7 @@ const MediaCard = ({
       return "#";
     }
     
-    const mediaId = media.id;
+    const mediaId = String(media.id);
     
     // Verificar se o ID é válido
     if (!mediaId || mediaId === 'undefined' || mediaId === 'null') {
@@ -112,7 +112,7 @@ const MediaCard = ({
 
   const title = 'title' in media ? media.title : 'name' in media ? media.name : "Sem título";
   const rating = media.vote_average ? Math.round(media.vote_average * 10) / 10 : null;
-  const mediaId = media.id;
+  const mediaId = String(media.id);
   
   const handleClick = async (e: React.MouseEvent | React.KeyboardEvent) => {
     // Verificar se o ID é válido antes de prosseguir
