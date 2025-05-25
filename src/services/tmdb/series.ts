@@ -10,7 +10,17 @@ export const fetchPopularSeries = async (page = 1, itemsPerPage = 20) => {
     const url = buildApiUrl("/tv/popular", `&page=${page}`);
     const data = await fetchFromApi<{results?: any[]}>(url);
     const seriesWithType = addMediaTypeToResults(data.results, "tv");
-    return limitResults(seriesWithType, itemsPerPage);
+    
+    // Filtrar apenas séries que possuem imagens
+    const seriesWithImages = seriesWithType.filter(series => 
+      series && 
+      series.poster_path && 
+      series.backdrop_path &&
+      series.poster_path !== null && 
+      series.backdrop_path !== null
+    );
+    
+    return limitResults(seriesWithImages, itemsPerPage);
   } catch (error) {
     console.error("Error fetching popular series:", error);
     return [];
@@ -24,7 +34,17 @@ export const fetchPopularAmericanSeries = async (page = 1, itemsPerPage = 20) =>
     const url = buildApiUrl("/discover/tv", `&page=${page}&with_origin_country=US&sort_by=popularity.desc&language=pt-BR`);
     const data = await fetchFromApi<{results?: any[]}>(url);
     const seriesWithType = addMediaTypeToResults(data.results, "tv");
-    return limitResults(seriesWithType, itemsPerPage);
+    
+    // Filtrar apenas séries que possuem imagens
+    const seriesWithImages = seriesWithType.filter(series => 
+      series && 
+      series.poster_path && 
+      series.backdrop_path &&
+      series.poster_path !== null && 
+      series.backdrop_path !== null
+    );
+    
+    return limitResults(seriesWithImages, itemsPerPage);
   } catch (error) {
     console.error("Error fetching popular American series:", error);
     return [];
@@ -75,17 +95,48 @@ export const fetchRecentSeries = async (limit = 12) => {
   }
 };
 
-// Fetch TV series details
+// Fetch TV series details with improved error handling
 export const fetchSeriesDetails = async (id: string | number, language: string = 'pt-BR', signal?: AbortSignal): Promise<Series> => {
   try {
+    console.log(`Fetching series details for ID: ${id}`);
+    
+    // Verificar se o ID é válido
+    if (!id || id === 'undefined' || id === 'null') {
+      throw new Error(`ID inválido para buscar detalhes da série: ${id}`);
+    }
+    
     const url = buildApiUrl(`/tv/${id}`, `&language=${language}&append_to_response=external_ids,credits,recommendations`);
-    return await fetchFromApi<Series>(url, signal);
+    console.log(`Series details URL: ${url}`);
+    
+    const series = await fetchFromApi<Series>(url, signal);
+    
+    // Verificar se a série retornada tem os dados necessários
+    if (!series || !series.id) {
+      throw new Error(`Série não encontrada ou dados incompletos para ID: ${id}`);
+    }
+    
+    console.log(`Series details fetched successfully for: ${series.name || series.title}`);
+    return series;
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       throw error;
     }
-    console.error("Error fetching series details:", error);
-    return {} as Series;
+    console.error(`Error fetching series details for ID ${id}:`, error);
+    // Retornar um objeto série vazio mas válido para evitar crashes
+    return {
+      id: Number(id),
+      name: "Série não encontrada",
+      overview: "Esta série não pôde ser carregada. Tente novamente mais tarde.",
+      poster_path: null,
+      backdrop_path: null,
+      first_air_date: "",
+      media_type: "tv",
+      vote_average: 0,
+      vote_count: 0,
+      original_language: "",
+      original_name: "",
+      popularity: 0
+    } as Series;
   }
 };
 

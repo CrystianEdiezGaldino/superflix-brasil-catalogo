@@ -24,11 +24,27 @@ export function PopularTVSeriesSection({
     return <LoadingSpinner />;
   }
 
+  // Filtrar séries que não possuem imagens
+  const seriesWithImages = series.filter(serie => 
+    serie && 
+    serie.poster_path && 
+    serie.backdrop_path &&
+    serie.poster_path !== null && 
+    serie.backdrop_path !== null &&
+    serie.poster_path.trim() !== '' &&
+    serie.backdrop_path.trim() !== ''
+  );
+
+  // Se não há séries com imagens, não renderizar a seção
+  if (seriesWithImages.length === 0) {
+    return null;
+  }
+
   return (
     <section className="py-8">
       <SectionTitle>{title}</SectionTitle>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {series.map((serie, index) => (
+        {seriesWithImages.map((serie, index) => (
           <MediaCard
             key={`${serie.media_type}-${serie.id}`}
             media={serie}

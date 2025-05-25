@@ -468,8 +468,18 @@ export const usePopularTVSeries = (limit: number = 30) => {
         // Simula carregamento das séries populares brasileiras
         await new Promise(resolve => setTimeout(resolve, 800));
         
+        // Filtrar apenas séries que têm poster_path E backdrop_path
+        const seriesWithImages = popularBrazilianSeries.filter(series => 
+          series.poster_path && 
+          series.backdrop_path && 
+          series.poster_path !== null && 
+          series.backdrop_path !== null &&
+          series.poster_path.trim() !== '' &&
+          series.backdrop_path.trim() !== ''
+        );
+        
         // Retorna as séries limitadas pela quantidade solicitada
-        const limitedSeries = popularBrazilianSeries.slice(0, limit);
+        const limitedSeries = seriesWithImages.slice(0, limit);
         setPopularTVSeries(limitedSeries);
         setIsLoading(false);
       } catch (err) {

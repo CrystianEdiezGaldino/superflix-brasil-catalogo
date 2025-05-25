@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link } from "react-router-dom";
 import { MediaItem, getMediaTitle } from "@/types/movie";
@@ -36,8 +37,6 @@ const MediaCard = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
 
-
-
   const handleKeyDown = (e: React.KeyboardEvent) => {
     const itemsPerRow = window.innerWidth >= 1280 ? 6 : 
                        window.innerWidth >= 1024 ? 5 : 
@@ -68,17 +67,25 @@ const MediaCard = ({
     }
   };
 
-  // Fail safe check for the media object
-  if (!media) {
+  // Fail safe check for the media object and images
+  if (!media || !media.poster_path || !media.backdrop_path) {
     return null;
   }
 
-  // Determine link path based on media type
+  // Determine link path based on media type with improved validation
   const getLinkPath = () => {
-    if (!media) return "#";
+    if (!media || !media.id) {
+      console.warn('Media object or ID is missing:', media);
+      return "#";
+    }
     
-    const mediaId = (media as any).id;
-    if (mediaId === undefined) return "#";
+    const mediaId = media.id;
+    
+    // Verificar se o ID é válido
+    if (!mediaId || mediaId === 'undefined' || mediaId === 'null') {
+      console.warn('Invalid media ID:', mediaId);
+      return "#";
+    }
     
     if (!media.media_type) return `/filme/${mediaId}`;
     
@@ -105,9 +112,17 @@ const MediaCard = ({
 
   const title = 'title' in media ? media.title : 'name' in media ? media.name : "Sem título";
   const rating = media.vote_average ? Math.round(media.vote_average * 10) / 10 : null;
-  const mediaId = (media as any).id;
+  const mediaId = media.id;
   
   const handleClick = async (e: React.MouseEvent | React.KeyboardEvent) => {
+    // Verificar se o ID é válido antes de prosseguir
+    if (!mediaId || mediaId === 'undefined' || mediaId === 'null') {
+      e.preventDefault();
+      console.error('ID inválido para navegação:', mediaId);
+      toast.error('Erro: ID da série inválido');
+      return;
+    }
+
     if (onClick) {
       e.preventDefault();
       onClick(media);
@@ -115,7 +130,6 @@ const MediaCard = ({
 
     if (user) {
       try {
-        // Fixed: Use the correct parameter type for addToWatchHistory
         await addToWatchHistory({ 
           mediaId: Number(mediaId),
           mediaType: media.media_type || 'movie'
@@ -136,6 +150,13 @@ const MediaCard = ({
     return "16";
   };
 
+  // Verificar se o link é válido antes de renderizar
+  const linkPath = getLinkPath();
+  if (linkPath === "#") {
+    console.warn('Invalid link path for media:', media);
+    return null;
+  }
+
   return (
     <Card 
       ref={cardRef}
@@ -146,7 +167,7 @@ const MediaCard = ({
       data-item={itemIndex}
     >
       <Link 
-        to={getLinkPath()}
+        to={linkPath}
         className="block overflow-hidden rounded-lg transition-all duration-300 relative focus:outline-none focus:scale-105 focus:ring-4 focus:ring-netflix-red"
         onClick={handleClick}
         tabIndex={tabIndex}
@@ -159,6 +180,13 @@ const MediaCard = ({
               alt={title}
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
               loading="lazy"
+              onError={(e) => {
+                console.warn('Failed to load poster image:', posterUrl);
+                // Se a imagem falhar ao carregar, esconder o card
+                if (cardRef.current) {
+                  cardRef.current.style.display = 'none';
+                }
+              }}
             />
           ) : (
             <div className="h-full w-full bg-gray-900 flex items-center justify-center border border-gray-800">
